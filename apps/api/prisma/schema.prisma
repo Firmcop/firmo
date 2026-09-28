@@ -1,0 +1,692 @@
+// FirmPlant core schema — PostgreSQL. Module ownership noted per section.
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")   // Supabase pooled connection (port 6543, ?pgbouncer=true)
+  directUrl  = env("DIRECT_URL")     // Supabase direct connection (port 5432) — used by migrations
+  extensions = [pg_trgm(schema: "extensions"), vector(schema: "extensions")]
+}
+
+// ───────────── Identity & Access ─────────────
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  type      OrgType
+  countryId String?
+  country   Country? @relation(fields: [countryId], references: [id])
+  users     User[]
+  supplier  Supplier?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrgType { FIRMPLANT CUSTOMER SUPPLIER FINANCIER }
+
+model User {
+  id                 String     @id @default(uuid())
+  email              String     @unique
+  name               String
+  phone              String?
+  passwordHash       String
+  mfaSecret          String?
+  mfaEnabled         Boolean    @default(false)
+  mustChangePassword Boolean    @default(false)
+  isActive           Boolean    @default(true)
+  organizationId     String?
+  organization       Organization? @relation(fields: [organizationId], references: [id])
+  roles              UserRole[]
+  sessions           Session[]
+  assignedLeads      Lead[]     @relation("LeadAssignee")
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  key         String     @unique   // SUPER_ADMIN, RESEARCH_ANALYST, ...
+  name        String
+  permissions String[]              // e.g. ["opportunity:research", "lead:read:assigned"]
+  users       UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime @default(now())
+  @@index([userId])
+}
+
+// ───────────── Reference ─────────────
+model Country {
+  id            String   @id @default(uuid())
+  iso2          String   @unique
+  name          String
+  currency      String
+  regionId      String?
+  region        Region?  @relation(fields: [regionId], references: [id])
+  isActive      Boolean  @default(false)
+  opportunities Opportunity[]
+  organizations Organization[]
+  tariffs       Tariff[]
+}
+
+model Region {
+  id        String    @id @default(uuid())
+  name      String    @unique   // East Africa, Southern Africa…
+  countries Country[]
+}
+
+model Sector {
+  id            String        @id @default(uuid())
+  slug          String        @unique
+  name          String
+  description   String?
+  subsectors    Subsector[]
+  opportunities Opportunity[]
+}
+
+model Subsector {
+  id       String @id @default(uuid())
+  sectorId String
+  sector   Sector @relation(fields: [sectorId], references: [id])
+  name     String
+}
+
+model HsCode {
+  code        String        @id          // e.g. 2309.90
+  description String
+  hsVersion   String        @default("HS2022")
+  products    Product[]
+  trade       TradeRecord[]
+  tariffs     Tariff[]
+}
+
+model Product {
+  id            String        @id @default(uuid())
+  name          String
+  hsCode        String?
+  hs            HsCode?       @relation(fields: [hsCode], references: [code])
+  unit          String                      // tonne, unit, m²…
+  opportunities Opportunity[]
+}
+
+model Tariff {
+  id          String   @id @default(uuid())
+  countryId   String
+  country     Country  @relation(fields: [countryId], references: [id])
+  hsCode      String
+  hs          HsCode   @relation(fields: [hsCode], references: [code])
+  dutyPct     Decimal  @db.Decimal(6, 2)
+  otherPct    Decimal  @default(0) @db.Decimal(6, 2)
+  vatPct      Decimal  @default(0) @db.Decimal(6, 2)
+  validFrom   DateTime
+  validTo     DateTime?
+  sourceId    String?
+  @@index([countryId, hsCode])
+}
+
+model FxRate {
+  id        String   @id @default(uuid())
+  base      String
+  quote     String
+  rate      Decimal  @db.Decimal(18, 6)
+  asOf      DateTime
+  @@unique([base, quote, asOf])
+}
+
+// ───────────── Intelligence ─────────────
+model DataSource {
+  id          String   @id @default(uuid())
+  name        String
+  url         String?
+  methodology String?
+  licence     String?
+  runs        IngestionRun[]
+  evidence    OpportunityEvidence[]
+}
+
+model IngestionRun {
+  id             String       @id @default(uuid())
+  sourceId       String
+  source         DataSource   @relation(fields: [sourceId], references: [id])
+  adapter        String
+  geographicScope String
+  periodFrom     DateTime
+  periodTo       DateTime
+  status         RunStatus    @default(RUNNING)
+  rowsIn         Int          @default(0)
+  rowsAccepted   Int          @default(0)
+  errors         Json?
+  confidence     Confidence   @default(MEDIUM)
+  startedAt      DateTime     @default(now())
+  finishedAt     DateTime?
+  trade          TradeRecord[]
+}
+
+enum RunStatus { RUNNING SUCCEEDED FAILED }
+enum Confidence { LOW MEDIUM HIGH }
+
+/// Append-only: a revised figure creates a new row and sets supersededById on the old one.
+model TradeRecord {
+  id              String   @id @default(uuid())
+  countryIso2     String
+  partnerIso2     String?
+  hsCode          String
+  hs              HsCode   @relation(fields: [hsCode], references: [code])
+  flow            TradeFlow
+  year            Int
+  valueUsd        Decimal  @db.Decimal(18, 2)
+  quantity        Decimal? @db.Decimal(18, 3)
+  quantityUnit    String?
+  ingestionRunId  String
+  ingestionRun    IngestionRun @relation(fields: [ingestionRunId], references: [id])
+  supersededById  String?
+  createdAt       DateTime @default(now())
+  @@index([countryIso2, hsCode, year])
+}
+
+enum TradeFlow { IMPORT EXPORT }
+
+model Resource {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  material         String
+  category         String
+  location         String
+  annualVolume     String?
+  quality          String?
+  priceNote        String?
+  seasonality      String?
+  competingUse     String?
+  transport        String?
+  currentExport    String?
+  currentImport    String?
+  processingLevel  String?
+  possibleProducts String[]
+  valueChain       String[]           // raw → primary → intermediate → finished → specialty
+  isDemo           Boolean  @default(false)
+  publicationStatus PublicationStatus @default(DRAFT)
+  opportunities    OpportunityResource[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model GlobalDemandSignal {
+  id              String   @id @default(uuid())
+  hsCode          String
+  category        String
+  globalImportUsd Decimal? @db.Decimal(18, 2)
+  growthPct       Decimal? @db.Decimal(8, 2)
+  concentration   Decimal? @db.Decimal(6, 4)   // HHI
+  notes           String?
+  periodYear      Int
+  createdAt       DateTime @default(now())
+}
+
+model FactoryBenchmark {
+  id               String   @id @default(uuid())
+  product          String
+  country          String
+  technology       String?
+  capacity         String?
+  oeePct           Decimal? @db.Decimal(5, 2)
+  outputPerHour    Decimal? @db.Decimal(14, 3)
+  outputPerEmployee Decimal? @db.Decimal(14, 3)
+  energyPerUnit    Decimal? @db.Decimal(14, 4)
+  waterPerUnit     Decimal? @db.Decimal(14, 4)
+  yieldPct         Decimal? @db.Decimal(5, 2)
+  defectRatePct    Decimal? @db.Decimal(5, 2)
+  automation       String?
+  capexUsd         Decimal? @db.Decimal(18, 2)
+  factoryAreaM2    Int?
+  productionCostUsd Decimal? @db.Decimal(14, 4)
+  uptimePct        Decimal? @db.Decimal(5, 2)
+  sourceNote       String?
+  createdAt        DateTime @default(now())
+}
+
+model Signal {
+  id          String   @id @default(uuid())
+  engine      SignalEngine
+  hsCode      String?
+  countryIso2 String
+  metrics     Json
+  rationale   String
+  status      SignalStatus @default(NEW)
+  opportunityId String?
+  createdAt   DateTime @default(now())
+}
+
+enum SignalEngine { IMPORT_GAP AFRICA_GAP GLOBAL_DEMAND RESOURCE_VALUE_ADDITION INDUSTRIAL_INPUT }
+enum SignalStatus { NEW PROMOTED DISMISSED }
+
+// ───────────── Opportunities ─────────────
+model Opportunity {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  name              String
+  summary           String
+  sectorId          String
+  sector            Sector   @relation(fields: [sectorId], references: [id])
+  countryId         String
+  country           Country  @relation(fields: [countryId], references: [id])
+  location          String?
+  productId         String?
+  product           Product? @relation(fields: [productId], references: [id])
+  opportunityTypes  String[]
+  capacityLabel     String
+  factoryArea       String?
+  marketLabel       String?
+  capexKes          Decimal  @db.Decimal(18, 2)
+  equityPct         Decimal  @db.Decimal(5, 2)
+  advantages        String[]
+  processSteps      String[]
+  equipmentSummary  String[]
+  keywords          String[]
+  status            OpportunityStatus @default(DISCOVERED)
+  validationStatus  ValidationStatus  @default(PENDING)
+  hardStopFailures  Json?
+  publicationStatus PublicationStatus @default(DRAFT)
+  verificationLevel String?
+  riskLevel         String?
+  evidenceLevel     Confidence @default(LOW)
+  disclosures       Json?               // data period, research date, assumptions, sources, quote status
+  isDemo            Boolean  @default(false)
+  authorId          String
+  publishedAt       DateTime?
+  evidence          OpportunityEvidence[]
+  scores            OpportunityScore[]
+  approvals         OpportunityApproval[]
+  resources         OpportunityResource[]
+  financialModels   FinancialModel[]
+  enquiries         Enquiry[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([publicationStatus, sectorId, countryId])
+}
+
+enum OpportunityStatus { DISCOVERED SCREENED VALIDATING ENGINEERING MODELLING FINANCE_READY COMMERCIAL RESERVED IN_DEVELOPMENT OPERATING ARCHIVED NO_GO }
+enum ValidationStatus { PENDING GO NO_GO OVERRIDDEN }
+enum PublicationStatus { DRAFT IN_REVIEW APPROVED PUBLISHED ARCHIVED }
+
+model OpportunityResource {
+  opportunityId String
+  resourceId    String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  resource      Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  @@id([opportunityId, resourceId])
+}
+
+model OpportunityEvidence {
+  id            String      @id @default(uuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  claim         String
+  value         String?
+  unit          String?
+  sourceId      String?
+  source        DataSource? @relation(fields: [sourceId], references: [id])
+  sourceUrl     String?
+  dataPeriod    String?
+  collectedAt   DateTime
+  method        String?
+  confidence    Confidence  @default(MEDIUM)
+  supersededById String?
+  createdById   String
+  createdAt     DateTime    @default(now())
+}
+
+/// Internal only — never serialised on public endpoints.
+model OpportunityScore {
+  id            String      @id @default(uuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  inputs        Json
+  breakdown     Json
+  total         Decimal     @db.Decimal(5, 2)
+  weightsVersion String
+  createdById   String
+  createdAt     DateTime    @default(now())
+}
+
+model OpportunityApproval {
+  id            String      @id @default(uuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  stage         ApprovalStage
+  decision      ApprovalDecision
+  notes         String?
+  checklist     Json?
+  reviewerId    String
+  createdAt     DateTime    @default(now())
+  @@index([opportunityId, stage])
+}
+
+enum ApprovalStage { RESEARCH TECHNICAL FINANCIAL COMMERCIAL MANAGEMENT }
+enum ApprovalDecision { APPROVED CHANGES_REQUESTED REJECTED }
+
+model HardStopRule {
+  id         String  @id @default(uuid())
+  scope      String  @default("global")    // global | sector slug
+  thresholds Json
+  version    Int
+  isActive   Boolean @default(true)
+  createdAt  DateTime @default(now())
+}
+
+// ───────────── Finance ─────────────
+model FinancialModel {
+  id            String      @id @default(uuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  version       Int
+  engineVersion String
+  inputHash     String
+  assumptions   Json        // FinancialInputs (frozen)
+  scenarioAdj   Json
+  outputs       Json        // { conservative, base, upside }
+  notes         String?
+  createdById   String
+  createdAt     DateTime    @default(now())
+  @@unique([opportunityId, version])
+}
+
+// ───────────── Marketplace ─────────────
+model Supplier {
+  id              String   @id @default(uuid())
+  organizationId  String   @unique
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  name            String
+  country         String
+  capabilities    String[]
+  yearsOperating  Int?
+  installedBase   Int?
+  serviceCoverage String[]
+  status          SupplierStatus @default(REGISTERED)
+  isDemo          Boolean  @default(false)
+  verifications   SupplierVerification[]
+  equipment       Equipment[]
+  rfqResponses    RfqResponse[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum SupplierStatus { REGISTERED DOCUMENTATION_SUBMITTED UNDER_REVIEW VERIFIED QUALIFIED APPROVED SUSPENDED }
+
+model SupplierVerification {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  fromStatus  SupplierStatus
+  toStatus    SupplierStatus
+  criteria    Json?          // scorecard per verification criterion
+  notes       String?
+  reviewerId  String
+  createdAt   DateTime @default(now())
+}
+
+model Equipment {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  name          String
+  category      String
+  manufacturer  String
+  model         String
+  capacity      String
+  power         String?
+  dimensions    String?
+  weight        String?
+  application   String?
+  origin        String?
+  supplierId    String
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  warranty      String?
+  leadTime      String?
+  priceMinKes   Decimal? @db.Decimal(18, 2)
+  priceMaxKes   Decimal? @db.Decimal(18, 2)
+  installation  String?
+  spareParts    String?
+  certification String?
+  isDemo        Boolean  @default(false)
+  publicationStatus PublicationStatus @default(DRAFT)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([category])
+}
+
+// ───────────── Procurement ─────────────
+model Rfq {
+  id          String    @id @default(uuid())
+  reference   String    @unique
+  projectId   String?
+  leadId      String?
+  title       String
+  spec        Json       // capacity, standards, materials, controls, FAT, commissioning, commercial terms
+  status      RfqStatus @default(DRAFT)
+  closesAt    DateTime?
+  responses   RfqResponse[]
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum RfqStatus { DRAFT ISSUED RESPONSES_OPEN CLOSED EVALUATED AWARDED CANCELLED }
+
+model RfqResponse {
+  id          String   @id @default(uuid())
+  rfqId       String
+  rfq         Rfq      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  priceKes    Decimal? @db.Decimal(18, 2)
+  leadTime    String?
+  payload     Json
+  evaluation  Json?
+  submittedAt DateTime @default(now())
+  @@unique([rfqId, supplierId])
+}
+
+// ───────────── Commercial ─────────────
+model Lead {
+  id           String    @id @default(uuid())
+  reference    String    @unique
+  source       LeadSource
+  stage        LeadStage @default(NEW)
+  name         String
+  company      String?
+  email        String
+  phone        String?
+  country      String?
+  investmentRange String?
+  availableEquity String?
+  preferredFinancing String?
+  timeline     String?
+  notes        String?
+  assigneeId   String?
+  assignee     User?     @relation("LeadAssignee", fields: [assigneeId], references: [id])
+  enquiries    Enquiry[]
+  activities   CrmActivity[]
+  consentAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  @@index([stage, assigneeId])
+}
+
+enum LeadSource { WEBSITE OPPORTUNITY_ENQUIRY EQUIPMENT_ENQUIRY SUPPLIER_ENQUIRY FINANCING_ENQUIRY BUILD_MY_FACTORY WHATSAPP PHONE REFERRAL CAMPAIGN }
+enum LeadStage { NEW QUALIFYING QUALIFIED OPPORTUNITY_SELECTED FINANCING ENGINEERING QUOTED WON PROJECT COMMISSIONING OPERATING LOST }
+
+model Enquiry {
+  id            String       @id @default(uuid())
+  leadId        String
+  lead          Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  equipmentId   String?
+  kind          String       // opportunity | equipment_rfq | wizard | contact
+  payload       Json
+  createdAt     DateTime     @default(now())
+}
+
+model CrmActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String   // note | call | email | stage_change | assignment
+  body      String?
+  meta      Json?
+  userId    String?
+  createdAt DateTime @default(now())
+}
+
+model WizardSession {
+  id        String   @id @default(uuid())
+  answers   Json
+  result    Json
+  leadId    String?
+  createdAt DateTime @default(now())
+}
+
+// ───────────── Projects & Assets (Phase 8; schema ready) ─────────────
+model Project {
+  id         String   @id @default(uuid())
+  reference  String   @unique
+  name       String
+  leadId     String?
+  opportunityId String?
+  status     String   @default("PLANNING")
+  milestones ProjectMilestone[]
+  assets     Asset[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProjectMilestone {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  dueAt     DateTime?
+  doneAt    DateTime?
+  sort      Int
+}
+
+model Asset {
+  id             String   @id @default(uuid())
+  passportId     String   @unique     // FP-KE-000142
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id])
+  manufacturer   String
+  model          String
+  serialNumber   String?
+  capacity       String?
+  purchaseValueKes Decimal? @db.Decimal(18, 2)
+  ownerOrgId     String?
+  financierOrgId String?
+  location       String?
+  status         String   @default("INSTALLED")
+  warrantyUntil  DateTime?
+  commissionedAt DateTime?
+  events         AssetEvent[]
+  createdAt      DateTime @default(now())
+}
+
+model AssetEvent {
+  id        String   @id @default(uuid())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  type      String   // installation | service | maintenance | warranty | telemetry
+  data      Json
+  createdAt DateTime @default(now())
+}
+
+// ───────────── Content, Documents, Notifications, Audit ─────────────
+model Article {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  category  String
+  summary   String
+  body      String
+  relatedOpportunityId String?
+  seo       Json?
+  isDemo    Boolean  @default(false)
+  publicationStatus PublicationStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  kind       String   // quotation | certificate | invoice | contract | drawing | manual | financial_statement …
+  title      String
+  versions   DocumentVersion[]
+  aclRoles   String[]
+  ownerOrgId String?
+  createdAt  DateTime @default(now())
+  @@index([entityType, entityId])
+}
+
+model DocumentVersion {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  sha256     String
+  scanStatus String   @default("PENDING")
+  uploadedById String
+  createdAt  DateTime @default(now())
+  @@unique([documentId, version])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  channel   String   // email | sms | whatsapp | in_app
+  to        String?
+  template  String
+  data      Json
+  status    String   @default("QUEUED")
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+/// Append-only. Grant the app role INSERT/SELECT only on this table.
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  requestId String?
+  createdAt DateTime @default(now())
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
+}

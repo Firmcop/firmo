@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0E0D0C;color:#F4F2EE;font-family:'Archivo',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#F26A1B;text-decoration:none}a:hover{color:#FF8A45}
+input,select,textarea,button{font-family:inherit}
+input[type=range]{accent-color:#F26A1B;width:100%}
+*{box-sizing:border-box}
+</style>
+</helmet>
+
+<header style="position:sticky;top:0;z-index:20;background:rgba(14,13,12,0.94);backdrop-filter:blur(8px);border-bottom:1px solid #26231F">
+  <div style="max-width:1360px;margin:0 auto;padding:0 28px;height:68px;display:flex;align-items:center;gap:32px">
+    <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+      <div style="width:18px;height:18px;background:#F26A1B"></div>
+      <div style="font-weight:800;font-stretch:80%;font-size:22px;letter-spacing:0.04em">FIRMPLANT</div>
+    </div>
+    <nav style="display:flex;gap:22px;flex:1;flex-wrap:wrap;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#B8B2A9">
+      <span onClick="{{ goList }}" style="cursor:pointer" style-hover="color:#F4F2EE">Opportunities</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goEquip }}">Equipment</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goIndustries }}">Industries</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goResources }}">Resources</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goHow }}">How it works</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goResearch }}">Research</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goProjects }}">Projects</span>
+      <span style="cursor:pointer" style-hover="color:#F4F2EE" onClick="{{ goSuppliers }}">Suppliers</span>
+    </nav>
+    <button onClick="{{ goBuild }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:12px 18px;font-weight:700;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#FF8A45">Build a factory</button>
+  </div>
+</header>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<main>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:72px 28px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:48px;align-items:end">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-bottom:28px">DISCOVER. ENGINEER. BUILD. MANUFACTURE. COMPETE.</div>
+        <h1 style="margin:0;font-weight:850;font-stretch:72%;font-size:clamp(64px,9vw,148px);line-height:0.86;letter-spacing:-0.01em;text-transform:uppercase">What can you <span style="color:#F26A1B">manufacture?</span></h1>
+        <p style="margin:32px 0 0;max-width:560px;font-size:19px;line-height:1.5;color:#C9C3BA;text-wrap:pretty">FirmPlant identifies manufacturing opportunities, engineers globally competitive production systems and connects investors with equipment, financing and factory development.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:36px">
+          <button onClick="{{ goList }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:18px 24px;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#FF8A45">Explore opportunities →</button>
+          <button onClick="{{ goBuild }}" style="background:transparent;color:#F4F2EE;border:1px solid #F4F2EE;padding:18px 24px;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#F4F2EE;color:#0E0D0C">Build my factory</button>
+          <button onClick="{{ goSupRegister }}" style="background:transparent;color:#B8B2A9;border:1px solid #3A3631;padding:18px 24px;font-weight:600;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="color:#F4F2EE;border-color:#F4F2EE">Sell industrial equipment</button>
+        </div>
+      </div>
+      <div style="position:relative;aspect-ratio:4/3.4;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);border:1px solid #2A2723;display:flex;align-items:center;justify-content:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A847B;letter-spacing:0.08em">[ LARGE INDUSTRIAL PHOTO — PLANT FLOOR ]</div>
+        <div style="position:absolute;left:0;bottom:0;background:#0E0D0C;border-top:1px solid #2A2723;border-right:1px solid #2A2723;padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;color:#B8B2A9">MARKET → PROCESS → EQUIPMENT → FACTORY → FINANCE → OPERATE</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="finder" style="background:#F4F2EE;color:#0E0D0C">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:48px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#B5470A">01 / CAPITAL</div>
+          <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">What is your investment range?</h2>
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.5;color:#58534C;max-width:360px">We match your available equity to projects where financing can realistically cover the rest.</p>
+        </div>
+        <div style="grid-column:span 2;min-width:0">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
+            <sc-for list="{{ capitals }}" as="c" hint-placeholder-count="9">
+              <button onClick="{{ c.pick }}" style="padding:22px 16px;text-align:left;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};font-weight:750;font-stretch:85%;font-size:22px;cursor:pointer">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isCustom }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#58534C">KES (MILLIONS)</span>
+              <input type="number" value="{{ customVal }}" onChange="{{ setCustom }}" style="width:140px;padding:12px;border:1px solid #0E0D0C;background:#fff;font-size:18px;font-weight:700">
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      <div style="height:1px;background:#D6D1C8;margin:56px 0"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:48px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#B5470A">02 / SECTOR</div>
+          <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">What industry interests you?</h2>
+        </div>
+        <div style="grid-column:span 2;min-width:0">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ industries }}" as="i" hint-placeholder-count="20">
+              <button onClick="{{ i.pick }}" style="padding:11px 16px;border:1px solid {{ i.border }};background:{{ i.bg }};color:{{ i.fg }};font-size:14px;font-weight:600;cursor:pointer">{{ i.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:32px">
+            <button onClick="{{ goList }}" style="background:#0E0D0C;color:#F4F2EE;border:0;padding:20px 28px;font-weight:700;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#F26A1B;color:#0E0D0C">Show me opportunities →</button>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#58534C">{{ matchText }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:36px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">FEATURED OPPORTUNITIES</div>
+          <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">Validated. Engineered. Modelled.</h2>
+        </div>
+        <span onClick="{{ goList }}" style="cursor:pointer;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;font-size:13px;color:#F26A1B">All opportunities →</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:1px;background:#26231F;border:1px solid #26231F">
+        <sc-for list="{{ featured }}" as="o" hint-placeholder-count="3">
+          <article onClick="{{ o.open }}" style="background:#0E0D0C;padding:28px;cursor:pointer;display:flex;flex-direction:column;gap:20px" style-hover="background:#151412">
+            <div style="display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#B8B2A9"><span>{{ o.sector }} · {{ o.location }}</span><span style="color:#F26A1B">{{ o.demo }}</span></div>
+            <h3 style="margin:0;font-weight:800;font-stretch:80%;font-size:30px;line-height:1;text-transform:uppercase">{{ o.name }}</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 20px">
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">INDICATIVE COST</div><div style="font-size:20px;font-weight:700;margin-top:4px">{{ o.costFmt }}</div></div>
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">EQUITY FROM</div><div style="font-size:20px;font-weight:700;margin-top:4px">{{ o.equityFmt }}</div></div>
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">CAPACITY</div><div style="font-size:15px;margin-top:4px">{{ o.capacity }}</div></div>
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">FACTORY</div><div style="font-size:15px;margin-top:4px">{{ o.area }}</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #26231F;padding-top:16px;font-size:13px"><span style="color:#B8B2A9">{{ o.type }}</span><span style="color:#F26A1B;font-weight:700;letter-spacing:0.06em">VIEW →</span></div>
+          </article>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:56px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">OPPORTUNITY RADAR</div>
+          <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">Research before equipment.</h2>
+          <p style="margin:20px 0 0;font-size:17px;line-height:1.55;color:#C9C3BA;max-width:460px;text-wrap:pretty">Five engines screen trade, market, resource and global demand data. Every signal passes human review. If local production has no defensible advantage, it never becomes an opportunity.</p>
+          <div style="margin-top:32px;border:1px solid #F26A1B;padding:24px;display:inline-flex;flex-direction:column;gap:4px">
+            <div style="font-weight:850;font-stretch:72%;font-size:40px;line-height:1;text-transform:uppercase">No advantage =<br><span style="color:#F26A1B">No opportunity</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ engines }}" as="e" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:56px 1fr;gap:16px;padding:22px 0;border-top:1px solid #26231F">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#F26A1B">{{ e.n }}</div>
+              <div><div style="font-weight:750;font-size:20px;text-transform:uppercase;font-stretch:85%">{{ e.t }}</div><div style="margin-top:6px;color:#B8B2A9;font-size:15px;line-height:1.5">{{ e.d }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#F4F2EE;color:#0E0D0C">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#B5470A">IMPORT VS LOCAL ECONOMICS</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:56px;margin-top:12px;align-items:start">
+        <div>
+          <h2 style="margin:0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">Every opportunity must beat the landed import.</h2>
+          <p style="margin:20px 0 0;font-size:17px;line-height:1.55;color:#58534C;max-width:460px">We build up the true landed cost — freight, duty, port, clearance, inland haulage — and compare it with a benchmarked local factory cost.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #D6D1C8;padding:28px">
+          <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;color:#58534C"><span>EXAMPLE · {{ sample.name }}</span><span style="color:#B5470A">DEMO</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
+            <sc-for list="{{ sample.landed }}" as="r" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:130px 1fr 72px;gap:12px;align-items:center;font-size:13px">
+                <span style="color:#58534C">{{ r.label }}</span>
+                <div style="height:10px;background:#EEEAE3"><div style="height:10px;width:{{ r.w }};background:#0E0D0C"></div></div>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.val }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#D6D1C8;margin-top:24px">
+            <div style="background:#fff;padding:16px 0"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#58534C;letter-spacing:0.1em">LANDED IMPORT</div><div style="font-size:28px;font-weight:800;margin-top:4px">{{ sample.landedTotal }}</div></div>
+            <div style="background:#fff;padding:16px 0 16px 20px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#B5470A;letter-spacing:0.1em">LOCAL MANUFACTURE</div><div style="font-size:28px;font-weight:800;margin-top:4px;color:#B5470A">{{ sample.localFmt }}</div></div>
+          </div>
+          <div style="margin-top:12px;font-size:13px;color:#58534C">{{ sample.unit }} · Local advantage {{ sample.advPct }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">HOW IT WORKS</div>
+      <h2 style="margin:12px 0 40px;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">From market gap to operating factory.</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:#26231F;border:1px solid #26231F">
+        <sc-for list="{{ steps }}" as="s" hint-placeholder-count="7">
+          <div style="background:#0E0D0C;padding:24px 20px;min-height:200px;display:flex;flex-direction:column;justify-content:space-between;gap:24px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#F26A1B">{{ s.n }}</div>
+            <div><div style="font-weight:800;font-stretch:80%;font-size:26px;text-transform:uppercase">{{ s.t }}</div><div style="margin-top:8px;color:#B8B2A9;font-size:14px;line-height:1.45">{{ s.d }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:56px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">EQUIPMENT MARKETPLACE</div>
+        <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">Qualified machines. Specified for your plant.</h2>
+        <p style="margin:20px 0 0;font-size:17px;line-height:1.55;color:#C9C3BA;max-width:460px">Suppliers pass a six-stage verification — from registration to FirmPlant Approved. Suppliers never self-assign status.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:28px">
+          <sc-for list="{{ verif }}" as="v" hint-placeholder-count="6">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;padding:8px 10px;border:1px solid {{ v.c }};color:{{ v.c }}">{{ v.t }}</span>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-content:start">
+        <sc-for list="{{ equipCats }}" as="c" hint-placeholder-count="12">
+          <div onClick="{{ goEquip }}" style="border:1px solid #2A2723;padding:16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between" style-hover="border-color:#F26A1B;color:#F26A1B"><span>{{ c }}</span><span style="color:#5A554E">→</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:56px;align-items:center">
+      <div style="aspect-ratio:1/1;max-height:460px;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);border:1px solid #2A2723;display:flex;align-items:center;justify-content:center;padding:24px">
+        <div style="background:#F4F2EE;color:#0E0D0C;width:min(100%,300px);padding:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.9">
+          <div style="display:flex;justify-content:space-between;font-weight:600"><span>ASSET PASSPORT™</span><span style="color:#B5470A">DEMO</span></div>
+          <div style="height:1px;background:#0E0D0C;margin:10px 0"></div>
+          <div>ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FP-KE-000142</div><div>ASSET&nbsp;&nbsp;&nbsp;Pellet mill 5 t/h</div><div>STATUS&nbsp;&nbsp;Operating</div><div>WARRANTY Active</div>
+          <div style="width:72px;height:72px;margin-top:12px;background:repeating-linear-gradient(90deg,#0E0D0C 0 4px,#fff 4px 8px);border:1px solid #0E0D0C"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">FINANCE · BUILD · OPERATE</div>
+        <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">Financed, commissioned, documented.</h2>
+        <div style="display:flex;flex-direction:column;margin-top:28px">
+          <div style="padding:18px 0;border-top:1px solid #26231F"><div style="font-weight:750;font-size:18px">Financing pathways</div><div style="color:#B8B2A9;font-size:15px;margin-top:4px;line-height:1.5">Asset, equipment, project, development and blended finance — structured into a finance-ready pack.</div></div>
+          <div style="padding:18px 0;border-top:1px solid #26231F"><div style="font-weight:750;font-size:18px">Factory development</div><div style="color:#B8B2A9;font-size:15px;margin-top:4px;line-height:1.5">Process design, RFQs, FAT, installation and commissioning against global benchmarks.</div></div>
+          <div style="padding:18px 0;border-top:1px solid #26231F;border-bottom:1px solid #26231F"><div style="font-weight:750;font-size:18px">Asset Passport™</div><div style="color:#B8B2A9;font-size:15px;margin-top:4px;line-height:1.5">Every major machine gets a QR identity: owner, financier, warranty and service history.</div></div>
+        </div>
+        <p style="margin:16px 0 0;font-size:12px;color:#8F897F">Financing subject to applicant eligibility, financier credit assessment and final project documentation.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:80px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">INDUSTRIES</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 28px;margin-top:20px">
+        <sc-for list="{{ industryLinks }}" as="i" hint-placeholder-count="15">
+          <span onClick="{{ i.go }}" style="font-weight:800;font-stretch:75%;font-size:clamp(28px,3.4vw,48px);text-transform:uppercase;color:#5A554E;cursor:pointer;line-height:1.1" style-hover="color:#F4F2EE">{{ i.label }}</span>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/OPPORTUNITIES</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Manufacturing opportunities</h1>
+  <div style="display:flex;flex-direction:column;gap:16px;margin-top:36px;padding:24px 0;border-top:1px solid #26231F;border-bottom:1px solid #26231F">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#8F897F;width:110px">EQUITY</span>
+      <sc-for list="{{ capitalsDark }}" as="c" hint-placeholder-count="9">
+        <button onClick="{{ c.pick }}" style="padding:9px 14px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:600;cursor:pointer">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#8F897F;width:110px">SECTOR</span>
+      <sc-for list="{{ industriesDark }}" as="i" hint-placeholder-count="10">
+        <button onClick="{{ i.pick }}" style="padding:9px 14px;border:1px solid {{ i.border }};background:{{ i.bg }};color:{{ i.fg }};font-size:13px;font-weight:600;cursor:pointer">{{ i.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:24px 0;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#B8B2A9"><span>{{ matchText }}</span><span>All figures are DEMO data</span></div>
+  <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed #3A3631;padding:48px;text-align:center;color:#B8B2A9">No validated opportunity matches this combination yet. <span onClick="{{ clearFilters }}" style="color:#F26A1B;cursor:pointer">Clear filters</span> or <span onClick="{{ goContact }}" style="color:#F26A1B;cursor:pointer">ask us to research it</span>.</div>
+  </sc-if>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:1px;background:#26231F;border:1px solid #26231F">
+    <sc-for list="{{ filtered }}" as="o" hint-placeholder-count="6">
+      <article onClick="{{ o.open }}" style="background:#0E0D0C;padding:28px;cursor:pointer;display:flex;flex-direction:column;gap:18px" style-hover="background:#151412">
+        <div style="display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#B8B2A9"><span>{{ o.sector }} · {{ o.location }}</span><span style="color:#F26A1B">{{ o.demo }}</span></div>
+        <h3 style="margin:0;font-weight:800;font-stretch:80%;font-size:30px;line-height:1;text-transform:uppercase">{{ o.name }}</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px">
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">INDICATIVE COST</div><div style="font-size:20px;font-weight:700;margin-top:4px">{{ o.costFmt }}</div></div>
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">EQUITY FROM</div><div style="font-size:20px;font-weight:700;margin-top:4px">{{ o.equityFmt }}</div></div>
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">CAPACITY</div><div style="font-size:15px;margin-top:4px">{{ o.capacity }}</div></div>
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">FACTORY</div><div style="font-size:15px;margin-top:4px">{{ o.area }}</div></div>
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">MARKET</div><div style="font-size:15px;margin-top:4px">{{ o.market }}</div></div>
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">FINANCING</div><div style="font-size:15px;margin-top:4px">{{ o.financing }}</div></div>
+        </div>
+        <div style="font-size:14px;color:#C9C3BA;line-height:1.45"><span style="color:#F26A1B">Advantage:</span> {{ o.advShort }}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #26231F;padding-top:16px;font-size:12px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.06em"><span style="color:#B8B2A9">{{ o.status }} · {{ o.verification }}</span><span style="color:#F26A1B;font-weight:600">VIEW →</span></div>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<main>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:40px 28px 56px">
+      <div style="display:flex;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8F897F;letter-spacing:0.06em;flex-wrap:wrap"><span onClick="{{ goList }}" style="cursor:pointer;color:#B8B2A9">← /opportunities</span><span>/{{ d.slug }}</span><span style="color:#F26A1B">· DEMO RECORD</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:40px;margin-top:28px;align-items:end">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">{{ d.sector }} · {{ d.type }}</div>
+          <h1 style="margin:14px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(52px,6.5vw,104px);line-height:0.88;text-transform:uppercase">{{ d.name }}</h1>
+          <p style="margin:20px 0 0;font-size:18px;line-height:1.5;color:#C9C3BA;max-width:580px">{{ d.summary }}</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px">
+            <button onClick="{{ goEnquire }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:18px 24px;font-weight:750;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#FF8A45">I want this plant →</button>
+            <button onClick="{{ goCalc }}" style="background:transparent;color:#F4F2EE;border:1px solid #F4F2EE;padding:18px 24px;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">How can I finance it?</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#26231F;border:1px solid #26231F">
+          <sc-for list="{{ d.overview }}" as="k" hint-placeholder-count="8">
+            <div style="background:#0E0D0C;padding:18px 20px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">{{ k.l }}</div><div style="font-size:18px;font-weight:700;margin-top:6px">{{ k.v }}</div></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">B / WHY THIS OPPORTUNITY</div><h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:40px;line-height:0.95;text-transform:uppercase">The advantage</h2></div>
+      <div style="grid-column:span 2;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;min-width:0">
+        <sc-for list="{{ d.adv }}" as="a" hint-placeholder-count="3">
+          <div style="background:#0E0D0C;padding:24px"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F26A1B">{{ a.n }}</div><div style="margin-top:14px;font-size:17px;line-height:1.45">{{ a.t }}</div></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#F4F2EE;color:#0E0D0C">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:40px">
+      <div style="background:#fff;border:1px solid #D6D1C8;padding:28px">
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.12em;color:#B5470A"><span>C–D / IMPORT GAP</span><span>DEMO</span></div>
+        <div style="font-weight:800;font-stretch:80%;font-size:30px;text-transform:uppercase;margin-top:10px">Annual imports, USD M</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#58534C;margin-top:6px">HS {{ d.hs }} · Kenya · 5-year trend {{ d.cagr }}</div>
+        <div style="display:flex;align-items:end;gap:14px;height:200px;margin-top:28px;border-bottom:1px solid #0E0D0C">
+          <sc-for list="{{ d.impBars }}" as="b" hint-placeholder-count="5">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;gap:6px;height:100%">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ b.v }}</span>
+              <div style="width:100%;height:{{ b.h }};background:{{ b.c }}"></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:8px"><sc-for list="{{ d.impBars }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#58534C">{{ b.y }}</span></sc-for></div>
+        <div style="margin-top:20px;font-size:14px;color:#58534C">Main origins: {{ d.origins }}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #D6D1C8;padding:28px">
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.12em;color:#B5470A"><span>IMPORT VS LOCAL</span><span>DEMO</span></div>
+        <div style="font-weight:800;font-stretch:80%;font-size:30px;text-transform:uppercase;margin-top:10px">Landed cost build-up</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#58534C;margin-top:6px">{{ d.unit }}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+          <sc-for list="{{ d.landed }}" as="r" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:130px 1fr 72px;gap:12px;align-items:center;font-size:13px">
+              <span style="color:#58534C">{{ r.label }}</span>
+              <div style="height:10px;background:#EEEAE3"><div style="height:10px;width:{{ r.w }};background:#0E0D0C"></div></div>
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.val }}</span>
+            </div>
+          </sc-for>
+          <div style="display:grid;grid-template-columns:130px 1fr 72px;gap:12px;align-items:center;font-size:13px;font-weight:700;padding-top:8px;border-top:1px solid #D6D1C8"><span>Landed import</span><div style="height:10px;background:#0E0D0C"></div><span style="text-align:right;font-family:'IBM Plex Mono',monospace">{{ d.landedTotal }}</span></div>
+          <div style="display:grid;grid-template-columns:130px 1fr 72px;gap:12px;align-items:center;font-size:13px;font-weight:700;color:#B5470A"><span>Local target</span><div style="height:10px;background:#EEEAE3"><div style="height:10px;width:{{ d.localW }};background:#F26A1B"></div></div><span style="text-align:right;font-family:'IBM Plex Mono',monospace">{{ d.localFmt }}</span></div>
+        </div>
+        <div style="margin-top:20px;padding:14px 16px;background:#0E0D0C;color:#F4F2EE;font-size:14px;display:flex;justify-content:space-between"><span>Local cost advantage</span><strong style="color:#F26A1B">{{ d.advPct }}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:40px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">E / RESOURCE ADVANTAGE</div>
+        <div style="display:flex;flex-direction:column;margin-top:20px">
+          <sc-for list="{{ d.raw }}" as="r" hint-placeholder-count="2">
+            <div style="padding:18px 0;border-top:1px solid #26231F;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
+              <div style="grid-column:span 2;font-weight:750;font-size:20px">{{ r.m }}</div>
+              <div style="font-size:14px;color:#B8B2A9">Source: {{ r.src }}</div>
+              <div style="font-size:14px;color:#B8B2A9">Seasonality: {{ r.season }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B"><span>F / GLOBAL BENCHMARK</span><span>DEMO</span></div>
+        <div style="margin-top:20px;border:1px solid #26231F">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;color:#8F897F;border-bottom:1px solid #26231F"><span>METRIC</span><span>GLOBAL BEST</span><span style="color:#F26A1B">FP DESIGN</span><span>TYPICAL LOCAL</span></div>
+          <sc-for list="{{ bench }}" as="b" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;padding:12px 16px;font-size:14px;border-bottom:1px solid #1E1C1A"><span style="color:#B8B2A9">{{ b.m }}</span><span>{{ b.g }}</span><span style="color:#F26A1B;font-weight:700">{{ b.f }}</span><span style="color:#8F897F">{{ b.l }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">G / PLANT CONFIGURATION</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:20px">
+        <sc-for list="{{ d.steps }}" as="s" hint-placeholder-count="7">
+          <div style="display:flex;align-items:center;gap:8px"><div style="border:1px solid #3A3631;padding:14px 16px;font-size:14px;font-weight:600"><span style="font-family:'IBM Plex Mono',monospace;color:#F26A1B;font-size:11px;margin-right:8px">{{ s.n }}</span>{{ s.t }}</div><span style="color:#5A554E">{{ s.arrow }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px;margin-top:40px">
+        <div>
+          <div style="font-weight:750;font-size:18px;margin-bottom:10px">Core equipment</div>
+          <sc-for list="{{ d.equip }}" as="e" hint-placeholder-count="5"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:15px;color:#C9C3BA;display:flex;justify-content:space-between;gap:12px"><span>{{ e }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8F897F">RFQ READY</span></div></sc-for>
+        </div>
+        <div style="aspect-ratio:16/9;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);border:1px solid #2A2723;display:flex;align-items:center;justify-content:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A847B;letter-spacing:0.08em">[ PLANT LAYOUT / MATERIAL FLOW DRAWING ]</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B"><span>H / FINANCIAL MODEL</span><span style="color:#B8B2A9">ILLUSTRATIVE MODEL BASED ON STATED ASSUMPTIONS · DEMO</span></div>
+      <div style="margin-top:20px;border:1px solid #26231F;overflow-x:auto">
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;min-width:560px;padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#8F897F;border-bottom:1px solid #26231F"><span></span><span>CONSERVATIVE</span><span style="color:#F26A1B">BASE</span><span>UPSIDE</span></div>
+        <sc-for list="{{ d.scen }}" as="r" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;min-width:560px;padding:14px 20px;font-size:15px;border-bottom:1px solid #1E1C1A"><span style="color:#B8B2A9">{{ r.l }}</span><span>{{ r.c }}</span><span style="font-weight:700">{{ r.b }}</span><span>{{ r.u }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="calc" style="background:#F4F2EE;color:#0E0D0C">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#B5470A">I / FINANCING</div>
+      <h2 style="margin:12px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">How can I finance this plant?</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px">
+        <sc-for list="{{ finTypes }}" as="f" hint-placeholder-count="8"><span style="font-size:13px;padding:8px 12px;border:1px solid #BEB8AE">{{ f }}</span></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:40px;margin-top:36px">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <sc-for list="{{ calcInputs }}" as="c" hint-placeholder-count="7">
+            <label style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#58534C">{{ c.label }}</span><strong style="font-family:'IBM Plex Mono',monospace">{{ c.display }}</strong></div>
+              <input type="range" min="{{ c.min }}" max="{{ c.max }}" step="{{ c.step }}" value="{{ c.value }}" onChange="{{ c.set }}">
+            </label>
+          </sc-for>
+        </div>
+        <div style="background:#0E0D0C;color:#F4F2EE;padding:32px;display:flex;flex-direction:column;gap:1px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#8F897F">MONTHLY REPAYMENT (AFTER GRACE)</div>
+          <div style="font-weight:850;font-stretch:78%;font-size:64px;line-height:1;margin-top:6px;color:#F26A1B">{{ calc.monthly }}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px">
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">EQUITY REQUIRED</div><div style="font-size:22px;font-weight:700;margin-top:4px">{{ calc.equity }}</div></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">LOAN AMOUNT</div><div style="font-size:22px;font-weight:700;margin-top:4px">{{ calc.loan }}</div></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">ANNUAL DEBT SERVICE</div><div style="font-size:22px;font-weight:700;margin-top:4px">{{ calc.annual }}</div></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">EBITDA / YEAR</div><div style="font-size:22px;font-weight:700;margin-top:4px">{{ calc.ebitda }}</div></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">DSCR</div><div style="font-size:22px;font-weight:700;margin-top:4px;color:{{ calc.dscrColor }}">{{ calc.dscr }}</div></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">CASH AFTER DEBT SERVICE</div><div style="font-size:22px;font-weight:700;margin-top:4px">{{ calc.cash }}</div></div>
+          </div>
+          <div style="margin-top:24px;font-size:13px;color:#B8B2A9;line-height:1.5">{{ calc.note }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #26231F;font-size:12px;color:#8F897F;line-height:1.5">Financing subject to applicant eligibility, financier credit assessment and final project documentation. Illustrative model based on stated assumptions.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:48px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">DISCLOSURE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-top:18px">
+        <sc-for list="{{ d.disclosure }}" as="x" hint-placeholder-count="6">
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">{{ x.l }}</div><div style="font-size:14px;margin-top:4px;color:#C9C3BA">{{ x.v }}</div></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="enquire" style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:72px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:48px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">ENQUIRY</div>
+        <h2 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">I want<br>this plant</h2>
+        <p style="margin:20px 0 0;font-size:16px;color:#B8B2A9;line-height:1.5;max-width:400px">{{ d.name }}. A FirmPlant analyst will qualify your enquiry and walk you through the research, plant and financing pathway.</p>
+      </div>
+      <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ submit }}" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <input required placeholder="Name" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input placeholder="Company" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input required placeholder="Phone" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input required type="email" placeholder="Email" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Kenya</option><option>Uganda</option><option>Tanzania</option><option>Rwanda</option><option>Ethiopia</option><option>Other</option></select>
+          <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Available equity: KES 1–5M</option><option>KES 5–10M</option><option>KES 10–20M</option><option>KES 20–50M</option><option>KES 50M+</option></select>
+          <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Preferred financing: Asset finance</option><option>Project finance</option><option>Development finance</option><option>Investor equity</option><option>Not sure</option></select>
+          <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Timeline: 0–6 months</option><option>6–12 months</option><option>12+ months</option></select>
+          <textarea placeholder="Experience, factory location, questions" rows="4" style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px;resize:vertical"></textarea>
+          <button type="submit" style="grid-column:span 2;background:#F26A1B;color:#0E0D0C;border:0;padding:20px;font-weight:750;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#FF8A45">Submit enquiry →</button>
+        </form>
+      </sc-if>
+      <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #F26A1B;padding:32px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F26A1B;letter-spacing:0.1em">ENQUIRY RECEIVED · {{ leadRef }}</div>
+          <div style="font-weight:800;font-stretch:80%;font-size:34px;text-transform:uppercase;margin-top:10px">Thank you. Here's what happens next.</div>
+          <div style="display:flex;flex-direction:column;margin-top:20px">
+            <sc-for list="{{ workflow }}" as="w" hint-placeholder-count="5"><div style="display:flex;gap:14px;padding:12px 0;border-top:1px solid #26231F;font-size:15px"><span style="color:#F26A1B;font-family:'IBM Plex Mono',monospace">✓</span><span>{{ w }}</span></div></sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ isBuild }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1100px;margin:0 auto;padding:56px 28px 88px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/BUILD-MY-FACTORY</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Build my factory</h1>
+  <sc-if value="{{ wizActive }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:40px">
+      <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#B8B2A9"><span>STEP {{ wiz.stepNum }} / 10</span><span>{{ wiz.section }}</span></div>
+      <div style="height:3px;background:#26231F;margin-top:12px"><div style="height:3px;width:{{ wiz.pct }};background:#F26A1B;transition:width .3s"></div></div>
+      <h2 style="margin:40px 0 0;font-weight:800;font-stretch:78%;font-size:clamp(36px,4.4vw,60px);line-height:0.95;text-transform:uppercase">{{ wiz.q }}</h2>
+      <p style="margin:14px 0 0;font-size:16px;color:#B8B2A9;max-width:620px;line-height:1.5">{{ wiz.hint }}</p>
+      <sc-if value="{{ wiz.isText }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ wiz.text }}" onChange="{{ wiz.setText }}" placeholder="e.g. animal feed, fruit purée, cartons" style="margin-top:28px;width:100%;padding:20px;background:#151412;border:1px solid #3A3631;color:#F4F2EE;font-size:22px">
+      </sc-if>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:20px">
+        <sc-for list="{{ wiz.options }}" as="op" hint-placeholder-count="4">
+          <button onClick="{{ op.pick }}" style="padding:22px 18px;text-align:left;border:1px solid {{ op.border }};background:{{ op.bg }};color:{{ op.fg }};font-size:17px;font-weight:650;cursor:pointer">{{ op.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:24px;border-top:1px solid #26231F">
+        <button onClick="{{ wiz.back }}" style="background:transparent;color:#B8B2A9;border:1px solid #3A3631;padding:16px 22px;font-weight:600;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;opacity:{{ wiz.backOpacity }}">← Back</button>
+        <button onClick="{{ wiz.next }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:16px 26px;font-weight:750;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;opacity:{{ wiz.nextOpacity }}">{{ wiz.nextLabel }}</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ wizDone }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:40px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">OUTPUT · PRELIMINARY · {{ path.demo }}</div>
+      <h2 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(40px,5vw,72px);line-height:0.9;text-transform:uppercase">Your preliminary manufacturing path</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:24px">
+        <sc-for list="{{ path.answers }}" as="a" hint-placeholder-count="10"><span onClick="{{ a.edit }}" style="font-size:12px;padding:7px 10px;border:1px solid #3A3631;color:#C9C3BA;cursor:pointer" style-hover="border-color:#F26A1B"><span style="font-family:'IBM Plex Mono',monospace;color:#8F897F;margin-right:6px">{{ a.k }}</span>{{ a.v }}</span></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:32px">
+        <div style="background:#0E0D0C;padding:22px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">LIKELY CAPEX RANGE</div><div style="font-size:26px;font-weight:800;margin-top:6px;color:#F26A1B">{{ path.capex }}</div></div>
+        <div style="background:#0E0D0C;padding:22px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">PROJECT BUDGET (EQUITY + DEBT)</div><div style="font-size:26px;font-weight:800;margin-top:6px">{{ path.budget }}</div></div>
+        <div style="background:#0E0D0C;padding:22px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">PRELIMINARY PLANT SIZE</div><div style="font-size:18px;font-weight:700;margin-top:6px">{{ path.size }}</div></div>
+        <div style="background:#0E0D0C;padding:22px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">FACTORY FOOTPRINT</div><div style="font-size:18px;font-weight:700;margin-top:6px">{{ path.area }}</div></div>
+      </div>
+      <sc-if value="{{ path.warn }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:12px;padding:14px 16px;border:1px solid #F2C14E;color:#F2C14E;font-size:14px">{{ path.warnText }}</div>
+      </sc-if>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-top:48px">POSSIBLE OPPORTUNITY CATEGORIES</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:16px">
+        <sc-for list="{{ path.matches }}" as="o" hint-placeholder-count="3">
+          <article onClick="{{ o.open }}" style="background:#0E0D0C;padding:24px;cursor:pointer;display:flex;flex-direction:column;gap:12px" style-hover="background:#151412">
+            <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em"><span style="color:#B8B2A9">{{ o.sector }}</span><span style="color:{{ o.fitColor }}">{{ o.fit }}</span></div>
+            <div style="font-weight:800;font-stretch:80%;font-size:24px;line-height:1;text-transform:uppercase">{{ o.name }}</div>
+            <div style="font-size:14px;color:#B8B2A9">{{ o.costFmt }} · equity from {{ o.equityFmt }}</div>
+            <div style="font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em">VIEW OPPORTUNITY →</div>
+          </article>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px;margin-top:48px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">EQUIPMENT REQUIREMENTS</div>
+          <div style="margin-top:12px"><sc-for list="{{ path.equip }}" as="e" hint-placeholder-count="5"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:15px;color:#C9C3BA">{{ e }}</div></sc-for></div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">REQUIRED RESEARCH</div>
+          <div style="margin-top:12px"><sc-for list="{{ path.research }}" as="r" hint-placeholder-count="5"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:15px;color:#C9C3BA">{{ r }}</div></sc-for></div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">NEXT STEPS</div>
+          <div style="margin-top:12px"><sc-for list="{{ path.next }}" as="n" hint-placeholder-count="4"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:15px;display:flex;gap:12px"><span style="font-family:'IBM Plex Mono',monospace;color:#F26A1B">{{ n.n }}</span><span style="color:#C9C3BA">{{ n.t }}</span></div></sc-for></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:44px;padding-top:28px;border-top:1px solid #26231F">
+        <sc-if value="{{ path.notSent }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ path.send }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:18px 24px;font-weight:750;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Send to a FirmPlant analyst →</button>
+        </sc-if>
+        <sc-if value="{{ path.sent }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px solid #F26A1B;padding:16px 20px;font-size:14px"><span style="font-family:'IBM Plex Mono',monospace;color:#F26A1B">{{ path.ref }}</span> · Lead created. An analyst will contact you to scope the research.</div>
+        </sc-if>
+        <button onClick="{{ path.restart }}" style="background:transparent;color:#B8B2A9;border:1px solid #3A3631;padding:18px 22px;font-weight:600;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Start again</button>
+      </div>
+      <p style="margin:24px 0 0;font-size:12px;color:#8F897F;line-height:1.5;max-width:760px">This is a preliminary, indicative path, not a feasibility study. Ranges come from DEMO reference plants and must be confirmed through market research, engineering and supplier quotations. No financing or returns are implied.</p>
+    </div>
+  </sc-if>
+</main>
+</sc-if>
+
+<sc-if value="{{ isEquip }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/EQUIPMENT</div>
+  <div style="display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap">
+    <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Industrial equipment</h1>
+    <span onClick="{{ goSupRegister }}" style="cursor:pointer;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;font-size:13px;color:#F26A1B">List your equipment →</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:32px;padding:24px 0;border-top:1px solid #26231F;border-bottom:1px solid #26231F">
+    <sc-for list="{{ eqCats }}" as="c" hint-placeholder-count="12">
+      <button onClick="{{ c.pick }}" style="padding:9px 14px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:600;cursor:pointer">{{ c.label }}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:24px 0;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#B8B2A9"><span>{{ eqCount }}</span><span>Listings and prices are DEMO data</span></div>
+  <sc-if value="{{ eqEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed #3A3631;padding:48px;text-align:center;color:#B8B2A9">No verified listings in this category yet. <span onClick="{{ eqClear }}" style="color:#F26A1B;cursor:pointer">Show all equipment</span></div>
+  </sc-if>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:1px;background:#26231F;border:1px solid #26231F">
+    <sc-for list="{{ equipment }}" as="e" hint-placeholder-count="6">
+      <article style="background:#0E0D0C;display:flex;flex-direction:column">
+        <div style="aspect-ratio:16/8;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);border-bottom:1px solid #26231F;display:flex;align-items:center;justify-content:center;position:relative">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A847B;letter-spacing:0.08em">[ PRODUCT PHOTO ]</span>
+          <span style="position:absolute;top:12px;left:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;padding:5px 8px;background:{{ e.vBg }};color:{{ e.vFg }}">{{ e.verif }}</span>
+          <span style="position:absolute;top:12px;right:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#F26A1B">{{ e.demo }}</span>
+        </div>
+        <div style="padding:24px;display:flex;flex-direction:column;gap:16px;flex:1">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#B8B2A9">{{ e.cat }} · {{ e.maker }}</div>
+            <h3 style="margin:8px 0 0;font-weight:800;font-stretch:80%;font-size:26px;line-height:1;text-transform:uppercase">{{ e.name }}</h3>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8F897F;margin-top:6px">MODEL {{ e.model }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 16px">
+            <sc-for list="{{ e.specs }}" as="sp" hint-placeholder-count="9"><div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#8F897F">{{ sp.l }}</div><div style="font-size:13px;margin-top:3px;color:#E4DFD7">{{ sp.v }}</div></div></sc-for>
+          </div>
+          <div style="font-size:13px;color:#B8B2A9;line-height:1.45">Supplier: {{ e.supplier }} · Install {{ e.install }} · Spares {{ e.spares }} · {{ e.cert }}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto;padding-top:16px;border-top:1px solid #26231F">
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#8F897F">INDICATIVE PRICE</div><div style="font-size:18px;font-weight:750;margin-top:3px">{{ e.priceFmt }}</div></div>
+            <button onClick="{{ e.quote }}" style="background:#F26A1B;color:#0E0D0C;border:0;padding:13px 18px;font-weight:750;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer" style-hover="background:#FF8A45">Request quote</button>
+          </div>
+        </div>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isSuppliers }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/SUPPLIERS</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Supplier directory</h1>
+  <p style="margin:20px 0 0;font-size:17px;color:#C9C3BA;max-width:620px;line-height:1.5">Every supplier moves through FirmPlant's verification workflow. Status is assigned by FirmPlant reviewers — never by the supplier.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:32px">
+    <sc-for list="{{ supStages }}" as="st" hint-placeholder-count="6">
+      <button onClick="{{ st.pick }}" style="background:{{ st.bg }};color:{{ st.fg }};border:0;padding:18px 16px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.8">{{ st.n }} · {{ st.count }}</span>
+        <span style="font-weight:750;font-size:15px">{{ st.t }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:24px 0;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#B8B2A9"><span>{{ supCount }}</span><span onClick="{{ supClear }}" style="cursor:pointer;color:#F26A1B">{{ supClearLabel }}</span></div>
+  <div style="border:1px solid #26231F;overflow-x:auto">
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1fr 1.4fr;min-width:900px;padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F;border-bottom:1px solid #26231F"><span>SUPPLIER</span><span>COUNTRY</span><span>CAPABILITIES</span><span>YEARS</span><span>SERVICE</span><span>STATUS</span></div>
+    <sc-for list="{{ suppliers }}" as="sp" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1fr 1.4fr;min-width:900px;padding:18px 20px;border-bottom:1px solid #1E1C1A;align-items:center;font-size:14px">
+        <div><div style="font-weight:700;font-size:16px">{{ sp.name }}</div><div style="font-size:12px;color:#8F897F;margin-top:3px">{{ sp.installed }} installed · {{ sp.demo }}</div></div>
+        <span style="color:#C9C3BA">{{ sp.country }}</span>
+        <span style="color:#C9C3BA">{{ sp.cats }}</span>
+        <span style="color:#C9C3BA">{{ sp.years }}</span>
+        <span style="color:#C9C3BA">{{ sp.service }}</span>
+        <span style="justify-self:start;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;padding:6px 9px;background:{{ sp.bg }};color:{{ sp.fg }};border:1px solid {{ sp.border }}">{{ sp.status }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div id="register" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:48px;margin-top:80px;padding-top:56px;border-top:1px solid #26231F">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">SUPPLIER PORTAL</div>
+      <h2 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(40px,5vw,72px);line-height:0.9;text-transform:uppercase">Sell industrial equipment</h2>
+      <p style="margin:20px 0 0;font-size:16px;color:#B8B2A9;line-height:1.5;max-width:440px">Register to receive RFQs from engineered factory projects. After registration you'll upload certifications, catalogues, references, warranty, spare-parts and service coverage for review.</p>
+      <div style="margin-top:24px"><sc-for list="{{ verifCriteria }}" as="v" hint-placeholder-count="8"><div style="padding:10px 0;border-top:1px solid #26231F;font-size:14px;color:#C9C3BA;display:flex;gap:12px"><span style="color:#F26A1B;font-family:'IBM Plex Mono',monospace">+</span>{{ v }}</div></sc-for></div>
+    </div>
+    <sc-if value="{{ regNotSent }}" hint-placeholder-val="{{ true }}">
+      <form onSubmit="{{ regSubmit }}" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start">
+        <input required placeholder="Company name" style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <input required placeholder="Contact person" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <input required type="email" placeholder="Email" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <input placeholder="Phone" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <input placeholder="Country" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Type: Manufacturer (OEM)</option><option>Distributor / agent</option><option>Fabricator</option><option>Service provider</option></select>
+        <select style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Years operating: &lt; 3</option><option>3–10</option><option>10–25</option><option>25+</option></select>
+        <input placeholder="Main equipment categories" style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+        <textarea rows="3" placeholder="Service coverage in East Africa, lead times, references" style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px;resize:vertical"></textarea>
+        <button type="submit" style="grid-column:span 2;background:#F26A1B;color:#0E0D0C;border:0;padding:20px;font-weight:750;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Register as supplier →</button>
+      </form>
+    </sc-if>
+    <sc-if value="{{ regSent }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid #F26A1B;padding:32px;align-self:start">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F26A1B;letter-spacing:0.1em">{{ regRef }} · STATUS: REGISTERED</div>
+        <div style="font-weight:800;font-stretch:80%;font-size:32px;text-transform:uppercase;margin-top:10px">Registration received.</div>
+        <p style="margin:12px 0 0;font-size:15px;color:#B8B2A9;line-height:1.5">Next: submit documentation through the supplier portal. A FirmPlant reviewer moves your record through Under Review, Verified and beyond — suppliers can't set their own status.</p>
+      </div>
+    </sc-if>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_industries }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/INDUSTRIES</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Industries</h1>
+  <p style="margin:20px 0 40px;font-size:17px;color:#C9C3BA;max-width:620px;line-height:1.5">Opportunities, equipment, resources and research organised by sector.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:1px;background:#26231F;border:1px solid #26231F">
+    <sc-for list="{{ indCards }}" as="i" hint-placeholder-count="15">
+      <article onClick="{{ i.open }}" style="background:#0E0D0C;padding:28px;cursor:pointer;display:flex;flex-direction:column;gap:14px;min-height:220px" style-hover="background:#151412">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:{{ i.countColor }}">{{ i.count }}</div>
+        <h3 style="margin:0;font-weight:850;font-stretch:75%;font-size:40px;line-height:0.95;text-transform:uppercase">{{ i.label }}</h3>
+        <p style="margin:0;font-size:15px;color:#B8B2A9;line-height:1.5">{{ i.desc }}</p>
+        <span style="margin-top:auto;font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em">EXPLORE →</span>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_industry }}" hint-placeholder-val="{{ false }}">
+<main>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:40px 28px 56px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8F897F"><span onClick="{{ goIndustries }}" style="cursor:pointer;color:#B8B2A9">← /industries</span> /{{ ind.key }}</div>
+      <h1 style="margin:24px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(56px,8vw,128px);line-height:0.86;text-transform:uppercase">{{ ind.label }}</h1>
+      <p style="margin:20px 0 0;font-size:19px;color:#C9C3BA;max-width:640px;line-height:1.5">{{ ind.desc }}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:36px">
+        <sc-for list="{{ ind.stats }}" as="k" hint-placeholder-count="4"><div style="background:#0E0D0C;padding:20px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">{{ k.l }}</div><div style="font-size:28px;font-weight:800;margin-top:6px">{{ k.v }}</div></div></sc-for>
+      </div>
+    </div>
+  </section>
+  <section style="max-width:1360px;margin:0 auto;padding:56px 28px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-bottom:20px">OPPORTUNITIES</div>
+    <sc-if value="{{ ind.noOpps }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px dashed #3A3631;padding:40px;color:#B8B2A9;font-size:15px">No published opportunity in this sector yet — candidates are in research. <span onClick="{{ goAboutContact }}" style="color:#F26A1B;cursor:pointer">Tell us what you'd like to manufacture</span>.</div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:1px;background:#26231F">
+      <sc-for list="{{ ind.opps }}" as="o" hint-placeholder-count="2">
+        <article onClick="{{ o.open }}" style="background:#0E0D0C;padding:24px;cursor:pointer;display:flex;flex-direction:column;gap:12px;border:1px solid #26231F" style-hover="background:#151412">
+          <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B8B2A9"><span>{{ o.location }}</span><span style="color:#F26A1B">{{ o.demo }}</span></div>
+          <div style="font-weight:800;font-stretch:80%;font-size:26px;line-height:1;text-transform:uppercase">{{ o.name }}</div>
+          <div style="font-size:14px;color:#B8B2A9">{{ o.costFmt }} · equity from {{ o.equityFmt }}</div>
+        </article>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:48px;margin-top:56px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">EQUIPMENT</div>
+        <div style="margin-top:12px"><sc-for list="{{ ind.equip }}" as="e" hint-placeholder-count="3"><div onClick="{{ goEquip }}" style="padding:14px 0;border-top:1px solid #26231F;display:flex;justify-content:space-between;gap:12px;cursor:pointer"><div><div style="font-weight:700">{{ e.name }}</div><div style="font-size:12px;color:#8F897F;margin-top:3px">{{ e.meta }}</div></div><span style="font-size:13px;color:#C9C3BA;white-space:nowrap">{{ e.price }}</span></div></sc-for></div>
+        <span onClick="{{ goEquip }}" style="display:inline-block;margin-top:12px;font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em;cursor:pointer">ALL EQUIPMENT →</span>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">RESOURCES</div>
+        <div style="margin-top:12px"><sc-for list="{{ ind.res }}" as="r" hint-placeholder-count="2"><div onClick="{{ r.open }}" style="padding:14px 0;border-top:1px solid #26231F;cursor:pointer"><div style="font-weight:700">{{ r.m }}</div><div style="font-size:12px;color:#8F897F;margin-top:3px">{{ r.loc }}</div></div></sc-for></div>
+        <span onClick="{{ goResources }}" style="display:inline-block;margin-top:12px;font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em;cursor:pointer">RESOURCE DATABASE →</span>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">RESEARCH</div>
+        <div style="margin-top:12px"><sc-for list="{{ ind.arts }}" as="a" hint-placeholder-count="1"><div onClick="{{ a.open }}" style="padding:14px 0;border-top:1px solid #26231F;cursor:pointer"><div style="font-weight:700">{{ a.title }}</div><div style="font-size:12px;color:#8F897F;margin-top:3px">{{ a.cat }} · {{ a.read }}</div></div></sc-for></div>
+        <span onClick="{{ goResearch }}" style="display:inline-block;margin-top:12px;font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em;cursor:pointer">ALL RESEARCH →</span>
+      </div>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_resources }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/RESOURCES</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Raw material intelligence</h1>
+  <p style="margin:20px 0 40px;font-size:17px;color:#C9C3BA;max-width:640px;line-height:1.5">East African materials mapped from raw input to specialty product — the basis of every resource-advantage opportunity.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:40px;align-items:start">
+    <div style="border-top:1px solid #26231F">
+      <sc-for list="{{ resList }}" as="x" hint-placeholder-count="8">
+        <div onClick="{{ x.pick }}" style="display:grid;grid-template-columns:3px 1fr auto;gap:16px;padding:18px 16px 18px 0;border-bottom:1px solid #26231F;cursor:pointer;background:{{ x.bg }}" style-hover="background:#151412">
+          <div style="background:{{ x.bar }}"></div>
+          <div><div style="font-weight:750;font-size:18px">{{ x.m }}</div><div style="font-size:13px;color:#8F897F;margin-top:3px">{{ x.loc }}</div></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B8B2A9;align-self:center">{{ x.cat }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="grid-column:span 2;min-width:0;position:sticky;top:88px">
+      <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#F26A1B"><span>{{ res.cat }}</span><span>{{ res.demo }}</span></div>
+      <h2 style="margin:10px 0 0;font-weight:850;font-stretch:75%;font-size:56px;line-height:0.95;text-transform:uppercase">{{ res.m }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:24px">
+        <sc-for list="{{ res.fields }}" as="k" hint-placeholder-count="11"><div style="background:#0E0D0C;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">{{ k.l }}</div><div style="font-size:14px;margin-top:5px;color:#E4DFD7;line-height:1.4">{{ k.v }}</div></div></sc-for>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-top:36px">VALUE-ADDITION LADDER</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">
+        <sc-for list="{{ res.chain }}" as="c" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">{{ c.n }}</span><div style="width:{{ c.w }};padding:12px 14px;border:1px solid #3A3631;font-size:14px;font-weight:600" style-hover="border-color:#F26A1B">{{ c.t }}</div></div>
+        </sc-for>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-top:36px">POSSIBLE PRODUCTS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><sc-for list="{{ res.products }}" as="p" hint-placeholder-count="4"><span style="padding:9px 12px;border:1px solid #3A3631;font-size:14px">{{ p }}</span></sc-for></div>
+      <div style="display:flex;flex-direction:column;gap:1px;margin-top:28px">
+        <sc-for list="{{ res.opps }}" as="o" hint-placeholder-count="1">
+          <div onClick="{{ o.open }}" style="display:flex;justify-content:space-between;gap:12px;padding:16px 18px;background:#F4F2EE;color:#0E0D0C;cursor:pointer"><span style="font-weight:750">{{ o.name }}</span><span style="font-size:13px;color:#B5470A;font-weight:700">VIEW OPPORTUNITY →</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_how }}" hint-placeholder-val="{{ false }}">
+<main>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:56px 28px 64px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/HOW-IT-WORKS</div>
+      <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(52px,7vw,112px);line-height:0.86;text-transform:uppercase">Research before<br><span style="color:#F26A1B">equipment.</span></h1>
+      <p style="margin:24px 0 0;font-size:19px;color:#C9C3BA;max-width:640px;line-height:1.5">FirmPlant starts with the market, not the machine. Equipment is specified only once an opportunity has proven it can compete.</p>
+    </div>
+  </section>
+  <section style="max-width:1360px;margin:0 auto;padding:40px 28px">
+    <sc-for list="{{ howSteps }}" as="s" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px 48px;padding:32px 0;border-bottom:1px solid #26231F;align-items:baseline">
+        <div style="display:flex;gap:20px;align-items:baseline"><span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#F26A1B">{{ s.n }}</span><span style="font-weight:850;font-stretch:75%;font-size:48px;line-height:1;text-transform:uppercase">{{ s.t }}</span></div>
+        <p style="margin:0;font-size:17px;color:#C9C3BA;line-height:1.5">{{ s.d }}</p>
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">DELIVERABLE</div><div style="font-size:17px;font-weight:700;margin-top:4px">{{ s.out }}</div></div>
+      </div>
+    </sc-for>
+  </section>
+  <section style="background:#F4F2EE;color:#0E0D0C">
+    <div style="max-width:1360px;margin:0 auto;padding:72px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:56px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#B5470A">HARD STOPS</div>
+        <h2 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(40px,5vw,72px);line-height:0.9;text-transform:uppercase">No advantage =<br>no opportunity.</h2>
+        <p style="margin:20px 0 0;font-size:16px;color:#58534C;line-height:1.5;max-width:440px">Any one of these triggers a NO-GO. A rejected opportunity can't be published without human approval.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;align-content:start">
+        <sc-for list="{{ hardStops }}" as="h" hint-placeholder-count="9"><div style="padding:16px;background:#fff;border:1px solid #D6D1C8;font-size:15px;font-weight:600;display:flex;gap:10px"><span style="color:#B5470A;font-family:'IBM Plex Mono',monospace">✕</span>{{ h }}</div></sc-for>
+      </div>
+    </div>
+  </section>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:72px 28px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">PUBLICATION WORKFLOW</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:20px">
+        <sc-for list="{{ approval }}" as="a" hint-placeholder-count="6"><div style="display:flex;align-items:center;gap:8px"><span style="padding:14px 16px;border:1px solid #3A3631;font-weight:650;font-size:15px">{{ a }}</span><span style="color:#5A554E">→</span></div></sc-for>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-top:56px">OPPORTUNITY LIFECYCLE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:#26231F;border:1px solid #26231F;margin-top:20px">
+        <sc-for list="{{ pipeline }}" as="p" hint-placeholder-count="10"><div style="background:#0E0D0C;padding:18px 14px;font-size:14px;font-weight:650;min-height:72px">{{ p }}</div></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:48px;margin-top:64px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">TRUST ARCHITECTURE</div>
+          <div style="margin-top:12px"><sc-for list="{{ trust }}" as="t" hint-placeholder-count="7"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:16px;display:flex;gap:12px"><span style="color:#F26A1B">✓</span>{{ t }}</div></sc-for></div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">WHAT WE NEVER CLAIM</div>
+          <div style="margin-top:12px"><sc-for list="{{ never }}" as="t" hint-placeholder-count="5"><div style="padding:12px 0;border-top:1px solid #26231F;font-size:16px;color:#8F897F;text-decoration:line-through">{{ t }}</div></sc-for></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_research }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/RESEARCH</div>
+  <h1 style="margin:12px 0 40px;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Research &amp; intelligence</h1>
+  <article onClick="{{ leadArt.open }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;padding-bottom:40px;border-bottom:1px solid #26231F;cursor:pointer">
+    <div style="aspect-ratio:16/9;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);border:1px solid #2A2723;display:flex;align-items:center;justify-content:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A847B">[ FEATURE IMAGE ]</span></div>
+    <div style="display:flex;flex-direction:column;justify-content:center;gap:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#F26A1B">{{ leadArt.cat }} · {{ leadArt.date }} · {{ leadArt.demo }}</div>
+      <h2 style="margin:0;font-weight:850;font-stretch:75%;font-size:clamp(36px,4vw,56px);line-height:0.95;text-transform:uppercase">{{ leadArt.title }}</h2>
+      <p style="margin:0;font-size:17px;color:#C9C3BA;line-height:1.5">{{ leadArt.sum }}</p>
+      <span style="font-size:12px;color:#F26A1B;font-weight:700;letter-spacing:0.06em">READ · {{ leadArt.read }} →</span>
+    </div>
+  </article>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:40px 32px;margin-top:40px">
+    <sc-for list="{{ restArts }}" as="a" hint-placeholder-count="5">
+      <article onClick="{{ a.open }}" style="cursor:pointer;display:flex;flex-direction:column;gap:12px;padding-top:20px;border-top:1px solid #3A3631" style-hover="border-color:#F26A1B">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#F26A1B">{{ a.cat }} · {{ a.date }}</div>
+        <h3 style="margin:0;font-weight:800;font-stretch:80%;font-size:26px;line-height:1;text-transform:uppercase">{{ a.title }}</h3>
+        <p style="margin:0;font-size:15px;color:#B8B2A9;line-height:1.5">{{ a.sum }}</p>
+        <span style="font-size:12px;color:#8F897F;font-family:'IBM Plex Mono',monospace">{{ a.read }}</span>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_article }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:820px;margin:0 auto;padding:48px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8F897F"><span onClick="{{ goResearch }}" style="cursor:pointer;color:#B8B2A9">← /research</span> /{{ art.id }}</div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#F26A1B;margin-top:32px">{{ art.cat }} · {{ art.date }} · {{ art.read }} · {{ art.demo }}</div>
+  <h1 style="margin:14px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(44px,6vw,80px);line-height:0.9;text-transform:uppercase">{{ art.title }}</h1>
+  <p style="margin:24px 0 0;font-size:21px;color:#E4DFD7;line-height:1.5">{{ art.sum }}</p>
+  <div style="display:flex;flex-direction:column;gap:20px;margin-top:36px;padding-top:36px;border-top:1px solid #26231F">
+    <sc-for list="{{ art.body }}" as="p" hint-placeholder-count="3"><p style="margin:0;font-size:18px;color:#C9C3BA;line-height:1.7;text-wrap:pretty">{{ p }}</p></sc-for>
+  </div>
+  <sc-if value="{{ art.hasOpp }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ art.opp.open }}" style="margin-top:40px;padding:24px;background:#F4F2EE;color:#0E0D0C;cursor:pointer;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B5470A;letter-spacing:0.1em">RELATED OPPORTUNITY</div><div style="font-weight:800;font-stretch:80%;font-size:26px;text-transform:uppercase;margin-top:4px">{{ art.opp.name }}</div></div>
+      <span style="font-weight:700;font-size:13px;letter-spacing:0.06em;color:#B5470A">VIEW →</span>
+    </div>
+  </sc-if>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B;margin-top:56px">MORE RESEARCH</div>
+  <div style="margin-top:12px"><sc-for list="{{ art.more }}" as="a" hint-placeholder-count="3"><div onClick="{{ a.open }}" style="padding:16px 0;border-top:1px solid #26231F;cursor:pointer;display:flex;justify-content:space-between;gap:16px"><span style="font-weight:700;font-size:17px">{{ a.title }}</span><span style="font-size:12px;color:#8F897F;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ a.cat }}</span></div></sc-for></div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_projects }}" hint-placeholder-val="{{ false }}">
+<main style="max-width:1360px;margin:0 auto;padding:56px 28px 80px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/PROJECTS</div>
+  <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6vw,88px);line-height:0.9;text-transform:uppercase">Projects</h1>
+  <p style="margin:20px 0 40px;font-size:17px;color:#C9C3BA;max-width:620px;line-height:1.5">Active and completed factory projects. Only verified information is published.</p>
+  <div style="display:flex;flex-direction:column;gap:1px;background:#26231F;border:1px solid #26231F">
+    <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+      <article style="background:#0E0D0C;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))">
+        <div style="min-height:300px;background:repeating-linear-gradient(135deg,#181715 0 10px,#1E1C1A 10px 20px);display:flex;align-items:center;justify-content:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A847B">[ PROJECT PHOTO ]</span></div>
+        <div style="padding:32px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em"><span style="color:{{ p.statusColor }}">● {{ p.status }}</span><span style="color:#F26A1B">{{ p.demo }}</span></div>
+          <div><h3 style="margin:0;font-weight:850;font-stretch:75%;font-size:40px;line-height:0.95;text-transform:uppercase">{{ p.name }}</h3><div style="font-size:14px;color:#8F897F;margin-top:6px">{{ p.loc }}</div></div>
+          <p style="margin:0;font-size:16px;color:#C9C3BA;line-height:1.5"><span style="color:#F26A1B">Problem:</span> {{ p.problem }}</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px 20px">
+            <sc-for list="{{ p.facts }}" as="k" hint-placeholder-count="6"><div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#8F897F">{{ k.l }}</div><div style="font-size:13px;margin-top:3px;color:#E4DFD7;line-height:1.4">{{ k.v }}</div></div></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
+            <sc-for list="{{ p.tlItems }}" as="t" hint-placeholder-count="5"><div><div style="height:4px;background:{{ t.bg }}"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:6px;color:{{ t.fg }}">{{ t.t }}</div></div></sc-for>
+          </div>
+          <div style="padding-top:14px;border-top:1px solid #26231F;font-size:15px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F;margin-right:10px">OUTCOME</span>{{ p.outcome }}</div>
+        </div>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ is_about }}" hint-placeholder-val="{{ false }}">
+<main>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:56px 28px 72px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">/ABOUT</div>
+      <h1 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(48px,6.5vw,104px);line-height:0.88;text-transform:uppercase;max-width:1100px">FirmPlant identifies, engineers and enables competitive manufacturing.</h1>
+      <p style="margin:28px 0 0;font-size:19px;color:#C9C3BA;max-width:700px;line-height:1.55">We are not an equipment seller. We discover what should be manufactured, prove why it can compete, design the factory, source the equipment, connect the project to financing pathways and support the asset for life. The equipment sale is the consequence of the intelligence.</p>
+    </div>
+  </section>
+  <section style="border-bottom:1px solid #26231F">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:48px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">DOCTRINE</div>
+        <div style="font-weight:850;font-stretch:72%;font-size:clamp(36px,4vw,60px);line-height:0.95;text-transform:uppercase;margin-top:16px">Research before equipment.</div>
+        <div style="font-weight:850;font-stretch:72%;font-size:clamp(36px,4vw,60px);line-height:0.95;text-transform:uppercase;margin-top:12px;color:#F26A1B">No advantage = no opportunity.</div>
+        <div style="font-weight:850;font-stretch:72%;font-size:clamp(36px,4vw,60px);line-height:0.95;text-transform:uppercase;margin-top:12px">Build global factories.</div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">COUNTRIES</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#26231F;border:1px solid #26231F;margin-top:16px">
+          <sc-for list="{{ countries }}" as="c" hint-placeholder-count="8"><div style="background:#0E0D0C;padding:16px 18px"><div style="font-weight:700;font-size:17px">{{ c.c }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8F897F;margin-top:3px">{{ c.s }}</div></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="contactform">
+    <div style="max-width:1360px;margin:0 auto;padding:72px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:48px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:#F26A1B">CONTACT</div>
+        <h2 style="margin:12px 0 0;font-weight:850;font-stretch:72%;font-size:clamp(44px,5vw,80px);line-height:0.9;text-transform:uppercase">Talk to an analyst</h2>
+        <div style="display:flex;flex-direction:column;margin-top:28px">
+          <div style="padding:14px 0;border-top:1px solid #26231F"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">OFFICE</div><div style="margin-top:4px">Nairobi, Kenya — address TBC</div></div>
+          <div style="padding:14px 0;border-top:1px solid #26231F"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">EMAIL</div><div style="margin-top:4px">hello@firmplant.com (placeholder)</div></div>
+          <div style="padding:14px 0;border-top:1px solid #26231F;border-bottom:1px solid #26231F"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#8F897F">PHONE / WHATSAPP</div><div style="margin-top:4px">+254 — TBC</div></div>
+        </div>
+      </div>
+      <sc-if value="{{ contactNotSent }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ contactSubmit }}" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start">
+          <input required placeholder="Name" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input placeholder="Company" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input required type="email" placeholder="Email" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input placeholder="Phone" style="padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <select style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>I'm interested in: Manufacturing opportunities</option><option>Building a factory</option><option>Buying equipment</option><option>Supplying equipment</option><option>Financing projects</option><option>Research partnership</option></select>
+          <textarea required rows="5" placeholder="How can we help?" style="grid-column:span 2;padding:15px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px;resize:vertical"></textarea>
+          <button type="submit" style="grid-column:span 2;background:#F26A1B;color:#0E0D0C;border:0;padding:20px;font-weight:750;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Send message →</button>
+        </form>
+      </sc-if>
+      <sc-if value="{{ contactSent }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #F26A1B;padding:32px;align-self:start"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F26A1B">{{ contactRef }} · RECEIVED</div><div style="font-weight:800;font-stretch:80%;font-size:30px;text-transform:uppercase;margin-top:10px">Thanks — we'll be in touch.</div></div>
+      </sc-if>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ rfqOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ rfqClose }}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div onClick="{{ stop }}" style="background:#0E0D0C;border:1px solid #3A3631;width:min(100%,640px);max-height:90vh;overflow:auto;padding:32px">
+      <div style="display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#F26A1B"><span>REQUEST QUOTE</span><span onClick="{{ rfqClose }}" style="cursor:pointer;color:#B8B2A9">CLOSE ✕</span></div>
+      <div style="font-weight:800;font-stretch:80%;font-size:32px;text-transform:uppercase;margin-top:10px;line-height:1">{{ rfq.name }}</div>
+      <div style="font-size:13px;color:#8F897F;margin-top:6px">{{ rfq.maker }} · {{ rfq.model }} · {{ rfq.priceFmt }}</div>
+      <sc-if value="{{ rfqNotSent }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ rfqSubmit }}" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px">
+          <input required placeholder="Name" style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input placeholder="Company" style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input required type="email" placeholder="Email" style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input placeholder="Phone" style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <input type="number" min="1" value="1" placeholder="Quantity" style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px">
+          <select style="padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px"><option>Delivery: Kenya</option><option>Uganda</option><option>Tanzania</option><option>Rwanda</option><option>Ethiopia</option></select>
+          <textarea rows="3" placeholder="Application, required capacity, installation needs" style="grid-column:span 2;padding:14px;background:#151412;border:1px solid #2A2723;color:#F4F2EE;font-size:15px;resize:vertical"></textarea>
+          <div style="grid-column:span 2;font-size:12px;color:#8F897F;line-height:1.5">Your RFQ includes technical spec, warranty, spare parts, installation, training, FAT and commissioning requirements.</div>
+          <button type="submit" style="grid-column:span 2;background:#F26A1B;color:#0E0D0C;border:0;padding:18px;font-weight:750;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Send RFQ →</button>
+        </form>
+      </sc-if>
+      <sc-if value="{{ rfqSent }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:24px;border:1px solid #F26A1B;padding:24px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F26A1B">{{ rfqRef }} · RFQ SENT</div>
+          <p style="margin:10px 0 0;font-size:15px;color:#C9C3BA;line-height:1.5">Sent to {{ rfq.supplier }}. A FirmPlant procurement manager will review responses and follow up.</p>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<section id="contact" style="background:#F26A1B;color:#0E0D0C">
+  <div style="max-width:1360px;margin:0 auto;padding:88px 28px;display:flex;justify-content:space-between;align-items:end;gap:32px;flex-wrap:wrap">
+    <h2 style="margin:0;font-weight:850;font-stretch:72%;font-size:clamp(52px,7vw,112px);line-height:0.86;text-transform:uppercase;max-width:900px">Find your manufacturing opportunity</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button onClick="{{ goList }}" style="background:#0E0D0C;color:#F4F2EE;border:0;padding:20px 26px;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Explore opportunities</button>
+      <button onClick="{{ goAboutContact }}" style="background:transparent;color:#0E0D0C;border:1px solid #0E0D0C;padding:20px 26px;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Talk to an analyst</button>
+    </div>
+  </div>
+</section>
+<footer style="max-width:1360px;margin:0 auto;padding:40px 28px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:13px;color:#8F897F">
+  <div style="display:flex;align-items:center;gap:10px"><div style="width:12px;height:12px;background:#F26A1B"></div><span style="font-weight:800;font-stretch:80%;color:#F4F2EE;letter-spacing:0.04em">FIRMPLANT</span><span>Turning market gaps and resource advantages into globally competitive factories.</span></div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap"><span onClick="{{ goAbout }}" style="cursor:pointer">About</span><span onClick="{{ goAboutContact }}" style="cursor:pointer">Contact</span><span onClick="{{ goProjects }}" style="cursor:pointer">Projects</span><span onClick="{{ goSuppliers }}" style="cursor:pointer">Suppliers</span></div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em">NO GUARANTEED RETURNS, FINANCING OR MARKETS. ALL SAMPLE DATA MARKED DEMO.</div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;currency&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;KES&quot;,&quot;USD&quot;],&quot;default&quot;:&quot;KES&quot;,&quot;tsType&quot;:&quot;'KES'|'USD'&quot;},&quot;showDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const USD = 129;
+const OPPS = [
+ {id:'feed',slug:'animal-feed-plant-5tph',name:'5 TPH Animal Feed Plant',sector:'Agriculture',location:'Nakuru, KE',capacity:'5 tonnes/hour',cost:85,eq:30,area:'2,400 m²',market:'Kenya + East Africa',type:'Import Gap / Resource Advantage',status:'Commercial',verification:'Engineering reviewed',hs:'2309.90',imp:[38,41,47,52,58],origins:'Egypt, India, South Africa',unit:'Per tonne, KES \'000',price:62,local:51,m:0.17,
+  summary:'Pelleted poultry, dairy and pig feed for the Rift Valley and western Kenya, built on local maize, soya and sunflower cake.',
+  adv:['Premixes and finished feed imported while maize bran and oilseed cake are produced within 150 km.','Pellet mill with conditioning delivers feed conversion comparable to imported brands.','Regional demand from Uganda and Tanzania poultry expansion.'],
+  raw:[{m:'Maize & maize bran',src:'Rift Valley, Trans Nzoia',season:'Harvest Aug–Dec; storage required'},{m:'Sunflower & soya cake',src:'Western Kenya, Uganda',season:'Year-round, price varies ±20%'}],
+  steps:['Intake','Cleaning','Grinding','Batching','Mixing','Pelleting','Cooling','Bagging','Dispatch'],equip:['Hammer mill 7.5 t/h','Batch mixer 2 t','Pellet mill 5 t/h with conditioner','Counterflow cooler','Automatic bagging line']},
+ {id:'pulp',slug:'fruit-pulp-line-2tph',name:'2 TPH Fruit Pulp & Purée Line',sector:'Food Processing',location:'Makueni, KE',capacity:'2 tonnes/hour',cost:32,eq:30,area:'900 m²',market:'Kenya + Middle East export',type:'Resource Advantage / Export',status:'Finance Ready',verification:'Finance-ready pack',hs:'2008.99',imp:[9,11,12,14,16],origins:'India, South Africa, Egypt',unit:'Per tonne purée, KES \'000',price:118,local:92,m:0.2,
+  summary:'Aseptic mango and passion purée for juice makers and export, cutting post-harvest losses in Eastern Kenya.',
+  adv:['Mango post-harvest losses estimated at a large share of seasonal output in producing counties.','Local juice processors import aseptic purée at a freight premium.','Aseptic packaging opens Gulf export channels.'],
+  raw:[{m:'Mango (Apple, Ngowe)',src:'Makueni, Machakos, Kilifi',season:'Two seasons: Nov–Feb, Jun–Jul'},{m:'Passion fruit',src:'Uasin Gishu, Embu',season:'Year-round with peaks'}],
+  steps:['Receiving','Washing','Sorting','Destoning','Refining','Concentration','Sterilisation','Aseptic fill'],equip:['Fruit washer & sorting table','Destoner / pulper 2 t/h','Tubular sterilizer','Aseptic bag-in-drum filler','CIP system']},
+ {id:'maize',slug:'maize-flour-mill-2tph',name:'2 TPH Maize Flour Mill',sector:'Food Processing',location:'Eldoret, KE',capacity:'2 tonnes/hour',cost:9.5,eq:25,area:'600 m²',market:'Kenya',type:'Resource Advantage',status:'Commercial',verification:'Research validated',hs:'1102.20',imp:[6,5,8,7,9],origins:'Uganda, Tanzania, Zambia',unit:'Per 2 kg pack, KES',price:190,local:168,m:0.14,
+  summary:'Fortified sifted and whole-maize flour close to the grain belt, with bran sold as feed input.',
+  adv:['Located at the grain source, cutting transport on raw maize.','Bran by-product feeds local feed mills.','Fortification premix enables compliance for institutional tenders.'],
+  raw:[{m:'White maize',src:'Uasin Gishu, Trans Nzoia',season:'Harvest Oct–Jan'},{m:'Fortification premix',src:'Imported (regional distributors)',season:'Year-round'}],
+  steps:['Intake','Cleaning','Conditioning','Degerming','Milling','Sifting','Fortification','Packing'],equip:['Pre-cleaner & destoner','Degerminator','Roller mills (4)','Plansifter','Auto packer 1–2 kg']},
+ {id:'honey',slug:'honey-processing-plant',name:'Honey Processing & Packing',sector:'Food Processing',location:'Baringo, KE',capacity:'500 kg/day',cost:6,eq:30,area:'250 m²',market:'Kenya + East Africa',type:'Resource Advantage',status:'Modelling',verification:'Research validated',hs:'0409.00',imp:[3,3,4,4,5],origins:'China, Tanzania, UAE',unit:'Per kg, KES',price:780,local:610,m:0.22,
+  summary:'Filtered, moisture-controlled table honey and wax recovery for retail and hospitality.',
+  adv:['Arid and semi-arid counties produce honey with little formal processing.','Retail shelves carry imported blended honey.','Wax by-product sold to cosmetics makers.'],
+  raw:[{m:'Raw honey',src:'Baringo, Kitui, West Pokot',season:'Two flows per year'},{m:'Glass & PET jars',src:'Nairobi packaging suppliers',season:'Year-round'}],
+  steps:['Receiving','Decapping','Extraction','Warming','Filtration','Moisture control','Filling','Labelling'],equip:['Uncapping & extractor','Heated settling tanks','Honey dehumidifier','Piston filler','Labeller']},
+ {id:'preform',slug:'pet-preform-injection',name:'PET Preform Injection Plant',sector:'Plastics',location:'Athi River, KE',capacity:'45M preforms/yr',cost:48,eq:35,area:'1,200 m²',market:'Kenya + Uganda',type:'Import Gap / Industrial Input',status:'Commercial',verification:'Engineering reviewed',hs:'3923.30',imp:[22,24,27,29,33],origins:'China, UAE, India',unit:'Per \'000 preforms, KES',price:2900,local:2450,m:0.18,
+  summary:'Preforms for bottled water and beverage producers who currently import or depend on a few regional suppliers.',
+  adv:['Preforms are bulky and freight-heavy relative to value.','Faster delivery and custom neck finishes for mid-size bottlers.','Resin import route already established via Mombasa.'],
+  raw:[{m:'PET resin',src:'Imported (Mombasa)',season:'Year-round, oil-price linked'},{m:'Masterbatch',src:'Nairobi distributors',season:'Year-round'}],
+  steps:['Resin drying','Injection','Cooling','Inspection','Boxing','Storage'],equip:['Injection machine 350 t with 48-cavity mould','Resin dryer','Chiller','Vision inspection','Compressor 40 bar']},
+ {id:'carton',slug:'corrugated-carton-plant',name:'Corrugated Carton Plant',sector:'Packaging',location:'Thika, KE',capacity:'12,000 t/yr',cost:140,eq:30,area:'5,500 m²',market:'Kenya + East Africa',type:'Industrial Input / MRO',status:'Finance Ready',verification:'Finance-ready pack',hs:'4819.10',imp:[31,34,36,41,44],origins:'China, Egypt, India',unit:'Per tonne, KES \'000',price:165,local:138,m:0.19,
+  summary:'Printed corrugated boxes for horticulture, FMCG and e-commerce, close to the export flower and fruit belt.',
+  adv:['Horticulture exporters need reliable, short-lead-time cartons.','Custom sizes and print runs difficult to import economically.','Recycled fibre available from Nairobi collection.'],
+  raw:[{m:'Kraft liner & fluting',src:'Imported + regional mills',season:'Year-round'},{m:'Recovered paper (OCC)',src:'Nairobi metro collection',season:'Year-round'}],
+  steps:['Reel stand','Corrugation','Board cutting','Printing','Die-cutting','Folding & gluing','Bundling'],equip:['Corrugator line 1.8 m','Flexo printer-slotter','Rotary die-cutter','Folder-gluer','Steam boiler 3 t/h']},
+ {id:'paver',slug:'paver-block-plant',name:'Paver & Block Plant',sector:'Construction Materials',location:'Kajiado, KE',capacity:'8,000 pavers/day',cost:12,eq:30,area:'3,000 m² yard',market:'Kenya',type:'Local Demand / Logistics',status:'Commercial',verification:'Research validated',hs:'6810.11',imp:[2,2,3,3,3],origins:'Local production dominates',unit:'Per m², KES',price:1050,local:880,m:0.2,
+  summary:'Vibro-pressed interlocking pavers and hollow blocks for estate and county road projects.',
+  adv:['Heavy product — local production wins on logistics.','Quarry aggregates within 30 km.','Automated press gives consistent strength for public tenders.'],
+  raw:[{m:'Quarry dust & aggregate',src:'Kajiado, Machakos',season:'Year-round'},{m:'Cement',src:'Athi River plants',season:'Year-round'}],
+  steps:['Aggregate batching','Mixing','Pressing','Curing','Stacking','Dispatch'],equip:['Automatic block machine','Pan mixer','Batching plant','Pallet handling','Forklift']},
+ {id:'rpet',slug:'pet-recycling-flake-1tph',name:'1 TPH PET Recycling Line',sector:'Recycling',location:'Mombasa, KE',capacity:'1 tonne/hour',cost:26,eq:30,area:'1,500 m²',market:'Kenya + export',type:'Resource Advantage / Sustainability',status:'Modelling',verification:'Research validated',hs:'3915.90',imp:[4,5,5,6,7],origins:'Export flows to Asia',unit:'Per tonne flake, KES \'000',price:96,local:74,m:0.18,
+  summary:'Hot-washed PET flake from post-consumer bottles for fibre, strapping and bottle-to-bottle buyers.',
+  adv:['Bottle waste stream available in coastal and Nairobi metros.','EPR regulation drives brand-owner demand for recycled content.','Port location supports flake export.'],
+  raw:[{m:'Post-consumer PET bottles',src:'Mombasa, Nairobi collectors',season:'Year-round, higher in dry season'},{m:'Caustic & detergents',src:'Local chemical suppliers',season:'Year-round'}],
+  steps:['Bale breaking','Sorting','Label removal','Grinding','Hot wash','Float-sink','Drying','Bagging'],equip:['Bale opener','Label remover','Wet granulator','Hot wash tank','Centrifugal dryer']}
+];
+const IND = ['Agriculture','Food Processing','Beverages','Packaging','Plastics','Construction Materials','Chemicals','Metals','Minerals','Textiles','Furniture','Recycling','Energy','Industrial Components','Automotive Components','Pharmaceuticals','Healthcare Manufacturing','Electronics','Consumer Products','Industrial Products','Other'];
+const CAPS = [1,2,5,10,20,50,100,250];
+
+const EQCATS = ['Production Lines','Processing Equipment','Packaging','Filling','Mixing','Milling','Crushing','Extrusion','Injection Moulding','CNC','Fabrication','Welding','Boilers','Compressors','Generators','Water Treatment','Waste Processing','Conveyors','Material Handling','Automation','Laboratory Equipment','Utilities','Custom Machinery'];
+const EQUIP = [
+ {name:'Pellet Mill 5 t/h',cat:'Milling',maker:'Kestrel Machinery',model:'KPM-520',capacity:'4–6 t/h',power:'132 kW',dims:'3.1×1.4×2.6 m',weight:'6.8 t',app:'Animal feed',origin:'China',supplier:'Rift Agro Engineering',warranty:'12 months',lead:'10–12 wks',price:[6.5,8.2],install:'included',spares:'local stock',cert:'CE',verif:'FirmPlant Approved'},
+ {name:'Hammer Mill 7.5 t/h',cat:'Milling',maker:'Kestrel Machinery',model:'KHM-75',capacity:'7.5 t/h',power:'90 kW',dims:'2.2×1.2×1.8 m',weight:'2.4 t',app:'Grain, feed',origin:'China',supplier:'Rift Agro Engineering',warranty:'12 months',lead:'8 wks',price:[2.8,3.6],install:'included',spares:'local stock',cert:'CE',verif:'FirmPlant Approved'},
+ {name:'Paddle Batch Mixer 2 t',cat:'Mixing',maker:'Mixtek Systems',model:'MX-2000',capacity:'2 t/batch',power:'30 kW',dims:'3.8×1.6×2.0 m',weight:'3.1 t',app:'Feed, premix',origin:'Turkey',supplier:'Lakeside Process Ltd',warranty:'18 months',lead:'12 wks',price:[3.2,4.1],install:'optional',spares:'regional',cert:'CE, ISO 9001',verif:'FirmPlant Qualified'},
+ {name:'PET Preform Injection 350 t',cat:'Injection Moulding',maker:'Orion Plastmach',model:'OP-350P',capacity:'48 cavities',power:'185 kW',dims:'8.2×2.1×2.3 m',weight:'19 t',app:'PET preforms',origin:'China',supplier:'Coast Polymer Machinery',warranty:'12 months',lead:'16–20 wks',price:[28,34],install:'included',spares:'regional',cert:'CE',verif:'Verified'},
+ {name:'Automatic Bagging Line',cat:'Packaging',maker:'Valtorre Packaging',model:'VB-50',capacity:'600 bags/h',power:'12 kW',dims:'5.0×2.5×3.4 m',weight:'2.2 t',app:'25–50 kg bags',origin:'Italy',supplier:'Lakeside Process Ltd',warranty:'24 months',lead:'14 wks',price:[9,11.5],install:'included',spares:'regional',cert:'CE, ISO 9001',verif:'FirmPlant Approved'},
+ {name:'Aseptic Bag-in-Drum Filler',cat:'Filling',maker:'Valtorre Packaging',model:'VA-220',capacity:'4 drums/h',power:'8 kW',dims:'3.0×2.2×3.1 m',weight:'1.8 t',app:'Fruit purée',origin:'Italy',supplier:'Highland Food Tech',warranty:'24 months',lead:'18 wks',price:[12,15],install:'included',spares:'import',cert:'CE, 3-A',verif:'FirmPlant Qualified'},
+ {name:'Automatic Block Machine',cat:'Production Lines',maker:'Anadol Press',model:'AP-10',capacity:'8,000 pavers/day',power:'55 kW',dims:'7.5×3.0×3.2 m',weight:'14 t',app:'Pavers, blocks',origin:'Turkey',supplier:'Savannah Build Equipment',warranty:'12 months',lead:'10 wks',price:[5.5,7],install:'included',spares:'local stock',cert:'CE',verif:'Verified'},
+ {name:'Fire-Tube Steam Boiler 3 t/h',cat:'Boilers',maker:'Deccan Thermal',model:'DT-3000',capacity:'3 t/h @ 10 bar',power:'Biomass / FO',dims:'5.6×2.4×2.8 m',weight:'11 t',app:'Process steam',origin:'India',supplier:'Nairobi Thermal Services',warranty:'18 months',lead:'12 wks',price:[7.5,9.8],install:'optional',spares:'local stock',cert:'IBR, ASME',verif:'FirmPlant Qualified'},
+ {name:'Rotary Screw Compressor',cat:'Compressors',maker:'Nordwerk',model:'NW-37',capacity:'6.2 m³/min',power:'37 kW',dims:'1.4×0.9×1.5 m',weight:'0.7 t',app:'Plant air',origin:'Germany',supplier:'Nairobi Thermal Services',warranty:'24 months',lead:'4 wks',price:[2.1,2.6],install:'included',spares:'local stock',cert:'CE, ISO 8573',verif:'FirmPlant Approved'},
+ {name:'RO Water Treatment 5 m³/h',cat:'Water Treatment',maker:'Aqualine EA',model:'RO-5',capacity:'5 m³/h',power:'7.5 kW',dims:'3.0×1.0×1.9 m',weight:'0.9 t',app:'Process water',origin:'Kenya',supplier:'Aqualine EA',warranty:'12 months',lead:'5 wks',price:[1.6,2.2],install:'included',spares:'local stock',cert:'KEBS',verif:'Verified'},
+ {name:'PET Wet Granulator 1 t/h',cat:'Waste Processing',maker:'Orion Plastmach',model:'OG-1000W',capacity:'1 t/h',power:'75 kW',dims:'2.4×1.8×2.6 m',weight:'4.2 t',app:'PET recycling',origin:'China',supplier:'Coast Polymer Machinery',warranty:'12 months',lead:'12 wks',price:[3.4,4.3],install:'included',spares:'regional',cert:'CE',verif:'Under Review'},
+ {name:'CNC Plasma Cutting Table',cat:'CNC',maker:'Industrial Area Fabricators',model:'IAF-P1530',capacity:'1.5×3.0 m bed',power:'22 kW',dims:'4.2×2.4×1.6 m',weight:'1.6 t',app:'Steel fabrication',origin:'Kenya',supplier:'Industrial Area Fabricators',warranty:'12 months',lead:'6 wks',price:[2.4,3.1],install:'included',spares:'local stock',cert:'—',verif:'Verified'}
+];
+const STAGES = ['Registered','Documentation Submitted','Under Review','Verified','FirmPlant Qualified','FirmPlant Approved'];
+const SUPP = [
+ {name:'Rift Agro Engineering',country:'Kenya',cats:'Feed mills, grain handling',years:14,service:'KE, UG, TZ',installed:38,status:'FirmPlant Approved'},
+ {name:'Lakeside Process Ltd',country:'Uganda',cats:'Mixing, packaging, conveyors',years:9,service:'UG, KE, RW',installed:21,status:'FirmPlant Qualified'},
+ {name:'Valtorre Packaging',country:'Italy',cats:'Bagging, aseptic filling',years:32,service:'Via agent, EA',installed:210,status:'FirmPlant Approved'},
+ {name:'Coast Polymer Machinery',country:'Kenya',cats:'Injection, extrusion, recycling',years:7,service:'KE, TZ',installed:15,status:'Verified'},
+ {name:'Nairobi Thermal Services',country:'Kenya',cats:'Boilers, compressors, utilities',years:18,service:'EA',installed:64,status:'FirmPlant Qualified'},
+ {name:'Highland Food Tech',country:'Ethiopia',cats:'Fruit & dairy processing',years:6,service:'ET, KE',installed:11,status:'Under Review'},
+ {name:'Savannah Build Equipment',country:'Tanzania',cats:'Block & paver plants',years:11,service:'TZ, KE, RW',installed:27,status:'Verified'},
+ {name:'Aqualine EA',country:'Kenya',cats:'Water treatment',years:8,service:'KE, UG',installed:40,status:'Documentation Submitted'},
+ {name:'Kigali Steelworks',country:'Rwanda',cats:'Fabrication, welding',years:4,service:'RW',installed:6,status:'Registered'}
+];
+const WIZ = [
+ {q:'What do you want to manufacture?',hint:'Type a product or pick a starting point. Not sure? We\'ll suggest options that fit your capital.',sec:'PRODUCT',text:true,opts:['Animal feed','Fruit purée','Maize flour','Honey','PET preforms','Cartons','Pavers & blocks','Recycled PET','Not sure yet']},
+ {q:'Where?',hint:'Country where the factory would be located.',sec:'LOCATION',opts:['Kenya','Uganda','Tanzania','Rwanda','Ethiopia','Other']},
+ {q:'Target market?',hint:'Where you intend to sell.',sec:'MARKET',opts:['Kenya','East Africa','Africa','Global']},
+ {q:'Available capital?',hint:'Your own equity — not including any loan.',sec:'CAPITAL',opts:['KES 1–5M','KES 5–10M','KES 10–20M','KES 20–50M','KES 50–100M','KES 100M+']},
+ {q:'Available land?',hint:'Land you own or can lease.',sec:'SITE',opts:['None','Under 0.5 acre','0.5–2 acres','Over 2 acres']},
+ {q:'Existing building?',hint:'A structure that could house production.',sec:'SITE',opts:['None','Under 500 m²','500–2,000 m²','Over 2,000 m²']},
+ {q:'Existing equipment?',hint:'Machines you already own.',sec:'ASSETS',opts:['None','Some relevant machines','Full line — needs upgrade']},
+ {q:'Raw material access?',hint:'How you would secure inputs.',sec:'INPUTS',opts:['Own supply / farm','Contracted suppliers','Buy in open market','Not sure']},
+ {q:'Desired production capacity?',hint:'Rough scale of operation.',sec:'SCALE',opts:['Small pilot','Commercial SME','Industrial scale','Recommend for me']},
+ {q:'Financing required?',hint:'How much of the project you\'d like financed.',sec:'FINANCE',opts:['No','Partly','Majority','Not sure']}
+];
+const KEYS = [[/feed/i,'feed'],[/fruit|mango|pur|pulp|juice|passion/i,'pulp'],[/maize|flour|grain|mill/i,'maize'],[/honey|bee/i,'honey'],[/preform|bottle|pet$|plastic|inject/i,'preform'],[/carton|packag|box|corrugat/i,'carton'],[/paver|block|brick|construct|cement/i,'paver'],[/recycl|waste|flake|rpet|recycled/i,'rpet']];
+
+const INDS = [
+ {key:'agriculture',label:'Agriculture',sector:'Agriculture',desc:'Feed, grain handling and primary processing built on East Africa\'s crop base.',eq:['Milling','Mixing','Packaging'],res:['maize','sunflower']},
+ {key:'food',label:'Food',sector:'Food Processing',desc:'Milling, fruit processing and packaged foods replacing imported shelf products.',eq:['Milling','Filling','Packaging'],res:['maize','mango','honey','cassava']},
+ {key:'packaging',label:'Packaging',sector:'Packaging',desc:'Cartons, sacks and containers — bulky imports where local supply wins on logistics.',eq:['Packaging','Boilers'],res:['occ']},
+ {key:'plastics',label:'Plastics',sector:'Plastics',desc:'Preforms, closures and moulded components for bottlers and manufacturers.',eq:['Injection Moulding','Compressors'],res:['pet']},
+ {key:'construction',label:'Construction',sector:'Construction Materials',desc:'Heavy, low-value-per-tonne materials that are naturally local.',eq:['Production Lines'],res:['aggregate']},
+ {key:'metals',label:'Metals',sector:'Metals',desc:'Fabrication, fasteners and formed steel for construction and industry.',eq:['CNC'],res:[]},
+ {key:'recycling',label:'Recycling',sector:'Recycling',desc:'Turning urban waste streams into industrial feedstock.',eq:['Waste Processing','Water Treatment'],res:['pet','occ']},
+ {key:'chemicals',label:'Chemicals',sector:'Chemicals',desc:'Cleaning chemicals, resins and process inputs with import-heavy supply.',eq:['Mixing','Water Treatment'],res:[]},
+ {key:'textiles',label:'Textiles',sector:'Textiles',desc:'Yarn, fabric and technical textiles for regional and export markets.',eq:[],res:[]},
+ {key:'furniture',label:'Furniture',sector:'Furniture',desc:'Board, flat-pack and institutional furniture close to demand.',eq:['CNC'],res:[]},
+ {key:'automotive',label:'Automotive',sector:'Automotive Components',desc:'Replacement parts and assembly inputs for a growing vehicle fleet.',eq:['CNC','Injection Moulding'],res:[]},
+ {key:'energy',label:'Energy',sector:'Energy',desc:'Biomass fuels, briquettes and energy equipment for industry.',eq:['Boilers'],res:['cassava']},
+ {key:'healthcare',label:'Healthcare',sector:'Healthcare Manufacturing',desc:'Consumables and packaging for regional health systems.',eq:['Filling','Water Treatment'],res:[]},
+ {key:'components',label:'Components',sector:'Industrial Components',desc:'MRO spares, fabricated parts and consumables currently imported.',eq:['CNC','Compressors'],res:[]},
+ {key:'consumer',label:'Consumer',sector:'Consumer Products',desc:'Household and personal-care products for regional retail.',eq:['Filling','Packaging'],res:['honey']}
+];
+const RES = [
+ {id:'maize',m:'Maize',cat:'Cereal',loc:'Rift Valley, Western Kenya',vol:'Millions of tonnes / yr',quality:'Variable moisture; aflatoxin control needed',price:'KES 35–50 / kg',season:'Main harvest Oct–Jan',compete:'High — staple food',transport:'Road; depot network',exp:'Low',imp:'Seasonal deficit imports',level:'Primary',products:['Maize flour','Animal feed','Starch','Glucose syrup'],chain:['Maize grain','Flour & grits','Starch','Glucose syrup','Modified starch'],opps:['maize','feed']},
+ {id:'mango',m:'Mango',cat:'Fruit',loc:'Makueni, Machakos, Kilifi',vol:'Hundreds of thousands t / yr',quality:'Good; high post-harvest loss',price:'KES 10–30 / kg farm-gate',season:'Nov–Feb, Jun–Jul',compete:'Fresh market',transport:'Rough rural roads; cold chain gaps',exp:'Fresh & dried, small',imp:'Purée & concentrate',level:'Raw',products:['Purée','Juice concentrate','Dried mango','Pectin'],chain:['Fresh mango','Pulp','Aseptic purée','Juice & nectar','Pectin / specialty']},
+ {id:'sunflower',m:'Sunflower seed',cat:'Oilseed',loc:'Western Kenya, Uganda, Tanzania',vol:'Regional, expanding',quality:'Good oil content',price:'KES 45–70 / kg',season:'Two seasons',compete:'Edible oil crushers',transport:'Cross-border road',exp:'Low',imp:'Crude vegetable oil',level:'Primary',products:['Edible oil','Seed cake for feed'],chain:['Seed','Crude oil + cake','Refined oil','Packaged oil','Specialty fats']},
+ {id:'honey',m:'Raw honey',cat:'Apiculture',loc:'Baringo, Kitui, West Pokot',vol:'Thousands of tonnes / yr',quality:'High; moisture control needed',price:'KES 300–500 / kg raw',season:'Two flows',compete:'Informal local sale',transport:'Small lots; aggregation needed',exp:'Small',imp:'Blended table honey',level:'Raw',products:['Table honey','Beeswax','Propolis'],chain:['Comb honey','Extracted honey','Filtered & packed','Wax products','Cosmetic inputs']},
+ {id:'pet',m:'Post-consumer PET',cat:'Recycled material',loc:'Nairobi, Mombasa metros',vol:'Tens of thousands t / yr',quality:'Mixed; sorting required',price:'KES 15–30 / kg baled',season:'Year-round',compete:'Informal export of bales',transport:'Collector networks',exp:'Baled & flake',imp:'Virgin resin',level:'Collected',products:['Hot-washed flake','Fibre','Strapping','rPET pellet'],chain:['Bottles','Bales','Washed flake','Pellet / fibre','Food-grade rPET']},
+ {id:'aggregate',m:'Quarry aggregate',cat:'Mineral',loc:'Kajiado, Machakos',vol:'Abundant',quality:'Consistent with grading',price:'KES 1,500–2,500 / t',season:'Year-round',compete:'Construction',transport:'Short-haul road',exp:'None',imp:'None',level:'Primary',products:['Pavers','Blocks','Precast'],chain:['Rock','Crushed aggregate','Blocks & pavers','Precast elements','Architectural precast']},
+ {id:'occ',m:'Recovered paper (OCC)',cat:'Recycled material',loc:'Nairobi metro',vol:'Tens of thousands t / yr',quality:'Mixed grades',price:'KES 10–20 / kg',season:'Year-round',compete:'Regional mills',transport:'Collector networks',exp:'Some bales',imp:'Kraft liner',level:'Collected',products:['Fluting medium','Test liner','Egg trays'],chain:['OCC','Pulp','Fluting / liner','Corrugated board','Printed cartons']},
+ {id:'cassava',m:'Cassava',cat:'Root crop',loc:'Coast, Western Kenya, Uganda',vol:'Large, under-processed',quality:'Perishable within 48 h',price:'KES 8–15 / kg',season:'Year-round harvest',compete:'Food',transport:'Needs near-farm processing',exp:'Low',imp:'Industrial starch',level:'Raw',products:['Starch','Flour','Ethanol','Briquette binder'],chain:['Roots','Chips / flour','Native starch','Modified starch','Bio-ethanol']}
+];
+const ARTS = [
+ {id:'framework',title:'What can Kenya manufacture? A framework',cat:'Industrial guide',date:'Sep 2026',read:'8 min',sum:'How to move from “what is imported” to “what can be made competitively” — and why most candidates should be rejected.',body:['Import statistics are a starting point, not an answer. A product that Kenya imports heavily is only an opportunity if a local plant can beat the landed import on cost, quality, speed or security of supply.','We screen candidates through five engines — import gap, Africa gap, global demand, resource value addition and industrial inputs — then test each against hard stops: insufficient demand, uncompetitive cost, no input route, unavailable technology, unreasonable CAPEX, regulatory barriers or no path to finance.','What survives is engineered against global factory benchmarks, not local competitors. The aim is a globally competitive factory that happens to be located in East Africa.'],opp:null},
+ {id:'feed-gap',title:'Animal feed: import gap brief',cat:'Import gap brief',date:'Aug 2026',read:'6 min',sum:'Why pelleted feed and premixes are a candidate for regional production, and what a 5 t/h plant needs to compete.',body:['Poultry and dairy expansion across the region is lifting demand for consistent, pelleted feed. Part of that demand is met by imported finished feed and premixes.','Local inputs — maize bran, sunflower and soya cake — are available within short haul of Rift Valley sites, though seasonality requires storage and forward contracting.','A conditioned pellet line at 5 t/h, benchmarked on OEE and energy per tonne, is the reference configuration in our DEMO model.'],opp:'feed'},
+ {id:'landed',title:'Landed cost vs local cost: how we test advantage',cat:'Methodology',date:'Jul 2026',read:'5 min',sum:'The build-up from supplier price to landed cost, and the local cost a plant must hit.',body:['Landed cost adds freight, insurance, duties and taxes where applicable, port charges, clearance, inland transport and financing to the supplier price.','Local cost is modelled from raw materials, labour, power, water, fuel, maintenance, packaging, logistics and overheads at a stated utilisation.','If local cost cannot sit meaningfully below landed cost — or offer another defensible advantage — the opportunity is rejected. No advantage, no opportunity.'],opp:null},
+ {id:'mango',title:'Mango value addition in Eastern Kenya',cat:'Resource brief',date:'Jun 2026',read:'7 min',sum:'From fresh fruit losses to aseptic purée: mapping the value chain.',body:['Eastern Kenya produces mango in two seasons, and a significant share of fruit is lost between farm and market.','Aseptic purée allows fruit to be stored for months and sold to juice makers locally and in the Gulf.','Plant viability depends on season length, aggregation logistics and securing offtake before commissioning.'],opp:'pulp'},
+ {id:'pellet',title:'Choosing a pellet mill: a specification guide',cat:'Equipment guide',date:'May 2026',read:'6 min',sum:'Die specification, conditioning, power and spare-parts questions to ask before you buy.',body:['Specify on the product, not the machine: target pellet size, durability and throughput determine die, conditioner and motor sizing.','Ask for installed references at similar capacity, local spare-parts stock for dies and rollers, and service engineer coverage.','Include FAT, installation, training and commissioning in the RFQ — not as afterthoughts.'],opp:null},
+ {id:'finance',title:'Financing a KES 30M factory: pathways explained',cat:'Finance guide',date:'Apr 2026',read:'7 min',sum:'Asset finance, project finance, development finance and blended structures — what each needs.',body:['Most small and mid-size plants combine owner equity with asset or equipment finance secured on the machinery.','Lenders look at debt service coverage: whether projected cash flow comfortably covers repayments at conservative assumptions.','Financing is always subject to applicant eligibility, credit assessment and final documentation. A finance-ready pack shortens that conversation.'],opp:'pulp'}
+];
+const PROJ = [
+ {name:'5 TPH Feed Mill',loc:'Nakuru, Kenya',status:'In development',problem:'Poultry farmers in the region relied on inconsistent and imported feed.',market:'Kenya + Uganda poultry and dairy',product:'Pelleted layer, broiler and dairy feed',plant:'Conditioned pellet line',capacity:'5 t/h',equip:'Hammer mill, batch mixer, pellet mill, cooler, bagging line',tech:'PLC-batched, semi-automatic',outcome:'Civil works complete; equipment FAT scheduled.',tl:['Research','Engineering','Financing','Build','Commission'],at:3},
+ {name:'Fruit Purée Pilot Line',loc:'Makueni, Kenya',status:'Engineering',problem:'High seasonal mango losses with no local aseptic processing.',market:'Local juice makers + Gulf export',product:'Aseptic mango purée',plant:'Pulping, sterilisation, aseptic fill',capacity:'2 t/h',equip:'Washer, pulper, tubular sterilizer, aseptic filler',tech:'Aseptic bag-in-drum',outcome:'Process design and supplier RFQs underway.',tl:['Research','Engineering','Financing','Build','Commission'],at:1},
+ {name:'Paver & Block Plant',loc:'Kajiado, Kenya',status:'Operating',problem:'Estate developers faced variable block quality and long haul distances.',market:'Nairobi metro construction',product:'Interlocking pavers and hollow blocks',plant:'Automatic vibro-press line',capacity:'8,000 pavers/day',equip:'Block machine, pan mixer, batching plant',tech:'Automatic pressing, yard curing',outcome:'Commissioned; operating on two shifts.',tl:['Research','Engineering','Financing','Build','Commission'],at:5}
+];
+
+function irr(flows){let lo=-0.9,hi=1.5;for(let i=0;i<80;i++){const r=(lo+hi)/2;let v=0;flows.forEach((f,t)=>v+=f/Math.pow(1+r,t));if(v>0)lo=r;else hi=r;}return (lo+hi)/2;}
+function pmt(L,rate,years,grace){const r=rate/1200,n=Math.max(1,years*12-grace);return r?L*r/(1-Math.pow(1+r,-n)):L/n;}
+
+class Component extends DCLogic {
+  state = { view:'home', capital:null, custom:15, industry:null, oppId:null, calc:null, submitted:false, leadRef:'', wizStep:0, wizAns:{}, wizText:'', wizSent:false, wizRef:'', eqCat:null, rfq:null, rfqRef:'', supStatus:null, regRef:'' };
+  extraVals2(card, demo){
+    const s=this.state, f=this.fmt.bind(this), out={};
+    const V=['industries','industry','resources','how','research','article','projects','about'];
+    V.forEach(v=>out['is_'+v]=s.view===v);
+    out.goIndustries=()=>this.go('industries'); out.goResources=()=>this.go('resources'); out.goHow=()=>this.go('how');
+    out.goResearch=()=>this.go('research'); out.goProjects=()=>this.go('projects'); out.goAbout=()=>this.go('about'); out.goAboutContact=()=>this.go('about','contactform');
+    const openInd=k=>{this.setState({indKey:k});this.go('industry');};
+    const openRes=id=>{this.setState({resId:id});this.go('resources');};
+    const openArt=id=>{this.setState({artId:id});this.go('article');};
+    const artCard=a=>({...a,demo,open:()=>openArt(a.id)});
+    out.industryLinks=INDS.map(i=>({label:i.label,go:()=>openInd(i.key)}));
+    out.indCards=INDS.map(i=>{const n=OPPS.filter(o=>o.sector===i.sector).length;return {...i,count:n?n+' opportunit'+(n===1?'y':'ies'):'Research in progress',countColor:n?'#F26A1B':'#8F897F',open:()=>openInd(i.key)};});
+    const ind=INDS.find(i=>i.key===s.indKey)||INDS[1];
+    const io=OPPS.filter(o=>o.sector===ind.sector);
+    const ie=EQUIP.filter(e=>ind.eq.includes(e.cat));
+    out.ind={...ind,opps:io.map(card),hasOpps:io.length>0,noOpps:!io.length,
+      equip:ie.map(e=>({name:e.name,meta:e.cat+' · '+e.capacity,price:f(e.price[0])+' – '+f(e.price[1])})),hasEquip:ie.length>0,
+      res:ind.res.map(id=>RES.find(r=>r.id===id)).filter(Boolean).map(r=>({m:r.m,loc:r.loc,open:()=>openRes(r.id)})),hasRes:ind.res.length>0,
+      arts:ARTS.filter(a=>a.opp&&io.some(o=>o.id===a.opp)).map(artCard),hasArts:ARTS.some(a=>a.opp&&io.some(o=>o.id===a.opp)),
+      stats:[{l:'OPPORTUNITIES',v:String(io.length)},{l:'EQUIPMENT LISTINGS',v:String(ie.length)},{l:'MAPPED RESOURCES',v:String(ind.res.length)},{l:'PRIMARY MARKET',v:'Kenya + EA'}]};
+    const r=RES.find(x=>x.id===s.resId)||RES[0];
+    out.resList=RES.map(x=>({...x,pick:()=>this.setState({resId:x.id}),bg:x.id===r.id?'#1A1816':'transparent',bar:x.id===r.id?'#F26A1B':'transparent'}));
+    out.res={...r,demo,fields:[{l:'CATEGORY',v:r.cat},{l:'LOCATION',v:r.loc},{l:'ANNUAL VOLUME',v:r.vol},{l:'QUALITY',v:r.quality},{l:'INDICATIVE PRICE',v:r.price},{l:'SEASONALITY',v:r.season},{l:'COMPETING USE',v:r.compete},{l:'TRANSPORT',v:r.transport},{l:'CURRENT EXPORT',v:r.exp},{l:'CURRENT IMPORT',v:r.imp},{l:'PROCESSING LEVEL',v:r.level}],
+      chain:r.chain.map((t,i)=>({t,n:['RAW','PRIMARY','INTERMEDIATE','FINISHED','SPECIALTY'][i],w:(40+i*15)+'%'})),
+      opps:OPPS.filter(o=>r.opps&&r.opps.includes(o.id)).map(card)};
+    out.howSteps=[
+      {n:'01',t:'Discover',d:'Opportunity Radar ingests trade, market, resource and global demand data across five engines.',out:'Opportunity signal'},
+      {n:'02',t:'Validate',d:'Market size, import gap, buyers, competitors and raw-material access are researched with sourced evidence.',out:'Research dossier'},
+      {n:'03',t:'Engineer',d:'Process flow, plant configuration and utilities designed against global factory benchmarks.',out:'Plant concept & equipment list'},
+      {n:'04',t:'Equip',d:'Automated RFQs go to verified suppliers; responses are compared on spec, warranty, service and lead time.',out:'Supplier comparison'},
+      {n:'05',t:'Finance',d:'Conservative, base and upside models; financing pathways and debt coverage tested.',out:'Finance-ready pack'},
+      {n:'06',t:'Build',d:'Site, civil works, FAT, installation and commissioning managed to schedule.',out:'Commissioning certificate'},
+      {n:'07',t:'Operate',d:'Every major asset gets an Asset Passport™ with warranty, service and maintenance history.',out:'Asset Passport™'}];
+    out.hardStops=['Demand insufficient','Market cannot absorb capacity','Local cost materially uncompetitive','No resource or input route','Technology unavailable','CAPEX unreasonable','Regulatory barrier','Financing structurally impossible','No quality pathway'];
+    out.approval=['Research analyst','Technical review','Financial review','Commercial review','Management approval','Publish'];
+    out.pipeline=['Discovered','Screened','Validating','Engineering','Modelling','Finance ready','Commercial','Reserved','In development','Operating'];
+    out.trust=['FirmPlant Verified™ suppliers','Engineering review','Sourced market research','Financial modelling','Equipment verification','Commissioning','Asset documentation'];
+    out.never=['Guaranteed ROI','Guaranteed financing','Guaranteed profits','Guaranteed market','Guaranteed loan approval'];
+    out.articles=ARTS.map(artCard); out.leadArt=artCard(ARTS[0]); out.restArts=ARTS.slice(1).map(artCard);
+    const a=ARTS.find(x=>x.id===s.artId)||ARTS[0], ao=OPPS.find(o=>o.id===a.opp);
+    out.art={...a,demo,hasOpp:!!ao,opp:ao?card(ao):{},more:ARTS.filter(x=>x.id!==a.id).slice(0,3).map(artCard)};
+    out.projects=PROJ.map(p=>({...p,demo,tlItems:p.tl.map((t,i)=>({t,bg:i<p.at?'#F26A1B':'#26231F',fg:i<p.at?'#F26A1B':'#8F897F'})),statusColor:p.status==='Operating'?'#7FD48A':'#F26A1B',
+      facts:[{l:'MARKET',v:p.market},{l:'PRODUCT',v:p.product},{l:'PLANT',v:p.plant},{l:'CAPACITY',v:p.capacity},{l:'EQUIPMENT',v:p.equip},{l:'TECHNOLOGY',v:p.tech}]}));
+    out.countries=[{c:'Kenya',s:'Launch market'},{c:'Uganda',s:'Next'},{c:'Tanzania',s:'Next'},{c:'Rwanda',s:'Planned'},{c:'Ethiopia',s:'Planned'},{c:'DRC',s:'Planned'},{c:'Zambia',s:'Planned'},{c:'Export markets',s:'Via opportunities'}];
+    out.contactNotSent=!s.contactRef; out.contactSent=!!s.contactRef; out.contactRef=s.contactRef||'';
+    out.contactSubmit=e=>{e.preventDefault();this.setState({contactRef:this.ref('FP-L')});};
+    return out;
+  }
+  ref(p){ return p+'-'+Math.floor(10000+Math.random()*89999); }
+  extraVals(pickStyle, card, demo){
+    const s=this.state, f=this.fmt.bind(this), out={};
+    out.isBuild=s.view==='build'; out.isEquip=s.view==='equipment'; out.isSuppliers=s.view==='suppliers';
+    out.goBuild=()=>this.go('build'); out.goEquip=()=>this.go('equipment'); out.goSuppliers=()=>this.go('suppliers'); out.goSupRegister=()=>this.go('suppliers','register');
+    // wizard
+    const done=s.wizStep>=WIZ.length; out.wizActive=!done; out.wizDone=done;
+    if(!done){
+      const w=WIZ[s.wizStep], cur=w.text?s.wizText:s.wizAns[s.wizStep], ok=!!(cur&&String(cur).trim());
+      const nextFn=()=>{ if(!ok)return; if(w.text)this.setState(st=>({wizAns:{...st.wizAns,0:st.wizText},wizStep:st.wizStep+1})); else this.setState(st=>({wizStep:st.wizStep+1})); window.scrollTo(0,0); };
+      out.wiz={stepNum:s.wizStep+1,section:w.sec,pct:((s.wizStep+1)/WIZ.length*100)+'%',q:w.q,hint:w.hint,isText:!!w.text,text:s.wizText,
+        setText:e=>this.setState({wizText:e.target.value}),
+        options:w.opts.map(l=>({label:l,...pickStyle(cur===l,true),pick:()=>{ if(w.text)this.setState({wizText:l}); else this.setState(st=>({wizAns:{...st.wizAns,[st.wizStep]:l},wizStep:st.wizStep+1})); }})),
+        back:()=>this.setState(st=>({wizStep:Math.max(0,st.wizStep-1)})),backOpacity:s.wizStep?1:0.35,
+        next:nextFn,nextOpacity:ok?1:0.35,nextLabel:s.wizStep===WIZ.length-1?'See my path →':'Next →'};
+      out.path={};
+    } else {
+      const a=s.wizAns, prod=a[0]||'';
+      const capU=[5,10,20,50,100,250][WIZ[3].opts.indexOf(a[3])]||10;
+      const finM={No:1,Partly:1/0.6,Majority:1/0.3,'Not sure':1/0.4}[a[9]]||1;
+      const budget=capU*finM;
+      const kw=KEYS.filter(([re])=>re.test(prod)).map(k=>k[1]);
+      const byKw=OPPS.filter(o=>kw.includes(o.id));
+      const rest=OPPS.filter(o=>!kw.includes(o.id)&&o.cost<=budget).sort((x,y)=>y.cost-x.cost);
+      let matches=[...byKw,...rest].slice(0,3); if(!matches.length) matches=[...OPPS].sort((x,y)=>x.cost-y.cost).slice(0,3);
+      const p=matches[0], sc={'Small pilot':0.5,'Commercial SME':1,'Industrial scale':2,'Recommend for me':1}[a[8]]||1;
+      const lo=p.cost*0.85*sc, hi=p.cost*1.25*sc;
+      const research=['Market demand & buyer validation','Import gap & landed-cost analysis','Competitor and price benchmarking'];
+      if(a[7]==='Not sure'||a[7]==='Buy in open market') research.push('Raw material availability, price & seasonality study');
+      if(a[2]==='Africa'||a[2]==='Global') research.push('Export market & trade corridor analysis');
+      if(a[4]==='None') research.push('Site selection & industrial park options');
+      if(a[5]&&a[5]!=='None') research.push('Structural & utilities survey of existing building');
+      if(a[6]&&a[6]!=='None') research.push('Condition assessment of existing equipment');
+      out.path={demo:demo||'INDICATIVE',
+        answers:WIZ.map((w,i)=>({k:w.sec,v:a[i]||'—',edit:()=>this.setState({wizStep:i,wizText:a[0]||''})})),
+        capex:f(lo)+' – '+f(hi), budget:'≈ '+f(budget),
+        size:(a[8]==='Recommend for me'?'Commercial SME':a[8]||'Commercial SME')+' · ref. '+p.capacity+(sc!==1?' ×'+sc:''),
+        area:p.area+(sc!==1?' (scaled)':''),
+        warn:lo>budget, warnText:'Indicative CAPEX exceeds your stated capital plus financing. Consider a smaller pilot, phased build, or co-investors.',
+        matches:matches.map(o=>{const c=card(o);const fit=o.cost<=budget;return {...c,fit:fit?'FITS BUDGET':'ABOVE BUDGET',fitColor:fit?'#7FD48A':'#F2C14E'};}),
+        equip:p.equip, research,
+        next:[{n:'01',t:'Scoping call with a FirmPlant analyst'},{n:'02',t:'Commission targeted market & resource research'},{n:'03',t:'Preliminary plant configuration & supplier RFQs'},{n:'04',t:'Financial model and financing pathway review'}],
+        notSent:!s.wizSent, sent:s.wizSent, ref:s.wizRef,
+        send:()=>this.setState({wizSent:true,wizRef:this.ref('FP-L')}),
+        restart:()=>this.setState({wizStep:0,wizAns:{},wizText:'',wizSent:false})};
+      out.wiz={};
+    }
+    // equipment
+    const eqList=EQUIP.filter(e=>!s.eqCat||e.cat===s.eqCat);
+    const vStyle=v=>v==='FirmPlant Approved'?{vBg:'#F26A1B',vFg:'#0E0D0C'}:v==='FirmPlant Qualified'?{vBg:'#F4F2EE',vFg:'#0E0D0C'}:{vBg:'#26231F',vFg:'#C9C3BA'};
+    const priceFmt=e=>f(e.price[0])+' – '+f(e.price[1]);
+    out.eqCats=[{label:'All',...pickStyle(!s.eqCat,true),pick:()=>this.setState({eqCat:null})},...EQCATS.map(c=>({label:c,...pickStyle(s.eqCat===c,true),pick:()=>this.setState({eqCat:s.eqCat===c?null:c})}))];
+    out.equipment=eqList.map(e=>({...e,demo,...vStyle(e.verif),priceFmt:priceFmt(e),
+      specs:[{l:'CAPACITY',v:e.capacity},{l:'POWER',v:e.power},{l:'DIMENSIONS',v:e.dims},{l:'WEIGHT',v:e.weight},{l:'APPLICATION',v:e.app},{l:'ORIGIN',v:e.origin},{l:'WARRANTY',v:e.warranty},{l:'LEAD TIME',v:e.lead},{l:'DOCS',v:'Manual, drawings'}],
+      quote:()=>this.setState({rfq:{...e,priceFmt:priceFmt(e)},rfqRef:''})}));
+    out.eqCount=eqList.length+' listing'+(eqList.length===1?'':'s')+(s.eqCat?' · '+s.eqCat:'');
+    out.eqEmpty=!eqList.length; out.eqClear=()=>this.setState({eqCat:null});
+    out.rfqOpen=!!s.rfq; out.rfq=s.rfq||{}; out.rfqNotSent=!s.rfqRef; out.rfqSent=!!s.rfqRef; out.rfqRef=s.rfqRef;
+    out.rfqClose=()=>this.setState({rfq:null}); out.stop=e=>e.stopPropagation();
+    out.rfqSubmit=e=>{e.preventDefault();this.setState({rfqRef:this.ref('FP-RFQ')});};
+    // suppliers
+    const supList=SUPP.filter(x=>!s.supStatus||x.status===s.supStatus);
+    out.supStages=STAGES.map((t,i)=>{const on=s.supStatus===t;return {t,n:'0'+(i+1),count:SUPP.filter(x=>x.status===t).length,bg:on?'#F26A1B':'#0E0D0C',fg:on?'#0E0D0C':'#F4F2EE',pick:()=>this.setState({supStatus:on?null:t})};});
+    out.suppliers=supList.map(x=>{const i=STAGES.indexOf(x.status);return {...x,demo:demo||'',years:x.years+' yrs',bg:i===5?'#F26A1B':i===4?'#F4F2EE':'transparent',fg:i>=4?'#0E0D0C':i===3?'#F4F2EE':'#8F897F',border:i===5?'#F26A1B':i===4?'#F4F2EE':i===3?'#F4F2EE':'#3A3631'};});
+    out.supCount=supList.length+' supplier'+(supList.length===1?'':'s')+(s.supStatus?' · '+s.supStatus:'');
+    out.supClear=()=>this.setState({supStatus:null}); out.supClearLabel=s.supStatus?'Show all':'';
+    out.verifCriteria=['Company existence & years in operation','Manufacturing & engineering capability','Certifications and compliance','Installed base & customer references','Production and component quality','Warranty, spare parts & service engineers','Lead time and commercial stability'];
+    out.regNotSent=!s.regRef; out.regSent=!!s.regRef; out.regRef=s.regRef;
+    out.regSubmit=e=>{e.preventDefault();this.setState({regRef:this.ref('FP-S')});};
+    return out;
+  }
+
+  fmt(m){ if((this.props.currency??'KES')==='USD'){const v=m*1e6/USD;return v>=1e6?'USD '+(v/1e6).toFixed(2)+'M':'USD '+Math.round(v/1e3)+'K';} return 'KES '+(m>=100?Math.round(m):m>=10?m.toFixed(1).replace('.0',''):m.toFixed(2).replace(/0$/,''))+'M'; }
+  go(view,anchor){ this.setState({view}); setTimeout(()=>{ const el=anchor&&document.getElementById(anchor); window.scrollTo({top: el? el.getBoundingClientRect().top+window.scrollY-68 : 0, behavior: el?'smooth':'auto'}); },30); }
+  capVal(){ const c=this.state.capital; return c==='custom'?Number(this.state.custom)||0:c; }
+  open(o){ this.setState({oppId:o.id,submitted:false,calc:{cost:o.cost,eq:o.eq,rate:14,tenure:7,grace:12,util:75,price:100}}); this.go('detail'); }
+
+  econ(o,c){
+    const R=o.cost*1.35, varC=R*(1-o.m)*0.7, fix=R*(1-o.m)*0.3;
+    const rev=R*(c.util/75)*(c.price/100)*(c.cost/o.cost);
+    const eb=rev-(varC*(c.util/75)*(c.cost/o.cost)+fix*(c.cost/o.cost));
+    const loan=c.cost*(1-c.eq/100), mo=pmt(loan,c.rate,c.tenure,c.grace), ads=mo*12;
+    return {eb,loan,mo,ads,dscr:ads?eb/ads:0,eqAmt:c.cost-loan};
+  }
+  scen(o,rf,ma){
+    const R=o.cost*1.35*rf, m=o.m+ma, eb=R*m, cash=eb*0.75;
+    const ads=pmt(o.cost*(1-o.eq/100),14,7,12)*12;
+    const i=irr([-o.cost*1.12,...Array(10).fill(cash)]);
+    return {R,gm:(m+0.14),eb,be:Math.round(0.3*(1-m)/(1-0.7*(1-m))*75*100/ (75/ (rf*1)))/100,pb:o.cost*1.12/cash,irr:i,dscr:eb/ads};
+  }
+
+  renderVals(){
+    const s=this.state, cap=this.capVal(), demo=(this.props.showDemo??true)?'DEMO':'';
+    const pickStyle=(on,dark)=> on?{bg:'#F26A1B',fg:'#0E0D0C',border:'#F26A1B'}:dark?{bg:'transparent',fg:'#C9C3BA',border:'#3A3631'}:{bg:'#fff',fg:'#0E0D0C',border:'#D6D1C8'};
+    const capList=dark=>[...CAPS.map(v=>({label:'KES '+v+'M+',...pickStyle(s.capital===v,dark),pick:()=>this.setState({capital:s.capital===v?null:v})})),{label:'Custom',...pickStyle(s.capital==='custom',dark),pick:()=>this.setState({capital:s.capital==='custom'?null:'custom'})}];
+    const indList=(list,dark)=>[{label:'All',...pickStyle(!s.industry,dark),pick:()=>this.setState({industry:null})},...list.map(l=>({label:l,...pickStyle(s.industry===l,dark),pick:()=>this.setState({industry:s.industry===l?null:l})}))];
+    const card=o=>({...o,demo,costFmt:this.fmt(o.cost),equityFmt:this.fmt(o.cost*o.eq/100)+' ('+o.eq+'%)',financing:o.eq<=30?'Asset / project finance':'Equipment + equity',advShort:o.adv[0],open:()=>this.open(o)});
+    const filteredRaw=OPPS.filter(o=>(!cap||o.cost*o.eq/100<=cap)&&(!s.industry||o.sector===s.industry));
+    const landedRows=o=>{const p=o.price/1.52;const parts=[['Supplier price (FOB)',p],['Freight',p*0.12],['Insurance',p*0.015],['Duty & taxes',p*0.25],['Port charges',p*0.03],['Clearance',p*0.02],['Inland transport',p*0.085]];const tot=parts.reduce((a,b)=>a+b[1],0);return {rows:parts.map(([label,v])=>({label,val:Math.round(v).toLocaleString(),w:(v/tot*100*2.2).toFixed(1)+'%'})),tot};};
+    const smp=OPPS[0], sl=landedRows(smp);
+
+    let d=null, calc=null, calcInputs=[];
+    const o=OPPS.find(x=>x.id===s.oppId);
+    if(s.view==='detail'&&o&&s.calc){
+      const L=landedRows(o), max=Math.max(...o.imp);
+      const cs=this.scen(o,0.8,-0.04), bs=this.scen(o,1,0), us=this.scen(o,1.15,0.03);
+      const f=this.fmt.bind(this), pc=v=>(v*100).toFixed(0)+'%';
+      const cagr=(Math.pow(o.imp[4]/o.imp[0],1/4)-1)*100;
+      d={...o,
+        overview:[{l:'PRODUCT',v:o.name.replace(/^[\d.]+ ?\w+ /,'')},{l:'COUNTRY',v:'Kenya'},{l:'LOCATION',v:o.location},{l:'CAPACITY',v:o.capacity},{l:'INDICATIVE CAPEX',v:f(o.cost)},{l:'EQUITY FROM',v:f(o.cost*o.eq/100)},{l:'FACTORY',v:o.area},{l:'MARKET',v:o.market}],
+        adv:o.adv.map((t,i)=>({n:'0'+(i+1),t})),
+        impBars:o.imp.map((v,i)=>({y:String(2021+i),v:String(v),h:(v/max*85).toFixed(0)+'%',c:i===4?'#F26A1B':'#0E0D0C'})),
+        cagr:(cagr>=0?'+':'')+cagr.toFixed(1)+'% CAGR',
+        landed:L.rows,landedTotal:Math.round(L.tot).toLocaleString(),localFmt:Math.round(o.local).toLocaleString(),localW:(o.local/L.tot*100).toFixed(0)+'%',advPct:'−'+((1-o.local/L.tot)*100).toFixed(0)+'%',
+        steps:o.steps.map((t,i,a)=>({n:String(i+1).padStart(2,'0'),t,arrow:i<a.length-1?'→':''})),
+        scen:[
+          {l:'Revenue / yr',c:f(cs.R),b:f(bs.R),u:f(us.R)},
+          {l:'Gross margin',c:pc(cs.gm),b:pc(bs.gm),u:pc(us.gm)},
+          {l:'EBITDA / yr',c:f(cs.eb),b:f(bs.eb),u:f(us.eb)},
+          {l:'CAPEX + working capital',c:f(o.cost*1.12),b:f(o.cost*1.12),u:f(o.cost*1.12)},
+          {l:'Payback',c:cs.pb.toFixed(1)+' yrs',b:bs.pb.toFixed(1)+' yrs',u:us.pb.toFixed(1)+' yrs'},
+          {l:'Project IRR (10 yr)',c:pc(cs.irr),b:pc(bs.irr),u:pc(us.irr)},
+          {l:'DSCR (70% debt, 14%, 7 yr)',c:cs.dscr.toFixed(2)+'x',b:bs.dscr.toFixed(2)+'x',u:us.dscr.toFixed(2)+'x'}],
+        disclosure:[{l:'DATA PERIOD',v:'2021–2025 (DEMO)'},{l:'RESEARCH DATE',v:'Sep 2026 (DEMO)'},{l:'KEY ASSUMPTIONS',v:'75% utilisation, 2 shifts, KES/USD '+USD},{l:'MARKET-DATA SOURCE',v:'Placeholder — trade database integration pending'},{l:'EQUIPMENT QUOTATION',v:'Indicative, 2 supplier quotes'},{l:'SUPPLIER VERIFICATION',v:o.verification}]
+      };
+      const c=s.calc, e=this.econ(o,c);
+      const set=k=>ev=>{const v=Number(ev.target.value);this.setState(st=>({calc:{...st.calc,[k]:v}}));};
+      const lo=Math.round(o.cost*0.6*10)/10, hi=Math.round(o.cost*1.6*10)/10;
+      calcInputs=[
+        {label:'Project cost',display:f(c.cost),min:lo,max:hi,step:(hi-lo)/100,value:c.cost,set:set('cost')},
+        {label:'Equity contribution',display:c.eq+'%',min:10,max:80,step:5,value:c.eq,set:set('eq')},
+        {label:'Interest rate',display:c.rate+'%',min:6,max:22,step:0.5,value:c.rate,set:set('rate')},
+        {label:'Tenure',display:c.tenure+' yrs',min:2,max:12,step:1,value:c.tenure,set:set('tenure')},
+        {label:'Grace period',display:c.grace+' months',min:0,max:24,step:3,value:c.grace,set:set('grace')},
+        {label:'Capacity utilisation',display:c.util+'%',min:40,max:95,step:5,value:c.util,set:set('util')},
+        {label:'Selling price vs base',display:c.price+'%',min:80,max:120,step:1,value:c.price,set:set('price')}];
+      const small=v=>{if((this.props.currency??'KES')==='USD')return 'USD '+Math.round(v*1e6/USD).toLocaleString();return 'KES '+Math.round(v*1e6).toLocaleString();};
+      calc={monthly:small(e.mo),annual:f(e.ads),ebitda:f(e.eb),dscr:e.dscr.toFixed(2)+'x',dscrColor:e.dscr>=1.3?'#7FD48A':e.dscr>=1?'#F2C14E':'#FF6B5B',equity:f(e.eqAmt),loan:f(e.loan),cash:f(e.eb-e.ads),
+        note:e.dscr>=1.3?'DSCR above 1.3x — typical lender comfort range.':e.dscr>=1?'DSCR between 1.0x and 1.3x — lenders may ask for more equity or longer tenure.':'DSCR below 1.0x — cash flow does not cover debt service at these inputs.'};
+    }
+
+    return {
+      ...this.extraVals(pickStyle, card, demo),
+      isHome:s.view==='home', isList:s.view==='list', isDetail:s.view==='detail',
+      goHome:()=>this.go('home'), goList:()=>this.go('list'), goContact:()=>this.go(s.view,'contact'),
+      goEnquire:()=>this.go('detail','enquire'), goCalc:()=>this.go('detail','calc'),
+      capitals:capList(false), capitalsDark:capList(true),
+      industries:indList(IND,false), industriesDark:indList([...new Set(OPPS.map(o=>o.sector))],true),
+      isCustom:s.capital==='custom', customVal:s.custom, setCustom:e=>this.setState({custom:e.target.value}),
+      matchText:filteredRaw.length+' validated opportunit'+(filteredRaw.length===1?'y':'ies')+(cap?' within KES '+cap+'M equity':'')+(s.industry?' · '+s.industry:''),
+      featured:(cap||s.industry?filteredRaw:OPPS).slice(0,3).map(card),
+      filtered:filteredRaw.map(card), noResults:filteredRaw.length===0,
+      clearFilters:()=>this.setState({capital:null,industry:null}),
+      engines:[{n:'E1',t:'Import Gap',d:'Products with significant, growing imports that could be produced locally with an advantage.'},{n:'E2',t:'Africa Gap',d:'Goods Africa imports heavily where intra-African supply is low.'},{n:'E3',t:'Global Demand Radar™',d:'Fast-growing components, ingredients and industrial inputs worldwide.'},{n:'E4',t:'Resource Value Addition',d:'Raw material → intermediate → component → finished and specialty product.'},{n:'E5',t:'Industrial Input / MRO',d:'Imported spares, consumables, packaging and chemicals that could be made regionally.'}],
+      sample:{name:smp.name,landed:sl.rows,landedTotal:'KES '+Math.round(sl.tot)+'K',localFmt:'KES '+smp.local+'K',unit:smp.unit+' · DEMO',advPct:'−'+((1-smp.local/sl.tot)*100).toFixed(0)+'%'},
+      steps:[{n:'01',t:'Discover',d:'Find a manufacturing opportunity.'},{n:'02',t:'Validate',d:'Research demand, resources and competition.'},{n:'03',t:'Engineer',d:'Design the production system.'},{n:'04',t:'Equip',d:'Source qualified equipment.'},{n:'05',t:'Finance',d:'Connect with potential financing pathways.'},{n:'06',t:'Build',d:'Develop and commission the factory.'},{n:'07',t:'Operate',d:'Support production and assets.'}],
+      verif:['Registered','Docs submitted','Under review','Verified','FP Qualified','FP Approved'].map((t,i)=>({t,c:i>=4?'#F26A1B':'#8F897F'})),
+      equipCats:['Production lines','Processing','Packaging','Filling','Mixing','Milling','Extrusion','Injection moulding','CNC & fabrication','Boilers','Compressors','Water treatment'],
+      industryLinks:['Agriculture','Food','Packaging','Plastics','Construction','Metals','Recycling','Chemicals','Textiles','Furniture','Automotive','Energy','Healthcare','Components','Consumer'].map(l=>({label:l,go:()=>{const m={Food:'Food Processing',Construction:'Construction Materials',Components:'Industrial Components'}[l]||l;this.setState({industry:m});this.go('list');}})),
+      bench:[{m:'OEE',g:'85%',f:'80%',l:'55%'},{m:'Yield',g:'98%',f:'96%',l:'90%'},{m:'Uptime',g:'95%',f:'92%',l:'78%'},{m:'Labour productivity',g:'100',f:'85',l:'40'},{m:'Energy intensity',g:'100',f:'108',l:'140'},{m:'Automation level',g:'High',f:'Med-high',l:'Low'}],
+      finTypes:['Asset finance','Equipment finance','Project finance','Development finance','Investor equity','Blended finance','Supplier financing','Leasing'],
+      d:d||{}, calc:calc||{}, calcInputs,
+      notSubmitted:!s.submitted, submitted:s.submitted, leadRef:s.leadRef,
+      submit:e=>{e.preventDefault();this.setState({submitted:true,leadRef:'FP-L-'+Math.floor(10000+Math.random()*89999)});},
+      workflow:['CRM lead created and linked to this opportunity','Opportunity enquiry assigned to an analyst','FirmPlant sales team notified','Confirmation sent to your email','Qualification call scheduled within 2 business days'],
+      ...this.extraVals2(card, demo)
+    };
+  }
+}
+</script>
+</body>
+</html>
