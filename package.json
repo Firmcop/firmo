@@ -1,0 +1,17 @@
+{
+  "name": "firmplant",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build -w @firmplant/engines && npm run build -w @firmplant/api",
+    "dev": "npm run dev -w @firmplant/api",
+    "test": "npm test -w @firmplant/engines && npm test -w @firmplant/api",
+    "db:migrate": "npm run db:migrate -w @firmplant/api",
+    "db:seed": "npm run db:seed -w @firmplant/api",
+    "lint": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "engines": { "node": ">=20" }
+}
