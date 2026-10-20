@@ -168,6 +168,7 @@ class Component extends DCLogic {
     const products = all.filter((p) => this.state.cat === 'All' || p.cat === this.state.cat).map((p) => {
       let st;
       if (p.stock <= 5) st = { t: 'Low · ' + p.stock + ' left', s: pill + 'background:#FFF1D6;color:#6B4A00' };
+      else if (p.stock >= 9999) st = { t: 'Made to order', s: pill + 'background:#ECE8E0;color:#4A463F' };
       else st = { t: fmt(p.stock) + ' ' + p.unit + ' in stock', s: pill + 'background:#E3F1E6;color:#1F5A2E' };
       const inCart = cart[p.sku] || 0;
       return Object.assign({}, p, {

@@ -73,6 +73,8 @@ def store(s):
     js = array_list(js, p, 'store')
     js = rep(js, "    const labels = ['All', 'Doors', 'Windows', 'Cladding', 'Insulation', 'Flooring', 'Roofing'];",
              "    const labels = ['All'].concat(all.map((p) => p.cat).filter((c, i, a) => a.indexOf(c) === i));", p)
+    js = rep(js, "      else st = { t: fmt(p.stock) + ' ' + p.unit + ' in stock', s: pill + 'background:#E3F1E6;color:#1F5A2E' };",
+             "      else if (p.stock >= 9999) st = { t: 'Made to order', s: pill + 'background:#ECE8E0;color:#4A463F' };\n      else st = { t: fmt(p.stock) + ' ' + p.unit + ' in stock', s: pill + 'background:#E3F1E6;color:#1F5A2E' };", p)
     js = rep(js, "    const lines = Object.keys(cart).filter((k) => cart[k] > 0).map((k) => {",
              "    const lines = Object.keys(cart).filter((k) => cart[k] > 0 && all.some((x) => x.sku === k)).map((k) => {", p)
     js = rep(js, "swatch: 'position:relative;height:120px;background-color:' + p.bg + ';' + tex[p.tex],",

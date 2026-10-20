@@ -252,6 +252,28 @@
     }).then((r) => (r && r.quote) || null);
   };
 
+  // ---------- product prices (same rules as public.catalog_price) ----------
+  FC.price = function (p, params, choices) {
+    choices = choices || {}; let w = null, h = null, len = null, mult = 1, adds = 0; const picked = {};
+    (params || []).slice().sort((a, b) => (a.sort || 0) - (b.sort || 0)).forEach((pr) => {
+      const v = choices[pr.key] != null ? String(choices[pr.key]) : pr.default_value;
+      if (pr.kind === 'number') {
+        let n = Number(v); if (!isFinite(n)) n = Number(pr.default_value) || Number(pr.min) || 0;
+        if (pr.step > 0) n = (Number(pr.min) || 0) + Math.round((n - (Number(pr.min) || 0)) / pr.step) * pr.step;
+        if (pr.min != null && n < pr.min) n = Number(pr.min); if (pr.max != null && n > pr.max) n = Number(pr.max);
+        if (pr.geometry === 'w') w = n; else if (pr.geometry === 'h') h = n; else if (pr.geometry === 'len') len = n;
+        picked[pr.key] = n;
+      } else {
+        const opts = pr.options || []; const o = opts.find((x) => x.value === v) || opts[0];
+        if (o) { adds += Number(o.price_add) || 0; if (o.price_mult != null) mult *= Number(o.price_mult); picked[pr.key] = o.value; }
+      }
+    });
+    const area = w != null && h != null ? Math.round(w * h / 1000) / 1000 : null;
+    const base = Number(p.base_price) || 0, rate = Number(p.rate) || 0;
+    const price = p.price_mode === 'per_m2' ? base + rate * (area == null ? 1 : area) : (p.price_mode === 'per_m' ? base + rate * (len == null ? 1 : len / 1000) : base);
+    return { unit_price: Math.round(price * mult + adds), area_m2: area, choices: picked, quote_only: p.price_mode === 'quote' };
+  };
+
   // ---------- live lists for the DC pages ----------
   const TYPE_IMG = { 'A-frame': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', Cabin: '/_blob/934cee1933bb4f74580e99cf52bfbbdc', Steel: '/_blob/ad198461426af454fde500cf62dc0e6d', Container: '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac', Other: '/_blob/ad198461426af454fde500cf62dc0e6d' };
   const LOADERS = {
@@ -259,9 +281,13 @@
       name: w.title, type: w.type === 'Other' ? 'Steel' : w.type, place: w.location || 'Kenya', area: w.area_m2 ? Math.round(w.area_m2) : '', weeks: w.weeks || '',
       client: w.client || w.category || '', design: w.design || w.category || '', finishes: w.finishes || 'On request', story: w.story || '', img: (w.images && w.images[0]) || TYPE_IMG[w.type], images: w.images || [], slug: w.slug
     }))),
-    store: () => FC.rest('store_items?select=*&active=eq.true&order=sort.asc').then((rows) => rows.map((x) => ({
-      sku: x.sku, name: x.name, cat: x.category, unit: x.unit, price: Number(x.price), stock: x.stock == null ? 9999 : Number(x.stock), fits: x.fits || '', bg: x.swatch || '#8F8A80', tex: x.texture || 'none', img: x.image_url || ''
-    }))),
+    store: () => FC.rest('catalog_products?select=id,slug,sku,name,kind,unit,price_mode,base_price,rate,stock,summary,specs,shape,cover_url,model_url,category:catalog_categories!inner(name,slug,scopes),params:product_params(key,label,kind,unit,min,max,step,default_value,geometry,options,sort)'
+      + '&published=eq.true&kind=in.(material,fitting,furniture)&category.scopes=cs.{atelier}&price_mode=neq.quote&order=sort.asc,name.asc').then((rows) => rows.map((x) => {
+      const pat = { plank: 'boards', vplank: 'boards', tile: 'grid', none: 'none' };
+      return { sku: x.sku || x.slug, slug: x.slug, name: x.name, cat: x.category.name, catSlug: x.category.slug, unit: x.unit, price: FC.price(x, x.params).unit_price,
+        stock: x.stock == null ? 9999 : Number(x.stock), fits: x.summary || '', bg: (x.specs && x.specs.swatch) || (x.shape && x.shape.color) || '#8F8A80',
+        tex: (x.specs && (x.specs.texture || pat[x.specs.pat])) || 'none', img: x.cover_url || '', params: x.params || [], product: x };
+    })),
     opps: () => FC.rest('investment_opportunities?select=*&published=eq.true&order=sort.asc').then((rows) => rows.map((o) => ({
       name: o.name, sector: o.sector, place: o.place || '', spec: o.spec || '', units: o.units, taken: Math.min(o.taken, o.units), price: Number(o.price),
       yLo: Number(o.yield_lo) || 0, yHi: Number(o.yield_hi) || 0, opens: o.opens || '', status: o.status_label || '', own: o.own_terms || '', operator: o.operator || '', split: o.split || '', story: o.story || '', img: o.image_url || '', pack: o.pack_url || '', slug: o.slug

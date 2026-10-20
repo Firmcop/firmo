@@ -198,7 +198,7 @@ where email = '${esc(ME.email)}';</pre>
 // ---------- shell ----------
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
-  ['builds', 'Client builds', 'variations_pending'], ['items', 'Atelier items', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
+  ['builds', 'Client builds', 'variations_pending'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
   ['designs', 'Designs', 'designs_review'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
@@ -252,6 +252,7 @@ function formHtml(fields, rec) {
     if (f.type === 'select') return `<label${cls}>${esc(f.label)}${hint}<select name="${f.k}" ${f.ro ? 'disabled' : ''}>${f.options.map((o) => { const [ov, ol] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(ov)}" ${String(v) === String(ov) ? 'selected' : ''}>${esc(ol)}</option>`; }).join('')}</select></label>`;
     if (f.type === 'textarea') return `<label${cls}>${esc(f.label)}${hint}<textarea name="${f.k}" ${f.ro ? 'readonly' : ''}>${esc(v == null ? '' : v)}</textarea></label>`;
     if (f.type === 'lines') return `<label${cls}>${esc(f.label)}${hint}<textarea name="${f.k}" rows="4">${esc((v || []).join('\n'))}</textarea></label>`;
+    if (f.type === 'json') return `<label class="fl wide">${esc(f.label)}${hint}<textarea name="${f.k}" rows="4" class="mono" style="font-size:13px">${esc(v == null || (typeof v === 'object' && !Object.keys(v).length) ? '' : JSON.stringify(v, null, 1))}</textarea></label>`;
     const t = { money: 'number', number: 'number', date: 'date', color: 'color', email: 'email', url: 'url', tel: 'tel' }[f.type] || 'text';
     const val = f.type === 'date' && v ? String(v).slice(0, 10) : (v == null ? '' : v);
     return `<label${cls}>${esc(f.label)}${hint}<input name="${f.k}" type="${t}" value="${esc(val)}" ${t === 'number' ? 'step="any"' : ''} ${f.ro ? 'readonly' : ''} ${f.req ? 'required' : ''}></label>`;
@@ -265,6 +266,7 @@ function readForm(form, fields) {
     else if (f.type === 'number' || f.type === 'money') out[f.k] = el.value === '' ? null : Number(el.value);
     else if (f.type === 'lines') out[f.k] = el.value.split('\n').map((x) => x.trim()).filter(Boolean);
     else if (f.type === 'date') out[f.k] = el.value || null;
+    else if (f.type === 'json') { const t = el.value.trim(); try { out[f.k] = t ? JSON.parse(t) : {}; } catch (e) { throw new Error(f.label + ': not valid JSON'); } }
     else out[f.k] = el.value.trim() === '' ? null : el.value.trim();
   });
   return out;
@@ -341,7 +343,7 @@ VIEWS.dashboard = async (m) => {
   const c = COUNTS;
   const tiles = [['leads', c.leads_new, 'New leads'], ['leads', c.leads_open, 'Open leads'], ['quotes', c.quotes_review, 'Quotes to review'], ['orders', c.orders_pending, 'Atelier orders pending'],
     ['builds', c.builds_active, 'Active builds'], ['builds', c.variations_pending, 'Variations awaiting client'], ['builds', c.messages_7d, 'Client messages, 7 days'], ['designs', c.designs_review, 'Designs in review'],
-    ['items', c.low_stock, 'Items low on stock'], ['works', c.works, 'Published works'], ['subscribers', c.subscribers, 'Newsletter subscribers']];
+    ['catalogue', c.low_stock, 'Items low on stock'], ['catalogue', c.review, 'Products to check'], ['works', c.works, 'Published works'], ['subscribers', c.subscribers, 'Newsletter subscribers']];
   m.innerHTML = `<div class="top"><div><p class="eb">Firmcop · Admin</p><h1>Dashboard</h1></div><div class="tools"><a class="btn line" href="Main.dc.html" target="_blank" rel="noopener">Open the website</a></div></div>
     <div class="tiles">${tiles.map(([v, n, l]) => `<button type="button" class="tile" data-go="${v}"><div class="n">${n || 0}</div><div class="l">${l}</div></button>`).join('')}</div>
     <div class="cols3"><section class="card"><h2>Latest leads</h2><div id="d-leads" class="muted">Loading…</div></section>
@@ -589,6 +591,238 @@ async function buildDetail(r, d, reload, tab) {
     if (tab === 'payments') { const t = Number(r.contract_total) || 0; body = [['Deposit', 0.3], ['Drawings approved', 0.3], ['Before delivery', 0.3], ['Handover', 0.1]].map((p, i) => ({ build_id: r.id, sort: i + 1, name: p[0], amount: Math.round(t * p[1]), status: i === 0 ? 'due' : 'upcoming' })); }
     await guard(api(C.table, { method: 'POST', body }), 'Added'); buildDetail(r, d, reload, tab);
   };
+}
+
+// ---------- catalogue: categories, products, options, photos and models ----------
+const KINDS = [['building', 'Building (Collection)'], ['design', 'Studio design'], ['material', 'Material'], ['fitting', 'Fitting'], ['furniture', 'Furniture'], ['service', 'Service']];
+const PRICE_MODES = [['fixed', 'Fixed price per unit'], ['per_m2', 'By area: fixed part + rate per m²'], ['per_m', 'By length: fixed part + rate per m'], ['quote', 'Price on request']];
+let CATS = [];
+async function loadCats() { CATS = await api('catalog_categories?select=*&order=sort.asc,name.asc'); return CATS; }
+function catPath(id) { const out = []; let c = CATS.find((x) => x.id === id), n = 0; while (c && n++ < 6) { out.unshift(c.name); c = CATS.find((x) => x.id === c.parent_id); } return out.join(' › '); }
+function catOptions(withNone) {
+  const rows = []; const walk = (pid, depth) => CATS.filter((c) => (c.parent_id || null) === pid).forEach((c) => { rows.push([c.id, '  '.repeat(depth) + c.name]); walk(c.id, depth + 1); });
+  walk(null, 0); return (withNone ? [['', '(top level)']] : []).concat(rows);
+}
+async function uploadFile(file, folder) {
+  const cfg = window.FC_SUPA, t = await FC.auth.token();
+  const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+  const path = folder + '/' + Date.now() + '-' + safe;
+  const r = await fetch(cfg.url + '/storage/v1/object/media/' + path, { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }, body: file });
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Upload failed: ' + (j.message || j.error || r.status)); }
+  return cfg.url + '/storage/v1/object/public/media/' + path;
+}
+// options as editable lines:  value | label | +price | #swatch | x1.2
+const optToLines = (opts) => (opts || []).map((o) => [o.value, o.label || '', o.price_add ? (o.price_add > 0 ? '+' : '') + o.price_add : '', o.swatch || '', o.price_mult ? 'x' + o.price_mult : ''].filter((x, i) => i < 2 || x !== '').join(' | ')).join('\n');
+const linesToOpt = (txt) => txt.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+  const parts = l.split('|').map((x) => x.trim()); const o = { value: parts[0], label: parts[1] || parts[0] };
+  parts.slice(2).forEach((t) => { if (/^#[0-9a-f]{3,8}$/i.test(t)) o.swatch = t; else if (/^x[0-9.]+$/i.test(t)) o.price_mult = Number(t.slice(1)); else if (/^[+-]?[0-9.]+$/.test(t)) o.price_add = Number(t); });
+  return o;
+});
+
+VIEWS.catalogue = async (m, tab) => {
+  tab = tab || (location.hash.split('/')[1]) || 'products';
+  await loadCats();
+  m.innerHTML = `<div class="top"><div><p class="eb">Website and 3D Studio</p><h1>Catalogue</h1></div></div>
+    <p class="muted" style="margin-top:0">One catalogue feeds the Collection, the Atelier and the 3D Studio library. Change a price here and it changes everywhere.</p>
+    <div class="tabs" role="tablist" style="margin-bottom:14px"><button type="button" role="tab" data-ct="products" aria-selected="${tab === 'products'}">Products</button><button type="button" role="tab" data-ct="categories" aria-selected="${tab === 'categories'}">Categories</button></div><div id="cbox"></div>`;
+  m.querySelectorAll('[data-ct]').forEach((b) => b.onclick = () => { history.replaceState(null, '', '#catalogue/' + b.dataset.ct); VIEWS.catalogue(m, b.dataset.ct); });
+  const box = $('#cbox', m);
+  return tab === 'categories' ? categoriesView(box) : productsView(box);
+};
+
+async function categoriesView(box) {
+  const counts = {}; (await api('catalog_products?select=category_id')).forEach((p) => { counts[p.category_id] = (counts[p.category_id] || 0) + 1; });
+  const rows = []; const walk = (pid, depth) => CATS.filter((c) => (c.parent_id || null) === pid).forEach((c) => { rows.push([c, depth]); walk(c.id, depth + 1); });
+  walk(null, 0);
+  box.innerHTML = `<div class="tools" style="margin-bottom:10px"><button class="btn" type="button" id="newcat">Add a category</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Category</th><th>Shown in</th><th class="n">Products</th><th>On website</th></tr></thead><tbody>
+    ${rows.map(([c, d]) => `<tr class="row" tabindex="0" data-id="${c.id}"><td style="padding-left:${12 + d * 22}px">${d ? '<span class="muted">└ </span>' : ''}<b style="font-weight:${d ? 500 : 700}">${esc(c.name)}</b> <span class="mono small muted">${esc(c.slug)}</span></td><td class="small">${esc((c.scopes || []).join(', '))}</td><td class="n">${counts[c.id] || ''}</td><td>${yes(c.published)}</td></tr>`).join('')}</tbody></table></div>`;
+  const open = (c) => editCategory(c, () => VIEWS.catalogue($('#main'), 'categories'));
+  box.querySelectorAll('tr.row').forEach((tr) => { const c = CATS.find((x) => x.id === tr.dataset.id); tr.onclick = () => open(c); tr.onkeydown = (e) => { if (e.key === 'Enter') open(c); }; });
+  $('#newcat', box).onclick = () => open(null);
+}
+function editCategory(c, done) {
+  const isNew = !c; c = c || { scopes: ['atelier', 'studio'], published: true, sort: 100 };
+  drawer(isNew ? 'New category' : c.name, 'Catalogue · category', '', (d) => {
+    const parents = catOptions(true).filter((o) => o[0] !== c.id);
+    d.el.innerHTML = `<form class="f" id="cf">
+      <label class="fl">Name<input name="name" value="${esc(c.name || '')}" required></label>
+      <label class="fl">Web address <span class="hint">made from the name</span><input name="slug" value="${esc(c.slug || '')}"></label>
+      <label class="fl">Inside<select name="parent_id">${parents.map(([v, l]) => `<option value="${esc(v)}" ${String(c.parent_id || '') === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      <label class="fl">Order<input name="sort" type="number" value="${esc(c.sort)}"></label>
+      <fieldset class="wide" style="border:1px solid var(--line);border-radius:6px;padding:8px 12px"><legend class="small" style="font-weight:600">Shown in</legend>
+        ${[['collection', 'Collection (buildings)'], ['atelier', 'Atelier (shop)'], ['studio', '3D Studio library']].map(([k, l]) => `<label class="ck" style="display:inline-flex;margin-right:16px"><input type="checkbox" name="sc_${k}" ${(c.scopes || []).includes(k) ? 'checked' : ''}>${l}</label>`).join('')}</fieldset>
+      <label class="fl wide">Description<textarea name="description">${esc(c.description || '')}</textarea></label>
+      <label class="fl wide">Image <span class="hint">shown in the mega menu</span><input name="image_url" type="url" value="${esc(c.image_url || '')}"></label>
+      <label class="fl"><span>Upload an image</span><input type="file" accept="image/*" id="cimg"></label>
+      <label class="ck"><input type="checkbox" name="published" ${c.published ? 'checked' : ''}>Show on the website</label>
+      <div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button></div></form>`;
+    const f = $('#cf', d.el);
+    if (isNew) f.name.addEventListener('input', () => { f.slug.value = slugify(f.name.value); });
+    $('#cimg', d.el).onchange = async (e) => { const file = e.target.files[0]; if (!file) return; f.image_url.value = await guard(uploadFile(file, 'categories'), 'Image uploaded'); };
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const v = { name: f.name.value.trim(), slug: f.slug.value.trim() || slugify(f.name.value), parent_id: f.parent_id.value || null, sort: Number(f.sort.value || 0),
+        scopes: ['collection', 'atelier', 'studio'].filter((k) => f['sc_' + k].checked), description: f.description.value || null, image_url: f.image_url.value || null, published: f.published.checked };
+      if (!v.name) return toast('Give the category a name', true);
+      if (!v.scopes.length) return toast('Choose at least one place to show it', true);
+      if (isNew) await guard(api('catalog_categories', { method: 'POST', body: v }), 'Category added');
+      else await guard(api('catalog_categories?id=eq.' + c.id, { method: 'PATCH', body: v }), 'Saved');
+      d.close(); done();
+    };
+  });
+}
+
+const PRODUCT_FIELDS = () => [
+  { k: 'name', label: 'Name', req: true, wide: true }, { k: 'slug', label: 'Web address', hint: 'made from the name' }, { k: 'sku', label: 'SKU' },
+  { k: 'kind', label: 'Kind', type: 'select', options: KINDS }, { k: 'category_id', label: 'Category', type: 'select', options: catOptions(false) },
+  { k: 'summary', label: 'Short description', type: 'textarea' }, { k: 'description', label: 'Full description', type: 'textarea' },
+  { k: 'price_mode', label: 'Pricing', type: 'select', options: PRICE_MODES }, { k: 'unit', label: 'Unit', hint: 'no., m², per unit…' },
+  { k: 'base_price', label: 'Price, or fixed part (KES)', type: 'money' }, { k: 'rate', label: 'Rate per m² or m (KES)', type: 'money', hint: 'for area or length pricing' },
+  { k: 'lead_time_weeks', label: 'Lead time (weeks)', type: 'number' }, { k: 'stock', label: 'Stock', type: 'number', hint: 'empty = not tracked' },
+  { k: 'design_slug', label: '3D Studio design', hint: 'opens this design in the Studio' }, { k: 'sort', label: 'Order', type: 'number' },
+  { k: 'features', label: 'Features', type: 'lines', hint: 'one per line' },
+  { k: 'shape', label: '3D shape until a model is uploaded', type: 'json', hint: 'kind door|window|panel|box, w h d in mm, color' },
+  { k: 'specs', label: 'Specs', type: 'json' },
+  { k: 'published', label: 'Show on the website', type: 'bool' }, { k: 'featured', label: 'Featured', type: 'bool' },
+  { k: 'needs_review', label: 'Price needs checking', type: 'bool' }, { k: 'is_placeholder', label: 'Placeholder content', type: 'bool' }];
+
+async function productsView(box) {
+  const st = { q: '', kind: '', cat: '', flag: '' };
+  box.innerHTML = `<div class="tools" style="margin-bottom:10px"><input class="q" type="search" placeholder="Search name or SKU" aria-label="Search products">
+    <select class="f" id="fk" aria-label="Kind"><option value="">All kinds</option>${KINDS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>
+    <select class="f" id="fc" aria-label="Category" style="max-width:240px"><option value="">All categories</option>${catOptions(false).map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>
+    <select class="f" id="ff" aria-label="Flags"><option value="">Everything</option><option value="review">Price needs checking</option><option value="placeholder">Placeholders</option><option value="hidden">Hidden from the website</option><option value="low">Low stock</option></select>
+    <button class="btn" type="button" id="newp">Add a product</button></div>
+    <div class="tablewrap"><table><thead><tr><th></th><th>Product</th><th>Category</th><th class="n">Price</th><th class="n">Stock</th><th>Status</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div>
+    <p class="small muted" id="pcount"></p>`;
+  const tb = $('tbody', box); let rows = [];
+  const priceText = (p) => p.price_mode === 'quote' ? 'On request' : (p.price_mode === 'per_m2' ? kes(p.base_price) + ' + ' + fmt(p.rate) + '/m²' : (p.price_mode === 'per_m' ? kes(p.base_price) + ' + ' + fmt(p.rate) + '/m' : kes(p.base_price) + (p.unit && p.unit !== 'no.' ? ' ' + esc(p.unit) : '')));
+  async function load() {
+    const q = ['select=id,slug,sku,name,kind,category_id,unit,price_mode,base_price,rate,stock,cover_url,shape,published,featured,needs_review,is_placeholder,sort', 'order=sort.asc,name.asc', 'limit=1000'];
+    if (st.kind) q.push('kind=eq.' + st.kind);
+    if (st.cat) { const ids = [st.cat]; let grew = true; while (grew) { grew = false; CATS.forEach((c) => { if (c.parent_id && ids.includes(c.parent_id) && !ids.includes(c.id)) { ids.push(c.id); grew = true; } }); } q.push('category_id=in.(' + ids.join(',') + ')'); }
+    if (st.flag === 'review') q.push('needs_review=is.true'); if (st.flag === 'placeholder') q.push('is_placeholder=is.true'); if (st.flag === 'hidden') q.push('published=is.false'); if (st.flag === 'low') q.push('stock=lte.5');
+    if (st.q) q.push('or=(name.ilike.*' + encodeURIComponent(st.q.replace(/[(),*]/g, ' ')) + '*,sku.ilike.*' + encodeURIComponent(st.q.replace(/[(),*]/g, ' ')) + '*)');
+    rows = await api('catalog_products?' + q.join('&'));
+    $('#pcount', box).textContent = rows.length + ' product' + (rows.length === 1 ? '' : 's');
+    tb.innerHTML = rows.length ? rows.map((p, i) => {
+      const sw = p.cover_url ? `<img src="${esc(p.cover_url)}" alt="" width="48" height="36" style="object-fit:cover;border-radius:3px;display:block">` : `<span aria-hidden="true" style="display:block;width:48px;height:36px;border-radius:3px;background:${esc((p.shape && p.shape.color) || '#D9D4CA')}"></span>`;
+      const flags = [!p.published ? pill('hidden') : '', p.needs_review ? '<span class="pill due">check price</span>' : '', p.is_placeholder ? '<span class="pill">placeholder</span>' : '', p.featured ? '<span class="pill yes">featured</span>' : ''].join(' ');
+      return `<tr class="row" tabindex="0" data-i="${i}"><td>${sw}</td><td><b style="font-weight:600">${esc(p.name)}</b><br><span class="small muted mono">${esc(p.sku || p.slug)}</span> <span class="small muted">· ${esc((KINDS.find((k) => k[0] === p.kind) || [0, p.kind])[1])}</span></td><td class="small">${esc(catPath(p.category_id))}</td><td class="n">${priceText(p)}</td><td class="n">${p.stock == null ? '' : (p.stock <= 5 ? `<span class="pill due">${fmt(p.stock)}</span>` : fmt(p.stock))}</td><td>${flags}</td></tr>`;
+    }).join('') : `<tr><td colspan="6" class="empty">Nothing matches.</td></tr>`;
+    tb.querySelectorAll('tr.row').forEach((tr) => { const o = () => editProduct(rows[+tr.dataset.i], load); tr.onclick = o; tr.onkeydown = (e) => { if (e.key === 'Enter') o(); }; });
+  }
+  let t; $('.q', box).oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 250); };
+  $('#fk', box).onchange = (e) => { st.kind = e.target.value; load(); };
+  $('#fc', box).onchange = (e) => { st.cat = e.target.value; load(); };
+  $('#ff', box).onchange = (e) => { st.flag = e.target.value; load(); };
+  $('#newp', box).onclick = () => editProduct(null, load);
+  await load();
+}
+
+async function editProduct(p, reload, tab) {
+  const isNew = !p;
+  if (p) p = (await api('catalog_products?id=eq.' + p.id))[0];
+  else p = { kind: 'material', price_mode: 'fixed', unit: 'no.', base_price: 0, rate: 0, published: false, sort: 100, shape: {}, specs: {}, features: [], images: [], category_id: (CATS.find((c) => c.slug === 'doors') || CATS[0] || {}).id };
+  const d = drawer(isNew ? 'New product' : p.name, 'Catalogue · product', '');
+  const render = async (tab) => {
+    tab = tab || 'details';
+    const tabs = [['details', 'Details'], ['options', 'Options'], ['media', 'Photos and 3D'], ['price', 'Price check']];
+    d.el.innerHTML = (isNew ? '' : `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-pt="${k}">${l}</button>`).join('')}</div>`) + '<div id="pb"></div>';
+    d.el.querySelectorAll('[data-pt]').forEach((b) => b.onclick = () => render(b.dataset.pt));
+    const box = $('#pb', d.el);
+    if (tab === 'details') {
+      const F = PRODUCT_FIELDS();
+      box.innerHTML = `<form class="f" style="margin-top:12px">${formHtml(F, p)}<div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button>${p.slug ? `<a class="btn line" href="Store.dc.html" target="_blank" rel="noopener">See it on the website</a>` : ''}</div></form>`;
+      const f = $('form', box);
+      if (isNew) f.name.addEventListener('input', () => { f.slug.value = slugify(f.name.value); });
+      f.onsubmit = async (e) => {
+        e.preventDefault(); let v;
+        try { v = readForm(f, F); } catch (ex) { return toast(ex.message, true); }
+        v.slug = v.slug || slugify(v.name); v.base_price = v.base_price || 0; v.rate = v.rate || 0;
+        if (!v.name) return toast('Give the product a name', true);
+        if (isNew) { const r = await guard(api('catalog_products', { method: 'POST', body: v, headers: { Prefer: 'return=representation' } }), 'Product created'); p = r[0]; d.close(); reload(); editProduct(p, reload, 'options'); return; }
+        const r = await guard(api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body: v, headers: { Prefer: 'return=representation' } }), 'Saved');
+        p = r[0]; d.setTitle(p.name); reload(); refreshCounts();
+      };
+      return;
+    }
+    if (tab === 'options') {
+      const params = await api('product_params?product_id=eq.' + p.id + '&order=sort.asc,key.asc');
+      const card = (x, i) => `<section class="card" data-pid="${x.id || ''}" style="margin-top:12px"><div class="f" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+        <label class="fl">Label<input data-k="label" value="${esc(x.label || '')}"></label>
+        <label class="fl">Key <span class="hint">a-z, no spaces</span><input data-k="key" value="${esc(x.key || '')}" class="mono"></label>
+        <label class="fl">Type<select data-k="kind">${[['choice', 'Choice'], ['color', 'Colour or finish'], ['number', 'Number (size)'], ['bool', 'Yes or no']].map(([v, l]) => `<option value="${v}" ${x.kind === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="fl">Default<input data-k="default_value" value="${esc(x.default_value || '')}"></label>
+        <label class="fl">Min<input data-k="min" type="number" step="any" value="${esc(x.min == null ? '' : x.min)}"></label>
+        <label class="fl">Max<input data-k="max" type="number" step="any" value="${esc(x.max == null ? '' : x.max)}"></label>
+        <label class="fl">Step<input data-k="step" type="number" step="any" value="${esc(x.step == null ? '' : x.step)}"></label>
+        <label class="fl">Unit / drives size<span style="display:flex;gap:6px"><input data-k="unit" value="${esc(x.unit || '')}" placeholder="mm" style="width:40%"><select data-k="geometry" aria-label="Drives size" style="width:60%">${[['', '—'], ['w', 'width'], ['h', 'height'], ['d', 'depth'], ['len', 'length']].map(([v, l]) => `<option value="${v}" ${(x.geometry || '') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></span></label>
+        <label class="fl" style="grid-column:1/-1">Options <span class="hint">one per line: value | label | +price | #colour | x multiplier</span><textarea data-k="options" rows="4" class="mono" style="font-size:13px">${esc(optToLines(x.options))}</textarea></label>
+        <label class="fl">Order<input data-k="sort" type="number" value="${esc(x.sort == null ? i + 1 : x.sort)}"></label>
+        <div class="tools" style="grid-column:2/-1;align-self:end;justify-content:flex-end">${x.id ? '<button class="btn sm danger" type="button" data-rm>Remove option</button>' : ''}<button class="btn sm" type="button" data-sv>${x.id ? 'Save' : 'Add this option'}</button></div>
+      </div></section>`;
+      box.innerHTML = `<p class="small muted" style="margin:12px 0 0">What the customer can set on the product page and in the Studio. Sizes in mm. Prices add to the unit price; a multiplier scales it (x0.8 = 20% less).</p>
+        ${params.map(card).join('')}${card({ kind: 'choice', options: [] }, params.length)}`;
+      const val = (sec) => { const o = {}; sec.querySelectorAll('[data-k]').forEach((el) => { const k = el.dataset.k; let v = el.value.trim(); if (['min', 'max', 'step', 'sort'].includes(k)) v = v === '' ? null : Number(v); else if (k === 'options') v = linesToOpt(el.value); else if (v === '') v = null; o[k] = v; }); o.key = (o.key || slugify(o.label || '').replace(/-/g, '_')).toLowerCase(); return o; };
+      box.querySelectorAll('[data-sv]').forEach((b) => b.onclick = async () => {
+        const sec = b.closest('section'), v = val(sec);
+        if (!v.label || !/^[a-z][a-z0-9_]*$/.test(v.key)) return toast('Give the option a label and a key (letters, numbers, _)', true);
+        if (v.kind !== 'number' && !v.options.length) return toast('Add at least one line under Options', true);
+        if (sec.dataset.pid) await guard(api('product_params?id=eq.' + sec.dataset.pid, { method: 'PATCH', body: v }), 'Saved');
+        else { v.product_id = p.id; await guard(api('product_params', { method: 'POST', body: v }), 'Option added'); }
+        render('options');
+      });
+      box.querySelectorAll('[data-rm]').forEach((b) => b.onclick = async () => { if (!confirmInline(b, 'Sure?')) return; await guard(api('product_params?id=eq.' + b.closest('section').dataset.pid, { method: 'DELETE' }), 'Removed'); render('options'); });
+      return;
+    }
+    if (tab === 'media') {
+      const media = await api('product_media?product_id=eq.' + p.id + '&order=sort.asc,created_at.asc');
+      box.innerHTML = `<section class="card" style="margin-top:12px"><h3>Add photos, swatches or a 3D model</h3>
+        <p class="small muted" style="margin-top:0">Photos: JPG, PNG or WebP. 3D model: a .glb file; it replaces the simple shape in the Studio and on the product page.</p>
+        <div class="tools"><label class="btn line" style="cursor:pointer">Choose files<input type="file" id="mf" multiple accept="image/*,.glb,.gltf,model/gltf-binary" style="position:absolute;left:-9999px"></label><span class="small muted" id="mstatus"></span></div></section>
+        ${p.model_url ? `<p class="small" style="margin:10px 0 0">3D model in use: <a href="${esc(p.model_url)}" target="_blank" rel="noopener">${esc(p.model_url.split('/').pop())}</a></p>` : '<p class="small muted" style="margin:10px 0 0">No 3D model yet: the Studio draws a simple shape from the sizes.</p>'}
+        <div class="tablewrap ctable" style="margin-top:12px"><table><thead><tr><th></th><th>Kind</th><th>Shows for option</th><th>Caption</th><th>#</th><th></th></tr></thead><tbody>
+        ${media.map((x) => `<tr data-id="${x.id}"><td>${x.kind === 'model' ? '<span class="pill">GLB</span>' : `<img src="${esc(x.url)}" alt="" width="64" height="48" style="object-fit:cover;border-radius:3px;display:block">`}</td>
+          <td><select data-k="kind" aria-label="Kind">${['photo', 'swatch', 'model', 'drawing'].map((k) => `<option ${k === x.kind ? 'selected' : ''}>${k}</option>`).join('')}</select></td>
+          <td><input data-k="opt" aria-label="Option" placeholder="e.g. colour=black" value="${esc(x.option_key ? x.option_key + '=' + (x.option_value || '') : '')}"></td>
+          <td><input data-k="caption" aria-label="Caption" value="${esc(x.caption || '')}"></td><td><input data-k="sort" type="number" aria-label="Order" value="${esc(x.sort)}" style="width:56px"></td>
+          <td style="white-space:nowrap"><button class="btn sm line" type="button" data-cover>Use as cover</button> <button class="btn sm" type="button" data-save>Save</button> <button class="btn sm danger" type="button" data-del>Remove</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No photos yet.</td></tr>'}</tbody></table></div>`;
+      $('#mf', box).onchange = async (e) => {
+        const files = [...e.target.files]; const stat = $('#mstatus', box);
+        for (let i = 0; i < files.length; i++) {
+          stat.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + '…';
+          const file = files[i], isModel = /\.(glb|gltf)$/i.test(file.name);
+          const url = await guard(uploadFile(file, 'catalog/' + p.slug));
+          await api('product_media', { method: 'POST', body: { product_id: p.id, url, kind: isModel ? 'model' : 'photo', sort: media.length + i } });
+          const body = isModel ? { model_url: url } : Object.assign({ images: (p.images || []).concat(url) }, p.cover_url ? {} : { cover_url: url });
+          const r = await api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body, headers: { Prefer: 'return=representation' } }); p = r[0];
+        }
+        toast(files.length + ' file' + (files.length === 1 ? '' : 's') + ' uploaded'); reload(); render('media');
+      };
+      box.querySelectorAll('[data-save]').forEach((b) => b.onclick = async () => { const tr = b.closest('tr'), opt = tr.querySelector('[data-k=opt]').value.trim().split('='); await guard(api('product_media?id=eq.' + tr.dataset.id, { method: 'PATCH', body: { kind: tr.querySelector('[data-k=kind]').value, option_key: opt[0] || null, option_value: opt[1] || null, caption: tr.querySelector('[data-k=caption]').value || null, sort: Number(tr.querySelector('[data-k=sort]').value || 0) } }), 'Saved'); });
+      box.querySelectorAll('[data-cover]').forEach((b) => b.onclick = async () => { const x = media.find((mm) => mm.id === b.closest('tr').dataset.id); const r = await guard(api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body: { cover_url: x.url }, headers: { Prefer: 'return=representation' } }), 'Cover set'); p = r[0]; reload(); });
+      box.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => { if (!confirmInline(b, 'Sure?')) return; const x = media.find((mm) => mm.id === b.closest('tr').dataset.id); await guard(api('product_media?id=eq.' + x.id, { method: 'DELETE' }), 'Removed');
+        const body = { images: (p.images || []).filter((u) => u !== x.url) }; if (p.cover_url === x.url) body.cover_url = body.images[0] || null; if (p.model_url === x.url) body.model_url = null;
+        const r = await api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body, headers: { Prefer: 'return=representation' } }); p = r[0]; reload(); render('media'); });
+      return;
+    }
+    if (tab === 'price') {
+      const params = await api('product_params?product_id=eq.' + p.id + '&order=sort.asc,key.asc');
+      box.innerHTML = `<section class="card" style="margin-top:12px"><h3>Try the options</h3><p class="small muted" style="margin-top:0">The same calculation the website, the Atelier checkout and the Studio use.</p>
+        <form class="f" id="pf">${params.map((x) => x.kind === 'number' ? `<label class="fl">${esc(x.label)} (${esc(x.unit || '')})<input name="${esc(x.key)}" type="number" step="any" value="${esc(x.default_value || '')}" min="${esc(x.min == null ? '' : x.min)}" max="${esc(x.max == null ? '' : x.max)}"></label>`
+          : `<label class="fl">${esc(x.label)}<select name="${esc(x.key)}">${(x.options || []).map((o) => `<option value="${esc(o.value)}" ${o.value === x.default_value ? 'selected' : ''}>${esc(o.label || o.value)}${o.price_add ? ' (+' + fmt(o.price_add) + ')' : ''}${o.price_mult ? ' (×' + o.price_mult + ')' : ''}</option>`).join('')}</select></label>`).join('') || '<p class="muted wide">This product has no options; its price is fixed.</p>'}
+        <div class="wide"><button class="btn" type="submit">Work out the price</button></div></form><div id="pres" style="margin-top:12px"></div></section>`;
+      $('#pf', box).onsubmit = async (e) => {
+        e.preventDefault(); const ch = {}; params.forEach((x) => { const el = e.target.elements[x.key]; if (el) ch[x.key] = el.value; });
+        const r = await guard(rpc('catalog_price', { _product_id: p.id, _choices: ch }));
+        $('#pres', box).innerHTML = `<div class="tile" style="cursor:default"><div class="n">${r.quote_only ? 'On request' : 'KES ' + fmt(r.unit_price)}</div><div class="l">per ${esc(r.unit)}${r.area_m2 ? ' · ' + r.area_m2 + ' m²' : ''}${r.adjusted && r.adjusted.length ? ' · adjusted to limits: ' + r.adjusted.map((a) => a.key + ' ' + a.to).join(', ') : ''}</div></div>
+          ${r.lines && r.lines.length ? `<p class="small muted">Includes ${r.lines.map((l) => esc(l.label) + ' (+' + fmt(l.amount) + ')').join(', ')}.</p>` : ''}`;
+      };
+    }
+  };
+  render(tab);
 }
 
 // make the lead "Add note" refresh the open drawer
