@@ -13,6 +13,16 @@
       "permanent": false
     },
     {
+      "source": "/atelier",
+      "destination": "/atelier.html",
+      "permanent": false
+    },
+    {
+      "source": "/store",
+      "destination": "/atelier.html",
+      "permanent": false
+    },
+    {
       "source": "/works",
       "destination": "/Projects.dc.html",
       "permanent": false

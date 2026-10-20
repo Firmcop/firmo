@@ -35,6 +35,7 @@ def staff_links(s):
     """Staff entry lives only in the footer, as a lock icon; public menus lose 'Team portal'. Collection links go to the new Collection page."""
     s = s.replace('href="Team.dc.html"', 'href="admin.html"')
     s = s.replace('href="Catalog.dc.html"', 'href="collection.html"')
+    s = s.replace('href="Store.dc.html"', 'href="atelier.html"')
     s = s.replace('<a href="admin.html">Team portal</a>\n</nav>', '</nav>')          # header menus
     s = s.replace(' · <a href="admin.html">Team portal</a>', ' · ' + STAFF)             # Catalog, DesignDetail footers
     s = s.replace('<a href="admin.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Team portal</a>', '')  # Main resources column

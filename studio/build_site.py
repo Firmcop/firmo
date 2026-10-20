@@ -105,6 +105,8 @@ vercel = {
   "rewrites": [{"source": "/", "destination": "/Main.dc.html"}],
   "redirects": [
     {"source": "/collection", "destination": "/collection.html", "permanent": False},
+    {"source": "/atelier", "destination": "/atelier.html", "permanent": False},
+    {"source": "/store", "destination": "/atelier.html", "permanent": False},
     {"source": "/works", "destination": "/Projects.dc.html", "permanent": False},
     {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/3d-studio", "destination": "/3d-studio.html", "permanent": False},
@@ -129,4 +131,10 @@ open(os.path.join(out, 'vercel.json'), 'w').write(json.dumps(vercel, indent=2) +
 for fn in ['tools.html', 'collection.html', 'design-manager.html']:
     fp = os.path.join(out, fn); t = open(fp).read().replace("design-studio.html", "3d-studio.html")
     open(fp, 'w').write(t)
+# the Atelier is the same page in its Atelier mode (it reads the path)
+shutil.copy(os.path.join(out, 'collection.html'), os.path.join(out, 'atelier.html'))
+# the Studio has its own fixed controls, so no floating cart button there
+fp = os.path.join(out, '3d-studio.html'); t = open(fp).read()
+assert '<meta name="fc-footer" content="none">' in t
+open(fp, 'w').write(t.replace('<meta name="fc-footer" content="none">', '<meta name="fc-footer" content="none">\n<meta name="fc-cart" content="none">', 1))
 print('built', len(os.listdir(out)), 'entries in', out)

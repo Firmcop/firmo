@@ -29,22 +29,34 @@
 (function () {
   'use strict';
   const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc;
-  FC.header($('#fc-head'), 'collection.html');
+  const ATL = /atelier/i.test(location.pathname);
+  const M = ATL ? { scope: 'atelier', page: 'atelier.html', kinds: 'material,fitting,furniture', home: 'Atelier', noun: 'items',
+      title: 'Materials and furniture, <em style="color:#E3C48F">made to your sizes.</em>', lead: 'Doors, windows, cladding, finishes and furniture from our yard. Set the size and finish on each item, see the price, and add it to your cart.',
+      eyebrow: 'The Firmcop Atelier', search: 'e.g. door, cladding, sofa',
+      bands: [['', 'Any price'], ['0-5000', 'Under KES 5,000'], ['5000-20000', 'KES 5,000 to 20,000'], ['20000-60000', 'KES 20,000 to 60,000'], ['60000-', 'Over KES 60,000']],
+      bannerEye: 'Fitting out a whole building?', bannerTitle: 'Place every item in the 3D Studio', bannerBtn: 'Open the 3D Studio' }
+    : { scope: 'collection', page: 'collection.html', kinds: 'building,design', home: 'Collection', noun: 'products', search: 'e.g. office, 2 bedroom',
+      bands: [['', 'Any price'], ['0-1000000', 'Under KES 1M'], ['1000000-3000000', 'KES 1M to 3M'], ['3000000-6000000', 'KES 3M to 6M'], ['6000000-', 'Over KES 6M']],
+      bannerEye: 'Not quite right?', bannerTitle: 'Design your own in the 3D Studio', bannerBtn: 'Open the 3D Studio' };
+  FC.header($('#fc-head'), M.page);
+  if (ATL) { document.title = 'Atelier · Firmcop Modular'; $('#eyebrow').textContent = M.eyebrow; $('#title').innerHTML = M.title; $('#lead').textContent = M.lead; $('#crumbs').innerHTML = '<a href="Main.dc.html">Home</a><span aria-hidden="true">›</span><span>Atelier</span>'; }
   const q = new URLSearchParams(location.search);
   const want = q.get('c') || '';
   const st = { q: q.get('q') || '', sort: q.get('sort') || 'featured', band: q.get('band') || '' };
-  const BANDS = [['', 'Any price'], ['0-1000000', 'Under KES 1M'], ['1000000-3000000', 'KES 1M to 3M'], ['3000000-6000000', 'KES 3M to 6M'], ['6000000-', 'Over KES 6M']];
+  const BANDS = M.bands;
   let CATS = [], PRODS = [];
 
   const card = (p) => {
     const cat = CATS.find((c) => c.id === p.category_id), fam = famOf(cat);
-    const img = p.cover_url || (fam && (fam.image_url || FC.FAMILY_IMG[fam.slug])) || '';
-    return `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(img)}')">${p.kind === 'design' ? '<span class="tag">Design it in 3D</span>' : ''}</div>
+    const img = p.cover_url || (p.images && p.images[0]) || (fam && (fam.image_url || FC.FAMILY_IMG[fam.slug])) || '';
+    return `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(img)}')">${!img && p.shape && p.shape.kind ? shapeOf(p) : ''}${p.kind === 'design' ? '<span class="tag">Design it in 3D</span>' : p.params && p.params.length ? '<span class="tag">Made to size</span>' : ''}</div>
       <div class="bd"><span class="eyebrow" style="font-size:10px">${esc(cat ? cat.name : '')}</span><h3>${esc(p.name)}</h3>${p.summary ? `<p class="sum">${esc(p.summary)}</p>` : ''}
       <div class="meta"><span class="price">${esc(FC.priceText(p))}</span>${p.lead_time_weeks ? `<small class="muted">${p.lead_time_weeks} weeks</small>` : ''}</div></div></a>`;
   };
   function famOf(c) { let n = 0; while (c && c.parent_id && n++ < 6) c = CATS.find((x) => x.id === c.parent_id); return c; }
-  const priceOf = (p) => p.price_mode === 'quote' ? null : Number(p.base_price) || null;
+  const priceOf = (p) => p.price_mode === 'quote' ? null : (p.params && p.params.length ? FC.price(p, p.params).unit_price : Number(p.base_price)) || null;
+  const shapeOf = (p) => { const sp = p.specs || {}, g = (k) => { const x = (p.params || []).find((y) => y.geometry === k); return x ? Number(x.default_value) : (sp[k] ? sp[k] * 1000 : null); };
+    return FC.shape({ kind: p.shape.kind, w: g('w'), h: g('h'), d: sp.d ? sp.d * 1000 : null, color: sp.swatch || p.shape.color, glass: !!sp.glass }); };
 
   function filtered(ids) {
     let list = PRODS.filter((p) => !ids || ids.includes(p.category_id));
@@ -58,12 +70,12 @@
     history.replaceState(null, '', location.pathname + (u.toString() ? '?' + u : ''));
   }
   const toolbar = () => `<div class="tools" style="margin-bottom:18px">
-      <label class="muted" style="font-size:14px">Search <input type="search" id="fq" value="${esc(st.q)}" placeholder="e.g. office, 2 bedroom"></label>
+      <label class="muted" style="font-size:14px">Search <input type="search" id="fq" value="${esc(st.q)}" placeholder="${esc(M.search)}"></label>
       <label class="muted" style="font-size:14px">Price <select id="fb">${BANDS.map(([v, l]) => `<option value="${v}" ${v === st.band ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <label class="muted" style="font-size:14px">Sort <select id="fs">${[['featured', 'Featured'], ['low', 'Price, low to high'], ['high', 'Price, high to low'], ['name', 'Name']].map(([v, l]) => `<option value="${v}" ${v === st.sort ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <span class="muted" id="fn" style="font-size:14px;margin-left:auto" aria-live="polite"></span></div>`;
   function wireTools(ids) {
-    const run = () => { syncUrl(); const list = filtered(ids); $('#fn').textContent = list.length + ' product' + (list.length === 1 ? '' : 's'); $('#list').innerHTML = list.length ? list.map(card).join('') : '<div class="empty" style="grid-column:1/-1">Nothing matches. Try another price or clear the search.</div>'; };
+    const run = () => { syncUrl(); const list = filtered(ids); $('#fn').textContent = list.length + ' ' + (list.length === 1 ? M.noun.replace(/s$/, '') : M.noun); $('#list').innerHTML = list.length ? list.map(card).join('') : '<div class="empty" style="grid-column:1/-1">Nothing matches. Try another price or clear the search.</div>'; };
     let t; $('#fq').oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); run(); }, 200); };
     $('#fb').onchange = (e) => { st.band = e.target.value; run(); };
     $('#fs').onchange = (e) => { st.sort = e.target.value; run(); };
@@ -77,8 +89,8 @@
       const kids = CATS.filter((c) => c.parent_id === r.id && PRODS.some((p) => FC.subtree(CATS, c.id).includes(p.category_id)));
       if (!total) return '';
       return `<section style="margin-bottom:48px" aria-labelledby="f-${esc(r.slug)}"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px">
-        <h2 class="serif" id="f-${esc(r.slug)}" style="font-size:38px;margin:0">${esc(r.name)}</h2><a class="btn line" href="collection.html?c=${encodeURIComponent(r.slug)}">All ${total} ${esc(r.name.toLowerCase())}</a></div>
-        <div class="chips" style="margin-bottom:16px">${kids.map((k) => `<a class="chip" href="collection.html?c=${encodeURIComponent(k.slug)}">${esc(k.name)}</a>`).join('')}</div>
+        <h2 class="serif" id="f-${esc(r.slug)}" style="font-size:38px;margin:0">${esc(r.name)}</h2><a class="btn line" href="${M.page}?c=${encodeURIComponent(r.slug)}">All ${total} ${esc(r.name.toLowerCase())}</a></div>
+        <div class="chips" style="margin-bottom:16px">${kids.map((k) => `<a class="chip" href="${M.page}?c=${encodeURIComponent(k.slug)}">${esc(k.name)}</a>`).join('')}</div>
         <div class="grid">${list.map(card).join('')}</div></section>`;
     }).join('') || '<div class="empty">The collection is being updated. Please check back soon.</div>';
   }
@@ -86,25 +98,25 @@
   function renderCat(c) {
     const fam = famOf(c), isFam = fam === c, ids = FC.subtree(CATS, c.id);
     document.title = c.name + ' · Firmcop Modular';
-    $('#crumbs').innerHTML = `<a href="Main.dc.html">Home</a><span aria-hidden="true">›</span><a href="collection.html">Collection</a>${isFam ? '' : `<span aria-hidden="true">›</span><a href="collection.html?c=${encodeURIComponent(fam.slug)}">${esc(fam.name)}</a>`}<span aria-hidden="true">›</span><span aria-current="page">${esc(c.name)}</span>`;
-    $('#eyebrow').textContent = isFam ? 'Collection' : fam.name;
+    $('#crumbs').innerHTML = `<a href="Main.dc.html">Home</a><span aria-hidden="true">›</span><a href="${M.page}">${M.home}</a>${isFam ? '' : `<span aria-hidden="true">›</span><a href="${M.page}?c=${encodeURIComponent(fam.slug)}">${esc(fam.name)}</a>`}<span aria-hidden="true">›</span><span aria-current="page">${esc(c.name)}</span>`;
+    $('#eyebrow').textContent = isFam ? M.home : fam.name;
     $('#title').textContent = c.name;
     $('#lead').textContent = c.description || (isFam ? 'Choose a category, or browse everything below.' : 'Prices in KES. Each one can be changed to suit your plot and budget.');
     const sibs = CATS.filter((x) => x.parent_id === fam.id && PRODS.some((p) => FC.subtree(CATS, x.id).includes(p.category_id)));
-    $('#body').innerHTML = `<nav class="chips" aria-label="${esc(fam.name)} categories" style="margin-bottom:22px"><a class="chip" href="collection.html?c=${encodeURIComponent(fam.slug)}" ${isFam ? 'aria-current="page"' : ''}>All ${esc(fam.name.toLowerCase())}</a>
-      ${sibs.map((k) => `<a class="chip" href="collection.html?c=${encodeURIComponent(k.slug)}" ${k.id === c.id ? 'aria-current="page"' : ''}>${esc(k.name)} <small>${PRODS.filter((p) => FC.subtree(CATS, k.id).includes(p.category_id)).length}</small></a>`).join('')}</nav>
+    $('#body').innerHTML = `<nav class="chips" aria-label="${esc(fam.name)} categories" style="margin-bottom:22px"><a class="chip" href="${M.page}?c=${encodeURIComponent(fam.slug)}" ${isFam ? 'aria-current="page"' : ''}>All ${esc(fam.name.toLowerCase())}</a>
+      ${sibs.map((k) => `<a class="chip" href="${M.page}?c=${encodeURIComponent(k.slug)}" ${k.id === c.id ? 'aria-current="page"' : ''}>${esc(k.name)} <small>${PRODS.filter((p) => FC.subtree(CATS, k.id).includes(p.category_id)).length}</small></a>`).join('')}</nav>
       ${toolbar()}<div class="grid" id="list"></div>
       <section class="sec" style="padding-bottom:0"><div style="background:var(--night);color:#F2EBDF;border-radius:6px;padding:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
-        <div><p class="eyebrow">Not quite right?</p><h2 class="serif" style="margin:6px 0 0;font-size:30px;color:#F2EBDF">Design your own in the 3D Studio</h2></div>
-        <div class="tools"><a class="btn" href="3d-studio.html">Open the 3D Studio</a><button class="btn line" style="color:#F2EBDF;border-color:#F2EBDF" type="button" data-fc-lead="callback">Ask us to call you</button></div></div></section>`;
+        <div><p class="eyebrow">${M.bannerEye}</p><h2 class="serif" style="margin:6px 0 0;font-size:30px;color:#F2EBDF">${M.bannerTitle}</h2></div>
+        <div class="tools"><a class="btn" href="3d-studio.html">${M.bannerBtn}</a><button class="btn line" style="color:#F2EBDF;border-color:#F2EBDF" type="button" data-fc-lead="callback">Ask us to call you</button></div></div></section>`;
     wireTools(ids);
   }
 
-  Promise.all([FC.cats('collection'), FC.rest('catalog_products?select=id,slug,name,kind,category_id,summary,unit,price_mode,base_price,rate,lead_time_weeks,cover_url,design_slug,featured,sort&published=eq.true&kind=in.(building,design)&order=sort.asc')])
+  Promise.all([FC.cats(M.scope), FC.rest('catalog_products?select=id,slug,name,kind,category_id,summary,unit,price_mode,base_price,rate,lead_time_weeks,cover_url,images,design_slug,featured,sort,shape,specs,params:product_params(key,kind,default_value,options,geometry,min,max,step,sort)&published=eq.true&kind=in.(' + M.kinds + ')&order=sort.asc')])
     .then(([cats, prods]) => {
       CATS = cats; PRODS = prods.map((p) => Object.assign(p, { featured: p.featured ? 1 : 0 }));
       const c = want && CATS.find((x) => x.slug === want);
-      if (want && !c) { $('#body').innerHTML = '<div class="empty">That category is not available. <a href="collection.html">See the whole collection</a>.</div>'; return; }
+      if (want && !c) { $('#body').innerHTML = '<div class="empty">That category is not available. <a href="' + M.page + '">See everything</a>.</div>'; return; }
       c ? renderCat(c) : renderAll();
     })
     .catch(() => { $('#body').innerHTML = '<div class="empty">The collection could not load just now. Please refresh, or <a href="#" data-fc-wa>WhatsApp us</a>.</div>'; });

@@ -222,7 +222,7 @@
   FC.subscribe = (email, source) => FC.rpc('site_subscribe', { _email: email, _source: source || location.pathname });
 
   // ---------- Atelier checkout ----------
-  FC.order = function (items, totalText) {
+  FC.order = function (items, totalText, onPlaced) {
     return FC.dialog({
       eyebrow: 'Atelier', title: 'Place your order', intro: 'We confirm stock and delivery, then send an M-Pesa payment request or bank details. Nothing is charged now.',
       summary: `${items.length} line${items.length === 1 ? '' : 's'} · Total <b>KES ${esc(totalText)}</b> before delivery`,
@@ -230,6 +230,7 @@
       submit: 'Send order',
       onSubmit: async (v) => {
         const r = await FC.rpc('site_submit_order', { _name: v.name, _phone: v.phone, _email: v.email, _address: v.address, _notes: v.notes || null, _items: items });
+        if (onPlaced) try { onPlaced(r); } catch (e) { /* the order is in; the cart tidy-up is not critical */ }
         return { title: 'Order received', code: r.code, body: 'Total KES ' + fmt(r.total) + '. We will confirm stock and delivery, then send the payment request to ' + esc(v.phone || v.email) + '.', wa: 'Hello Firmcop, my Atelier order is ' + r.code + '.', order: r };
       }
     }).then((r) => (r && r.order) || null);
@@ -319,7 +320,7 @@
 
 
   // ---------- shared header for pages outside the canvas prototype ----------
-  const NAV = [['collection.html', 'Collection'], ['Configurator.dc.html', 'Configure'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['Store.dc.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
+  const NAV = [['collection.html', 'Collection'], ['Configurator.dc.html', 'Configure'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['atelier.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
   FC.header = function (el, active) {
     if (!el) return;
     el.className = 'fc-head';
@@ -365,11 +366,11 @@
       if (!document.getElementById('fc-mega-css')) { const st = document.createElement('style'); st.id = 'fc-mega-css'; st.textContent = MEGA_CSS; document.head.appendChild(st); }
       panel = document.createElement('div'); panel.className = 'fc-mega'; panel.id = 'fc-mega-' + o.scope; panel.hidden = true;
       panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', o.label || 'Menu');
-      panel.style.setProperty('--cols', Math.min(Math.max(roots.length, 1), 6));
+      panel.style.setProperty('--cols', Math.min(Math.max(roots.length, 4), 6));
       panel.innerHTML = '<div class="in">' + roots.map((r) => {
         const kids = cats.filter((c) => c.parent_id === r.id && (count[c.id] || 0) > 0);
         const img = r.image_url || cover(r.id) || FC.FAMILY_IMG[r.slug] || '';
-        return '<div class="fam"><a class="img" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '" tabindex="-1" aria-hidden="true" style="background-image:url(\'' + esc(img) + '\')"></a>'
+        return '<div class="fam">' + (img ? '<a class="img" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '" tabindex="-1" aria-hidden="true" style="background-image:url(\'' + esc(img) + '\')"></a>' : '')
           + '<a class="t" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">' + esc(r.name) + '</a><ul>'
           + kids.map((k) => '<li><a href="' + o.page + '?c=' + encodeURIComponent(k.slug) + '"><span>' + esc(k.name) + '</span><small>' + count[k.id] + '</small></a></li>').join('')
           + '</ul><a class="all" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">All ' + famCount(r.id) + ' →</a></div>';
@@ -395,7 +396,140 @@
   };
   if (!document.documentElement.hasAttribute('data-fc-admin') && window.top === window) {
     FC.mega({ scope: 'collection', match: 'collection.html', page: 'collection.html', kinds: 'building,design', label: 'Collection' });
+    FC.mega({ scope: 'atelier', match: 'atelier.html', page: 'atelier.html', kinds: 'material,fitting,furniture', label: 'Atelier' });
   }
+
+  // ---------- Atelier cart (kept in this browser; prices are checked again by the server) ----------
+  const CK = 'fc-cart';
+  const readCart = () => { try { const v = JSON.parse(localStorage.getItem(CK) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return FC._cart || []; } };
+  const writeCart = (l) => { FC._cart = l; try { localStorage.setItem(CK, JSON.stringify(l)); } catch (e) { /* private mode: memory only */ } paintCart(); document.dispatchEvent(new CustomEvent('fc-cart', { detail: l })); };
+  FC.cart = {
+    lines: readCart,
+    count: () => readCart().reduce((a, l) => a + (Number(l.qty) || 0), 0),
+    total: () => readCart().reduce((a, l) => a + (Number(l.qty) || 0) * (Number(l.price) || 0), 0),
+    /* line = { slug, sku, name, img, choices, desc, unit, price, qty } */
+    add(line) {
+      const l = readCart(), id = line.slug + '|' + JSON.stringify(line.choices || {}), q = Math.max(1, Number(line.qty) || 1), ex = l.find((x) => x.id === id);
+      if (ex) { ex.qty = (Number(ex.qty) || 0) + q; ex.price = line.price; } else l.push(Object.assign({}, line, { id, qty: q }));
+      writeCart(l);
+    },
+    set(id, qty) { writeCart(readCart().map((x) => (x.id === id ? Object.assign({}, x, { qty: Math.max(0, Math.round(Number(qty) || 0)) }) : x)).filter((x) => x.qty > 0)); },
+    clear() { writeCart([]); },
+    open: () => openCart()
+  };
+  const CART_CSS = `.fc-cartbtn{position:fixed;right:18px;bottom:18px;z-index:80;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px;border:0;border-radius:999px;background:#0D0C0A;color:#F2EBDF;font:600 15px Manrope,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.28);cursor:pointer}
+.fc-cartbtn[hidden]{display:none}
+.fc-cartbtn b{background:#C9A46A;color:#0D0C0A;border-radius:999px;min-width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;padding:0 6px}
+.fc-cartbtn:focus-visible{outline:3px solid #C9A46A;outline-offset:2px}
+dialog.fc-cart{border:0;padding:0;margin:0 0 0 auto;height:100%;max-height:none;width:min(460px,100vw);background:#F4F1EB;color:#1B1A17;font:15px/1.5 Manrope,system-ui,sans-serif}
+dialog.fc-cart::backdrop{background:rgba(13,12,10,.55)}
+.fc-cart .hd{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #DDD6CA;background:#fff}
+.fc-cart .hd h2{margin:0;font:500 28px 'Cormorant Garamond',Georgia,serif}
+.fc-cart button{font:inherit;cursor:pointer}
+.fc-cart .x{min-width:44px;min-height:44px;border:1px solid #CFC6B5;border-radius:4px;background:#fff;font-size:20px}
+.fc-cart ul{list-style:none;margin:0;padding:8px 20px;display:grid;gap:12px}
+.fc-cart li{display:grid;grid-template-columns:64px 1fr;gap:12px;background:#fff;border:1px solid #DDD6CA;border-radius:6px;padding:10px}
+.fc-cart li .im{overflow:hidden;width:64px;height:64px;border-radius:4px;background:#E7E1D6 center/cover no-repeat}
+.fc-cart li h3{margin:0;font-size:15px}
+.fc-cart li p{margin:2px 0 0;color:#5C5850;font-size:13px}
+.fc-cart .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.fc-cart .qty{display:inline-flex;align-items:center;border:1.5px solid #BDB29C;border-radius:4px;background:#fff}
+.fc-cart .qty button{min-width:40px;min-height:40px;border:0;background:transparent;font-size:18px}
+.fc-cart .qty input{width:56px;min-height:40px;border:0;text-align:center;font:inherit}
+.fc-cart .rm{border:0;background:none;color:#8C2B1E;text-decoration:underline;min-height:40px}
+.fc-cart .ft{align-content:start;position:sticky;bottom:0;background:#fff;border-top:1px solid #DDD6CA;padding:16px 20px;display:grid;gap:10px}
+.fc-cart .tot{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.fc-cart .tot b{font:500 28px 'Cormorant Garamond',Georgia,serif}
+.fc-cart .go{min-height:50px;border:0;border-radius:4px;background:#8A6A33;color:#fff;font-weight:600}
+.fc-cart .go:hover{background:#6B4F22}
+.fc-cart .alt{min-height:46px;border:1.5px solid #1B1A17;border-radius:4px;background:transparent;font-weight:600}
+.fc-cart .empty{padding:40px 20px;text-align:center;color:#5C5850}`;
+  let cartBtn = null, cartDlg = null;
+  const cartAllowed = () => !document.documentElement.hasAttribute('data-fc-admin') && window.top === window && !(document.querySelector('meta[name="fc-cart"]') || {}).content && !/Store\.dc\.html$/.test(location.pathname);
+  function cartCss() { if (!document.getElementById('fc-cart-css')) { const st = document.createElement('style'); st.id = 'fc-cart-css'; st.textContent = CART_CSS; document.head.appendChild(st); } }
+  function paintCart() {
+    if (!cartAllowed() || !document.body) return;
+    const n = FC.cart.count();
+    if (!cartBtn && n > 0) { cartCss(); cartBtn = document.createElement('button'); cartBtn.type = 'button'; cartBtn.className = 'fc-cartbtn'; cartBtn.onclick = () => openCart(); document.body.appendChild(cartBtn); }
+    if (cartBtn) { cartBtn.hidden = n === 0; document.body.style.paddingBottom = n ? '84px' : ''; cartBtn.innerHTML = 'Cart <b>' + fmt(n) + '</b>'; cartBtn.setAttribute('aria-label', 'Open your cart, ' + n + ' item' + (n === 1 ? '' : 's')); }
+    if (cartDlg && cartDlg.open) drawCart();
+  }
+  function drawCart() {
+    const l = readCart();
+    cartDlg.innerHTML = '<div style="display:flex;flex-direction:column;min-height:100%"><div class="hd"><h2 id="fc-cart-h">Your cart</h2><button type="button" class="x" data-x aria-label="Close cart">×</button></div>'
+      + (l.length ? '<ul>' + l.map((x) => '<li data-id="' + esc(x.id) + '"><span class="im" style="background-image:url(\'' + esc(x.img || '') + '\')">' + (!x.img && x.draw && /^<svg[\s\S]*<\/svg>$/.test(x.draw) ? x.draw : '') + '</span><div><h3><a href="product.html?p=' + encodeURIComponent(x.slug) + '" style="color:inherit">' + esc(x.name) + '</a></h3>'
+        + (x.desc ? '<p>' + esc(x.desc) + '</p>' : '') + '<p>KES ' + fmt(x.price) + (x.unit && !/^(no\.|unit|per unit)$/i.test(x.unit) ? ' ' + esc(x.unit) : ' each') + '</p>'
+        + '<div class="row"><span class="qty"><button type="button" data-d="-1" aria-label="One less">−</button><input type="number" min="0" inputmode="numeric" value="' + esc(x.qty) + '" aria-label="Quantity of ' + esc(x.name) + '"><button type="button" data-d="1" aria-label="One more">+</button></span>'
+        + '<b>KES ' + fmt(x.qty * x.price) + '</b></div><button type="button" class="rm" data-rm>Remove</button></div></li>').join('') + '</ul>'
+        : '<div class="empty">Your cart is empty.<br><a href="atelier.html">Browse the Atelier</a></div>')
+      + '<div style="flex:1"></div>' + (l.length ? '<div class="ft"><div class="tot"><span>Total before delivery</span><b>KES ' + fmt(FC.cart.total()) + '</b></div>'
+        + '<button type="button" class="go" data-order>Place order</button><button type="button" class="alt" data-deliv>Ask for a delivery quote first</button>'
+        + '<p style="margin:0;font-size:13px;color:#5C5850">Nothing is charged now. We confirm stock and delivery, then send an M-Pesa request or bank details.</p></div>' : '') + '</div>';
+    cartDlg.querySelector('[data-x]').onclick = () => cartDlg.close();
+    cartDlg.querySelectorAll('li').forEach((li) => {
+      const id = li.dataset.id, inp = li.querySelector('input'), cur = () => Number(inp.value) || 0;
+      li.querySelectorAll('[data-d]').forEach((b) => b.onclick = () => FC.cart.set(id, cur() + Number(b.dataset.d)));
+      inp.onchange = () => FC.cart.set(id, cur());
+      li.querySelector('[data-rm]').onclick = () => FC.cart.set(id, 0);
+    });
+    const ord = cartDlg.querySelector('[data-order]');
+    if (ord) ord.onclick = () => {
+      const lines = readCart(); cartDlg.close();
+      FC.order(lines.map((x) => ({ slug: x.slug, sku: x.sku || null, qty: x.qty, choices: x.choices || {} })), fmt(FC.cart.total()), () => FC.cart.clear());
+    };
+    const dv = cartDlg.querySelector('[data-deliv]');
+    if (dv) dv.onclick = () => { const lines = readCart(); cartDlg.close(); FC.lead('delivery_quote', { location: true, summary: lines.length + ' line' + (lines.length === 1 ? '' : 's') + ' in your cart · KES ' + fmt(FC.cart.total()), context: { cart: lines.map((x) => ({ slug: x.slug, name: x.name, desc: x.desc, qty: x.qty, price: x.price })) } }); };
+  }
+  function openCart() {
+    cartCss();
+    if (!cartDlg) { cartDlg = document.createElement('dialog'); cartDlg.className = 'fc-cart'; cartDlg.setAttribute('aria-labelledby', 'fc-cart-h'); cartDlg.addEventListener('click', (e) => { if (e.target === cartDlg) cartDlg.close(); }); document.body.appendChild(cartDlg); }
+    drawCart(); if (cartDlg.showModal) cartDlg.showModal(); else cartDlg.setAttribute('open', '');
+    const f = cartDlg.querySelector('.go') || cartDlg.querySelector('[data-x]'); if (f) f.focus();
+  }
+  window.addEventListener('storage', (e) => { if (e.key === CK) paintCart(); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintCart); else paintCart();
+
+  // ---------- simple to-scale drawings, until real 3D models are uploaded ----------
+  /* FC.shape({ kind:'door'|'window'|'panel'|'box', w, h, d (mm), color, glass, leaves }) -> svg string */
+  FC.shape = function (o) {
+    const kind = o.kind || 'box', col = o.color || '#9C8E78', W = 420, H = 300, pad = 46;
+    const w = Math.max(1, Number(o.w) || (kind === 'panel' ? 1000 : 900)), h = Math.max(1, Number(o.h) || (kind === 'panel' ? 600 : kind === 'window' ? 1200 : 2100));
+    const s = Math.min((W - pad * 2) / w, (H - pad * 2) / h), rw = w * s, rh = h * s, x = (W - rw) / 2 + 10, y = (H - rh) / 2 - 6;
+    const mm = (v) => fmt(Math.round(v)) + ' mm', line = '#5C5850';
+    let body = '';
+    if (kind === 'door') {
+      const f = Math.max(4, rw * 0.05), leaves = o.leaves || (w >= 1500 ? 2 : 1), lw = (rw - f * 2) / leaves;
+      body = `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="#3B3832"/>`;
+      for (let i = 0; i < leaves; i++) {
+        const lx = x + f + i * lw;
+        body += `<rect x="${lx + 1}" y="${y + f}" width="${lw - 2}" height="${rh - f}" fill="${esc(col)}" stroke="rgba(0,0,0,.25)"/>`;
+        if (o.glass) body += `<rect x="${lx + lw * 0.18}" y="${y + f + rh * 0.08}" width="${lw * 0.64}" height="${rh * 0.62}" fill="#CFE0E8" opacity=".85" stroke="rgba(0,0,0,.2)"/>`;
+        else body += `<rect x="${lx + lw * 0.16}" y="${y + f + rh * 0.08}" width="${lw * 0.68}" height="${rh * 0.36}" fill="none" stroke="rgba(0,0,0,.18)"/><rect x="${lx + lw * 0.16}" y="${y + f + rh * 0.5}" width="${lw * 0.68}" height="${rh * 0.38}" fill="none" stroke="rgba(0,0,0,.18)"/>`;
+        const hx = leaves === 2 ? (i === 0 ? lx + lw - 8 : lx + 5) : lx + lw - 10;
+        body += `<rect x="${hx}" y="${y + rh * 0.5}" width="3.5" height="${Math.max(10, rh * 0.07)}" rx="1.5" fill="#C9A46A"/>`;
+      }
+    } else if (kind === 'window') {
+      const f = Math.max(4, Math.min(rw, rh) * 0.06), panes = w >= 1400 ? 3 : w >= 800 ? 2 : 1, pw = (rw - f * 2) / panes;
+      body = `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${esc(col)}"/>`;
+      for (let i = 0; i < panes; i++) body += `<rect x="${x + f + i * pw + 1.5}" y="${y + f}" width="${pw - 3}" height="${rh - f * 2}" fill="#CFE0E8" stroke="rgba(0,0,0,.2)"/><line x1="${x + f + i * pw + pw * 0.2}" y1="${y + f + rh * 0.15}" x2="${x + f + i * pw + pw * 0.45}" y2="${y + f + rh * 0.05}" stroke="#fff" stroke-width="2" opacity=".7"/>`;
+      body += `<rect x="${x - 6}" y="${y + rh}" width="${rw + 12}" height="6" fill="#8F877A"/>`;
+    } else if (kind === 'panel') {
+      body = `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${esc(col)}" stroke="rgba(0,0,0,.2)"/>`;
+      const n = Math.max(4, Math.min(40, Math.round(w / 76)));
+      for (let i = 1; i < n; i++) body += `<line x1="${x + (rw * i) / n}" y1="${y}" x2="${x + (rw * i) / n}" y2="${y + rh}" stroke="rgba(0,0,0,.14)" stroke-width="2"/>`;
+    } else {
+      const d = Math.max(0, Number(o.d) || 0) * s, dx = Math.min(d * 0.5, 50), dy = Math.min(d * 0.35, 36);
+      body = (d ? `<polygon points="${x},${y} ${x + dx},${y - dy} ${x + rw + dx},${y - dy} ${x + rw},${y}" fill="${esc(col)}" opacity=".7" stroke="rgba(0,0,0,.25)"/><polygon points="${x + rw},${y} ${x + rw + dx},${y - dy} ${x + rw + dx},${y + rh - dy} ${x + rw},${y + rh}" fill="${esc(col)}" opacity=".55" stroke="rgba(0,0,0,.25)"/>` : '')
+        + `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${esc(col)}" stroke="rgba(0,0,0,.3)"/>`;
+    }
+    const dim = `<g stroke="${line}" stroke-width="1" fill="${line}" font-family="IBM Plex Mono,monospace" font-size="12">`
+      + `<line x1="${x}" y1="${y + rh + 22}" x2="${x + rw}" y2="${y + rh + 22}"/><line x1="${x}" y1="${y + rh + 16}" x2="${x}" y2="${y + rh + 28}"/><line x1="${x + rw}" y1="${y + rh + 16}" x2="${x + rw}" y2="${y + rh + 28}"/>`
+      + `<text x="${x + rw / 2}" y="${y + rh + 40}" text-anchor="middle" stroke="none">${mm(w)}</text>`
+      + `<line x1="${x - 22}" y1="${y}" x2="${x - 22}" y2="${y + rh}"/><line x1="${x - 28}" y1="${y}" x2="${x - 16}" y2="${y}"/><line x1="${x - 28}" y1="${y + rh}" x2="${x - 16}" y2="${y + rh}"/>`
+      + `<text x="${x - 30}" y="${y + rh / 2}" text-anchor="middle" stroke="none" transform="rotate(-90 ${x - 30} ${y + rh / 2})">${mm(h)}</text>`
+      + (kind === 'box' && o.d ? `<text x="${x + rw + 8}" y="${y - 8}" stroke="none">depth ${mm(o.d)}</text>` : '') + '</g>';
+    return `<svg viewBox="0 0 ${W} ${H + 20}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Drawing to scale: ${mm(w)} wide by ${mm(h)} high${o.d ? ' by ' + mm(o.d) + ' deep' : ''}" style="width:100%;height:100%;display:block"><rect width="100%" height="100%" fill="#F7F4EE"/>${body}${dim}</svg>`;
+  };
 
   // ---------- staff sign-in icon in the footer ----------
   const LOCK = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"></rect><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path></svg>';

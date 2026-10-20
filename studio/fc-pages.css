@@ -1,6 +1,7 @@
 /* Firmcop website pages built outside the canvas prototype: Collection, product, works detail. */
 :root{--ink:#1B1A17;--muted:#5C5850;--line:#DDD6CA;--paper:#F4F1EB;--card:#FFFFFF;--brass:#8A6A33;--brass-dk:#6B4F22;--gold:#C9A46A;--night:#0D0C0A;--night2:#15130F}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;font-size:16px;line-height:1.55}
 a{color:var(--brass-dk)}
 img{max-width:100%;display:block}

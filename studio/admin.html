@@ -775,7 +775,7 @@ async function editProduct(p, reload, tab) {
     const box = $('#pb', d.el);
     if (tab === 'details') {
       const F = PRODUCT_FIELDS();
-      box.innerHTML = `<form class="f" style="margin-top:12px">${formHtml(F, p)}<div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button>${p.slug ? `<a class="btn line" href="Store.dc.html" target="_blank" rel="noopener">See it on the website</a>` : ''}</div></form>`;
+      box.innerHTML = `<form class="f" style="margin-top:12px">${formHtml(F, p)}<div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button>${p.slug ? `<a class="btn line" href="atelier.html" target="_blank" rel="noopener">See it on the website</a>` : ''}</div></form>`;
       const f = $('form', box);
       if (isNew) f.name.addEventListener('input', () => { f.slug.value = slugify(f.name.value); });
       f.onsubmit = async (e) => {
