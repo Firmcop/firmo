@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Projects</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -35,7 +37,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <a href="Main.dc.html#resources">BIM and resources</a>
 <a href="3d-studio.html">3D Studio</a>
 <a href="Portal.dc.html">My builds</a>
-<a href="Team.dc.html">Team portal</a>
+<a href="admin.html">Team portal</a>
 </nav>
 <a class="btn" href="Configurator.dc.html">Build yours</a>
 </div>
@@ -66,7 +68,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <span style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;text-align:left">
 <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase">{{p.type}} · {{p.place}}</span>
 <span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:24px;text-transform:uppercase;line-height:1.05">{{p.name}}</span>
-<span style="font-size:14px;color:#5C5850">{{p.area}} m² · {{p.weeks}} weeks · {{p.client}}</span>
+<span style="font-size:14px;color:#5C5850">{{p.meta}}</span>
 </span>
 </button>
 </sc-for>
@@ -80,8 +82,8 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>
 <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px">
 <dt style="color:#5C5850">Design</dt><dd style="margin:0">{{sel.design}}</dd>
-<dt style="color:#5C5850">Floor area</dt><dd style="margin:0">{{sel.area}} m²</dd>
-<dt style="color:#5C5850">Build time</dt><dd style="margin:0">{{sel.weeks}} weeks, yard to handover</dd>
+<dt style="color:#5C5850">Floor area</dt><dd style="margin:0">{{sel.areaText}}</dd>
+<dt style="color:#5C5850">Build time</dt><dd style="margin:0">{{sel.weeksText}}</dd>
 <dt style="color:#5C5850">Key finishes</dt><dd style="margin:0">{{sel.finishes}}</dd>
 </dl>
 <blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">[Client quote about the build]</blockquote>
@@ -99,7 +101,7 @@ class Component extends DCLogic {
     this.state = { type: 'All', sel: 0 };
   }
   renderVals() {
-    const all = [
+    const all0 = FC.list(this, 'works', [
       { name: '[Highland A-frame retreat]', type: 'A-frame', place: '[Location]', area: 67, weeks: 9, client: 'Hospitality', design: 'A-frame loft, 2 bays', finishes: 'Cypress shiplap, uPVC glazing, engineered oak', story: 'Two rental A-frames on a sloping plot, delivered in sections and assembled on screw piles to avoid heavy earthworks.' },
       { name: '[Twin 40 family home]', type: 'Container', place: '[Location]', area: 59, weeks: 10, client: 'Private home', design: 'Twin 40 family', finishes: 'Fibre cement in charcoal, PIR 100 mm, SPC vinyl', story: 'Two 40 ft units joined around an open living core, with a full-length deck and rooftop solar.' },
       { name: '[Site camp, 12 units]', type: 'Container', place: '[Location]', area: 356, weeks: 7, client: 'Contractor', design: 'Site office 40 × 12', finishes: 'Corrugated steel, rockwool 75 mm, laminate', story: 'Offices, stores and ablutions for a road project, fitted out in parallel and delivered over two weeks.' },
@@ -108,7 +110,8 @@ class Component extends DCLogic {
       { name: '[Highway strip mall]', type: 'Container', place: '[Town]', area: 178, weeks: 10, client: 'Commercial investor', design: 'Strip mall, 12 shops', finishes: 'Corrugated charcoal, roller shutters, covered walkway', story: 'Twelve 20 ft shops in a row on a 100 × 100 ft plot, with parking in front. Seven units were pre-leased before delivery and individual shops were sold to investors.' },
       { name: '[Riverside eco-resort]', type: 'Container', place: '[Location]', area: 356, weeks: 14, client: 'Resort developer', design: 'Pod resort cluster, 24 cabins', finishes: 'Cypress shiplap, uPVC glazing, WPC decks', story: 'Twenty-four 20 ft cabins spaced for privacy around a lounge and pool deck. Cabins were offered to investors unit by unit, with an operator managing bookings.' },
       { name: '[Roadside kiosk]', type: 'Container', place: '[Location]', area: 15, weeks: 5, client: 'Retail', design: 'Container studio 20', finishes: 'Corrugated steel in oxide red, aluminium windows', story: 'A 20 ft retail kiosk with a fold-up serving hatch, delivered complete and connected on arrival.' }
-    ];
+    ]);
+    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request' }));
     const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];
     const filters = labels.map((l) => { const on = this.state.type === l; return { label: l === 'All' ? 'All projects' : (l === 'Steel' ? 'Steel structures' : l + 's'), pressed: on ? 'true' : 'false', pick: () => { const first = all.findIndex((p) => l === 'All' || p.type === l); this.setState({ type: l, sel: first < 0 ? 0 : first }); }, style: 'min-height:44px;padding:0 18px;border-radius:999px;font:inherit;font-size:15px;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB;border:1px solid #1B1A17' : 'background:#FFFFFF;color:#1B1A17;border:1px solid #BDB29C') }; });
     const projects = all.map((p, i) => Object.assign({}, p, { i: i })).filter((p) => this.state.type === 'All' || p.type === this.state.type).map((p) => {
@@ -121,9 +124,9 @@ class Component extends DCLogic {
       '[Highway strip mall]': '/_blob/c443aeb1df9da124515acb87cccc69cf', '[Riverside eco-resort]': '/_blob/1148ec4f8c7496bd7c3c61324e78a073',
       '[Roadside kiosk]': '/_blob/8f71d74f798a20f37854d9ceab7dbc74'
     };
-    const imgFor = (p) => IMG[p.name] || IMG[p.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac';
+    const imgFor = (p) => (p && p.img) || IMG[p.name] || IMG[p.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac';
     const withImg = projects.map((p) => Object.assign({}, p, { img: imgFor(p) }));
-    const s0 = all[this.state.sel];
+    const s0 = all[this.state.sel] || all[0];
     return { filters, projects: withImg, sel: Object.assign({}, s0, { img: imgFor(s0), alt: 'Illustrative render: ' + s0.design }) };
   }
 }

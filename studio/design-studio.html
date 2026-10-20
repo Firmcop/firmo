@@ -192,6 +192,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
 <div id="chip"></div>
 <script src="ds-config.js"></script>
 <script src="ds-core.js"></script>
+<script src="fc-site.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -758,6 +759,7 @@ document.addEventListener('click', e => {
     case 'openRender': return openRender(v);
     case 'job': return queueJob(v);
     case 'proposal': return openProposal();
+    case 'sendQuote': return sendQuote();
     case 'closeModal': return closeModal();
     case 'handoff': {
       const n = +v, errs = A.filter(x => x.lvl === 'error').length;
@@ -1211,7 +1213,7 @@ function openProposal() {
   const boq = CLIENT ? `<table><tr><th>Section</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td>${g}</td><td class="n">${KSh(Q.lines.filter(l => l.grp === g).reduce((a, l) => a + l.total, 0))}</td></tr>`).join('')}</table>`
     : `<table><tr><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td colspan="4" style="font-weight:600;color:#7A5C2A;padding-top:12px">${g}</td></tr>` + Q.lines.filter(l => l.grp === g).map(l => `<tr><td>${esc(l.name)}${l.short ? ' <span style="color:#9a6200">· ordered in</span>' : ''}</td><td class="n">${l.qty} ${l.unit}</td><td class="n">${KSh(l.rate)}</td><td class="n">${KSh(l.total)}</td></tr>`).join('')).join('')}</table>`;
   const joinery = P.runs.map(rn => { const cat = DS.runCat(rn); return `<tr><td>${rn.kind === 'kitchen' ? 'Kitchen' : 'Wardrobe'}</td><td>${rn.units.map(u => cat[u].name).join(', ')}</td><td>${FRONTS[rn.front].name}${rn.kind === 'kitchen' ? ` · ${TOPS[rn.top].name} worktop${rn.wallCab ? ' · wall cabinets' : ''}` : ''}</td></tr>`; }).join('');
-  m.innerHTML = `<div class="mbar"><span class="eb">Proposal preview${CLIENT ? ' · client view' : ' · sales view with full BOQ'}</span><button type="button" class="tb" data-a="closeModal">Close</button></div>
+  m.innerHTML = `<div class="mbar"><span class="eb">Proposal preview${CLIENT ? ' · client view' : ' · sales view with full BOQ'}</span><span style="display:flex;gap:8px"><button type="button" class="tb" data-a="sendQuote" style="background:#C9A46A;color:#0D0C0A;border-color:#C9A46A">Request this quote</button><button type="button" class="tb" data-a="closeModal">Close</button></span></div>
   <article class="doc"><div class="meta">FIRMCOP · MODULAR · Proposal ${ref} · ${dt}</div><h1>${esc(P.name)}</h1><div class="meta">Prepared for ${esc(CLIENTINFO.name)} · ${esc(CLIENTINFO.site)} · ${p.name}, ${SYSD().name.toLowerCase()} system</div>
   <img class="cover" src="${img}" alt="Render of the design">
   <h2>Plan</h2><svg viewBox="${vb.join(' ')}" xmlns="http://www.w3.org/2000/svg">${body}</svg>
@@ -1222,6 +1224,13 @@ function openProposal() {
   <h2>Payment and programme</h2><div class="mil">${[['30%', 'Deposit, to start fabrication'], ['30%', 'Shell complete at the yard'], ['30%', 'Fit-out complete'], ['10%', 'Handover on site']].map(([a, b]) => `<div><b>${a}</b>${b}<br><span class="meta">${KSh(Q.total * parseFloat(a) / 100)}</span></div>`).join('')}</div>
   <p class="meta" style="margin-top:14px">Lead time about ${Q.weeks} weeks from deposit${Q.shortfall.length ? ', including 2 weeks for finishes ordered in' : ''}. Sample price book for demonstration. The final price follows the site survey and engineering review. Valid for 30 days.</p></article>`;
   m.classList.add('show'); m.scrollTop = 0;
+}
+
+function sendQuote() {
+  if (!window.FC) return;
+  FC.quote({ source: 'studio', intent: 'proposal', title: P.name + ' · ' + PRE().name, design_slug: (P.design && P.design.slug) || null,
+    lines: Q.lines.map(l => ({ label: l.name, detail: l.grp, qty: l.qty, unit: l.unit, rate: l.qty ? Math.round(l.total / l.qty) : null, amount: Math.round(l.total) })),
+    subtotal: Math.round(Q.sub), vat: Math.round(Q.vat), total: Math.round(Q.total) });
 }
 
 // ---------------- author: save to the catalogue ----------------

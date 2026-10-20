@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Container one-bed 40</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -312,7 +314,7 @@ summary{cursor:pointer;min-height:56px;display:flex;align-items:center;font-fami
 <footer style="background:#070605;color:#A89E8E;font-size:14px">
 <div style="max-width:1360px;margin:0 auto;padding:40px 32px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center">
 <span class="serif" style="font-size:24px;letter-spacing:.18em;color:#F2EBDF">FIRMCOP</span>
-<span style="font-size:12px">© [Year] Firmcop Modular · <a href="Team.dc.html">Team portal</a></span>
+<span style="font-size:12px">© [Year] Firmcop Modular · <a href="admin.html">Team portal</a></span>
 </div>
 </footer>
 </div>
@@ -347,9 +349,9 @@ class Component extends DCLogic {
       photoLabel: s.view === 'int' ? '[Interior photographs]' : '[3D walkthrough from the BIM model]',
       views, terms, rates, milestones, checks, readyCount: ready, readyText,
       monthly: fmt(monthly), depositAmt: fmt(deposit), financed: fmt(financed),
-      bookVisit: () => this.setState({ toast: 'Choose a time at our yard: [Booking calendar] (prototype).' }),
-      whatsapp: () => this.setState({ toast: 'Opens WhatsApp with this design in the message (prototype).' }),
-      bookSurvey: () => this.setState({ toast: 'Survey requested. A surveyor will call to arrange a visit (prototype).' }),
+      bookVisit: () => FC.lead('visit', { context: { design: 'One-Bed Forty' }, intro: 'Walk through a One-Bed Forty at our yard. Tell us when suits you and we will confirm by phone or WhatsApp.' }),
+      whatsapp: () => FC.wa('Hello Firmcop, I am interested in the One-Bed Forty.'),
+      bookSurvey: () => FC.lead('survey', { context: { design: 'One-Bed Forty', site_ready: labels.filter((l, i) => s.checks[i]) }, summary: ready + ' of 6 site checks ticked' }),
       toastOn: !!s.toast, toast: s.toast
     };
   }

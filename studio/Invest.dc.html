@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Plot planner and ROI</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -40,7 +42,7 @@ input[type=range]{width:100%;accent-color:#8A6A33;min-height:32px}
 <a href="Invest.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">Invest</a>
 <a href="3d-studio.html">3D Studio</a>
 <a href="Portal.dc.html">My builds</a>
-<a href="Team.dc.html">Team portal</a>
+<a href="admin.html">Team portal</a>
 </nav>
 <a class="btn" href="Opportunities.dc.html">Opportunities</a>
 </div>
@@ -352,7 +354,7 @@ class Component extends DCLogic {
       capexLines: capexLines.map((l) => ({ name: l.name, amount: fmt(l.raw) })),
       bars: bars, chartAria: 'Cumulative cash turns positive after about ' + (noi > 0 ? payback.toFixed(1) + ' years' : 'never') + '.',
       unitSingular: p.singular, share: p.share, unitPrice: fmt(unitPrice), unitIncome: fmt(unitIncome), unitYield: unitPrice > 0 ? (unitIncome / unitPrice * 100).toFixed(1) : '0',
-      feasibility: () => this.setState({ toast: 'Feasibility request sent with this layout and these assumptions. Our team will confirm county rules and costs (prototype).' }),
+      feasibility: () => FC.lead('feasibility', { context: { planner: JSON.parse(JSON.stringify(this.state)) }, onDone: (r) => this.setState({ toast: 'Feasibility request ' + r.code + ' sent with this layout and these assumptions.' }) }),
       toastOn: !!s.toast, toast: s.toast
     };
   }

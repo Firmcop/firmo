@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en" data-fc-admin>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Firmcop Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+:root{--ink:#1B1A17;--muted:#5C5850;--line:#DDD6CA;--paper:#F4F1EB;--card:#FFFFFF;--brass:#8A6A33;--brass2:#C9A46A;--night:#0D0C0A;--ok:#1F5A2E;--okbg:#E3F1E6;--warn:#6B4A00;--warnbg:#FFF1D6;--bad:#9B2C1F;--badbg:#FBE4E0}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
+a{color:var(--brass)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500}
+.mono{font-family:'IBM Plex Mono',monospace}
+.eb{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin:0}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--night);color:#E8DFD0;padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:18px}
+.brand{color:#F2EBDF;text-decoration:none;display:flex;flex-direction:column;padding:0 8px}
+.brand b{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:26px;letter-spacing:.18em}
+.brand small{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass2)}
+nav.side{display:flex;flex-direction:column;gap:2px}
+nav.side button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;border:0;color:#D9D3C7;padding:10px 10px;border-radius:4px;cursor:pointer;min-height:42px}
+nav.side button:hover{background:#1E1B17;color:#fff}
+nav.side button[aria-current=page]{background:#2A2621;color:#fff;box-shadow:inset 3px 0 0 var(--brass2)}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--brass2);color:var(--night);border-radius:999px;padding:1px 7px;min-width:22px;text-align:center}
+.me{margin-top:auto;font-size:13px;color:#A89E8E;padding:0 8px;display:grid;gap:8px}
+.me button{background:transparent;border:1px solid #3A352D;color:#E8DFD0;border-radius:4px;min-height:38px;cursor:pointer}
+main{padding:28px 32px 60px;min-width:0}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{margin:4px 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:40px;line-height:1}
+h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:26px;margin:0 0 10px}
+h3{font-size:15px;margin:0 0 8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 16px;background:var(--brass);color:#fff;border:0;border-radius:4px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:#6B4F22}
+.btn.line{background:var(--card);color:var(--ink);border:1.5px solid var(--ink)}
+.btn.line:hover{background:var(--ink);color:var(--paper)}
+.btn.sm{min-height:34px;padding:0 10px;font-size:13px}
+.btn.danger{background:var(--card);color:var(--bad);border:1.5px solid var(--bad)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+input.q,select.f{min-height:42px;padding:0 12px;border:1.5px solid #BDB29C;border-radius:4px;background:var(--card)}
+input.q{min-width:220px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
+.grid{display:grid;gap:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;text-align:left;cursor:pointer}
+.tile:hover{border-color:var(--brass)}
+.tile .n{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1}
+.tile .l{font-size:13px;color:var(--muted)}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.tablewrap{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #EEE9E0;vertical-align:top}
+th{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;background:#FAF8F4;position:sticky;top:0}
+tr.row{cursor:pointer}
+tr.row:hover td{background:#FBF8F2}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 8px;border-radius:3px;background:#ECE8E0;color:#4A463F;white-space:nowrap}
+.pill.new,.pill.pending,.pill.pending_review,.pill.due,.pill.in_review{background:var(--warnbg);color:var(--warn)}
+.pill.won,.pill.paid,.pill.delivered,.pill.accepted,.pill.approved,.pill.done,.pill.active,.pill.yes{background:var(--okbg);color:var(--ok)}
+.pill.lost,.pill.cancelled,.pill.rejected,.pill.declined,.pill.no{background:var(--badbg);color:var(--bad)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+/* drawer */
+.dback{position:fixed;inset:0;background:rgba(13,12,10,.45);z-index:50;display:flex;justify-content:flex-end}
+.drawer{background:var(--paper);width:min(820px,100%);height:100%;overflow:auto;box-shadow:-20px 0 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
+.dhead{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:16px 22px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;z-index:2}
+.dbody{padding:18px 22px 40px;display:grid;gap:16px}
+.x{min-width:44px;min-height:44px;border:0;background:transparent;font-size:26px;cursor:pointer}
+form.f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+form.f .wide{grid-column:1/-1}
+label.fl{display:grid;gap:4px;font-size:13px;font-weight:600;color:#3B3832}
+label.fl input,label.fl select,label.fl textarea{font-weight:400;font-size:15px;padding:9px 11px;border:1.5px solid #BDB29C;border-radius:4px;background:#fff;min-height:42px;width:100%}
+label.fl textarea{min-height:90px;resize:vertical}
+label.ck{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;min-height:42px}
+label.ck input{width:20px;height:20px}
+.hint{font-weight:400;color:var(--muted);font-size:12px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;word-break:break-word}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{background:transparent;border:0;padding:10px 12px;min-height:42px;cursor:pointer;color:var(--muted);font-weight:600}
+.tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--brass)}
+.timeline{display:grid;gap:8px}
+.ev{font-size:13px;border-left:2px solid var(--line);padding:2px 0 2px 10px}
+.msg{padding:9px 12px;border-radius:6px;max-width:85%;font-size:14px}
+.msg.staff{background:#2F4550;color:#F4F1EB;justify-self:end}
+.msg.client{background:#fff;border:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--night);color:#F4F1EB;padding:12px 18px;border-radius:6px;z-index:99;max-width:min(560px,92vw);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.toast.err{background:var(--bad)}
+.ctable input,.ctable select{width:100%;min-height:36px;padding:4px 8px;border:1px solid #CFC6B5;border-radius:3px;background:#fff;font-size:14px}
+.ctable td{padding:6px}
+pre.json{background:#FAF8F4;border:1px solid var(--line);border-radius:4px;padding:10px;font-size:12.5px;white-space:pre-wrap;margin:0;max-height:240px;overflow:auto}
+/* sign in */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--night)}
+.gate .card{width:min(420px,100%);padding:26px}
+.gate form{display:grid;gap:12px}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  aside{position:static;height:auto;flex-direction:column;padding:12px}
+  nav.side{flex-direction:row;overflow:auto;gap:4px}
+  nav.side button{white-space:nowrap;width:auto}
+  .me{margin-top:0;grid-template-columns:1fr auto;align-items:center}
+  main{padding:18px 16px 50px}
+  form.f{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr}
+  input.q{min-width:0;flex:1 1 160px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="ds-config.js"></script>
+<script src="fc-site.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = FC.esc, fmt = FC.fmt;
+const root = $('#root');
+const ME = { role: null, email: '' };
+let COUNTS = {};
+let VIEW = (location.hash || '#dashboard').slice(1).split('/')[0] || 'dashboard';
+
+// ---------- helpers ----------
+const api = (path, o) => FC.rest(path, o);
+const rpc = (n, a) => FC.rpc(n, a);
+const when = (d) => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+const day = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const pill = (v) => v == null || v === '' ? '' : `<span class="pill ${esc(String(v)).replace(/\s/g, '_')}">${esc(String(v).replace(/_/g, ' '))}</span>`;
+const yes = (v) => pill(v ? 'yes' : 'no');
+const kes = (n) => n == null || n === '' ? '' : 'KES ' + fmt(n);
+const slugify = (t) => String(t || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 70);
+const phoneDigits = (p) => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '254' + d.slice(1); return d; };
+function toast(msg, bad) { const t = document.createElement('div'); t.className = 'toast' + (bad ? ' err' : ''); t.setAttribute('role', bad ? 'alert' : 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), bad ? 6000 : 3200); }
+async function guard(p, okMsg) { try { const r = await p; if (okMsg) toast(okMsg); return r; } catch (e) { toast(e.message || String(e), true); throw e; } }
+
+// ---------- sign in ----------
+function gate(mode, msg) {
+  mode = mode || 'in';
+  const titles = { in: 'Staff sign in', up: 'Create a staff account', reset: 'Reset your password', newpw: 'Set a new password' };
+  root.innerHTML = `<div class="gate"><div class="card">
+    <p class="eb">Firmcop · Admin</p><h1 style="margin-bottom:14px">${titles[mode]}</h1>
+    ${msg ? `<p class="small" role="status" style="background:var(--warnbg);color:var(--warn);padding:10px 12px;border-radius:4px">${msg}</p>` : ''}
+    <form id="gf" novalidate>
+      ${mode !== 'newpw' ? `<label class="fl">Email<input name="email" type="email" autocomplete="email" required></label>` : ''}
+      ${mode !== 'reset' ? `<label class="fl">${mode === 'newpw' ? 'New password' : 'Password'}<input name="password" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}" minlength="8" required></label>` : ''}
+      <p class="small" id="gerr" role="alert" style="color:var(--bad);margin:0" hidden></p>
+      <button class="btn" type="submit">${{ in: 'Sign in', up: 'Create account', reset: 'Email me a reset link', newpw: 'Save password' }[mode]}</button>
+    </form>
+    <p class="small muted" style="margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px">
+      ${mode !== 'in' ? '<a href="#" data-g="in">Sign in</a>' : ''}${mode !== 'up' ? '<a href="#" data-g="up">Create an account</a>' : ''}${mode !== 'reset' ? '<a href="#" data-g="reset">Forgot password</a>' : ''}<a href="Main.dc.html">Back to the website</a></p>
+  </div></div>`;
+  root.querySelectorAll('[data-g]').forEach((a) => a.onclick = (e) => { e.preventDefault(); gate(a.dataset.g); });
+  const f = $('#gf'), err = $('#gerr');
+  setTimeout(() => (f.querySelector('input') || f.querySelector('button')).focus(), 20);
+  f.onsubmit = async (e) => {
+    e.preventDefault(); err.hidden = true;
+    const email = f.email ? f.email.value.trim() : '', pw = f.password ? f.password.value : '';
+    if (f.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Enter your email address.'; err.hidden = false; return; }
+    if (f.password && pw.length < (mode === 'in' ? 1 : 8)) { err.textContent = mode === 'in' ? 'Enter your password.' : 'Use at least 8 characters.'; err.hidden = false; return; }
+    const b = f.querySelector('button'); b.disabled = true;
+    try {
+      if (mode === 'in') { await FC.auth.signIn(email, pw); return boot(); }
+      if (mode === 'up') { const r = await FC.auth.signUp(email, pw); if (r && r.access_token) return boot(); return gate('in', 'Check your email to confirm the account, then sign in. An admin then gives you access.'); }
+      if (mode === 'reset') { await FC.auth.resetPassword(email); return gate('in', 'If that email has an account, a reset link is on its way.'); }
+      if (mode === 'newpw') { await FC.auth.updatePassword(pw); FC.auth.recovery = false; toast('Password saved'); return boot(); }
+    } catch (ex) { err.textContent = ex.message; err.hidden = false; b.disabled = false; }
+  };
+}
+
+async function boot() {
+  if (!FC.auth.session) return gate('in');
+  if (FC.auth.recovery) return gate('newpw');
+  try {
+    const w = await rpc('site_whoami', {});
+    ME.role = w.role; ME.email = w.email || FC.auth.email;
+  } catch (e) { await FC.auth.signOut(); return gate('in', 'Your session expired. Please sign in again.'); }
+  if (!ME.role) {
+    root.innerHTML = `<div class="gate"><div class="card"><p class="eb">Firmcop · Admin</p><h1 style="margin-bottom:12px">No staff access yet</h1>
+      <p>You are signed in as <b>${esc(ME.email)}</b>, but this account is not on the Firmcop team.</p>
+      <p class="small muted">An admin can add you under <b>Team</b> in this admin. If you are setting up the very first admin, run this once in the Supabase SQL editor of the Firmcop2 project:</p>
+      <pre class="json">insert into public.ds_staff(user_id, role)
+select id, 'admin' from auth.users
+where email = '${esc(ME.email)}';</pre>
+      <div class="tools" style="margin-top:14px"><button class="btn" id="re">Check again</button><button class="btn line" id="so">Sign out</button></div></div></div>`;
+    $('#re').onclick = boot; $('#so').onclick = async () => { await FC.auth.signOut(); gate('in'); };
+    return;
+  }
+  shell();
+}
+
+// ---------- shell ----------
+const NAV = [
+  ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
+  ['builds', 'Client builds', 'variations_pending'], ['items', 'Atelier items', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
+  ['designs', 'Designs', 'designs_review'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
+];
+function shell() {
+  root.innerHTML = `<div class="app"><aside><a class="brand" href="Main.dc.html" title="Open the website"><b>FIRMCOP</b><small>Admin</small></a>
+    <nav class="side" aria-label="Admin sections">${NAV.map(([k, l, c]) => `<button type="button" data-v="${k}"><span>${l}</span>${c ? `<span class="badge" data-c="${c}" hidden></span>` : ''}</button>`).join('')}</nav>
+    <div class="me"><span>${esc(ME.email)}<br><span class="mono" style="font-size:11px;color:var(--brass2)">${esc(ME.role)}</span></span><button type="button" id="out">Sign out</button></div></aside>
+    <main id="main" tabindex="-1"></main></div>`;
+  root.querySelectorAll('nav.side button').forEach((b) => b.onclick = () => go(b.dataset.v));
+  $('#out').onclick = async () => { await FC.auth.signOut(); gate('in'); };
+  go(VIEW, true);
+}
+async function refreshCounts() {
+  try { COUNTS = await rpc('site_admin_counts', {}); } catch (e) { COUNTS = {}; }
+  root.querySelectorAll('[data-c]').forEach((b) => { const n = COUNTS[b.dataset.c] || 0; b.textContent = n; b.hidden = !n; });
+}
+function go(v, first) {
+  VIEW = NAV.some((n) => n[0] === v) ? v : 'dashboard';
+  if (location.hash.slice(1) !== VIEW) history.replaceState(null, '', '#' + VIEW);
+  root.querySelectorAll('nav.side button').forEach((b) => { if (b.dataset.v === VIEW) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  refreshCounts();
+  const m = $('#main'); m.innerHTML = '<p class="muted">Loading…</p>';
+  (VIEWS[VIEW] || VIEWS.dashboard)(m).catch((e) => { m.innerHTML = `<div class="card"><h2>Could not load</h2><p>${esc(e.message)}</p></div>`; });
+  if (!first) m.focus({ preventScroll: true });
+}
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && v !== VIEW && $('#main')) go(v); });
+
+// ---------- drawer ----------
+function drawer(title, eyebrow, bodyHtml, onMount) {
+  const prev = document.activeElement;
+  const d = document.createElement('div'); d.className = 'dback';
+  d.innerHTML = `<div class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="dhead"><div><p class="eb">${esc(eyebrow || '')}</p><h2 style="margin:4px 0 0">${esc(title)}</h2></div><button class="x" type="button" aria-label="Close">×</button></div><div class="dbody"></div></div>`;
+  document.body.appendChild(d);
+  const body = $('.dbody', d); body.innerHTML = bodyHtml || '';
+  const close = () => { d.remove(); document.removeEventListener('keydown', key); if (prev && prev.focus) prev.focus(); };
+  const key = (e) => { if (e.key === 'Escape' && !document.querySelector('.fcd-back')) close(); };
+  document.addEventListener('keydown', key);
+  $('.x', d).onclick = close; d.addEventListener('mousedown', (e) => { if (e.target === d) close(); });
+  setTimeout(() => $('.x', d).focus(), 20);
+  const api2 = { el: body, close, setTitle: (t) => { $('.dhead h2', d).textContent = t; } };
+  if (onMount) onMount(api2);
+  return api2;
+}
+
+// ---------- forms ----------
+/* field: { k, label, type: text|textarea|number|money|select|bool|date|color|lines|email|url|tel, options, wide, hint, ro } */
+function formHtml(fields, rec) {
+  return fields.map((f) => {
+    const v = rec[f.k], cls = f.wide || f.type === 'textarea' || f.type === 'lines' ? ' class="fl wide"' : ' class="fl"';
+    const hint = f.hint ? ` <span class="hint">${esc(f.hint)}</span>` : '';
+    if (f.type === 'bool') return `<label class="ck${f.wide ? ' wide' : ''}"><input type="checkbox" name="${f.k}" ${v ? 'checked' : ''} ${f.ro ? 'disabled' : ''}>${esc(f.label)}</label>`;
+    if (f.type === 'select') return `<label${cls}>${esc(f.label)}${hint}<select name="${f.k}" ${f.ro ? 'disabled' : ''}>${f.options.map((o) => { const [ov, ol] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(ov)}" ${String(v) === String(ov) ? 'selected' : ''}>${esc(ol)}</option>`; }).join('')}</select></label>`;
+    if (f.type === 'textarea') return `<label${cls}>${esc(f.label)}${hint}<textarea name="${f.k}" ${f.ro ? 'readonly' : ''}>${esc(v == null ? '' : v)}</textarea></label>`;
+    if (f.type === 'lines') return `<label${cls}>${esc(f.label)}${hint}<textarea name="${f.k}" rows="4">${esc((v || []).join('\n'))}</textarea></label>`;
+    const t = { money: 'number', number: 'number', date: 'date', color: 'color', email: 'email', url: 'url', tel: 'tel' }[f.type] || 'text';
+    const val = f.type === 'date' && v ? String(v).slice(0, 10) : (v == null ? '' : v);
+    return `<label${cls}>${esc(f.label)}${hint}<input name="${f.k}" type="${t}" value="${esc(val)}" ${t === 'number' ? 'step="any"' : ''} ${f.ro ? 'readonly' : ''} ${f.req ? 'required' : ''}></label>`;
+  }).join('');
+}
+function readForm(form, fields) {
+  const out = {};
+  fields.forEach((f) => {
+    if (f.ro) return; const el = form.elements[f.k]; if (!el) return;
+    if (f.type === 'bool') out[f.k] = el.checked;
+    else if (f.type === 'number' || f.type === 'money') out[f.k] = el.value === '' ? null : Number(el.value);
+    else if (f.type === 'lines') out[f.k] = el.value.split('\n').map((x) => x.trim()).filter(Boolean);
+    else if (f.type === 'date') out[f.k] = el.value || null;
+    else out[f.k] = el.value.trim() === '' ? null : el.value.trim();
+  });
+  return out;
+}
+
+// ---------- generic list + editor ----------
+/* spec: { table, title, eyebrow, order, select, search:[cols], filter:{col, options}, cols:[{k,label,fmt,n}], fields, defaults, newLabel, canDelete, slugFrom, detail(rec, drawerApi, reload) } */
+async function listView(m, spec) {
+  const st = { q: '', f: '' };
+  m.innerHTML = `<div class="top"><div><p class="eb">${esc(spec.eyebrow || 'Firmcop')}</p><h1>${esc(spec.title)}</h1></div>
+    <div class="tools">${spec.search ? `<input class="q" type="search" placeholder="Search" aria-label="Search ${esc(spec.title)}">` : ''}
+    ${spec.filter ? `<select class="f" aria-label="Filter"><option value="">All ${esc(spec.filter.label || 'statuses')}</option>${spec.filter.options.map((o) => `<option value="${esc(o)}">${esc(o.replace(/_/g, ' '))}</option>`).join('')}</select>` : ''}
+    ${spec.extraTools || ''}${spec.fields && spec.newLabel !== false ? `<button class="btn" type="button" data-new>${esc(spec.newLabel || 'Add')}</button>` : ''}</div></div>
+    <div class="tablewrap"><table><thead><tr>${spec.cols.map((c) => `<th${c.n ? ' class="n"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead><tbody><tr><td colspan="${spec.cols.length}" class="empty">Loading…</td></tr></tbody></table></div>`;
+  const tb = $('tbody', m);
+  let rows = [];
+  async function load() {
+    const params = ['select=' + (spec.select || '*'), 'order=' + (spec.order || 'created_at.desc'), 'limit=500'];
+    if (st.f && spec.filter) params.push(spec.filter.col + '=eq.' + encodeURIComponent(st.f));
+    if (st.q && spec.search) params.push('or=(' + spec.search.map((c) => c + '.ilike.*' + encodeURIComponent(st.q.replace(/[(),*]/g, ' ')) + '*').join(',') + ')');
+    rows = await api(spec.table + '?' + params.join('&'));
+    tb.innerHTML = rows.length ? rows.map((r, i) => `<tr class="row" tabindex="0" data-i="${i}">${spec.cols.map((c) => `<td${c.n ? ' class="n"' : ''}>${c.fmt ? c.fmt(r[c.k], r) : esc(r[c.k] == null ? '' : r[c.k])}</td>`).join('')}</tr>`).join('')
+      : `<tr><td colspan="${spec.cols.length}" class="empty">${st.q || st.f ? 'Nothing matches.' : esc(spec.emptyText || 'Nothing here yet.')}</td></tr>`;
+    tb.querySelectorAll('tr.row').forEach((tr) => { const open = () => edit(rows[+tr.dataset.i]); tr.onclick = open; tr.onkeydown = (e) => { if (e.key === 'Enter') open(); }; });
+  }
+  function edit(rec) {
+    const isNew = !rec; rec = rec || Object.assign({}, spec.defaults || {});
+    const title = isNew ? (spec.newLabel || 'New') : (spec.label ? spec.label(rec) : (rec.name || rec.title || rec.code || 'Edit'));
+    drawer(title, spec.title, '', (d) => {
+      if (spec.detail && !isNew) return spec.detail(rec, d, load);
+      d.el.innerHTML = `<form class="f">${formHtml(spec.fields, rec)}<div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button>${!isNew && spec.canDelete ? '<button class="btn danger" type="button" data-del>Delete</button>' : ''}</div></form>`;
+      const form = $('form', d.el);
+      if (spec.slugFrom && form.elements.slug && form.elements[spec.slugFrom]) form.elements[spec.slugFrom].addEventListener('input', () => { if (isNew) form.elements.slug.value = slugify(form.elements[spec.slugFrom].value); });
+      form.onsubmit = async (e) => {
+        e.preventDefault(); const v = readForm(form, spec.fields);
+        if (spec.slugFrom && 'slug' in v && !v.slug) v.slug = slugify(v[spec.slugFrom]);
+        const miss = spec.fields.find((f) => f.req && (v[f.k] == null || v[f.k] === ''));
+        if (miss) { toast('Fill in ' + miss.label.toLowerCase(), true); return; }
+        if (isNew) await guard(api(spec.table, { method: 'POST', body: v, headers: { Prefer: 'return=representation' } }), 'Created');
+        else await guard(api(spec.table + '?id=eq.' + rec.id, { method: 'PATCH', body: v, headers: { Prefer: 'return=representation' } }), 'Saved');
+        d.close(); load(); refreshCounts();
+      };
+      const del = $('[data-del]', d.el);
+      if (del) del.onclick = async () => { if (!confirmInline(del, 'Delete for good?')) return; await guard(api(spec.table + '?id=eq.' + rec.id, { method: 'DELETE' }), 'Deleted'); d.close(); load(); };
+    });
+  }
+  if (spec.search) { let t; $('.q', m).oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 250); }; }
+  if (spec.filter) { $('.f', m).onchange = (e) => { st.f = e.target.value; load(); }; if (spec.filter.initial) { st.f = spec.filter.initial; $('.f', m).value = st.f; } }
+  const nb = $('[data-new]', m); if (nb) nb.onclick = () => edit(null);
+  if (spec.onTools) spec.onTools(m, { reload: load, rows: () => rows, edit });
+  await load();
+  return { reload: load, edit };
+}
+// two-step confirm without browser dialogs
+function confirmInline(btn, label) {
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = label;
+  setTimeout(() => { delete btn.dataset.armed; btn.textContent = old; }, 3500);
+  return false;
+}
+
+// ---------- contact actions ----------
+function contactTools(r) {
+  const ph = r.phone || r.client_phone, em = r.email || r.client_email, ref = r.code ? ' (' + r.code + ')' : '';
+  return `<div class="tools">${ph ? `<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${phoneDigits(ph)}?text=${encodeURIComponent('Hello ' + (r.name || r.client_name || '') + ', this is Firmcop about your request' + ref + '.')}">WhatsApp</a><a class="btn sm line" href="tel:${esc(ph)}">Call</a>` : ''}${em ? `<a class="btn sm line" href="mailto:${esc(em)}?subject=${encodeURIComponent('Firmcop' + ref)}">Email</a>` : ''}</div>`;
+}
+
+// ---------- views ----------
+const LEAD_KINDS = ['visit', 'survey', 'feasibility', 'delivery_quote', 'reservation', 'waitlist', 'info_pack', 'contact', 'callback', 'other'];
+const VIEWS = {};
+
+VIEWS.dashboard = async (m) => {
+  await refreshCounts();
+  const c = COUNTS;
+  const tiles = [['leads', c.leads_new, 'New leads'], ['leads', c.leads_open, 'Open leads'], ['quotes', c.quotes_review, 'Quotes to review'], ['orders', c.orders_pending, 'Atelier orders pending'],
+    ['builds', c.builds_active, 'Active builds'], ['builds', c.variations_pending, 'Variations awaiting client'], ['builds', c.messages_7d, 'Client messages, 7 days'], ['designs', c.designs_review, 'Designs in review'],
+    ['items', c.low_stock, 'Items low on stock'], ['works', c.works, 'Published works'], ['subscribers', c.subscribers, 'Newsletter subscribers']];
+  m.innerHTML = `<div class="top"><div><p class="eb">Firmcop · Admin</p><h1>Dashboard</h1></div><div class="tools"><a class="btn line" href="Main.dc.html" target="_blank" rel="noopener">Open the website</a></div></div>
+    <div class="tiles">${tiles.map(([v, n, l]) => `<button type="button" class="tile" data-go="${v}"><div class="n">${n || 0}</div><div class="l">${l}</div></button>`).join('')}</div>
+    <div class="cols3"><section class="card"><h2>Latest leads</h2><div id="d-leads" class="muted">Loading…</div></section>
+    <section class="card"><h2>Latest quotes</h2><div id="d-quotes" class="muted">Loading…</div></section>
+    <section class="card"><h2>Latest orders</h2><div id="d-orders" class="muted">Loading…</div></section></div>`;
+  m.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => go(b.dataset.go));
+  const mini = (rows, f) => rows.length ? `<table>${rows.map(f).join('')}</table>` : '<p class="muted small">None yet.</p>';
+  const [L, Q, O] = await Promise.all([
+    api('leads?select=code,kind,name,status,created_at&order=created_at.desc&limit=6'), api('sales_quotes?select=code,title,name,total,status,created_at&order=created_at.desc&limit=6'), api('store_orders?select=code,name,total,status,created_at&order=created_at.desc&limit=6')]);
+  $('#d-leads').innerHTML = mini(L, (r) => `<tr><td class="mono small">${esc(r.code)}</td><td>${esc(r.name)}<br><span class="small muted">${esc(r.kind.replace('_', ' '))} · ${when(r.created_at)}</span></td><td>${pill(r.status)}</td></tr>`);
+  $('#d-quotes').innerHTML = mini(Q, (r) => `<tr><td class="mono small">${esc(r.code)}</td><td>${esc(r.name)}<br><span class="small muted">${esc(r.title || '')}</span></td><td class="n">${kes(r.total)}<br>${pill(r.status)}</td></tr>`);
+  $('#d-orders').innerHTML = mini(O, (r) => `<tr><td class="mono small">${esc(r.code)}</td><td>${esc(r.name)}<br><span class="small muted">${when(r.created_at)}</span></td><td class="n">${kes(r.total)}<br>${pill(r.status)}</td></tr>`);
+};
+
+VIEWS.leads = (m) => listView(m, {
+  table: 'leads', title: 'Leads', eyebrow: 'Sales', search: ['name', 'phone', 'email', 'code', 'message'], filter: { col: 'status', options: ['new', 'contacted', 'qualified', 'won', 'lost', 'closed'] },
+  cols: [{ k: 'code', label: 'Ref', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'created_at', label: 'Received', fmt: when }, { k: 'kind', label: 'Type', fmt: (v) => esc(v.replace('_', ' ')) },
+    { k: 'name', label: 'Name', fmt: (v, r) => esc(v) + (r.context && r.context.design ? `<br><span class="small muted">${esc(r.context.design)}</span>` : (r.context && r.context.opportunity ? `<br><span class="small muted">${esc(r.context.opportunity)}</span>` : '')) },
+    { k: 'phone', label: 'Phone' }, { k: 'preferred_date', label: 'Date', fmt: day }, { k: 'status', label: 'Status', fmt: pill }],
+  fields: [{ k: 'kind', label: 'Type', type: 'select', options: LEAD_KINDS }, { k: 'status', label: 'Status', type: 'select', options: ['new', 'contacted', 'qualified', 'won', 'lost', 'closed'] }, { k: 'name', label: 'Name', req: true }, { k: 'phone', label: 'Phone', type: 'tel' }, { k: 'email', label: 'Email', type: 'email' }, { k: 'preferred_date', label: 'Preferred date', type: 'date' }, { k: 'message', label: 'Message', type: 'textarea' }, { k: 'internal_notes', label: 'Internal notes', type: 'textarea' }],
+  newLabel: 'Add a lead', defaults: { kind: 'contact', status: 'new', context: {} },
+  label: (r) => r.code + ' · ' + r.name,
+  detail: async (r, d, reload) => {
+    const ev = await api('lead_events?lead_id=eq.' + r.id + '&order=created_at.asc');
+    const ctx = r.context && Object.keys(r.context).length ? r.context : null;
+    d.el.innerHTML = `${contactTools(r)}
+      <section class="card"><dl class="kv"><dt>Type</dt><dd>${esc(r.kind.replace('_', ' '))}</dd><dt>Received</dt><dd>${when(r.created_at)} · from ${esc(r.page || 'website')}</dd><dt>Phone</dt><dd>${esc(r.phone || '')}</dd><dt>Email</dt><dd>${esc(r.email || '')}</dd><dt>Preferred date</dt><dd>${day(r.preferred_date)}</dd><dt>Message</dt><dd>${esc(r.message || '')}</dd></dl>
+      ${ctx ? `<h3 style="margin-top:14px">Details from the page</h3><pre class="json">${esc(JSON.stringify(ctx, null, 2))}</pre>` : ''}</section>
+      <section class="card"><form class="f" id="lf"><label class="fl">Status<select name="status">${['new', 'contacted', 'qualified', 'won', 'lost', 'closed'].map((s) => `<option ${s === r.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label><span></span>
+        <label class="fl wide">Internal notes<textarea name="internal_notes">${esc(r.internal_notes || '')}</textarea></label><div class="wide tools"><button class="btn" type="submit">Save</button></div></form></section>
+      <section class="card"><h3>Activity</h3><div class="timeline">${ev.map((e) => `<div class="ev"><b>${esc(e.kind)}</b> ${esc(e.note || '')}<br><span class="muted">${when(e.created_at)}${e.actor_email ? ' · ' + esc(e.actor_email) : ''}</span></div>`).join('') || '<p class="muted small">Nothing yet.</p>'}</div>
+        <form id="nf" style="display:flex;gap:8px;margin-top:10px"><input name="note" aria-label="Add a note" placeholder="Add a note, e.g. called, visit booked for Tuesday" style="flex:1;min-height:42px;padding:0 10px;border:1.5px solid #BDB29C;border-radius:4px"><button class="btn" type="submit">Add</button></form></section>`;
+    $('#lf', d.el).onsubmit = async (e) => {
+      e.preventDefault(); const f = e.target, st = f.status.value;
+      await guard(api('leads?id=eq.' + r.id, { method: 'PATCH', body: { status: st, internal_notes: f.internal_notes.value || null } }), 'Saved');
+      if (st !== r.status) await api('lead_events', { method: 'POST', body: { lead_id: r.id, kind: 'status', note: r.status + ' → ' + st, actor_email: ME.email } });
+      d.close(); reload(); refreshCounts();
+    };
+    $('#nf', d.el).onsubmit = async (e) => { e.preventDefault(); const n = e.target.note.value.trim(); if (!n) return; await guard(api('lead_events', { method: 'POST', body: { lead_id: r.id, kind: 'note', note: n, actor_email: ME.email } }), 'Note added'); VIEWS_DETAIL_REOPEN(d, r); };
+  }
+});
+// re-open a lead after adding a note so the activity list refreshes
+let LIST_EDIT = null;
+function VIEWS_DETAIL_REOPEN(d, r) { d.close(); setTimeout(() => { if (LIST_EDIT) LIST_EDIT(r); }, 0); }
+
+const QUOTE_ST = ['pending_review', 'sent', 'accepted', 'rejected', 'won', 'lost'];
+VIEWS.quotes = (m) => listView(m, {
+  table: 'sales_quotes', title: 'Quotes', eyebrow: 'Sales', search: ['name', 'email', 'phone', 'code', 'title'], filter: { col: 'status', options: QUOTE_ST },
+  cols: [{ k: 'code', label: 'Ref', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'created_at', label: 'Received', fmt: when }, { k: 'source', label: 'From', fmt: (v, r) => esc(v) + (r.intent ? `<br><span class="small muted">${esc(r.intent)}</span>` : '') },
+    { k: 'title', label: 'Design' }, { k: 'name', label: 'Client' }, { k: 'total', label: 'Total', n: true, fmt: kes }, { k: 'status', label: 'Status', fmt: pill }],
+  newLabel: false, fields: [],
+  label: (r) => r.code + ' · ' + r.name,
+  detail: async (r, d, reload) => {
+    const [lines, ev] = await Promise.all([api('sales_quote_lines?quote_id=eq.' + r.id + '&order=sort.asc'), api('sales_quote_events?quote_id=eq.' + r.id + '&order=created_at.asc')]);
+    d.el.innerHTML = `${contactTools(r)}
+      <section class="card"><dl class="kv"><dt>Client</dt><dd>${esc(r.name)}${r.location ? ' · ' + esc(r.location) : ''}</dd><dt>Phone</dt><dd>${esc(r.phone || '')}</dd><dt>Email</dt><dd>${esc(r.email)}</dd><dt>From</dt><dd>${esc(r.source)}${r.intent ? ' · ' + esc(r.intent) : ''}${r.design_slug ? ` · <a href="3d-studio.html?design=${encodeURIComponent(r.design_slug)}" target="_blank" rel="noopener">${esc(r.design_slug)}</a>` : ''}</dd><dt>Design</dt><dd>${esc(r.title || '')}</dd><dt>Notes</dt><dd>${esc(r.notes || '')}</dd></dl></section>
+      <section class="card"><h3>Bill of quantities</h3><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>
+        ${lines.map((l) => `<tr><td>${esc(l.label)}${l.detail ? `<br><span class="small muted">${esc(l.detail)}</span>` : ''}</td><td class="n">${l.qty == null ? '' : fmt(l.qty) + ' ' + esc(l.unit || '')}</td><td class="n">${l.rate == null ? '' : fmt(l.rate)}</td><td class="n">${l.amount == null ? '' : fmt(l.amount)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No lines</td></tr>'}
+        <tr><td colspan="3" class="n">Subtotal</td><td class="n">${fmt(r.subtotal)}</td></tr><tr><td colspan="3" class="n">VAT</td><td class="n">${fmt(r.vat)}</td></tr><tr><td colspan="3" class="n"><b>Total</b></td><td class="n"><b>${fmt(r.total)}</b></td></tr>${r.deposit ? `<tr><td colspan="3" class="n">Deposit requested</td><td class="n">${fmt(r.deposit)}</td></tr>` : ''}</tbody></table></div></section>
+      <section class="card"><form class="f" id="qf"><label class="fl">Status<select name="status">${QUOTE_ST.map((s) => `<option value="${s}" ${s === r.status ? 'selected' : ''}>${s.replace('_', ' ')}</option>`).join('')}</select></label><span></span>
+        <label class="fl wide">Internal notes<textarea name="internal_notes">${esc(r.internal_notes || '')}</textarea></label>
+        <div class="wide tools"><button class="btn" type="submit">Save</button><button class="btn line" type="button" id="mkb">Start a client build from this quote</button></div></form></section>
+      <section class="card"><h3>Activity</h3><div class="timeline">${ev.map((e) => `<div class="ev"><b>${esc(e.kind)}</b> ${esc(e.note || '')}<br><span class="muted">${when(e.created_at)}</span></div>`).join('')}</div></section>`;
+    $('#qf', d.el).onsubmit = async (e) => {
+      e.preventDefault(); const f = e.target;
+      await guard(api('sales_quotes?id=eq.' + r.id, { method: 'PATCH', body: { status: f.status.value, internal_notes: f.internal_notes.value || null } }), 'Saved');
+      if (f.status.value !== r.status) await api('sales_quote_events', { method: 'POST', body: { quote_id: r.id, kind: 'status', note: r.status + ' → ' + f.status.value + ' by ' + ME.email } });
+      d.close(); reload(); refreshCounts();
+    };
+    $('#mkb', d.el).onclick = async () => {
+      const b = await guard(api('client_builds', { method: 'POST', headers: { Prefer: 'return=representation' }, body: { client_name: r.name, client_email: r.email, client_phone: r.phone, title: r.title || 'Your build', location: r.location, contract_total: r.total, quote_id: r.id, spec: r.title } }), 'Client build created');
+      await api('sales_quotes?id=eq.' + r.id, { method: 'PATCH', body: { status: 'won' } }).catch(() => {});
+      d.close(); location.hash = 'builds'; setTimeout(() => openBuild(b[0]), 400);
+    };
+  }
+});
+
+const ORDER_ST = ['pending', 'confirmed', 'paid', 'dispatched', 'delivered', 'cancelled'];
+VIEWS.orders = (m) => listView(m, {
+  table: 'store_orders', title: 'Atelier orders', eyebrow: 'Store', search: ['name', 'email', 'phone', 'code'], filter: { col: 'status', options: ORDER_ST },
+  cols: [{ k: 'code', label: 'Ref', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'created_at', label: 'Placed', fmt: when }, { k: 'name', label: 'Customer' }, { k: 'phone', label: 'Phone' }, { k: 'address', label: 'Delivery' }, { k: 'total', label: 'Total', n: true, fmt: kes }, { k: 'status', label: 'Status', fmt: pill }],
+  newLabel: false, fields: [], label: (r) => r.code + ' · ' + r.name,
+  detail: async (r, d, reload) => {
+    const items = await api('store_order_items?order_id=eq.' + r.id);
+    d.el.innerHTML = `${contactTools(r)}
+      <section class="card"><dl class="kv"><dt>Customer</dt><dd>${esc(r.name)}</dd><dt>Phone</dt><dd>${esc(r.phone || '')}</dd><dt>Email</dt><dd>${esc(r.email)}</dd><dt>Delivery</dt><dd>${esc(r.address || '')}</dd><dt>Notes</dt><dd>${esc(r.notes || '')}</dd></dl></section>
+      <section class="card"><div class="tablewrap"><table><thead><tr><th>SKU</th><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>
+      ${items.map((i) => `<tr><td class="mono small">${esc(i.sku || '')}</td><td>${esc(i.name)}</td><td class="n">${fmt(i.qty)} ${esc(i.unit || '')}</td><td class="n">${fmt(i.unit_price)}</td><td class="n">${fmt(i.qty * i.unit_price)}</td></tr>`).join('')}
+      <tr><td colspan="4" class="n"><b>Total</b></td><td class="n"><b>${fmt(r.total)}</b></td></tr></tbody></table></div></section>
+      <section class="card"><form class="f" id="of"><label class="fl">Status<select name="status">${ORDER_ST.map((s) => `<option ${s === r.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label><span></span>
+      <label class="fl wide">Internal notes<textarea name="internal_notes">${esc(r.internal_notes || '')}</textarea></label><div class="wide tools"><button class="btn" type="submit">Save</button></div></form></section>`;
+    $('#of', d.el).onsubmit = async (e) => { e.preventDefault(); const f = e.target; await guard(api('store_orders?id=eq.' + r.id, { method: 'PATCH', body: { status: f.status.value, internal_notes: f.internal_notes.value || null } }), 'Saved'); d.close(); reload(); refreshCounts(); };
+  }
+});
+
+VIEWS.items = (m) => listView(m, {
+  table: 'store_items', title: 'Atelier items', eyebrow: 'Store', order: 'sort.asc,name.asc', search: ['name', 'sku', 'category'],
+  cols: [{ k: 'swatch', label: '', fmt: (v, r) => `<span aria-hidden="true" style="display:inline-block;width:22px;height:22px;border-radius:3px;background:${esc(v || '#ccc')}${r.image_url ? ` url(${esc(r.image_url)}) center/cover` : ''}"></span>` }, { k: 'sku', label: 'SKU', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'name', label: 'Item' }, { k: 'category', label: 'Category' },
+    { k: 'price', label: 'Price', n: true, fmt: (v, r) => kes(v) + ' / ' + esc(r.unit) }, { k: 'stock', label: 'Stock', n: true, fmt: (v) => v == null ? '<span class="muted">not tracked</span>' : (v <= 5 ? `<span class="pill due">${fmt(v)}</span>` : fmt(v)) }, { k: 'active', label: 'On sale', fmt: yes }],
+  fields: [{ k: 'sku', label: 'SKU', req: true }, { k: 'name', label: 'Name', req: true }, { k: 'category', label: 'Category', req: true, hint: 'Doors, Windows, Cladding…' }, { k: 'unit', label: 'Unit', hint: 'no., m², m' },
+    { k: 'price', label: 'Price (KES)', type: 'money', req: true }, { k: 'stock', label: 'Stock', type: 'number', hint: 'Leave empty to not track' }, { k: 'fits', label: 'Fit note', type: 'textarea' },
+    { k: 'swatch', label: 'Swatch colour', type: 'color' }, { k: 'texture', label: 'Swatch pattern', type: 'select', options: ['none', 'ribs', 'boards', 'panels', 'grid'] }, { k: 'image_url', label: 'Photo URL', type: 'url', wide: true }, { k: 'sort', label: 'Order', type: 'number' }, { k: 'active', label: 'On sale on the website', type: 'bool' }],
+  defaults: { unit: 'no.', active: true, texture: 'none', swatch: '#8F8A80', sort: 100 }, newLabel: 'Add an item', canDelete: true, label: (r) => r.sku + ' · ' + r.name
+});
+
+const WORK_TYPES = ['Container', 'A-frame', 'Cabin', 'Steel', 'Other'];
+VIEWS.works = (m) => listView(m, {
+  table: 'works', title: 'Works', eyebrow: 'Portfolio', order: 'published.desc,featured.desc,sort.asc', search: ['title', 'location', 'category'], filter: { col: 'type', options: WORK_TYPES, label: 'types' },
+  cols: [{ k: 'images', label: '', fmt: (v) => v && v[0] ? `<img src="${esc(v[0])}" alt="" width="56" height="42" style="object-fit:cover;border-radius:3px;display:block">` : '' }, { k: 'title', label: 'Project' }, { k: 'type', label: 'Type' }, { k: 'location', label: 'Location' }, { k: 'weeks', label: 'Weeks', n: true }, { k: 'featured', label: 'Featured', fmt: yes }, { k: 'published', label: 'On website', fmt: yes }],
+  fields: [{ k: 'title', label: 'Title', req: true, wide: true }, { k: 'slug', label: 'Web address', hint: 'made from the title' }, { k: 'type', label: 'Filter group', type: 'select', options: WORK_TYPES }, { k: 'category', label: 'Category' }, { k: 'location', label: 'Location' }, { k: 'client', label: 'Client type', hint: 'e.g. Private home, Contractor' },
+    { k: 'area_m2', label: 'Floor area (m²)', type: 'number' }, { k: 'weeks', label: 'Build time (weeks)', type: 'number' }, { k: 'design', label: 'Design' }, { k: 'finishes', label: 'Key finishes', wide: true }, { k: 'story', label: 'Story', type: 'textarea' },
+    { k: 'images', label: 'Photo URLs', type: 'lines', hint: 'one per line; the first is the cover' }, { k: 'sort', label: 'Order', type: 'number' }, { k: 'featured', label: 'Featured', type: 'bool' }, { k: 'published', label: 'Show on the website', type: 'bool' }],
+  defaults: { type: 'Container', published: true, featured: false, images: [], sort: 100 }, newLabel: 'Add a project', canDelete: true, slugFrom: 'title'
+});
+
+VIEWS.opps = (m) => listView(m, {
+  table: 'investment_opportunities', title: 'Investments', eyebrow: 'Invest', order: 'sort.asc', search: ['name', 'place', 'sector'],
+  cols: [{ k: 'name', label: 'Opportunity' }, { k: 'sector', label: 'Sector' }, { k: 'place', label: 'Place' }, { k: 'units', label: 'Reserved', n: true, fmt: (v, r) => r.taken + ' / ' + v }, { k: 'price', label: 'Per unit', n: true, fmt: kes }, { k: 'yield_lo', label: 'Yield', fmt: (v, r) => v != null ? esc(v + '–' + r.yield_hi + '%') : '' }, { k: 'published', label: 'On website', fmt: yes }],
+  fields: [{ k: 'name', label: 'Name', req: true, wide: true }, { k: 'slug', label: 'Web address' }, { k: 'sector', label: 'Sector', type: 'select', options: ['Hospitality', 'Retail', 'Residential', 'Commercial', 'Industrial'] }, { k: 'place', label: 'Place' }, { k: 'spec', label: 'What it is', wide: true },
+    { k: 'units', label: 'Units', type: 'number', req: true }, { k: 'taken', label: 'Units reserved', type: 'number' }, { k: 'price', label: 'Price per unit (KES)', type: 'money' }, { k: 'opens', label: 'Opens', hint: 'e.g. Q2 2027' },
+    { k: 'yield_lo', label: 'Yield from (%)', type: 'number' }, { k: 'yield_hi', label: 'Yield to (%)', type: 'number' }, { k: 'status_label', label: 'Status label', hint: 'e.g. Building now' }, { k: 'own_terms', label: 'What you own' },
+    { k: 'operator', label: 'Operator' }, { k: 'split', label: 'Income split' }, { k: 'story', label: 'Story', type: 'textarea' }, { k: 'image_url', label: 'Image URL', type: 'url' }, { k: 'pack_url', label: 'Information pack URL (PDF)', type: 'url' }, { k: 'sort', label: 'Order', type: 'number' }, { k: 'published', label: 'Show on the website', type: 'bool' }],
+  defaults: { sector: 'Hospitality', units: 10, taken: 0, published: false, sort: 100 }, newLabel: 'Add an opportunity', canDelete: true, slugFrom: 'name'
+});
+
+VIEWS.subscribers = (m) => listView(m, {
+  table: 'newsletter_subscribers', title: 'Subscribers', eyebrow: 'Marketing', search: ['email', 'source'],
+  cols: [{ k: 'email', label: 'Email' }, { k: 'source', label: 'Signed up on' }, { k: 'created_at', label: 'Date', fmt: when }, { k: 'active', label: 'Subscribed', fmt: yes }],
+  fields: [{ k: 'email', label: 'Email', type: 'email', req: true }, { k: 'source', label: 'Source' }, { k: 'active', label: 'Subscribed', type: 'bool' }], defaults: { active: true }, newLabel: 'Add a subscriber', canDelete: true,
+  extraTools: '<button class="btn line" type="button" data-csv>Export CSV</button>',
+  onTools: (mm, h) => { $('[data-csv]', mm).onclick = () => { const rows = h.rows(); const csv = 'email,source,created_at,active\n' + rows.map((r) => [r.email, r.source || '', r.created_at, r.active].map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'firmcop-subscribers.csv'; a.click(); }; }
+});
+
+VIEWS.settings = async (m) => {
+  const rows = await api('site_settings?select=*&order=key.asc');
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Site settings</h1></div></div>
+    <section class="card"><p class="muted small" style="margin-top:0">These fill the phone number, WhatsApp button, address and registration details across the website.</p>
+    <form class="f" id="sf">${rows.map((r) => `<label class="fl${(r.value || '').length > 60 ? ' wide' : ''}">${esc(r.label || r.key)} <span class="hint mono">${esc(r.key)}</span><input name="${esc(r.key)}" value="${esc(r.value || '')}"></label>`).join('')}
+    <div class="wide tools"><button class="btn" type="submit">Save settings</button></div></form></section>
+    <section class="card" style="margin-top:14px"><h3>Add a setting</h3><form class="f" id="sa"><label class="fl">Key<input name="key" placeholder="e.g. instagram_url"></label><label class="fl">Label<input name="label"></label><label class="fl wide">Value<input name="value"></label><div class="wide"><button class="btn line" type="submit">Add</button></div></form></section>`;
+  $('#sf', m).onsubmit = async (e) => {
+    e.preventDefault(); const f = e.target;
+    const changed = rows.filter((r) => (f.elements[r.key].value || '') !== (r.value || ''));
+    await guard(Promise.all(changed.map((r) => api('site_settings?key=eq.' + encodeURIComponent(r.key), { method: 'PATCH', body: { value: f.elements[r.key].value } }))), changed.length ? 'Settings saved' : 'Nothing changed');
+    VIEWS.settings(m);
+  };
+  $('#sa', m).onsubmit = async (e) => { e.preventDefault(); const f = e.target; const k = slugify(f.key.value).replace(/-/g, '_'); if (!k) return toast('Give the setting a key', true); await guard(api('site_settings', { method: 'POST', body: { key: k, label: f.label.value || null, value: f.value.value } }), 'Added'); VIEWS.settings(m); };
+};
+
+VIEWS.team = async (m) => {
+  const list = await rpc('site_staff_list', {});
+  const admin = ME.role === 'admin';
+  m.innerHTML = `<div class="top"><div><p class="eb">Access</p><h1>Team</h1></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Email</th><th>Role</th><th>Access</th>${admin ? '<th></th>' : ''}</tr></thead><tbody>
+    ${list.map((s) => `<tr><td>${esc(s.email)}</td><td>${esc(s.role)}</td><td>${pill(s.active ? 'active' : 'no')}</td>${admin ? `<td>${s.email !== ME.email ? (s.active ? `<button class="btn sm danger" data-off="${esc(s.email)}">Switch off</button>` : `<button class="btn sm line" data-on="${esc(s.email)}" data-role="${esc(s.role)}">Switch on</button>`) : '<span class="muted small">you</span>'}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+    ${admin ? `<section class="card" style="margin-top:14px"><h3>Add someone</h3><p class="small muted" style="margin-top:0">They first create an account on the <a href="admin.html">admin sign-in page</a> (Create an account). Then add their email here.</p>
+      <form class="f" id="tf"><label class="fl">Email<input name="email" type="email" required></label><label class="fl">Role<select name="role"><option value="sales">sales: leads, quotes, orders, builds, content</option><option value="designer">designer: also designs in the 3D Studio</option><option value="admin">admin: everything, including prices and team</option></select></label><div class="wide"><button class="btn" type="submit">Give access</button></div></form></section>` : '<p class="muted small">Only admins can change who has access.</p>'}`;
+  if (!admin) return;
+  $('#tf', m).onsubmit = async (e) => { e.preventDefault(); const f = e.target; await guard(rpc('site_set_staff', { _email: f.email.value.trim(), _role: f.role.value }), 'Access given'); VIEWS.team(m); };
+  m.querySelectorAll('[data-off]').forEach((b) => b.onclick = async () => { if (!confirmInline(b, 'Confirm switch off')) return; await guard(rpc('site_set_staff', { _email: b.dataset.off, _role: 'none' }), 'Access switched off'); VIEWS.team(m); });
+  m.querySelectorAll('[data-on]').forEach((b) => b.onclick = async () => { await guard(rpc('site_set_staff', { _email: b.dataset.on, _role: b.dataset.role }), 'Access switched on'); VIEWS.team(m); });
+};
+
+VIEWS.designs = async (m) => {
+  const [designs, versions] = await Promise.all([api('ds_designs?select=*&order=updated_at.desc').catch(() => []), api('ds_design_versions?select=id,design_id,version,status,created_at&order=created_at.desc&limit=200').catch(() => [])]);
+  const byId = {}; versions.forEach((v) => { (byId[v.design_id] = byId[v.design_id] || []).push(v); });
+  m.innerHTML = `<div class="top"><div><p class="eb">3D Studio</p><h1>Designs</h1></div><div class="tools"><a class="btn" href="design-manager.html">Open the Design Manager</a><a class="btn line" href="3d-studio.html" target="_blank" rel="noopener">Open the 3D Studio</a></div></div>
+    <p class="muted" style="margin-top:0">Review, publish and price designs in the Design Manager. Sign in there with the same staff account.</p>
+    <div class="tablewrap"><table><thead><tr><th>Design</th><th>System</th><th>Status</th><th>Versions</th><th>Waiting for review</th></tr></thead><tbody>
+    ${designs.map((d) => { const vs = byId[d.id] || []; const wait = vs.filter((v) => v.status === 'in_review').length; return `<tr><td><a href="3d-studio.html?design=${encodeURIComponent(d.slug)}" target="_blank" rel="noopener">${esc(d.name || d.slug)}</a></td><td>${esc(d.system || '')}</td><td>${pill(d.status || (d.published_version_id ? 'published' : 'draft'))}</td><td class="n">${vs.length}</td><td>${wait ? pill('in_review') + ' ' + wait : ''}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">No designs</td></tr>'}</tbody></table></div>`;
+};
+
+// ---------- client builds ----------
+const BUILD_FIELDS = [{ k: 'client_name', label: 'Client name', req: true }, { k: 'client_email', label: 'Client email', type: 'email', req: true, hint: 'they sign in to My builds with this' }, { k: 'client_phone', label: 'Client phone', type: 'tel' }, { k: 'location', label: 'Site location' },
+  { k: 'title', label: 'Build title', req: true, hint: 'shown as "Your …"' }, { k: 'spec', label: 'Spec line', hint: 'Container 40 ft · finishes · delivering to …' }, { k: 'status', label: 'Status', type: 'select', options: ['active', 'on_hold', 'complete', 'cancelled'] }, { k: 'progress', label: 'Progress %', type: 'number' },
+  { k: 'delivery_text', label: 'Estimated delivery', hint: 'e.g. Week of 16 Nov' }, { k: 'contract_total', label: 'Contract total incl. VAT (KES)', type: 'money' }, { k: 'pm_name', label: 'Project manager' }, { k: 'pm_phone', label: 'PM phone', type: 'tel' }];
+const CHILD = {
+  stages: { table: 'build_stages', label: 'Stages', order: 'sort.asc', cols: [{ k: 'sort', label: '#', type: 'number', w: 56 }, { k: 'name', label: 'Stage' }, { k: 'when_text', label: 'When' }, { k: 'note', label: 'Note' }, { k: 'state', label: 'State', type: 'select', options: ['done', 'current', 'next'] }] },
+  payments: { table: 'build_payments', label: 'Payments', order: 'sort.asc', cols: [{ k: 'sort', label: '#', type: 'number', w: 56 }, { k: 'name', label: 'Milestone' }, { k: 'amount', label: 'Amount', type: 'number' }, { k: 'due_date', label: 'Due', type: 'date' }, { k: 'status', label: 'Status', type: 'select', options: ['upcoming', 'due', 'paid'] }, { k: 'method', label: 'Paid by' }, { k: 'note', label: 'Note' }] },
+  updates: { table: 'build_updates', label: 'Yard updates', order: 'posted_on.desc', cols: [{ k: 'posted_on', label: 'Date', type: 'date' }, { k: 'title', label: 'Title' }, { k: 'body', label: 'Note' }, { k: 'image_url', label: 'Photo URL' }] },
+  documents: { table: 'build_documents', label: 'Documents', order: 'sort.asc', cols: [{ k: 'sort', label: '#', type: 'number', w: 56 }, { k: 'name', label: 'Document' }, { k: 'meta', label: 'Detail', }, { k: 'url', label: 'File URL' }, { k: 'available', label: 'Ready', type: 'bool' }] },
+  variations: { table: 'build_variations', label: 'Variations', order: 'created_at.asc', cols: [{ k: 'title', label: 'Title' }, { k: 'description', label: 'Description' }, { k: 'amount', label: 'Amount', type: 'number' }, { k: 'delivery_impact', label: 'Delivery impact' }, { k: 'status', label: 'Client decision', type: 'select', options: ['pending', 'approved', 'declined'] }] }
+};
+const STD_STAGES = [['Deposit paid', 'Production slot reserved'], ['Drawings approved', 'Signed off by you and our engineer'], ['Fabrication', 'Shell, openings, insulation and first fix'], ['Fitout', 'Flooring, kitchen, bathroom, second fix'], ['Yard inspection', 'Walk through it before it leaves our yard'], ['Delivery and install', 'Crane lift onto your plinths, connections'], ['Handover', 'Keys, manuals and warranty']];
+const STD_DOCS = [['Approved drawings', 'PDF'], ['Bill of quantities', 'PDF'], ['Contract and payment terms', 'PDF'], ['Plinth setting-out drawing', 'PDF · for your builder'], ['Warranty certificate', 'At handover']];
+
+VIEWS.builds = async (m) => {
+  const h = await listView(m, {
+    table: 'client_builds', title: 'Client builds', eyebrow: 'My builds', search: ['client_name', 'client_email', 'code', 'title'], filter: { col: 'status', options: ['active', 'on_hold', 'complete', 'cancelled'] },
+    cols: [{ k: 'code', label: 'Order', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'client_name', label: 'Client', fmt: (v, r) => esc(v) + `<br><span class="small muted">${esc(r.client_email)}</span>` }, { k: 'title', label: 'Build' }, { k: 'progress', label: 'Progress', n: true, fmt: (v) => v + '%' }, { k: 'delivery_text', label: 'Delivery' }, { k: 'contract_total', label: 'Contract', n: true, fmt: kes }, { k: 'status', label: 'Status', fmt: pill }],
+    fields: BUILD_FIELDS, defaults: { status: 'active', progress: 0, contract_total: 0 }, newLabel: 'New client build',
+    label: (r) => r.code + ' · ' + r.client_name,
+    detail: (r, d, reload) => buildDetail(r, d, reload)
+  });
+  OPEN_BUILD = (b) => h.edit(b);
+};
+let OPEN_BUILD = null;
+function openBuild(b) { if (OPEN_BUILD) OPEN_BUILD(b); }
+
+async function buildDetail(r, d, reload, tab) {
+  tab = tab || 'details';
+  const tabs = [['details', 'Details'], ['stages', 'Stages'], ['payments', 'Payments'], ['updates', 'Yard updates'], ['documents', 'Documents'], ['variations', 'Variations'], ['messages', 'Messages']];
+  d.el.innerHTML = `${contactTools(r)}<p class="small muted" style="margin:0">The client sees this at <a href="Portal.dc.html" target="_blank" rel="noopener">My builds</a> after signing in with <b>${esc(r.client_email)}</b>.</p>
+    <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-t="${k}">${l}</button>`).join('')}</div><div id="bt"></div>`;
+  d.el.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => buildDetail(r, d, reload, b.dataset.t));
+  const box = $('#bt', d.el);
+  if (tab === 'details') {
+    box.innerHTML = `<form class="f">${formHtml(BUILD_FIELDS, r)}<div class="wide tools"><button class="btn" type="submit">Save</button></div></form>`;
+    $('form', box).onsubmit = async (e) => { e.preventDefault(); const v = readForm(e.target, BUILD_FIELDS); const up = await guard(api('client_builds?id=eq.' + r.id, { method: 'PATCH', body: v, headers: { Prefer: 'return=representation' } }), 'Saved'); Object.assign(r, up[0]); d.setTitle(r.code + ' · ' + r.client_name); reload(); };
+    return;
+  }
+  if (tab === 'messages') {
+    const ms = await api('build_messages?build_id=eq.' + r.id + '&order=created_at.asc');
+    box.innerHTML = `<div class="grid" style="margin-top:12px">${ms.map((x) => `<div class="msg ${x.from_staff ? 'staff' : 'client'}"><div class="small" style="opacity:.75">${esc(x.author_name || (x.from_staff ? 'Firmcop' : r.client_name))} · ${when(x.created_at)}</div>${esc(x.body)}</div>`).join('') || '<p class="muted">No messages yet.</p>'}</div>
+      <form id="mf" style="display:grid;gap:8px;margin-top:14px"><label class="fl">Reply as ${esc(r.pm_name || 'Firmcop')}<textarea name="body" rows="3"></textarea></label><div><button class="btn" type="submit">Send to client</button></div></form>`;
+    $('#mf', box).onsubmit = async (e) => { e.preventDefault(); const t = e.target.body.value.trim(); if (!t) return; await guard(api('build_messages', { method: 'POST', body: { build_id: r.id, from_staff: true, author_name: r.pm_name || 'Firmcop', author_id: FC.auth.session.user ? FC.auth.session.user.id : null, body: t } }), 'Sent'); buildDetail(r, d, reload, 'messages'); };
+    return;
+  }
+  const C = CHILD[tab];
+  const rows = await api(C.table + '?build_id=eq.' + r.id + '&order=' + C.order);
+  const cell = (c, v) => {
+    if (c.type === 'select') return `<select data-k="${c.k}" aria-label="${esc(c.label)}">${c.options.map((o) => `<option ${o === v ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    if (c.type === 'bool') return `<input type="checkbox" data-k="${c.k}" aria-label="${esc(c.label)}" ${v ? 'checked' : ''} style="width:20px;height:20px">`;
+    const t = c.type === 'number' ? 'number' : (c.type === 'date' ? 'date' : 'text');
+    return `<input type="${t}" data-k="${c.k}" aria-label="${esc(c.label)}" value="${esc(v == null ? '' : (t === 'date' ? String(v).slice(0, 10) : v))}"${c.w ? ` style="width:${c.w}px"` : ''}>`;
+  };
+  const extra = tab === 'stages' && !rows.length ? '<button class="btn line" type="button" data-std>Add the standard 7 stages</button>'
+    : tab === 'payments' && !rows.length ? '<button class="btn line" type="button" data-std>Add 30 / 30 / 30 / 10 from the contract total</button>'
+    : tab === 'documents' && !rows.length ? '<button class="btn line" type="button" data-std>Add the standard document list</button>' : '';
+  box.innerHTML = `<div class="tablewrap ctable" style="margin-top:12px"><table><thead><tr>${C.cols.map((c) => `<th>${esc(c.label)}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${rows.map((x) => `<tr data-id="${x.id}">${C.cols.map((c) => `<td>${cell(c, x[c.k])}</td>`).join('')}<td style="white-space:nowrap"><button class="btn sm" type="button" data-save>Save</button> <button class="btn sm danger" type="button" data-del>Remove</button></td></tr>`).join('')}
+    <tr data-new>${C.cols.map((c) => `<td>${cell(c, c.k === 'sort' ? rows.length + 1 : (c.type === 'select' ? c.options[0] : (c.k === 'posted_on' ? new Date().toISOString().slice(0, 10) : (c.type === 'bool' ? true : ''))))}</td>`).join('')}<td><button class="btn sm" type="button" data-add>Add</button></td></tr></tbody></table></div>
+    <div class="tools" style="margin-top:10px">${extra}</div>
+    ${tab === 'variations' ? '<p class="small muted">Add a variation with the decision left at <b>pending</b>. The client approves or declines it in My builds.</p>' : ''}
+    ${tab === 'payments' ? '<p class="small muted">Set a payment to <b>due</b> to show the Pay button to the client. When the money arrives, set it to <b>paid</b> and note the method.</p>' : ''}`;
+  const val = (tr) => { const o = {}; C.cols.forEach((c) => { const el = tr.querySelector(`[data-k="${c.k}"]`); if (!el) return; o[c.k] = c.type === 'bool' ? el.checked : (c.type === 'number' ? (el.value === '' ? null : Number(el.value)) : (el.value === '' ? null : el.value)); }); if (tab === 'payments' && o.status === 'paid') o.paid_at = new Date().toISOString(); return o; };
+  box.querySelectorAll('[data-save]').forEach((b) => b.onclick = async () => { const tr = b.closest('tr'); await guard(api(C.table + '?id=eq.' + tr.dataset.id, { method: 'PATCH', body: val(tr) }), 'Saved'); if (tab === 'variations') refreshCounts(); });
+  box.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => { if (!confirmInline(b, 'Sure?')) return; const tr = b.closest('tr'); await guard(api(C.table + '?id=eq.' + tr.dataset.id, { method: 'DELETE' }), 'Removed'); buildDetail(r, d, reload, tab); });
+  $('[data-add]', box).onclick = async () => { const v = val($('[data-new]', box)); const first = C.cols.find((c) => c.k === 'name' || c.k === 'title'); if (first && !v[first.k]) return toast('Fill in ' + first.label.toLowerCase(), true); v.build_id = r.id; await guard(api(C.table, { method: 'POST', body: v }), 'Added'); buildDetail(r, d, reload, tab); };
+  const std = $('[data-std]', box);
+  if (std) std.onclick = async () => {
+    let body;
+    if (tab === 'stages') body = STD_STAGES.map((s, i) => ({ build_id: r.id, sort: i + 1, name: s[0], note: s[1], state: i === 0 ? 'current' : 'next' }));
+    if (tab === 'documents') body = STD_DOCS.map((s, i) => ({ build_id: r.id, sort: i + 1, name: s[0], meta: s[1], available: false }));
+    if (tab === 'payments') { const t = Number(r.contract_total) || 0; body = [['Deposit', 0.3], ['Drawings approved', 0.3], ['Before delivery', 0.3], ['Handover', 0.1]].map((p, i) => ({ build_id: r.id, sort: i + 1, name: p[0], amount: Math.round(t * p[1]), status: i === 0 ? 'due' : 'upcoming' })); }
+    await guard(api(C.table, { method: 'POST', body }), 'Added'); buildDetail(r, d, reload, tab);
+  };
+}
+
+// make the lead "Add note" refresh the open drawer
+const _origLeads = VIEWS.leads;
+VIEWS.leads = async (m) => { const h = await _origLeads(m); LIST_EDIT = h.edit; return h; };
+
+boot();
+})();
+</script>
+</body>
+</html>

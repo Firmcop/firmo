@@ -5,6 +5,8 @@ Usage: build_site.py <canvas/project dir> <f3d dir> <firm/src dir> <jpg dir> <ou
 The canvas pages stay the source of truth; this script only applies deploy-time changes.
 """
 import os, re, shutil, sys, json
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_patches
 
 canvas, f3d, firm, jpgs, out = sys.argv[1:6]
 ARTIFACT = 'https://claude.ai/artifact/RTs3DaQBKaZfT8NqWALgM3'
@@ -68,6 +70,7 @@ for name in PAGES:
         s = s.replace('<script src="./support.js"></script>', '<script src="./ds-config.js"></script>\n<script src="./ds-core.js"></script>\n<script src="./support.js"></script>', 1)
         for must in ['live: null', 'const merged', 'SYSIMG', 'cfgHref', '{{d.cfgHref}}', 'ds-core.js']:
             assert must in s, (name, must)
+    s = site_patches.patch_page(name, s)
     assert ARTIFACT not in s, (name, 'artifact link left')
     open(os.path.join(out, name + '.dc.html'), 'w').write(s)
 
@@ -79,7 +82,7 @@ for bid, fn in BLOBS.items():
 for fn in os.listdir(os.path.join(f3d, 'img')):
     shutil.copy(os.path.join(f3d, 'img', fn), os.path.join(out, 'img', fn))
 # 3D tools and data
-for fn in ['design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
+for fn in ['fc-site.js', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
 # the Studio as a page of the site: site header on top, Studio framed beneath
 shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))
@@ -87,6 +90,7 @@ d = open(os.path.join(out, 'design-studio.html')).read()
 old = '<a class="mark" href="index.html">'
 assert old in d
 d = d.replace(old, '<a class="mark" href="Main.dc.html" target="_top">')
+d = site_patches.patch_studio(d)
 # inside the site page the site header already carries the brand, so drop the Studio's own mark
 d = d.replace('</head>', '<script>if (window.top !== window) document.documentElement.classList.add("in-site");</script>\n<style>.in-site .mark{display:none}</style>\n</head>', 1)
 open(os.path.join(out, 'design-studio.html'), 'w').write(d)
@@ -105,6 +109,8 @@ vercel = {
     {"source": "/collection", "destination": "/Catalog.dc.html", "permanent": False},
     {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/3d-studio", "destination": "/3d-studio.html", "permanent": False},
+    {"source": "/admin", "destination": "/admin.html", "permanent": False},
+    {"source": "/my-builds", "destination": "/Portal.dc.html", "permanent": False},
     {"source": "/design-manager", "destination": "/design-manager.html", "permanent": False},
     {"source": "/studio", "destination": "/studio.html", "permanent": False},
     {"source": "/2x4", "destination": "/2x4.html", "permanent": False},

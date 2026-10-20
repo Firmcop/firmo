@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Investment opportunities</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -37,7 +39,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <a href="Invest.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">Invest</a>
 <a href="3d-studio.html">3D Studio</a>
 <a href="Portal.dc.html">My builds</a>
-<a href="Team.dc.html">Team portal</a>
+<a href="admin.html">Team portal</a>
 </nav>
 <a class="btn" href="Invest.dc.html">Plot planner</a>
 </div>
@@ -134,18 +136,18 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state;
     const fmt = (n) => Math.round(n).toLocaleString('en-KE');
-    const all = [
+    const all = FC.list(this, 'opps', [
       { name: '[Riverside eco-resort]', sector: 'Hospitality', place: '[Location]', spec: '24 cabins from 20 ft containers, lounge, pool deck', units: 24, taken: 15, price: 2600000, yLo: 11, yHi: 14, opens: 'Q2 2027', status: 'Building now', own: 'One cabin, on a [sectional title or long lease]', operator: '[Hospitality operator]', split: '60% to owners, 40% to operator', story: 'A low-density resort on a river frontage, with cabins spaced for privacy, a shared lounge and a pool deck. Booked through the operator and major platforms.' },
       { name: '[Highway strip mall]', sector: 'Retail', place: '[Town]', spec: '12 shops in a row with 24 parking bays', units: 12, taken: 7, price: 1400000, yLo: 13, yHi: 16, opens: 'Q1 2027', status: '7 pre-leased', own: 'One shop unit with its tenancy', operator: '[Property manager]', split: '85% to owners, 15% to manager', story: 'Roadside shops on a busy route, with tenants signed before construction. Long leases with annual rent reviews.' },
       { name: '[Hilltop pod village]', sector: 'Hospitality', place: '[Location]', spec: '16 Airbnb pods with decks and a shared fire pit', units: 16, taken: 4, price: 1900000, yLo: 10, yHi: 13, opens: 'Q3 2027', status: 'Now open for reservation', own: 'One pod, on a [sectional title or long lease]', operator: '[Hospitality operator]', split: '70% to owners, 30% to operator', story: 'Compact pods on a view plot, aimed at weekend and remote-work stays. Each pod has a private deck and self check-in.' },
       { name: '[Campus rental block]', sector: 'Residential', place: '[Town]', spec: '20 stacked one-bed units near a university', units: 20, taken: 20, price: 2900000, yLo: 9, yHi: 11, opens: 'Q4 2026', status: 'Fully reserved', own: 'One unit with its tenancy', operator: '[Property manager]', split: '85% to owners, 15% to manager', story: 'Two-level rental block for students and young professionals, close to campus and transport.' }
-    ];
-    const sectorLabels = ['All', 'Hospitality', 'Retail', 'Residential'];
+    ]);
+    const sectorLabels = ['All'].concat(all.map((o) => o.sector).filter((c, i, a) => a.indexOf(c) === i));
     const sectors = sectorLabels.map((l) => { const on = s.sector === l; return { label: l === 'All' ? 'All sectors' : l, pressed: on ? 'true' : 'false', pick: () => { const i = all.findIndex((o) => l === 'All' || o.sector === l); this.setState({ sector: l, sel: i < 0 ? 0 : i, qty: 1, toast: '' }); }, style: 'min-height:44px;padding:0 18px;border-radius:999px;font:inherit;font-size:15px;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB;border:1px solid #1B1A17' : 'background:#FFFFFF;color:#1B1A17;border:1px solid #BDB29C') }; });
     const list = all.map((o, i) => Object.assign({}, o, { i: i })).filter((o) => s.sector === 'All' || o.sector === s.sector).map((o) => {
       const on = s.sel === o.i, pct = Math.round(o.taken / o.units * 100), full = o.taken >= o.units;
       return Object.assign({}, o, {
-        img: ({ '[Riverside eco-resort]': '/_blob/1148ec4f8c7496bd7c3c61324e78a073', '[Highway strip mall]': '/_blob/c443aeb1df9da124515acb87cccc69cf', '[Hilltop pod village]': '/_blob/b63e77804b6d09a9cbb2a3a7b8ff94e5', '[Campus rental block]': '/_blob/34e98516af54244cb1e1a80f0a5f434d' })[o.name],
+        img: ({ '[Riverside eco-resort]': '/_blob/1148ec4f8c7496bd7c3c61324e78a073', '[Highway strip mall]': '/_blob/c443aeb1df9da124515acb87cccc69cf', '[Hilltop pod village]': '/_blob/b63e77804b6d09a9cbb2a3a7b8ff94e5', '[Campus rental block]': '/_blob/34e98516af54244cb1e1a80f0a5f434d' })[o.name] || o.img,
         priceM: 'KES ' + (o.price / 1e6).toFixed(1) + 'M', yieldR: o.yLo + '–' + o.yHi + '%', pct: pct,
         bar: 'height:8px;width:' + pct + '%;background:' + (full ? '#5C5850' : '#8A6A33'),
         statusStyle: 'position:absolute;left:12px;top:12px;font-family:IBM Plex Mono,monospace;font-size:11px;padding:3px 8px;border-radius:3px;text-transform:uppercase;' + (full ? 'background:#ECE8E0;color:#4A463F' : 'background:#1B1A17;color:#F4F1EB'),
@@ -153,7 +155,7 @@ class Component extends DCLogic {
         cardStyle: 'background:#FFFFFF;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;border:1px solid ' + (on ? '#8A6A33' : '#DDD6CA') + ';box-shadow:' + (on ? '0 0 0 2px #8A6A33' : 'none')
       });
     });
-    const sel = all[s.sel];
+    const sel = all[s.sel] || all[0];
     const left = sel.units - sel.taken;
     const soldOut = left <= 0;
     const midYield = (sel.yLo + sel.yHi) / 2 / 100;
@@ -163,8 +165,8 @@ class Component extends DCLogic {
       qtyDown: () => this.setState({ qty: Math.max(1, s.qty - 1) }), qtyUp: () => this.setState({ qty: s.qty + 1 }),
       invest: fmt(sel.price * s.qty), deposit: fmt(sel.price * s.qty * 0.2), income: fmt(sel.price * s.qty * midYield),
       soldOut: soldOut, reserveLabel: soldOut ? 'Fully reserved: join waitlist' : 'Reserve ' + s.qty + ' unit' + (s.qty > 1 ? 's' : ''),
-      reserve: () => this.setState({ toast: soldOut ? 'You are on the waitlist. We will tell you if a unit is released or a similar project opens (prototype).' : 'Reservation started. An investment advisor will call to walk you through the documents before any payment (prototype).' }),
-      pack: () => this.setState({ toast: 'Information pack downloaded: site plan, projections, legal structure and operator agreement (prototype).' }),
+      reserve: () => FC.lead(soldOut ? 'waitlist' : 'reservation', { eyebrow: sel.name, context: { opportunity: sel.name, slug: sel.slug || '', units: soldOut ? 0 : s.qty, amount: sel.price * s.qty }, summary: soldOut ? 'Fully reserved. Join the waitlist for ' + sel.name + '.' : s.qty + ' unit' + (s.qty > 1 ? 's' : '') + ' · KES ' + fmt(sel.price * s.qty) + ' · 20% deposit KES ' + fmt(sel.price * s.qty * 0.2), onDone: (r) => this.setState({ toast: (soldOut ? 'You are on the waitlist. ' : 'Reservation started. ') + 'Reference ' + r.code + '.' }) }),
+      pack: () => { if (sel.pack) window.open(sel.pack, '_blank', 'noopener'); else FC.lead('info_pack', { eyebrow: sel.name, context: { opportunity: sel.name, slug: sel.slug || '' } }); },
       toastOn: !!s.toast, toast: s.toast
     };
   }

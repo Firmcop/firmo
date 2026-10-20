@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>My build</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -39,7 +41,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <a href="3d-studio.html">3D Studio</a>
 <a href="Portal.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">My builds</a>
 </nav>
-<span style="font-size:14px;color:#D9D3C7">Signed in as [Customer A]</span>
+<span style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="font-size:14px;color:#D9D3C7">{{signedAs}}</span><button type="button" onClick="{{authAction}}" style="min-height:40px;padding:0 14px;background:transparent;color:#F4F1EB;border:1px solid #8C8475;border-radius:4px;font:inherit;font-size:14px;cursor:pointer">{{authLabel}}</button></span>
 </div>
 </header>
 
@@ -48,12 +50,12 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <div style="position:relative;max-width:1280px;margin:0 auto;padding:100px 24px 64px;display:flex;flex-direction:column;gap:32px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:32px">
 <div>
-<p style="margin:0 0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A">My builds · Order SO-0142 · Sample data</p>
-<h1 id="hero-t" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(44px,6vw,92px);line-height:.94">Your One-Bed Forty<br><em style="color:#E3C48F">is taking shape.</em></h1>
-<p style="margin:22px 0 0;font-size:15px;color:#C9BFAF;line-height:1.7">Container 40 ft · Fibre cement in charcoal · PIR 100 mm · SPC vinyl · Front deck · Delivering to [Town]</p>
+<p style="margin:0 0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A">{{orderLine}}</p>
+<h1 id="hero-t" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(44px,6vw,92px);line-height:.94">{{heroTitle}}<br><em style="color:#E3C48F">is taking shape.</em></h1>
+<p style="margin:22px 0 0;font-size:15px;color:#C9BFAF;line-height:1.7">{{specLine}}</p>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:40px">
-<div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#A89E8E">Estimated delivery</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1.1">Week of 16 Nov</div></div>
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#A89E8E">Estimated delivery</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1.1">{{deliveryText}}</div></div>
 <div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#A89E8E">Progress</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1.1">{{overall}}%</div></div>
 </div>
 </div>
@@ -65,6 +67,14 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 
 <sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
 <p role="status" style="margin:0;padding:12px 16px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:15px">{{toast}}</p>
+</sc-if>
+
+<sc-if value="{{showSignIn}}" hint-placeholder-val="{{false}}">
+<section class="card" aria-labelledby="signin-t" style="border:1.5px solid #8A6A33">
+<h2 id="signin-t" class="h" style="margin-bottom:8px">{{signInTitle}}</h2>
+<p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#3D3A34">{{signInText}}</p>
+<sc-if value="{{notSignedIn}}" hint-placeholder-val="{{true}}"><div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn" onClick="{{openMagic}}">Email me a sign-in link</button><button type="button" class="btn-line" onClick="{{openPassword}}">Sign in with a password</button></div></sc-if>
+</section>
 </sc-if>
 
 <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
@@ -91,18 +101,13 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <section class="card" aria-labelledby="updates">
 <h2 id="updates" class="h">Updates from the yard</h2>
 <div style="display:flex;flex-direction:column;gap:20px">
+<sc-for list="{{updates}}" as="u" hint-placeholder-count="3">
 <article style="display:flex;flex-wrap:wrap;gap:16px">
-<img src="/_blob/2c22d41bdd87f85716803400ede0e82b" alt="Illustrative render: the unit in the yard with wiring in its openings" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
-<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">19 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Electrical first fix done</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">Cables, back boxes and the distribution board are in. Insulation inspection passed before the walls were closed.</p></div>
+<img src="{{u.img}}" alt="{{u.alt}}" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
+<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">{{u.when}}</time><h3 style="margin:4px 0 6px;font-size:17px">{{u.title}}</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">{{u.body}}</p></div>
 </article>
-<article style="display:flex;flex-wrap:wrap;gap:16px">
-<img src="/_blob/baf01406d1e201b29b1be20833ec2c9f" alt="Illustrative render: insulation boards fitted in the unit" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
-<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">15 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Insulation installed</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">112 m² of PIR board fitted to walls and roof, taped and sealed.</p></div>
-</article>
-<article style="display:flex;flex-wrap:wrap;gap:16px">
-<img src="/_blob/1ee10acb3ca6b3ba53a693fa596afbdd" alt="Illustrative render: window openings cut and framed in the unit" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
-<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">9 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Openings cut and framed</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">Four window openings and the door opening cut, framed in box section and primed.</p></div>
-</article>
+</sc-for>
+<sc-if value="{{noUpdates}}" hint-placeholder-val="{{false}}"><p style="margin:0;color:#5C5850">Photos and notes from the yard appear here as your build progresses.</p></sc-if>
 </div>
 </section>
 
@@ -132,10 +137,11 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 
 <aside style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:24px">
 
+<sc-if value="{{hasVar}}" hint-placeholder-val="{{true}}">
 <section aria-labelledby="approve" style="{{varCard}}">
 <h2 id="approve" class="h" style="margin-bottom:8px">{{varTitle}}</h2>
-<p style="margin:0 0 6px;font-size:15px;line-height:1.5">Burglar bars on 4 windows, powder-coated to match the trims.</p>
-<p style="margin:0 0 14px;font-family:'IBM Plex Mono',monospace;font-size:15px">+ KES 32,000 · no change to delivery date</p>
+<p style="margin:0 0 6px;font-size:15px;line-height:1.5">{{varText}}</p>
+<p style="margin:0 0 14px;font-family:'IBM Plex Mono',monospace;font-size:15px">{{varAmt}}</p>
 <sc-if value="{{varPending}}" hint-placeholder-val="{{true}}">
 <div style="display:flex;flex-wrap:wrap;gap:8px">
 <button type="button" class="btn" onClick="{{approveVar}}">Approve</button>
@@ -146,10 +152,11 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <p style="margin:0;font-size:14px;color:#3D3A34">{{varResult}}</p>
 </sc-if>
 </section>
+</sc-if>
 
 <section class="card" aria-labelledby="site">
 <h2 id="site" class="h" style="margin-bottom:6px">Get your site ready</h2>
-<p style="margin:0 0 14px;font-size:14px;color:#5C5850">Complete these before the week of 16 Nov. {{siteDone}} of 5 done.</p>
+<p style="margin:0 0 14px;font-size:14px;color:#5C5850">{{siteLine}}</p>
 <div style="display:flex;flex-direction:column;gap:8px">
 <sc-for list="{{site}}" as="c" hint-placeholder-count="5">
 <label style="display:flex;gap:12px;align-items:center;min-height:44px;font-size:15px;cursor:pointer"><input type="checkbox" checked="{{c.on}}" onChange="{{c.toggle}}" style="width:20px;height:20px;margin:0;flex:0 0 auto">{{c.label}}</label>
@@ -173,7 +180,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <h2 id="pm" class="h" style="margin-bottom:12px">Your project manager</h2>
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
 <span aria-hidden="true" style="width:48px;height:48px;border-radius:50%;background:#2F4550;color:#F4F1EB;display:flex;align-items:center;justify-content:center;font-weight:600">PM</span>
-<span style="display:flex;flex-direction:column"><strong>[Project manager]</strong><span style="font-size:14px;color:#5C5850">Replies within a few hours</span></span>
+<span style="display:flex;flex-direction:column"><strong>{{pmName}}</strong><span style="font-size:14px;color:#5C5850">Replies within a few hours</span></span>
 </div>
 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
 <sc-for list="{{messages}}" as="m" hint-placeholder-count="2">
@@ -196,56 +203,127 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { variation: 'pending', paid3: false, site: [true, false, true, false, false], draft: '', messages: [{ me: false, text: 'Fabrication is on track. Bars for the windows can be added this week if you approve the variation.' }], toast: '' };
+    this.state = { variation: 'pending', paid3: false, site: [true, false, true, false, false], draft: '', messages: [{ me: false, text: 'Fabrication is on track. Bars for the windows can be added this week if you approve the variation.' }], toast: '', builds: null, pick: 0, loading: false, email: '' };
+    this.load = this.load.bind(this);
+    if (window.FC) {
+      FC.auth.onChange(() => this.load());
+      if (FC.auth.session) setTimeout(this.load, 0);
+    }
+  }
+  async load() {
+    if (!window.FC || !FC.auth.session) { this.setState({ builds: null, email: '' }); return; }
+    this.setState({ loading: true, email: FC.auth.email });
+    try { const b = await FC.rpc('site_my_builds', {}); this.setState({ builds: b || [], loading: false, email: FC.auth.email }); }
+    catch (e) { this.setState({ loading: false, toast: 'Could not load your build: ' + e.message }); }
+  }
+  signIn(magic) {
+    const self = this;
+    if (magic) {
+      return FC.dialog({ eyebrow: 'My builds', title: 'Email me a sign-in link', intro: 'Use the email address you gave Firmcop when you ordered. The link signs you in on this device.', fields: [{ name: 'email', label: 'Email', type: 'email', required: true }], submit: 'Send link', altLabel: 'Use a password instead', onAlt: () => self.signIn(false),
+        onSubmit: async (v) => { await FC.auth.magicLink(v.email); return { title: 'Check your email', body: 'We sent a sign-in link to ' + FC.esc(v.email) + '. Open it on this device.' }; } });
+    }
+    return FC.dialog({ eyebrow: 'My builds', title: 'Sign in', intro: 'Use the email address you gave Firmcop when you ordered.', fields: [{ name: 'email', label: 'Email', type: 'email', required: true }, { name: 'password', label: 'Password', type: 'password', required: true }], submit: 'Sign in', altLabel: 'Email me a link instead', onAlt: () => self.signIn(true),
+      onSubmit: async (v) => { await FC.auth.signIn(v.email, v.password); return null; } });
   }
   renderVals() {
     const s = this.state;
     const fmt = (n) => Math.round(n).toLocaleString('en-KE');
     const pill = 'font-family:IBM Plex Mono,monospace;font-size:12px;padding:3px 8px;border-radius:3px;white-space:nowrap;';
-    const base = 3920000, varAmt = s.variation === 'approved' ? 32000 * 1.16 : 0;
-    const contract = base + varAmt;
-    const pays = [
-      { name: 'Deposit', note: 'Paid 21 Sep by M-Pesa', amount: base * 0.3, paid: true },
-      { name: 'Drawings approved', note: 'Paid 2 Oct by bank transfer', amount: base * 0.3, paid: true },
-      { name: 'Before delivery', note: varAmt ? 'Includes approved variation' : 'Due after your yard inspection', amount: base * 0.3 + varAmt, paid: s.paid3, due: true },
-      { name: 'Handover', note: 'On installation and sign-off', amount: base * 0.1, paid: false }
-    ];
-    const payments = pays.map((p) => ({ name: p.name, note: p.paid && p.due ? 'Paid today by M-Pesa' : p.note, amount: fmt(p.amount), status: p.paid ? 'Paid' : (p.due ? 'Due 9 Nov' : 'Upcoming'), style: pill + (p.paid ? 'background:#E3F1E6;color:#1F5A2E' : (p.due ? 'background:#FFF1D6;color:#6B4A00' : 'background:#ECE8E0;color:#4A463F')), payable: !!p.due && !p.paid, pay: () => this.setState({ paid3: true, toast: 'M-Pesa prompt sent to your phone. Payment confirmed (prototype).' }) }));
-    const paid = pays.filter((p) => p.paid).reduce((a, p) => a + p.amount, 0);
-    const stageDefs = [
-      ['Deposit paid', '21 Sep', 'Production slot reserved', 'done'],
-      ['Drawings approved', '2 Oct', 'Signed off by you and our engineer', 'done'],
-      ['Fabrication', 'In progress', 'Shell, openings, insulation and first fix', 'current'],
-      ['Fitout', 'From 28 Oct', 'Flooring, kitchen, bathroom, second fix', 'next'],
-      ['Yard inspection', 'Around 6 Nov', 'Walk through it before it leaves our yard', 'next'],
-      ['Delivery and install', 'Week of 16 Nov', 'Crane lift onto your plinths, connections', 'next'],
-      ['Handover', 'After install', 'Keys, manuals and warranty', 'next']
-    ];
-    const stages = stageDefs.map((d) => {
-      const done = d[3] === 'done', cur = d[3] === 'current';
-      return { name: d[0], when: d[1], note: d[2], current: cur, mark: done ? '✓' : '', dot: 'flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;' + (done ? 'background:#2E8B4E;color:#FFFFFF' : (cur ? 'background:#FFFFFF;border:3px solid #8A6A33;box-sizing:border-box' : 'background:#FFFFFF;border:2px solid #BDB29C;box-sizing:border-box')) };
+    const fc = window.FC, signedIn = !!(fc && fc.auth.session), mine = (s.builds || [])[s.pick] || null;
+    const dfmt = (d) => { try { return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return d || ''; } };
+    let B;
+    if (mine) {
+      const b = mine.build;
+      B = {
+        real: true, id: b.id, code: b.code, title: b.title, spec: b.spec || '', delivery: b.delivery_text || 'To be confirmed', progress: b.progress || 0, contract: Number(b.contract_total) || 0, pmName: b.pm_name || 'Your project manager', pmPhone: b.pm_phone || '',
+        stages: mine.stages.map((x) => ({ name: x.name, when: x.when_text || '', note: x.note || '', state: x.state })),
+        payments: mine.payments.map((p) => ({ id: p.id, name: p.name, note: p.status === 'paid' && p.paid_at ? 'Paid ' + dfmt(p.paid_at) + (p.method ? ' by ' + p.method : '') : (p.note || ''), amount: Number(p.amount) || 0, paid: p.status === 'paid', due: p.status === 'due', dueText: p.due_date ? 'Due ' + dfmt(p.due_date) : 'Due now' })),
+        updates: mine.updates.map((u) => ({ when: dfmt(u.posted_on), title: u.title, body: u.body || '', img: u.image_url || '/_blob/2c22d41bdd87f85716803400ede0e82b', alt: u.title })),
+        docs: mine.documents.map((d) => ({ name: d.name, meta: d.meta || '', url: d.url || '', locked: !d.available || !d.url })),
+        variation: (mine.variations.filter((v) => v.status === 'pending')[0] || mine.variations[mine.variations.length - 1] || null),
+        messages: mine.messages.map((m) => ({ me: !m.from_staff, who: m.from_staff ? (m.author_name || b.pm_name || 'Firmcop') : 'You', text: m.body })),
+        site: (b.site_checklist || []).map((c) => ({ label: c.label, done: !!c.done }))
+      };
+    } else {
+      const base = 3920000, varAmt = s.variation === 'approved' ? 32000 * 1.16 : 0;
+      B = {
+        real: false, code: 'SO-0142', title: 'One-Bed Forty', spec: 'Container 40 ft · Fibre cement in charcoal · PIR 100 mm · SPC vinyl · Front deck · Delivering to [Town]', delivery: 'Week of 16 Nov', progress: s.paid3 ? 72 : 58, contract: base + varAmt, pmName: '[Project manager]', pmPhone: '',
+        stages: [['Deposit paid', '21 Sep', 'Production slot reserved', 'done'], ['Drawings approved', '2 Oct', 'Signed off by you and our engineer', 'done'], ['Fabrication', 'In progress', 'Shell, openings, insulation and first fix', 'current'], ['Fitout', 'From 28 Oct', 'Flooring, kitchen, bathroom, second fix', 'next'], ['Yard inspection', 'Around 6 Nov', 'Walk through it before it leaves our yard', 'next'], ['Delivery and install', 'Week of 16 Nov', 'Crane lift onto your plinths, connections', 'next'], ['Handover', 'After install', 'Keys, manuals and warranty', 'next']].map((d) => ({ name: d[0], when: d[1], note: d[2], state: d[3] })),
+        payments: [
+          { name: 'Deposit', note: 'Paid 21 Sep by M-Pesa', amount: base * 0.3, paid: true },
+          { name: 'Drawings approved', note: 'Paid 2 Oct by bank transfer', amount: base * 0.3, paid: true },
+          { name: 'Before delivery', note: s.paid3 ? 'Paid today by M-Pesa' : (varAmt ? 'Includes approved variation' : 'Due after your yard inspection'), amount: base * 0.3 + varAmt, paid: s.paid3, due: true, dueText: 'Due 9 Nov' },
+          { name: 'Handover', note: 'On installation and sign-off', amount: base * 0.1, paid: false }
+        ],
+        updates: [
+          { when: '19 Oct', title: 'Electrical first fix done', body: 'Cables, back boxes and the distribution board are in. Insulation inspection passed before the walls were closed.', img: '/_blob/2c22d41bdd87f85716803400ede0e82b', alt: 'Illustrative render: the unit in the yard with wiring in its openings' },
+          { when: '15 Oct', title: 'Insulation installed', body: '112 m² of PIR board fitted to walls and roof, taped and sealed.', img: '/_blob/baf01406d1e201b29b1be20833ec2c9f', alt: 'Illustrative render: insulation boards fitted in the unit' },
+          { when: '9 Oct', title: 'Openings cut and framed', body: 'Four window openings and the door opening cut, framed in box section and primed.', img: '/_blob/1ee10acb3ca6b3ba53a693fa596afbdd', alt: 'Illustrative render: window openings cut and framed in the unit' }
+        ],
+        docs: [['Approved drawings', 'PDF · signed 2 Oct', false], ['Bill of quantities', 'PDF · version 3', false], ['Contract and payment terms', 'PDF', false], ['Plinth setting-out drawing', 'PDF · for your builder', false], ['Warranty certificate', 'Available at handover', true]].map((d) => ({ name: d[0], meta: d[1], locked: d[2], url: '' })),
+        variation: { id: null, title: 'Burglar bars', description: 'Burglar bars on 4 windows, powder-coated to match the trims.', amount: 32000, delivery_impact: 'no change to delivery date', status: s.variation },
+        messages: s.messages.map((m) => ({ me: m.me, who: m.me ? 'You' : '[Project manager]', text: m.text })),
+        site: ['Plinths cast to our drawing', 'Access road cleared for a truck', 'Power line moved or confirmed clear', 'Water connection point ready', 'County approval on file'].map((l, i) => ({ label: l, done: !!s.site[i] }))
+      };
+    }
+    const toast = (t) => this.setState({ toast: t });
+    const payments = B.payments.map((p) => ({
+      name: p.name, note: p.note, amount: fmt(p.amount), status: p.paid ? 'Paid' : (p.due ? p.dueText : 'Upcoming'),
+      style: pill + (p.paid ? 'background:#E3F1E6;color:#1F5A2E' : (p.due ? 'background:#FFF1D6;color:#6B4A00' : 'background:#ECE8E0;color:#4A463F')),
+      payable: !!p.due && !p.paid,
+      pay: () => {
+        if (!B.real) { this.setState({ paid3: true, toast: 'Sample build: in your own build this sends an M-Pesa request to your phone.' }); return; }
+        fc.rpc('site_build_post_message', { _build_id: B.id, _body: 'Please send the M-Pesa request for "' + p.name + '" (KES ' + fmt(p.amount) + ').' })
+          .then(() => { toast('Payment request sent to your project manager. The M-Pesa prompt will come to your phone.'); this.load(); }).catch((e) => toast(e.message));
+      }
+    }));
+    const paid = B.payments.filter((p) => p.paid).reduce((a, p) => a + p.amount, 0);
+    const stages = B.stages.map((d) => {
+      const done = d.state === 'done', cur = d.state === 'current';
+      return { name: d.name, when: d.when, note: d.note, current: cur, mark: done ? '✓' : '', dot: 'flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;' + (done ? 'background:#2E8B4E;color:#FFFFFF' : (cur ? 'background:#FFFFFF;border:3px solid #8A6A33;box-sizing:border-box' : 'background:#FFFFFF;border:2px solid #BDB29C;box-sizing:border-box')) };
     });
-    const siteLabels = ['Plinths cast to our drawing', 'Access road cleared for a truck', 'Power line moved or confirmed clear', 'Water connection point ready', 'County approval on file'];
-    const site = siteLabels.map((l, i) => ({ label: l, on: !!s.site[i], toggle: () => { const c = s.site.slice(); c[i] = !c[i]; this.setState({ site: c }); } }));
-    const docDefs = [['Approved drawings', 'PDF · signed 2 Oct', false], ['Bill of quantities', 'PDF · version 3', false], ['Contract and payment terms', 'PDF', false], ['Plinth setting-out drawing', 'PDF · for your builder', false], ['Warranty certificate', 'Available at handover', true]];
-    const docs = docDefs.map((d) => ({ name: d[0], meta: d[1], locked: d[2], aria: 'Download ' + d[0], btn: d[2] ? 'Later' : 'Download', get: () => this.setState({ toast: d[0] + ' downloaded (prototype).' }), style: 'min-height:44px;padding:0 14px;border-radius:4px;font:inherit;font-size:14px;font-weight:600;background:#FFFFFF;color:#1B1A17;border:1.5px solid ' + (d[2] ? '#BDB29C' : '#1B1A17') + ';cursor:' + (d[2] ? 'not-allowed' : 'pointer') + ';opacity:' + (d[2] ? '0.5' : '1') }));
-    const messages = s.messages.map((m) => ({ who: m.me ? 'You' : '[Project manager]', text: m.text, style: 'padding:10px 12px;border-radius:6px;font-size:14px;line-height:1.45;max-width:90%;' + (m.me ? 'align-self:flex-end;background:#2F4550;color:#F4F1EB' : 'align-self:flex-start;background:#F4F1EB;color:#1B1A17') }));
-    const pending = s.variation === 'pending';
-    const overall = s.paid3 ? 72 : 58;
+    const site = B.site.map((c, i) => ({
+      label: c.label, on: c.done,
+      toggle: () => {
+        if (!B.real) { const x = s.site.slice(); x[i] = !x[i]; this.setState({ site: x }); return; }
+        fc.rpc('site_build_set_checklist', { _build_id: B.id, _index: i, _done: !c.done }).then(() => this.load()).catch((e) => toast(e.message));
+      }
+    }));
+    const docs = B.docs.map((d) => ({ name: d.name, meta: d.meta, locked: d.locked, aria: 'Download ' + d.name, btn: d.locked ? 'Later' : 'Download',
+      get: () => { if (d.url) window.open(d.url, '_blank', 'noopener'); else toast(B.real ? 'This document is not uploaded yet.' : 'Sample build: your own documents download here.'); },
+      style: 'min-height:44px;padding:0 14px;border-radius:4px;font:inherit;font-size:14px;font-weight:600;background:#FFFFFF;color:#1B1A17;border:1.5px solid ' + (d.locked ? '#BDB29C' : '#1B1A17') + ';cursor:' + (d.locked ? 'not-allowed' : 'pointer') + ';opacity:' + (d.locked ? '0.5' : '1') }));
+    const messages = B.messages.map((m) => ({ who: m.who, text: m.text, style: 'padding:10px 12px;border-radius:6px;font-size:14px;line-height:1.45;max-width:90%;' + (m.me ? 'align-self:flex-end;background:#2F4550;color:#F4F1EB' : 'align-self:flex-start;background:#F4F1EB;color:#1B1A17') }));
+    const V = B.variation, pending = !!V && V.status === 'pending';
+    const decide = (ok) => {
+      if (!B.real) { this.setState({ variation: ok ? 'approved' : 'declined', toast: '' }); return; }
+      fc.rpc('site_build_decide_variation', { _variation_id: V.id, _approve: ok }).then(() => this.load()).catch((e) => toast(e.message));
+    };
+    const doneSite = B.site.filter((c) => c.done).length;
     return {
-      overall, overallBar: 'height:3px;background:#C9A46A;width:' + overall + '%',
-      stages, payments, contract: fmt(contract), paid: fmt(paid), balance: fmt(contract - paid),
-      varPending: pending, varDecided: !pending,
-      varTitle: pending ? 'Your approval needed' : (s.variation === 'approved' ? 'Variation approved' : 'Variation declined'),
-      varResult: s.variation === 'approved' ? 'Added to your BOQ and the before-delivery payment. The yard and procurement have been told.' : 'No change to your build. You can ask your project manager to add it later.',
+      signedAs: signedIn ? 'Signed in as ' + (s.email || fc.auth.email) : 'Sample build', authLabel: signedIn ? 'Sign out' : 'Sign in',
+      authAction: () => { if (signedIn) { fc.auth.signOut(); } else this.signIn(true); },
+      showSignIn: !mine, signInTitle: signedIn ? (s.loading ? 'Loading your build…' : 'No build linked to this email yet') : 'Sign in to see your own build',
+      signInText: signedIn ? (s.loading ? '' : 'You are signed in as ' + (s.email || fc.auth.email) + '. If you have a build with Firmcop, ask your project manager to add this email to it. Below is a sample build.') : 'Below is a sample build. Sign in with the email you gave Firmcop to see your stages, payments, documents and messages.',
+      openMagic: () => this.signIn(true), openPassword: () => this.signIn(false), notSignedIn: !signedIn,
+      orderLine: 'My builds · Order ' + B.code + (B.real ? '' : ' · Sample data'), heroTitle: 'Your ' + B.title, specLine: B.spec, deliveryText: B.delivery,
+      overall: B.progress, overallBar: 'height:3px;background:#C9A46A;width:' + B.progress + '%',
+      stages, payments, contract: fmt(B.contract), paid: fmt(paid), balance: fmt(B.contract - paid),
+      updates: B.updates, noUpdates: B.updates.length === 0,
+      hasVar: !!V, varPending: pending, varDecided: !!V && !pending,
+      varTitle: !V ? '' : (pending ? 'Your approval needed' : (V.status === 'approved' ? 'Variation approved' : 'Variation declined')),
+      varText: V ? (V.description || V.title) : '', varAmt: V ? ('+ KES ' + fmt(V.amount) + (V.delivery_impact ? ' · ' + V.delivery_impact : '')) : '',
+      varResult: V && V.status === 'approved' ? 'Added to your BOQ and the next payment. The yard and procurement have been told.' : 'No change to your build. You can ask your project manager to add it later.',
       varCard: 'border-radius:6px;padding:22px;' + (pending ? 'background:#FFF1D6;border:1.5px solid #C77700' : 'background:#FFFFFF;border:1px solid #DDD6CA'),
-      approveVar: () => this.setState({ variation: 'approved', toast: '' }),
-      declineVar: () => this.setState({ variation: 'declined', toast: '' }),
-      site, siteDone: s.site.filter((x) => x).length,
-      docs, messages, draft: s.draft,
+      approveVar: () => decide(true), declineVar: () => decide(false),
+      site, siteDone: doneSite, siteLine: (B.real ? 'Complete these before delivery (' + B.delivery + '). ' : 'Complete these before the week of 16 Nov. ') + doneSite + ' of ' + B.site.length + ' done.',
+      docs, messages, draft: s.draft, pmName: B.pmName,
       typeDraft: (e) => this.setState({ draft: e.target.value }),
-      send: () => { if (!s.draft.trim()) { this.setState({ toast: 'Type a message first.' }); return; } this.setState({ messages: s.messages.concat([{ me: true, text: s.draft.trim() }]), draft: '', toast: '' }); },
-      openWa: () => this.setState({ toast: 'Opens a WhatsApp chat with your project manager (prototype).' }),
+      send: () => {
+        const t = s.draft.trim(); if (!t) { toast('Type a message first.'); return; }
+        if (!B.real) { this.setState({ messages: s.messages.concat([{ me: true, text: t }]), draft: '', toast: '' }); return; }
+        fc.rpc('site_build_post_message', { _build_id: B.id, _body: t }).then(() => { this.setState({ draft: '', toast: '' }); this.load(); }).catch((e) => toast(e.message));
+      },
+      openWa: () => fc ? fc.wa('Hello, this is about my Firmcop build ' + B.code + '.') : null,
       toastOn: !!s.toast, toast: s.toast
     };
   }

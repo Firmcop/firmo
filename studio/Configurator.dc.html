@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Configurator</title>
+<script src="./ds-config.js"></script>
+<script src="./fc-site.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -303,7 +305,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 </ul>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
 <a href="Portal.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 18px;background:#C9A46A;color:#1B1A17;text-decoration:none;font-weight:600;border-radius:4px">Open your client portal</a>
-<a href="Team.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 18px;background:#F4F1EB;color:#1B1A17;text-decoration:none;font-weight:600;border-radius:4px">See it in the team portal</a>
+<a href="#" data-fc-wa style="display:inline-flex;align-items:center;min-height:48px;padding:0 18px;background:#F4F1EB;color:#1B1A17;text-decoration:none;font-weight:600;border-radius:4px">WhatsApp us about it</a>
 <button type="button" onClick="{{restart}}" style="min-height:48px;padding:0 18px;background:transparent;color:#F4F1EB;border:1.5px solid #F4F1EB;border-radius:4px;font:inherit;font-weight:600;cursor:pointer">Edit configuration</button>
 </div>
 </div>
@@ -625,16 +627,16 @@ class Component extends DCLogic {
     const tab = (onTab) => 'min-height:44px;padding:0 18px;border:0;font:inherit;font-size:15px;font-weight:600;cursor:pointer;' + (onTab ? 'background:#1B1A17;color:#F4F1EB' : 'background:#FFFFFF;color:#1B1A17');
     const isReview = s.step === 5;
     const handoffs = s.done === 'deposit' ? [
-      { team: 'Payments', text: 'M-Pesa prompt sent for KES ' + fmt(deposit) + '. Production slot held for 48 hours.' },
-      { team: 'Sales', text: 'Order SO-0142 created in the CRM with this configuration and BOQ attached.' },
+      { team: 'Payments', text: 'We call to confirm, then send the M-Pesa request for KES ' + fmt(deposit) + '. Your production slot is held for 48 hours.' },
+      { team: 'Sales', text: 'Quote ' + (s.qcode || '') + ' saved with this configuration and BOQ.' },
       { team: 'Engineering', text: 'Drawing pack and BIM model queued for approval' + (flags.length ? ', with ' + flags.length + ' check' + (flags.length > 1 ? 's' : '') + ' flagged.' : '.') },
-      { team: 'Procurement', text: (lines.filter((l) => l.bd.text !== 'Service').length - back.length) + ' stocked lines reserved, ' + back.length + ' purchase request' + (back.length === 1 ? '' : 's') + ' raised.' },
-      { team: 'Marketing', text: 'Tagged as a customer for handover photos and a review request.' }
+      { team: 'Procurement', text: (lines.filter((l) => l.bd.text !== 'Service').length - back.length) + ' stocked lines to reserve and ' + back.length + ' purchase request' + (back.length === 1 ? '' : 's') + ' to raise once the deposit is in.' },
+      { team: 'You', text: 'Keep reference ' + (s.qcode || '') + '. WhatsApp us any time with it.' }
     ] : [
-      { team: 'Sales', text: 'Lead L-2291 created in the CRM with quote Q-0142 attached. An advisor calls within one working day.' },
-      { team: 'Engineering', text: 'Review ticket ENG-0318 opened' + (flags.length ? ' with ' + flags.length + ' check' + (flags.length > 1 ? 's' : '') + ' flagged.' : ' for a standard check.') },
+      { team: 'Sales', text: 'Quote ' + (s.qcode || '') + ' saved. An advisor calls within one working day.' },
+      { team: 'Engineering', text: 'Engineer review requested' + (flags.length ? ' with ' + flags.length + ' check' + (flags.length > 1 ? 's' : '') + ' flagged.' : ' for a standard check.') },
       { team: 'Procurement', text: 'Stock check saved. Nothing is reserved until a deposit is paid.' },
-      { team: 'Marketing', text: 'Added to the quote follow-up journey by email and WhatsApp.' }
+      { team: 'You', text: 'We follow up by email and WhatsApp.' }
     ];
     const nextNames = ['Size', 'Exterior', 'Interior', 'Extras and site', 'Review quote'];
 
@@ -659,11 +661,11 @@ class Component extends DCLogic {
       atStart: s.step === 0, nextLabel: nextNames[s.step] || 'Next',
       goBack: () => this.setState({ step: Math.max(0, s.step - 1), done: '' }),
       goNext: () => this.setState({ step: Math.min(5, s.step + 1), view: s.step + 1 === 5 ? 'boq' : s.view }),
-      payDeposit: () => this.setState({ done: 'deposit', toast: '' }),
-      requestReview: () => this.setState({ done: 'review', toast: '' }),
-      downloadQuote: () => this.setState({ toast: 'Quote PDF for Q-0142 generated with plans, finishes and payment terms (prototype).' }),
-      save: () => this.setState({ toast: 'Saved to your account. Sales can see this configuration.' }),
-      share: () => this.setState({ toast: 'Share link copied (prototype).' }),
+      payDeposit: () => FC.quote({ source: 'configurator', title: b.name + ' · ' + mod + ' ' + b.unit + (mod > 1 ? 's' : ''), intent: 'deposit', lines: lines.map((l) => ({ label: l.name, detail: l.trade + ' · ' + l.sku, qty: l.qty, unit: l.unit, rate: l.rate, amount: l.amount })), subtotal: sub, vat: vat, total: total, phone: (document.getElementById('mpesa') || {}).value || '' }).then((r) => { if (r) this.setState({ done: 'deposit', qcode: r.code, toast: '' }); }),
+      requestReview: () => FC.quote({ source: 'configurator', title: b.name + ' · ' + mod + ' ' + b.unit + (mod > 1 ? 's' : ''), intent: 'review', lines: lines.map((l) => ({ label: l.name, detail: l.trade + ' · ' + l.sku, qty: l.qty, unit: l.unit, rate: l.rate, amount: l.amount })), subtotal: sub, vat: vat, total: total, phone: (document.getElementById('mpesa') || {}).value || '' }).then((r) => { if (r) this.setState({ done: 'review', qcode: r.code, toast: '' }); }),
+      downloadQuote: () => window.print(),
+      save: () => FC.quote({ source: 'configurator', title: b.name + ' · ' + mod + ' ' + b.unit + (mod > 1 ? 's' : ''), intent: 'save', lines: lines.map((l) => ({ label: l.name, detail: l.trade + ' · ' + l.sku, qty: l.qty, unit: l.unit, rate: l.rate, amount: l.amount })), subtotal: sub, vat: vat, total: total, phone: (document.getElementById('mpesa') || {}).value || '' }).then((r) => { if (r) this.setState({ qcode: r.code, toast: 'Saved as quote ' + r.code + '. Sales can see this configuration.' }); }),
+      share: () => { const u = location.href.split('#')[0]; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => this.setState({ toast: 'Link to the configurator copied.' }), () => this.setState({ toast: u })); },
       restart: () => this.setState({ step: 0, done: '', view: 'elev' }),
       toastOn: !!s.toast, toast: s.toast,
       svgLabel: 'Front elevation of the ' + b.name + ', ' + dimText,

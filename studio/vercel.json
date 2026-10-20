@@ -23,6 +23,16 @@
       "permanent": false
     },
     {
+      "source": "/admin",
+      "destination": "/admin.html",
+      "permanent": false
+    },
+    {
+      "source": "/my-builds",
+      "destination": "/Portal.dc.html",
+      "permanent": false
+    },
+    {
       "source": "/design-manager",
       "destination": "/design-manager.html",
       "permanent": false
