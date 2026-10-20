@@ -1,12 +1,86 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Main.dc.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/collection",
+      "destination": "/Catalog.dc.html",
+      "permanent": false
+    },
+    {
+      "source": "/design-studio",
+      "destination": "/design-studio.html",
+      "permanent": false
+    },
+    {
+      "source": "/design-manager",
+      "destination": "/design-manager.html",
+      "permanent": false
+    },
+    {
+      "source": "/studio",
+      "destination": "/studio.html",
+      "permanent": false
+    },
+    {
+      "source": "/2x4",
+      "destination": "/2x4.html",
+      "permanent": false
+    }
+  ],
   "headers": [
-    { "source": "/(.*)", "headers": [
-      { "key": "X-Content-Type-Options", "value": "nosniff" },
-      { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-      { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
-    ]},
-    { "source": "/ds-package.json", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] },
-    { "source": "/img/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/_blob/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/jpeg"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/ds-package.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
+    }
   ]
 }

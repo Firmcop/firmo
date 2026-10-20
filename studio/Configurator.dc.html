@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Configurator</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F2EBDF}
+a{color:#6B4F22}a:hover{color:#4A3616}
+.nav a{color:#E8DFD0;text-decoration:none;font-size:12px;letter-spacing:.22em;text-transform:uppercase;padding:14px 0;display:inline-block}
+.nav a:hover{color:#C9A46A}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;letter-spacing:-.01em}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;background:#0D0C0A;color:#F2EBDF;text-decoration:none;border:0;font:inherit;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+.btn:hover{background:#8A6A33;color:#FFFFFF}
+.btn-line{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;background:transparent;color:#0D0C0A;border:1px solid #0D0C0A;font:inherit;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn-line:hover{background:#0D0C0A;color:#F2EBDF}
+.btn-line:disabled{opacity:.35;cursor:not-allowed}
+.ghost{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border:1px solid rgba(232,223,208,.5);color:#F2EBDF;background:transparent;text-decoration:none;font:inherit;font-size:12px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;cursor:pointer}
+.ghost:hover{border-color:#C9A46A;color:#C9A46A}
+.cnt{width:48px;height:48px;border:1px solid #0D0C0A;background:transparent;font:inherit;font-size:22px;cursor:pointer;color:#0D0C0A}
+.cnt:disabled{opacity:.3;cursor:not-allowed}
+@media (prefers-reduced-motion: no-preference){
+.rise{animation:rise 1.2s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#0D0C0A;background:#F2EBDF;min-height:100vh">
+
+<section aria-label="Configure your home" style="background:#0D0C0A;color:#F2EBDF">
+<header style="border-bottom:1px solid #1E1B17">
+<div style="max-width:1360px;margin:0 auto;padding:18px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 40px">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;text-decoration:none;color:#F2EBDF;min-height:48px;justify-content:center;line-height:1">
+<span class="serif" style="font-size:30px;letter-spacing:.18em">FIRMCOP</span>
+<span class="eyebrow" style="font-size:9px;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
+</a>
+<nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 32px;flex:1 1 auto;justify-content:center">
+<a href="Catalog.dc.html">Collection</a>
+<a href="Configurator.dc.html" aria-current="page" style="color:#C9A46A;box-shadow:inset 0 -1px 0 #C9A46A">Configure</a>
+<a href="Invest.dc.html">Invest</a>
+<a href="Projects.dc.html">Works</a>
+<a href="Store.dc.html">Atelier</a>
+<a href="design-studio.html">3D Studio</a>
+<a href="Portal.dc.html">My builds</a>
+</nav>
+<a class="ghost" href="Main.dc.html#visit">Visit the yard</a>
+</div>
+</header>
+<div style="max-width:1360px;margin:0 auto;padding:64px 32px 0">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+<div class="rise">
+<p class="eyebrow" style="margin:0 0 18px;color:#C9A46A">Quote Q-0142 · {{baseName}} · Sample prices</p>
+<h1 class="serif" style="margin:0;font-size:clamp(48px,6.4vw,96px);line-height:.94;font-weight:400">Compose your <em style="color:#E3C48F">home.</em></h1>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" class="ghost" onClick="{{save}}">Save</button>
+<button type="button" class="ghost" onClick="{{share}}">Share link</button>
+</div>
+</div>
+<nav aria-label="Configuration steps" style="margin-top:48px;border-top:1px solid #24211C">
+<ol style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0 36px">
+<sc-for list="{{steps}}" as="st" hint-placeholder-count="6">
+<li><button type="button" aria-current="{{st.current}}" onClick="{{st.pick}}" style="{{st.style}}"><span class="eyebrow" style="font-size:10px;opacity:.75">{{st.num}}</span>{{st.label}}</button></li>
+</sc-for>
+</ol>
+</nav>
+</div>
+</section>
+
+<div style="max-width:1360px;margin:0 auto;padding:40px 32px 96px">
+
+<sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+<div role="status" style="margin:0 0 16px;padding:12px 16px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:15px">{{toast}}</div>
+</sc-if>
+
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+<section aria-label="Preview" style="flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div role="group" aria-label="Preview mode" style="display:flex;gap:0;border:1.5px solid #1B1A17;border-radius:4px;overflow:hidden;align-self:flex-start">
+<button type="button" aria-pressed="{{elevPressed}}" onClick="{{showElevation}}" style="{{elevTab}}">Elevation</button>
+<button type="button" aria-pressed="{{planPressed}}" onClick="{{showPlan}}" style="{{planTab}}">Floor plan</button>
+<button type="button" aria-pressed="{{boqPressed}}" onClick="{{showBoq}}" style="{{boqTab}}">Bill of quantities</button>
+</div>
+
+<sc-if value="{{viewElev}}" hint-placeholder-val="{{true}}">
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;overflow:hidden">
+<svg viewBox="0 0 720 380" role="img" aria-label="{{svgLabel}}" style="width:100%;height:auto;display:block">
+<defs>
+<pattern id="ribs" width="7" height="10" patternUnits="userSpaceOnUse"><rect width="2" height="10" fill="rgba(0,0,0,0.2)"></rect></pattern>
+<pattern id="boards" width="10" height="8" patternUnits="userSpaceOnUse"><rect width="10" height="1.4" fill="rgba(0,0,0,0.25)"></rect></pattern>
+<pattern id="panels" width="48" height="10" patternUnits="userSpaceOnUse"><rect width="1.5" height="10" fill="rgba(0,0,0,0.28)"></rect></pattern>
+</defs>
+<rect x="0" y="0" width="720" height="380" fill="#1B1714"></rect>
+<circle cx="610" cy="70" r="16" fill="#EFE3CC" opacity=".5"></circle>
+<rect x="0" y="318" width="720" height="62" fill="#14110F"></rect>
+<polygon points="{{roofPts}}" fill="{{roofFill}}" display="{{roofD}}"></polygon>
+<rect x="{{bx}}" y="{{by}}" width="{{bw}}" height="{{bh}}" fill="{{cladFill}}" display="{{bodyD}}"></rect>
+<rect x="{{bx}}" y="{{by}}" width="{{bw}}" height="{{bh}}" fill="{{pattern}}" display="{{bodyD}}"></rect>
+<rect x="{{railX}}" y="{{railY}}" width="{{railW}}" height="7" fill="#1B1A17" display="{{railD}}"></rect>
+<polygon points="{{afOuter}}" fill="{{cladFill}}" display="{{afD}}"></polygon>
+<polygon points="{{afOuter}}" fill="{{pattern}}" stroke="#1B1A17" stroke-width="3" stroke-linejoin="round" display="{{afD}}"></polygon>
+<polygon points="{{afInner}}" fill="#E9C487" stroke="#1B1A17" stroke-width="2" display="{{afD}}"></polygon>
+<line x1="{{m0.x1}}" y1="{{m0.y1}}" x2="{{m0.x2}}" y2="{{m0.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m0.d}}"></line>
+<line x1="{{m1.x1}}" y1="{{m1.y1}}" x2="{{m1.x2}}" y2="{{m1.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m1.d}}"></line>
+<line x1="{{m2.x1}}" y1="{{m2.y1}}" x2="{{m2.x2}}" y2="{{m2.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m2.d}}"></line>
+<line x1="{{m3.x1}}" y1="{{m3.y1}}" x2="{{m3.x2}}" y2="{{m3.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m3.d}}"></line>
+<line x1="{{m4.x1}}" y1="{{m4.y1}}" x2="{{m4.x2}}" y2="{{m4.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m4.d}}"></line>
+<line x1="{{m5.x1}}" y1="{{m5.y1}}" x2="{{m5.x2}}" y2="{{m5.y2}}" stroke="#1B1A17" stroke-width="2" display="{{m5.d}}"></line>
+<line x1="{{j0.x1}}" y1="{{j0.y1}}" x2="{{j0.x2}}" y2="{{j0.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j0.d}}"></line>
+<line x1="{{j1.x1}}" y1="{{j1.y1}}" x2="{{j1.x2}}" y2="{{j1.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j1.d}}"></line>
+<line x1="{{j2.x1}}" y1="{{j2.y1}}" x2="{{j2.x2}}" y2="{{j2.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j2.d}}"></line>
+<line x1="{{j3.x1}}" y1="{{j3.y1}}" x2="{{j3.x2}}" y2="{{j3.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j3.d}}"></line>
+<line x1="{{j4.x1}}" y1="{{j4.y1}}" x2="{{j4.x2}}" y2="{{j4.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j4.d}}"></line>
+<line x1="{{j5.x1}}" y1="{{j5.y1}}" x2="{{j5.x2}}" y2="{{j5.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j5.d}}"></line>
+<line x1="{{j6.x1}}" y1="{{j6.y1}}" x2="{{j6.x2}}" y2="{{j6.y2}}" stroke="{{jointColor}}" stroke-width="{{jointW}}" display="{{j6.d}}"></line>
+<rect x="{{w0.x}}" y="{{w0.y}}" width="{{w0.w}}" height="{{w0.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w0.d}}"></rect>
+<rect x="{{w1.x}}" y="{{w1.y}}" width="{{w1.w}}" height="{{w1.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w1.d}}"></rect>
+<rect x="{{w2.x}}" y="{{w2.y}}" width="{{w2.w}}" height="{{w2.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w2.d}}"></rect>
+<rect x="{{w3.x}}" y="{{w3.y}}" width="{{w3.w}}" height="{{w3.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w3.d}}"></rect>
+<rect x="{{w4.x}}" y="{{w4.y}}" width="{{w4.w}}" height="{{w4.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w4.d}}"></rect>
+<rect x="{{w5.x}}" y="{{w5.y}}" width="{{w5.w}}" height="{{w5.h}}" fill="#E9C487" stroke="{{winStroke}}" stroke-width="3" display="{{w5.d}}"></rect>
+<rect x="{{rd.x}}" y="{{rd.y}}" width="{{rd.w}}" height="{{rd.h}}" fill="#4A5960" stroke="#1B1A17" stroke-width="2" display="{{rd.d}}"></rect>
+<rect x="{{rd.x}}" y="{{rd.y}}" width="{{rd.w}}" height="{{rd.h}}" fill="url(#boards)" display="{{rd.d}}"></rect>
+<rect x="{{door.x}}" y="{{door.y}}" width="{{door.w}}" height="{{door.h}}" fill="{{doorFill}}" stroke="#1B1A17" stroke-width="2" display="{{door.d}}"></rect>
+<polygon points="{{s0.pts}}" fill="#22313A" stroke="#7FA0B3" stroke-width="1" display="{{s0.d}}"></polygon>
+<polygon points="{{s1.pts}}" fill="#22313A" stroke="#7FA0B3" stroke-width="1" display="{{s1.d}}"></polygon>
+<polygon points="{{s2.pts}}" fill="#22313A" stroke="#7FA0B3" stroke-width="1" display="{{s2.d}}"></polygon>
+<polygon points="{{s3.pts}}" fill="#22313A" stroke="#7FA0B3" stroke-width="1" display="{{s3.d}}"></polygon>
+<polygon points="{{s4.pts}}" fill="#22313A" stroke="#7FA0B3" stroke-width="1" display="{{s4.d}}"></polygon>
+<rect x="{{deck.x}}" y="{{deck.y}}" width="{{deck.w}}" height="{{deck.h}}" fill="#8A6A48" display="{{deck.d}}"></rect>
+<rect x="{{deck.x}}" y="{{deck.y}}" width="{{deck.w}}" height="3" fill="#6B5236" display="{{deck.d}}"></rect>
+<line x1="{{dimX1}}" y1="344" x2="{{dimX2}}" y2="344" stroke="#8C8475" stroke-width="1"></line>
+<line x1="{{dimX1}}" y1="338" x2="{{dimX1}}" y2="350" stroke="#8C8475" stroke-width="1"></line>
+<line x1="{{dimX2}}" y1="338" x2="{{dimX2}}" y2="350" stroke="#8C8475" stroke-width="1"></line>
+<text x="360" y="368" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#C9BFAF">{{dimText}}</text>
+<text x="20" y="32" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="2" fill="#A89E8E">FRONT ELEVATION · NOT TO SCALE</text>
+</svg>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:1px solid #DDD6CA">
+<div style="padding:14px 18px;border-right:1px solid #EAE4D8"><div style="font-size:13px;color:#5C5850">Floor area</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:26px">{{floorArea}} m²</div></div>
+<div style="padding:14px 18px;border-right:1px solid #EAE4D8"><div style="font-size:13px;color:#5C5850">Footprint</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:26px">{{footprint}}</div></div>
+<div style="padding:14px 18px;border-right:1px solid #EAE4D8"><div style="font-size:13px;color:#5C5850">Lead time</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:26px">{{lead}} weeks</div></div>
+<div style="padding:14px 18px"><div style="font-size:13px;color:#5C5850">Engineer checks</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:26px">{{flagCount}}</div></div>
+</div>
+</div>
+<p style="margin:0;font-size:14px;color:#5C5850">A full 3D model and floor plan would load here in production, generated from the same BIM model the engineers use.</p>
+</sc-if>
+
+<sc-if value="{{viewPlan}}" hint-placeholder-val="{{false}}">
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;overflow:hidden">
+<svg viewBox="0 0 720 380" role="img" aria-label="{{planLabel}}" style="width:100%;height:auto;display:block">
+<rect x="0" y="0" width="720" height="380" fill="#F7F4EE"></rect>
+<rect x="{{r0.x}}" y="{{r0.y}}" width="{{r0.w}}" height="{{r0.h}}" fill="{{r0.fill}}" stroke="#8C8475" stroke-width="1.5" display="{{r0.d}}"></rect>
+<rect x="{{r1.x}}" y="{{r1.y}}" width="{{r1.w}}" height="{{r1.h}}" fill="{{r1.fill}}" stroke="#8C8475" stroke-width="1.5" display="{{r1.d}}"></rect>
+<rect x="{{r2.x}}" y="{{r2.y}}" width="{{r2.w}}" height="{{r2.h}}" fill="{{r2.fill}}" stroke="#8C8475" stroke-width="1.5" display="{{r2.d}}"></rect>
+<rect x="{{r3.x}}" y="{{r3.y}}" width="{{r3.w}}" height="{{r3.h}}" fill="{{r3.fill}}" stroke="#8C8475" stroke-width="1.5" display="{{r3.d}}"></rect>
+<rect x="{{r4.x}}" y="{{r4.y}}" width="{{r4.w}}" height="{{r4.h}}" fill="{{r4.fill}}" stroke="#8C8475" stroke-width="1.5" display="{{r4.d}}"></rect>
+<rect x="{{ppx}}" y="{{ppy}}" width="{{ppw}}" height="{{pph}}" fill="none" stroke="#1B1A17" stroke-width="6"></rect>
+<rect x="{{pf0.x}}" y="{{pf0.y}}" width="{{pf0.w}}" height="{{pf0.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf0.d}}"></rect>
+<rect x="{{pf1.x}}" y="{{pf1.y}}" width="{{pf1.w}}" height="{{pf1.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf1.d}}"></rect>
+<rect x="{{pf2.x}}" y="{{pf2.y}}" width="{{pf2.w}}" height="{{pf2.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf2.d}}"></rect>
+<rect x="{{pf3.x}}" y="{{pf3.y}}" width="{{pf3.w}}" height="{{pf3.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf3.d}}"></rect>
+<rect x="{{pf4.x}}" y="{{pf4.y}}" width="{{pf4.w}}" height="{{pf4.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf4.d}}"></rect>
+<rect x="{{pf5.x}}" y="{{pf5.y}}" width="{{pf5.w}}" height="{{pf5.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pf5.d}}"></rect>
+<rect x="{{pb0.x}}" y="{{pb0.y}}" width="{{pb0.w}}" height="{{pb0.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb0.d}}"></rect>
+<rect x="{{pb1.x}}" y="{{pb1.y}}" width="{{pb1.w}}" height="{{pb1.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb1.d}}"></rect>
+<rect x="{{pb2.x}}" y="{{pb2.y}}" width="{{pb2.w}}" height="{{pb2.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb2.d}}"></rect>
+<rect x="{{pb3.x}}" y="{{pb3.y}}" width="{{pb3.w}}" height="{{pb3.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb3.d}}"></rect>
+<rect x="{{pb4.x}}" y="{{pb4.y}}" width="{{pb4.w}}" height="{{pb4.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb4.d}}"></rect>
+<rect x="{{pb5.x}}" y="{{pb5.y}}" width="{{pb5.w}}" height="{{pb5.h}}" fill="#9DB4BF" stroke="#1B1A17" stroke-width="1.5" display="{{pb5.d}}"></rect>
+<rect x="{{pdoor.x}}" y="{{pdoor.y}}" width="{{pdoor.w}}" height="{{pdoor.h}}" fill="#8A6A33"></rect>
+<text x="{{r0.tx}}" y="{{r0.ty}}" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="13" font-weight="600" fill="#1B1A17" display="{{r0.d}}">{{r0.label}}</text>
+<text x="{{r1.tx}}" y="{{r1.ty}}" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="13" font-weight="600" fill="#1B1A17" display="{{r1.d}}">{{r1.label}}</text>
+<text x="{{r2.tx}}" y="{{r2.ty}}" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="13" font-weight="600" fill="#1B1A17" display="{{r2.d}}">{{r2.label}}</text>
+<text x="{{r3.tx}}" y="{{r3.ty}}" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="13" font-weight="600" fill="#1B1A17" display="{{r3.d}}">{{r3.label}}</text>
+<text x="{{r4.tx}}" y="{{r4.ty}}" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="13" font-weight="600" fill="#1B1A17" display="{{r4.d}}">{{r4.label}}</text>
+<text x="360" y="362" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#3D3A34">{{planDim}}</text>
+<text x="20" y="32" font-family="IBM Plex Mono, monospace" font-size="12" fill="#5C5850">FLOOR PLAN · {{layoutName}} · NOT TO SCALE</text>
+</svg>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border-top:1px solid #DDD6CA">
+<sc-for list="{{rooms}}" as="rm" hint-placeholder-count="3">
+<div style="padding:14px 18px;border-right:1px solid #EAE4D8;display:flex;flex-direction:column;gap:2px"><strong style="font-size:15px">{{rm.label}}</strong><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">{{rm.dims}} · {{rm.area}}</span></div>
+</sc-for>
+</div>
+</div>
+<p style="margin:0;font-size:14px;color:#5C5850">{{planNote}}</p>
+</sc-if>
+
+<sc-if value="{{viewBoq}}" hint-placeholder-val="{{false}}">
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:20px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px">
+<h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:28px;text-transform:uppercase">Bill of quantities</h2>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">Generated live from the model · {{lineCount}} lines</span>
+</div>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:720px">
+<thead>
+<tr style="text-align:left;color:#5C5850;font-size:12px;text-transform:uppercase;letter-spacing:.05em">
+<th scope="col" style="padding:8px 8px 8px 0;font-weight:500">SKU</th>
+<th scope="col" style="padding:8px;font-weight:500">Item</th>
+<th scope="col" style="padding:8px;font-weight:500;text-align:right">Qty</th>
+<th scope="col" style="padding:8px;font-weight:500">Unit</th>
+<th scope="col" style="padding:8px;font-weight:500;text-align:right">Rate</th>
+<th scope="col" style="padding:8px;font-weight:500;text-align:right">Amount</th>
+<th scope="col" style="padding:8px 0 8px 8px;font-weight:500">Stock</th>
+</tr>
+</thead>
+<sc-for list="{{boq}}" as="g" hint-placeholder-count="4">
+<tbody>
+<tr><th scope="rowgroup" colspan="7" style="text-align:left;padding:16px 0 6px;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;text-transform:uppercase;border-bottom:1.5px solid #1B1A17">{{g.trade}}</th></tr>
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+<tr style="border-bottom:1px solid #EAE4D8">
+<td style="padding:10px 8px 10px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;white-space:nowrap">{{r.sku}}</td>
+<td style="padding:10px 8px">{{r.name}}</td>
+<td style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{r.qty}}</td>
+<td style="padding:10px 8px;color:#5C5850">{{r.unit}}</td>
+<td style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{r.rate}}</td>
+<td style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{r.amount}}</td>
+<td style="padding:10px 0 10px 8px"><span style="{{r.stockStyle}}">{{r.stockText}}</span></td>
+</tr>
+</sc-for>
+<tr><td colspan="5" style="padding:8px 8px 8px 0;text-align:right;color:#5C5850;font-size:13px">{{g.trade}} subtotal</td><td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:500">{{g.subtotal}}</td><td></td></tr>
+</tbody>
+</sc-for>
+</table>
+</div>
+<p style="margin:16px 0 0;font-size:13px;color:#5C5850">Quantities include waste allowances: cladding 10%, insulation 5%, flooring 8%. Rates in KES, excluding VAT.</p>
+</div>
+</sc-if>
+</section>
+
+<aside aria-label="Options and quote" style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
+
+<sc-if value="{{notReview}}" hint-placeholder-val="{{true}}">
+<div style="background:#FBF7EF;border:1px solid #D6CBB8;padding:30px;display:flex;flex-direction:column;gap:26px">
+<h2 class="serif" style="margin:0;font-size:40px;line-height:1;font-weight:400">{{stepTitle}}</h2>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+<legend style="padding:0;margin-bottom:4px;font-weight:600;font-size:16px">{{g.title}}</legend>
+<p style="margin:0 0 4px;font-size:13px;color:#5C5850;line-height:1.45">{{g.hint}}</p>
+<sc-if value="{{g.isCards}}" hint-placeholder-val="{{true}}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+<sc-for list="{{g.options}}" as="o" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{o.pressed}}" disabled="{{o.disabled}}" onClick="{{o.pick}}" style="{{o.style}}">
+<strong style="font-size:15px;line-height:1.25">{{o.label}}</strong>
+<span style="font-size:13px;color:#5C5850;line-height:1.35">{{o.sub}}</span>
+<span style="{{o.badgeStyle}}">{{o.badge}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{g.isSwatch}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{g.options}}" as="o" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{o.pressed}}" disabled="{{o.disabled}}" onClick="{{o.pick}}" style="{{o.style}}"><span aria-hidden="true" style="{{o.dot}}"></span>{{o.label}}</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{g.isCounter}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;align-items:center;gap:12px">
+<button type="button" class="cnt" aria-label="{{g.decLabel}}" disabled="{{g.decDisabled}}" onClick="{{g.dec}}">−</button>
+<output aria-live="polite" style="min-width:48px;text-align:center;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:32px">{{g.value}}</output>
+<button type="button" class="cnt" aria-label="{{g.incLabel}}" disabled="{{g.incDisabled}}" onClick="{{g.inc}}">+</button>
+<span style="font-size:14px;color:#5C5850;line-height:1.4">{{g.note}}</span>
+</div>
+</sc-if>
+</fieldset>
+</sc-for>
+<div style="display:flex;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid #EAE4D8">
+<button type="button" class="btn-line" disabled="{{atStart}}" onClick="{{goBack}}">Back</button>
+<button type="button" class="btn" onClick="{{goNext}}">{{nextLabel}} →</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showActions}}" hint-placeholder-val="{{false}}">
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:30px;text-transform:uppercase">Ready when you are</h2>
+<p style="margin:0;font-size:15px;color:#5C5850;line-height:1.5">A deposit holds your production slot. Prefer to talk it through first? Send it for engineering review and a sales advisor will call you.</p>
+<label for="mpesa" style="font-size:14px;font-weight:600">M-Pesa number</label>
+<input id="mpesa" type="tel" inputmode="tel" placeholder="07XX XXX XXX" style="min-height:48px;padding:0 14px;border:1.5px solid #8C8475;border-radius:4px;font:inherit;font-size:16px;background:#FFFFFF;color:#1B1A17">
+<button type="button" class="btn" onClick="{{payDeposit}}">Pay 30% deposit · KES {{deposit}}</button>
+<button type="button" class="btn-line" onClick="{{requestReview}}">Request engineer review first</button>
+<button type="button" class="btn-line" onClick="{{downloadQuote}}">Download quote PDF</button>
+<button type="button" onClick="{{goBack}}" style="min-height:44px;background:none;border:0;font:inherit;color:#6B4F22;text-decoration:underline;cursor:pointer;align-self:flex-start;padding:0">Back to extras and site</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+<div role="status" style="background:#1B1A17;color:#F4F1EB;border-radius:6px;padding:22px;display:flex;flex-direction:column;gap:14px">
+<p style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#C9A46A;text-transform:uppercase;letter-spacing:.08em">Sent · Q-0142</p>
+<h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:32px;text-transform:uppercase;line-height:1.05">{{doneTitle}}</h2>
+<p style="margin:0;font-size:15px;color:#CFC8BA;line-height:1.5">Here is where your configuration went. No one re-types anything.</p>
+<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{handoffs}}" as="h" hint-placeholder-count="4">
+<li style="display:flex;gap:12px;align-items:flex-start;padding-top:12px;border-top:1px solid #3A372F"><span style="flex:0 0 108px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:18px;text-transform:uppercase;color:#C9A46A">{{h.team}}</span><span style="font-size:14px;line-height:1.5;color:#E6E0D4">{{h.text}}</span></li>
+</sc-for>
+</ul>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+<a href="Portal.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 18px;background:#C9A46A;color:#1B1A17;text-decoration:none;font-weight:600;border-radius:4px">Open your client portal</a>
+<a href="Team.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 18px;background:#F4F1EB;color:#1B1A17;text-decoration:none;font-weight:600;border-radius:4px">See it in the team portal</a>
+<button type="button" onClick="{{restart}}" style="min-height:48px;padding:0 18px;background:transparent;color:#F4F1EB;border:1.5px solid #F4F1EB;border-radius:4px;font:inherit;font-weight:600;cursor:pointer">Edit configuration</button>
+</div>
+</div>
+</sc-if>
+
+<div style="background:#0D0C0A;color:#F2EBDF;padding:30px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<h2 class="eyebrow" style="margin:0;font-size:10px;color:#C9A46A;font-weight:400">Your quote</h2>
+<span class="eyebrow" style="font-size:10px;color:#A89E8E">{{baseName}} × {{mod}}</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:10px 16px;font-size:14px">
+<sc-for list="{{summary}}" as="l" hint-placeholder-count="5">
+<span style="color:#C9BFAF">{{l.name}}</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{l.amount}}</span>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:14px;padding-top:16px;border-top:1px solid #2A2722">
+<span style="color:#A89E8E">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{subtotal}}</span>
+<span style="color:#A89E8E">VAT 16%</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{vat}}</span>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-top:18px;border-top:1px solid #C9A46A">
+<span class="eyebrow" style="font-size:10px;color:#C9BFAF">Total</span>
+<span class="serif" style="font-size:48px;line-height:1">KES {{total}}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:#D8CFC0">
+<span style="display:flex;align-items:center;gap:10px"><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{stockDot}}"></circle></svg>{{stockText}}</span>
+<span style="color:#A89E8E">Ready in about {{lead}} weeks from deposit</span>
+</div>
+<sc-if value="{{hasFlags}}" hint-placeholder-val="{{false}}">
+<div style="background:#FFF1D6;border-radius:4px;padding:12px 14px;font-size:13px;color:#5A3D00;line-height:1.45">
+<strong style="display:block;margin-bottom:4px">An engineer will check</strong>
+<sc-for list="{{flags}}" as="f" hint-placeholder-count="1"><div>· {{f.text}}</div></sc-for>
+</div>
+</sc-if>
+</div>
+
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 0, base: 'c40', layout: 'sep', mod: 1, win: 4, clad: 'FCB', color: 'char', winType: 'ALU', door: 'STL', ins: 'PIR', floor: 'SPC', kitchen: true, bath: true, solar: false, deck: true, zone: 'nbo', view: 'elev', done: '', toast: '' };
+  }
+  data() {
+    return {
+      bases: {
+        c20: { name: 'Container 20 ft', type: 'Container', L: 6.06, W: 2.44, H: 2.59, area: 14.8, shell: 420000, minMod: 1, maxMod: 3, defMod: 1, defWin: 2, weeks: 6, modName: 'Units joined in a row', unit: 'unit', home: true },
+        c40: { name: 'Container 40 ft', type: 'Container', L: 12.19, W: 2.44, H: 2.59, area: 29.7, shell: 690000, minMod: 1, maxMod: 3, defMod: 1, defWin: 4, weeks: 6, modName: 'Units joined in a row', unit: 'unit', home: true },
+        af: { name: 'A-frame', type: 'A-frame', L: 4, W: 6, H: 6.2, area: 33.6, shell: 540000, minMod: 1, maxMod: 4, defMod: 2, defWin: 4, weeks: 8, modName: 'Bays, 4 m each', unit: 'bay', home: true },
+        cab: { name: 'Timber cabin', type: 'Cabin', L: 3, W: 6, H: 2.7, area: 18, shell: 310000, minMod: 2, maxMod: 5, defMod: 3, defWin: 5, weeks: 7, modName: 'Bays, 3 m each', unit: 'bay', home: true },
+        stl: { name: 'Steel structure', type: 'Steel', L: 5, W: 12, H: 6, area: 60, shell: 640000, minMod: 2, maxMod: 8, defMod: 4, defWin: 6, weeks: 10, modName: 'Bays, 5 m each', unit: 'bay', home: false }
+      },
+      items: {
+        CRG: { sku: 'CLD-CRG', name: 'Corrugated steel profile, painted', short: 'Corrugated steel', unit: 'm²', rate: 1450, stock: 1200, wait: 2 },
+        TMB: { sku: 'CLD-TMB', name: 'Cypress shiplap, treated', short: 'Cypress shiplap', unit: 'm²', rate: 2900, stock: 260, wait: 3 },
+        FCB: { sku: 'CLD-FCB9', name: 'Fibre cement board 9 mm', short: 'Fibre cement', unit: 'm²', rate: 2300, stock: 640, wait: 2 },
+        WPC: { sku: 'CLD-WPC', name: 'Composite WPC cladding', short: 'Composite WPC', unit: 'm²', rate: 3600, stock: 90, wait: 4 },
+        PU: { sku: 'INS-PU50', name: 'Spray PU foam 50 mm', short: 'Spray PU 50 mm', unit: 'm²', rate: 1200, stock: 2000, wait: 1 },
+        RW: { sku: 'INS-RW75', name: 'Rockwool slab 75 mm', short: 'Rockwool 75 mm', unit: 'm²', rate: 950, stock: 800, wait: 2 },
+        PIR: { sku: 'INS-PIR100', name: 'PIR board 100 mm', short: 'PIR board 100 mm', unit: 'm²', rate: 1850, stock: 420, wait: 3 },
+        SPC: { sku: 'FLR-SPC5', name: 'SPC vinyl plank 5 mm', short: 'SPC vinyl', unit: 'm²', rate: 2100, stock: 500, wait: 2 },
+        LAM: { sku: 'FLR-LAM8', name: 'Laminate 8 mm', short: 'Laminate', unit: 'm²', rate: 1700, stock: 350, wait: 2 },
+        OAK: { sku: 'FLR-OAK14', name: 'Engineered oak 14 mm', short: 'Engineered oak', unit: 'm²', rate: 5400, stock: 40, wait: 5 },
+        CON: { sku: 'FLR-CON', name: 'Polished concrete finish', short: 'Polished concrete', unit: 'm²', rate: 1500, stock: null, wait: 0 },
+        ALU: { sku: 'WIN-ALU12', name: 'Aluminium sliding window 1.2 × 1.2 m', short: 'Aluminium sliding', unit: 'no.', rate: 18500, stock: 64, wait: 2 },
+        UPV: { sku: 'WIN-UPV12', name: 'uPVC double-glazed window 1.2 × 1.2 m', short: 'uPVC double-glazed', unit: 'no.', rate: 32000, stock: 6, wait: 3 },
+        STL: { sku: 'DR-STL', name: 'Steel security door', short: 'Steel security', unit: 'no.', rate: 38000, stock: 22, wait: 2 },
+        MAH: { sku: 'DR-MAH', name: 'Solid mahogany door', short: 'Solid mahogany', unit: 'no.', rate: 46000, stock: 8, wait: 3 },
+        GLS: { sku: 'DR-GLS24', name: 'Aluminium glass slider 2.4 m', short: 'Glass slider 2.4 m', unit: 'no.', rate: 85000, stock: 3, wait: 4 },
+        ROOF: { sku: 'RF-BOX05', name: 'Box-profile roofing sheet 0.5 mm', short: 'Roofing', unit: 'm²', rate: 1350, stock: 2500, wait: 1 },
+        RSD: { sku: 'DR-RS44', name: 'Roller shutter door 4 × 4 m', short: 'Roller shutter', unit: 'no.', rate: 165000, stock: 2, wait: 3 },
+        KIT: { sku: 'PKG-KIT', name: 'Kitchen package', short: 'Kitchen package', unit: 'set', rate: 165000, stock: 5, wait: 2 },
+        BTH: { sku: 'PKG-BTH', name: 'Bathroom package with plumbing', short: 'Bathroom package', unit: 'set', rate: 140000, stock: 7, wait: 2 },
+        SOL: { sku: 'SOL-3KW', name: 'Solar kit 3 kW with battery', short: 'Solar 3 kW', unit: 'set', rate: 285000, stock: 4, wait: 3 },
+        DCK: { sku: 'DCK-WPC', name: 'Deck, WPC boards on steel frame', short: 'Front deck', unit: 'm²', rate: 6500, stock: 300, wait: 2 }
+      },
+      colors: { rust: { name: 'Oxide red', hex: '#B5462A' }, char: { name: 'Charcoal', hex: '#3A3D3F' }, sage: { name: 'Sage', hex: '#7D8F74' }, sand: { name: 'Sand', hex: '#C9B48E' } },
+      zones: { nbo: { name: 'Nairobi metro', rate: 45000 }, r150: { name: 'Within 150 km', rate: 95000 }, far: { name: 'Beyond 150 km', rate: 180000 } }
+    };
+  }
+  renderVals() {
+    const D = this.data();
+    const s = this.state;
+    const b = D.bases[s.base];
+    const I = D.items;
+    const fmt = (n) => Math.round(n).toLocaleString('en-KE');
+    const isC = b.type === 'Container', isA = b.type === 'A-frame', isCab = b.type === 'Cabin', isS = b.type === 'Steel';
+    const mod = s.mod, len = b.L * mod, W = b.W, H = b.H;
+    const floorArea = b.area * mod;
+    let wallArea, roofArea;
+    if (isA) { const slant = Math.sqrt((W / 2) * (W / 2) + H * H); wallArea = W * H; roofArea = 2 * slant * len; }
+    else { wallArea = 2 * (len + W) * H; roofArea = isCab ? len * W * 1.25 : (isS ? len * W * 1.05 : len * W); }
+    const doorsCount = isC ? Math.min(mod, 2) : 1;
+    const rsd = isS ? Math.max(1, Math.floor(mod / 4)) : 0;
+    const openings = s.win * 1.44 + doorsCount * (s.door === 'GLS' ? 5 : 2) + rsd * 16;
+    const cladQty = Math.ceil(Math.max(0, wallArea - openings) * 1.1);
+    const insQty = Math.ceil((wallArea + roofArea) * 1.05);
+    const floorQty = Math.ceil(floorArea * 1.08);
+    const deckQty = isS ? 0 : Math.ceil(isA ? W * 2.4 : len * 2.4);
+    const maxWinFor = (bb, m) => { const l = bb.L * m; if (bb.type === 'A-frame') return 6; if (bb.type === 'Steel') return Math.min(12, 2 * m + 2); return Math.min(12, Math.max(2, Math.floor((l - 1.5) / 1.8) * 2)); };
+    const maxWin = maxWinFor(b, mod);
+    const layoutDefs = {
+      'Container': [{ k: 'open', name: 'Open plan', sub: 'Living, kitchen and sleeping in one flow', rooms: [['Living + kitchen', 0.6], ['Bath', 0.15], ['Sleep', 0.25]] }, { k: 'sep', name: 'Separate bedroom', sub: 'Closed bedroom at one end', rooms: [['Kitchen', 0.25], ['Living', 0.3], ['Bath', 0.15], ['Bedroom', 0.3]] }],
+      'A-frame': [{ k: 'open', name: 'Loft living', sub: 'One bedroom, sleeping loft above living', rooms: [['Living + kitchen', 0.65], ['Bath', 0.15], ['Bedroom', 0.2]] }, { k: 'sep', name: 'Two bedrooms', sub: 'A bedroom at each gable end', rooms: [['Bedroom 2', 0.2], ['Living + kitchen', 0.45], ['Bath', 0.15], ['Bedroom 1', 0.2]] }],
+      'Cabin': [{ k: 'open', name: 'One bedroom', sub: 'Large living room and kitchen', rooms: [['Living + kitchen', 0.5], ['Bath', 0.15], ['Bedroom', 0.35]] }, { k: 'sep', name: 'Two bedrooms', sub: 'Bedrooms either side of living', rooms: [['Bedroom 2', 0.22], ['Living + kitchen', 0.4], ['Bath', 0.14], ['Bedroom 1', 0.24]] }],
+      'Steel': [{ k: 'open', name: 'Open span', sub: 'Clear floor, no internal walls', rooms: [['Open floor', 1]] }, { k: 'sep', name: 'With site office', sub: 'Office and WC in the first bay', rooms: [['Office + WC', 0.15], ['Warehouse floor', 0.85]] }]
+    };
+    const lays = layoutDefs[b.type];
+    const lay = lays.find((l) => l.k === s.layout) || lays[0];
+
+    const pill = 'font-family:IBM Plex Mono,monospace;font-size:12px;padding:3px 7px;border-radius:3px;white-space:nowrap;align-self:flex-start;';
+    const badge = (it, q) => {
+      if (it.stock == null) return { text: 'Service', style: pill + 'background:#ECE8E0;color:#4A463F', back: false, wait: 0 };
+      if (q > it.stock) return { text: 'Backorder ' + it.wait + ' wks', style: pill + 'background:#FBE3CF;color:#7A3A00', back: true, wait: it.wait };
+      if (it.stock - q < Math.max(5, it.stock * 0.15)) return { text: 'Low · ' + fmt(it.stock) + ' left', style: pill + 'background:#FFF1D6;color:#6B4A00', back: false, wait: 0 };
+      return { text: 'In stock', style: pill + 'background:#E3F1E6;color:#1F5A2E', back: false, wait: 0 };
+    };
+
+    const lines = [];
+    const add = (trade, it, q) => {
+      const qty = it.unit === 'm²' ? Math.ceil(q) : Math.round(q);
+      if (qty <= 0) return;
+      lines.push({ trade: trade, sku: it.sku, name: it.name, unit: it.unit, qty: qty, rate: it.rate, amount: qty * it.rate, bd: badge(it, qty) });
+    };
+    add('Structure', { sku: 'STR-' + s.base.toUpperCase(), name: b.name + ' shell, primed and sealed', unit: b.unit, rate: b.shell, stock: null }, mod);
+    add('Structure', { sku: isC ? 'FND-PLN' : (isS ? 'FND-SLB' : 'FND-STR'), name: isC ? 'Concrete plinth foundations' : (isS ? 'Reinforced slab and column bases' : 'Strip footing and ground slab'), unit: 'm²', rate: isC ? 1200 : (isS ? 3500 : 2800), stock: null }, floorArea);
+    add('Envelope', I[s.clad], cladQty);
+    if (!isC) add('Envelope', I.ROOF, roofArea);
+    add('Envelope', I[s.ins], insQty);
+    add('Envelope', I[s.winType], s.win);
+    add('Envelope', I[s.door], doorsCount);
+    if (isS) add('Envelope', I.RSD, rsd);
+    add('Interior', I[s.floor], floorQty);
+    add('Interior', { sku: 'ELE-FIX', name: 'Electrical first and second fix', unit: 'm²', rate: isS ? 900 : 1800, stock: null }, floorArea);
+    if (s.kitchen) add('Interior', I.KIT, 1);
+    if (s.bath) add('Interior', I.BTH, 1);
+    if (s.solar) add('Extras', I.SOL, 1);
+    if (s.deck && !isS) add('Extras', I.DCK, deckQty);
+    const z = D.zones[s.zone];
+    const loads = isC ? mod : Math.ceil(floorArea / 40);
+    add('Site and delivery', { sku: 'TRN-' + s.zone.toUpperCase(), name: 'Transport, ' + z.name, unit: 'load', rate: z.rate, stock: null }, loads);
+    add('Site and delivery', { sku: 'LAB-INST', name: 'Installation and commissioning', unit: 'm²', rate: isS ? 2500 : 4500, stock: null }, floorArea);
+
+    const sub = lines.reduce((a, l) => a + l.amount, 0);
+    const vat = sub * 0.16, total = sub + vat, deposit = total * 0.3;
+    const back = lines.filter((l) => l.bd.back);
+    const lead = b.weeks + back.reduce((m, l) => Math.max(m, l.bd.wait), 0);
+    const trades = ['Structure', 'Envelope', 'Interior', 'Extras', 'Site and delivery'];
+    const boq = trades.map((t) => {
+      const ls = lines.filter((l) => l.trade === t);
+      return { trade: t, has: ls.length > 0, subtotal: fmt(ls.reduce((a, l) => a + l.amount, 0)), rows: ls.map((l) => ({ sku: l.sku, name: l.name, qty: fmt(l.qty), unit: l.unit, rate: fmt(l.rate), amount: fmt(l.amount), stockText: l.bd.text, stockStyle: l.bd.style })) };
+    }).filter((g) => g.has);
+    const summary = boq.map((g) => ({ name: g.trade, amount: g.subtotal }));
+
+    const flags = [];
+    if (isC && mod >= 3 && s.solar) flags.push({ text: 'Solar on a three-unit row: confirm roof fixings and cable routes.' });
+    if (isC && s.door === 'GLS') flags.push({ text: '2.4 m opening in a container wall: add lintel and posts.' });
+    if (isS && mod >= 7) flags.push({ text: 'Building over 35 m long: confirm wind bracing.' });
+    if (isA && s.win >= 6) flags.push({ text: 'Fully glazed gable: confirm glazing loads.' });
+    if (isS && s.solar) flags.push({ text: 'Solar on a portal frame: confirm purlin loads.' });
+
+    const cardStyle = (on, dis) => 'text-align:left;display:flex;flex-direction:column;gap:6px;padding:16px;min-height:44px;border-radius:0;font:inherit;color:#0D0C0A;cursor:' + (dis ? 'not-allowed' : 'pointer') + ';opacity:' + (dis ? '0.45' : '1') + ';border:1px solid ' + (on ? '#8A6A33' : '#D6CBB8') + ';background:' + (on ? '#FFFFFF' : 'transparent') + ';box-shadow:' + (on ? 'inset 0 0 0 1px #8A6A33' : 'none');
+    const card = (on, label, sub, bd, pick, dis) => ({ label: label, sub: sub, badge: bd ? bd.text : '', badgeStyle: bd ? bd.style : 'display:none', pressed: on ? 'true' : 'false', disabled: !!dis, pick: pick, style: cardStyle(on, dis) });
+    const neutral = (t) => ({ text: t, style: pill + 'background:#ECE8E0;color:#4A463F' });
+    const itemCards = (keys, field, qty, unitWord) => keys.map((k) => { const it = I[k]; return card(s[field] === k, it.short, 'KES ' + fmt(it.rate) + ' / ' + it.unit + (qty != null ? ' · ' + fmt(qty) + ' ' + (unitWord || it.unit) + ' needed' : ''), badge(it, qty || 1), () => { const o = {}; o[field] = k; this.setState(o); }); });
+
+    let groups = [];
+    let stepTitle = '';
+    if (s.step === 0) {
+      stepTitle = 'Choose a building type';
+      groups = [{ title: 'Building type', hint: 'Each type has its own structural rules and default finishes.', isCards: true, options: Object.keys(D.bases).map((k) => { const bb = D.bases[k]; return card(s.base === k, bb.name, fmt(bb.area) + ' m² per ' + bb.unit + ' · from KES ' + fmt(bb.shell * bb.defMod), neutral(bb.weeks + ' wk build'), () => this.setState({ base: k, mod: bb.defMod, win: Math.min(bb.defWin, maxWinFor(bb, bb.defMod)), kitchen: bb.home, bath: bb.home, layout: 'open', deck: bb.type !== 'Steel', floor: bb.type === 'Steel' ? 'CON' : (s.floor === 'CON' ? 'SPC' : s.floor) })); }) }];
+    } else if (s.step === 1) {
+      stepTitle = 'Size and openings';
+      groups = [
+        { title: b.modName, hint: 'Rules keep you inside what the structure can carry.', isCounter: true, value: mod, decLabel: 'Fewer', incLabel: 'More', decDisabled: mod <= b.minMod, incDisabled: mod >= b.maxMod, dec: () => this.setState({ mod: mod - 1, win: Math.min(s.win, maxWinFor(b, mod - 1)) }), inc: () => this.setState({ mod: mod + 1 }), note: len.toFixed(1) + ' m × ' + W + ' m · ' + fmt(floorArea) + ' m² floor' },
+        { title: 'Windows', hint: 'Each window opening is cut and framed in our yard.', isCounter: true, value: s.win, decLabel: 'Fewer windows', incLabel: 'More windows', decDisabled: s.win <= 1, incDisabled: s.win >= maxWin, dec: () => this.setState({ win: s.win - 1 }), inc: () => this.setState({ win: s.win + 1 }), note: s.win >= maxWin ? 'Maximum ' + maxWin + ' for this wall length' : 'Up to ' + maxWin + ' on this size' },
+        { title: 'Layout', hint: 'Partitions are priced into the shell. Rooms resize as you add units or bays.', isCards: true, options: lays.map((l) => card(lay.k === l.k, l.name, l.sub, null, () => this.setState({ layout: l.k, view: 'plan' }))) }
+      ];
+    } else if (s.step === 2) {
+      stepTitle = 'Exterior';
+      const natural = s.clad === 'TMB' || s.clad === 'WPC';
+      groups = [
+        { title: 'Cladding', hint: 'Quantity is wall area minus openings, plus 10% waste.', isCards: true, options: itemCards(['FCB', 'CRG', 'TMB', 'WPC'], 'clad', cladQty) },
+        { title: 'Colour', hint: natural ? 'Timber and composite come in their natural finish.' : 'Factory-applied paint, matched on all trims.', isSwatch: true, options: Object.keys(D.colors).map((k) => { const c = D.colors[k]; const on = s.color === k && !natural; return { label: c.name, pressed: on ? 'true' : 'false', disabled: natural, pick: () => this.setState({ color: k }), dot: 'width:20px;height:20px;border-radius:50%;background:' + c.hex + ';border:1px solid rgba(0,0,0,.25);flex:0 0 auto', style: 'display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 10px;border-radius:999px;font:inherit;font-size:14px;color:#1B1A17;cursor:' + (natural ? 'not-allowed' : 'pointer') + ';opacity:' + (natural ? '0.45' : '1') + ';background:#FFFFFF;border:' + (on ? '2px solid #8A6A33' : '1px solid #D6CFC2') }; }) },
+        { title: 'Windows', hint: s.win + ' windows from the size step.', isCards: true, options: itemCards(['ALU', 'UPV'], 'winType', s.win, 'no.') },
+        { title: 'Main door', hint: 'Doors come pre-hung in a steel or timber frame.', isCards: true, options: itemCards(['STL', 'MAH', 'GLS'], 'door', doorsCount, 'no.') }
+      ];
+    } else if (s.step === 3) {
+      stepTitle = 'Interior';
+      groups = [
+        { title: 'Insulation', hint: 'Walls and roof, plus 5% waste. Thicker boards mean a cooler interior.', isCards: true, options: itemCards(['PIR', 'RW', 'PU'], 'ins', insQty) },
+        { title: 'Flooring', hint: 'Floor area plus 8% for cuts.', isCards: true, options: itemCards(['SPC', 'LAM', 'OAK', 'CON'], 'floor', floorQty) },
+        { title: 'Fitted packages', hint: 'Tap to add or remove.', isCards: true, options: [
+          card(s.kitchen, 'Kitchen', 'Units, worktop, sink and tap · KES ' + fmt(I.KIT.rate), badge(I.KIT, 1), () => this.setState({ kitchen: !s.kitchen })),
+          card(s.bath, 'Bathroom', 'Shower, WC, basin and plumbing · KES ' + fmt(I.BTH.rate), badge(I.BTH, 1), () => this.setState({ bath: !s.bath }))
+        ] }
+      ];
+    } else if (s.step === 4) {
+      stepTitle = 'Extras and site';
+      const extras = [card(s.solar, 'Solar 3 kW', 'Panels, inverter and battery · KES ' + fmt(I.SOL.rate), badge(I.SOL, 1), () => this.setState({ solar: !s.solar }))];
+      if (!isS) extras.push(card(s.deck, 'Front deck', fmt(deckQty) + ' m² WPC on steel · KES ' + fmt(I.DCK.rate) + ' / m²', badge(I.DCK, deckQty), () => this.setState({ deck: !s.deck })));
+      groups = [
+        { title: 'Extras', hint: 'Tap to add or remove.', isCards: true, options: extras },
+        { title: 'Delivery', hint: loads + ' truck load' + (loads > 1 ? 's' : '') + ' for this build. Foundations are priced by floor area.', isCards: true, options: Object.keys(D.zones).map((k) => card(s.zone === k, D.zones[k].name, 'KES ' + fmt(D.zones[k].rate) + ' per load', null, () => this.setState({ zone: k }))) }
+      ];
+    }
+    groups = groups.map((g) => Object.assign({ isCards: false, isSwatch: false, isCounter: false, options: [] }, g));
+
+    const stepNames = ['Building', 'Size', 'Exterior', 'Interior', 'Extras and site', 'Review'];
+    const steps = stepNames.map((n, i) => {
+      const cur = i === s.step, done = i < s.step;
+      return { num: String(i + 1).padStart(2, '0'), label: n, current: cur ? 'step' : 'false', pick: () => this.setState({ step: i, view: i === 5 ? 'boq' : s.view }), style: 'display:inline-flex;align-items:center;gap:10px;min-height:60px;padding:0;background:transparent;border:0;font:inherit;font-size:12px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;' + (cur ? 'color:#C9A46A;box-shadow:inset 0 2px 0 #C9A46A' : (done ? 'color:#F2EBDF' : 'color:#8C8475')) };
+    });
+
+    const VW = 720, G = 318, none = 'none', on = 'inline';
+    const blank = { x: 0, y: 0, w: 0, h: 0, x1: 0, y1: 0, x2: 0, y2: 0, pts: '0,0', d: none };
+    const pad = (arr, n) => { const out = arr.slice(0, n); while (out.length < n) out.push(blank); return out; };
+    let cladFill = D.colors[s.color].hex, pattern = 'url(#ribs)';
+    if (s.clad === 'TMB') { cladFill = '#A9744A'; pattern = 'url(#boards)'; }
+    else if (s.clad === 'WPC') { cladFill = '#6B5644'; pattern = 'url(#boards)'; }
+    else if (s.clad === 'FCB') { pattern = 'url(#panels)'; }
+    const doorFill = s.door === 'STL' ? '#2E3133' : (s.door === 'MAH' ? '#6E3F22' : '#9DB4BF');
+    const wins = [], joints = [], mulls = [], solars = [];
+    let bx, bw, by, bh, door = blank, rd = blank, deck = blank;
+    let roofPts = '0,0', roofFill = '#2F4550', roofD = none, bodyD = none, railD = none, afD = none, afOuter = '0,0', afInner = '0,0';
+    let dimText = '';
+    if (isA) {
+      const ppm = Math.min(42, 250 / H);
+      bw = W * ppm; bh = H * ppm; bx = (VW - bw) / 2; by = G - bh;
+      const mid = bx + bw / 2, ix0 = bx + bw * 0.2, ix1 = bx + bw * 0.8, iy = G - bh * 0.6;
+      afD = on; afOuter = bx + ',' + G + ' ' + mid + ',' + by + ' ' + (bx + bw) + ',' + G; afInner = ix0 + ',' + G + ' ' + mid + ',' + iy + ' ' + ix1 + ',' + G;
+      const n = Math.min(s.win, 6);
+      for (let i = 1; i <= n; i++) { const x = ix0 + (ix1 - ix0) * i / (n + 1); const t = x <= mid ? (x - ix0) / (mid - ix0) : (ix1 - x) / (ix1 - mid); mulls.push({ x1: x, y1: G, x2: x, y2: G - t * (G - iy), d: on }); }
+      const dw = (s.door === 'GLS' ? 2.4 : 0.95) * ppm, dh = 2.1 * ppm;
+      door = { x: mid - dw / 2, y: G - dh, w: dw, h: dh, d: on };
+      if (s.solar) {
+        const dx = mid - bx, dy = by - G, l = Math.sqrt(dx * dx + dy * dy), ux = dx / l, uy = dy / l, nx = uy, ny = -ux;
+        for (let k = 0; k < 3; k++) {
+          const t1 = 0.3 + k * 0.14, t2 = t1 + 0.12;
+          const ax = bx + ux * l * t1 + nx * 3, ay = G + uy * l * t1 + ny * 3, bx2 = bx + ux * l * t2 + nx * 3, by2 = G + uy * l * t2 + ny * 3;
+          solars.push({ pts: ax + ',' + ay + ' ' + bx2 + ',' + by2 + ' ' + (bx2 + nx * 10) + ',' + (by2 + ny * 10) + ' ' + (ax + nx * 10) + ',' + (ay + ny * 10), d: on });
+        }
+      }
+      if (s.deck) deck = { x: bx - 30, y: G - 9, w: bw + 60, h: 9, d: on };
+      dimText = W + ' m wide · ' + mod + ' bays, ' + len + ' m deep · ' + H + ' m to ridge';
+    } else {
+      const ppm = Math.min(46, 600 / len);
+      bw = len * ppm; bh = H * ppm; bx = (VW - bw) / 2; by = G - bh; bodyD = on;
+      if (isC) {
+        railD = on;
+        for (let k = 1; k < mod; k++) joints.push({ x1: bx + k * b.L * ppm, y1: by, x2: bx + k * b.L * ppm, y2: G, d: on });
+      }
+      if (isCab || isS) {
+        const rise = (W / 2) * Math.tan(isCab ? Math.PI / 6 : Math.PI / 30) * ppm, ov = (isCab ? 0.4 : 0.2) * ppm;
+        roofD = on; roofFill = isCab ? '#2F4550' : '#5E6E76';
+        roofPts = (bx - ov) + ',' + (by + 3) + ' ' + (bx + bw + ov) + ',' + (by + 3) + ' ' + (bx + bw + ov - rise * 0.7) + ',' + (by - rise) + ' ' + (bx - ov + rise * 0.7) + ',' + (by - rise);
+        if (isS) for (let k = 1; k < mod; k++) joints.push({ x1: bx + k * b.L * ppm, y1: by, x2: bx + k * b.L * ppm, y2: G, d: on });
+        if (s.solar) {
+          const yt = by - rise + 3, yb = by - 1, pw = bw * 0.12;
+          for (let k = 0; k < 4; k++) { const x = bx + bw * 0.16 + k * bw * 0.17; solars.push({ pts: x + ',' + yb + ' ' + (x + pw) + ',' + yb + ' ' + (x + pw) + ',' + yt + ' ' + x + ',' + yt, d: on }); }
+        }
+      }
+      if (isC && s.solar) {
+        const count = Math.min(5, Math.max(2, Math.floor(bw / 80)));
+        const pw = Math.min(56, bw / count - 14);
+        for (let k = 0; k < count; k++) { const x = bx + 16 + k * (pw + 14); solars.push({ pts: x + ',' + (by - 7) + ' ' + (x + pw) + ',' + (by - 7) + ' ' + (x + pw - 8) + ',' + (by - 22) + ' ' + (x - 8) + ',' + (by - 22), d: on }); }
+      }
+      const fw = Math.ceil(s.win / 2);
+      let ww, wh, wy, start, end;
+      if (isS) {
+        const dw = 0.95 * ppm, dh = 2.1 * ppm;
+        door = { x: bx + bw * 0.06, y: G - dh, w: dw, h: dh, d: on };
+        rd = { x: bx + bw / 2 - 2 * ppm, y: G - 4 * ppm, w: 4 * ppm, h: 4 * ppm, d: on };
+        ww = 1.8 * ppm; wh = 0.9 * ppm; wy = by + bh * 0.12; start = bx + 0.5 * ppm; end = bx + bw - 0.5 * ppm;
+      } else {
+        const dw = (s.door === 'GLS' ? 2.4 : 0.95) * ppm, dh = 2.1 * ppm;
+        door = { x: bx + Math.max(0.5 * ppm, bw * 0.06), y: G - dh, w: dw, h: dh, d: on };
+        ww = 1.2 * ppm; wh = 1.2 * ppm; wy = by + bh * 0.22; start = door.x + door.w + 0.5 * ppm; end = bx + bw - 0.4 * ppm;
+      }
+      const spacing = (end - start) / fw;
+      if (ww > spacing * 0.8) ww = spacing * 0.8;
+      for (let i = 0; i < fw; i++) wins.push({ x: start + spacing * (i + 0.5) - ww / 2, y: wy, w: ww, h: wh, d: on });
+      if (s.deck && !isS) deck = { x: bx - 14, y: G - 9, w: bw + 28, h: 9, d: on };
+      dimText = len.toFixed(1) + ' m long · ' + W + ' m wide · ' + H + ' m high';
+    }
+    const pppm = Math.min(620 / len, 220 / W);
+    const ppw = len * pppm, pph = W * pppm, ppx = (720 - ppw) / 2, ppy = (380 - pph) / 2 - 12;
+    let acc = 0;
+    const rooms = lay.rooms.map((r) => {
+      let label = r[0];
+      if (label === 'Bath' && !s.bath) label = 'Store';
+      const x = ppx + acc * ppw, w = r[1] * ppw;
+      acc += r[1];
+      const fill = label === 'Bath' ? '#DCE7EC' : ((label.indexOf('Bed') === 0 || label === 'Sleep') ? '#EFE4D3' : (label === 'Store' ? '#E6E1D8' : '#FBF8F2'));
+      return { x: x, y: ppy, w: w, h: pph, tx: x + w / 2, ty: ppy + pph / 2 + 4, label: label, fill: fill, d: on, dims: (r[1] * len).toFixed(1) + ' × ' + W.toFixed(1) + ' m', area: (r[1] * len * W).toFixed(1) + ' m²' };
+    });
+    const pFront = [], pBack = [];
+    const pWinW = (isS ? 1.8 : 1.2) * pppm;
+    const nF = Math.ceil(s.win / 2), nB = Math.floor(s.win / 2);
+    const pDoorW = (isS ? 4 : (s.door === 'GLS' ? 2.4 : 0.95)) * pppm;
+    const pDoorX = isS ? ppx + ppw / 2 - pDoorW / 2 : ppx + Math.max(0.5 * pppm, ppw * 0.06);
+    const fStart = isS ? ppx : pDoorX + pDoorW + 0.3 * pppm, fEnd = ppx + ppw;
+    for (let i = 0; i < nF; i++) { const sp = (fEnd - fStart) / nF, ww2 = Math.min(pWinW, sp * 0.8); pFront.push({ x: fStart + sp * (i + 0.5) - ww2 / 2, y: ppy + pph - 4, w: ww2, h: 8, d: on }); }
+    for (let i = 0; i < nB; i++) { const sp = ppw / nB, ww2 = Math.min(pWinW, sp * 0.8); pBack.push({ x: ppx + sp * (i + 0.5) - ww2 / 2, y: ppy - 4, w: ww2, h: 8, d: on }); }
+    const roomBlank = { x: 0, y: 0, w: 0, h: 0, tx: 0, ty: 0, label: '', fill: 'none', d: none };
+    const slots = { ppx: ppx, ppy: ppy, ppw: ppw, pph: pph, pdoor: { x: pDoorX, y: ppy + pph - 5, w: pDoorW, h: 10 } };
+    const rs = rooms.slice(0, 5); while (rs.length < 5) rs.push(roomBlank);
+    rs.forEach((v, i) => { slots['r' + i] = v; });
+    pad(pFront, 6).forEach((v, i) => { slots['pf' + i] = v; });
+    pad(pBack, 6).forEach((v, i) => { slots['pb' + i] = v; });
+    pad(wins, 6).forEach((v, i) => { slots['w' + i] = v; });
+    pad(joints, 7).forEach((v, i) => { slots['j' + i] = v; });
+    pad(mulls, 6).forEach((v, i) => { slots['m' + i] = v; });
+    pad(solars, 5).forEach((v, i) => { slots['s' + i] = v; });
+
+    const tab = (onTab) => 'min-height:44px;padding:0 18px;border:0;font:inherit;font-size:15px;font-weight:600;cursor:pointer;' + (onTab ? 'background:#1B1A17;color:#F4F1EB' : 'background:#FFFFFF;color:#1B1A17');
+    const isReview = s.step === 5;
+    const handoffs = s.done === 'deposit' ? [
+      { team: 'Payments', text: 'M-Pesa prompt sent for KES ' + fmt(deposit) + '. Production slot held for 48 hours.' },
+      { team: 'Sales', text: 'Order SO-0142 created in the CRM with this configuration and BOQ attached.' },
+      { team: 'Engineering', text: 'Drawing pack and BIM model queued for approval' + (flags.length ? ', with ' + flags.length + ' check' + (flags.length > 1 ? 's' : '') + ' flagged.' : '.') },
+      { team: 'Procurement', text: (lines.filter((l) => l.bd.text !== 'Service').length - back.length) + ' stocked lines reserved, ' + back.length + ' purchase request' + (back.length === 1 ? '' : 's') + ' raised.' },
+      { team: 'Marketing', text: 'Tagged as a customer for handover photos and a review request.' }
+    ] : [
+      { team: 'Sales', text: 'Lead L-2291 created in the CRM with quote Q-0142 attached. An advisor calls within one working day.' },
+      { team: 'Engineering', text: 'Review ticket ENG-0318 opened' + (flags.length ? ' with ' + flags.length + ' check' + (flags.length > 1 ? 's' : '') + ' flagged.' : ' for a standard check.') },
+      { team: 'Procurement', text: 'Stock check saved. Nothing is reserved until a deposit is paid.' },
+      { team: 'Marketing', text: 'Added to the quote follow-up journey by email and WhatsApp.' }
+    ];
+    const nextNames = ['Size', 'Exterior', 'Interior', 'Extras and site', 'Review quote'];
+
+    return Object.assign({
+      baseName: b.name, mod: mod, steps: steps, stepTitle: stepTitle, groups: groups,
+      floorArea: fmt(floorArea), footprint: (isA ? W + ' × ' + len : len.toFixed(1) + ' × ' + W) + ' m', lead: lead, flagCount: flags.length,
+      boq: boq, summary: summary, lineCount: lines.length,
+      subtotal: fmt(sub), vat: fmt(vat), total: fmt(total), deposit: fmt(deposit),
+      stockDot: back.length ? '#C77700' : '#2E8B4E',
+      stockText: back.length ? back.length + ' item' + (back.length > 1 ? 's' : '') + ' on backorder' : 'All stocked items available now',
+      flags: flags, hasFlags: flags.length > 0,
+      viewElev: s.view === 'elev', viewBoq: s.view === 'boq', viewPlan: s.view === 'plan', elevPressed: s.view === 'elev' ? 'true' : 'false', boqPressed: s.view === 'boq' ? 'true' : 'false', planPressed: s.view === 'plan' ? 'true' : 'false',
+      elevTab: tab(s.view === 'elev'), boqTab: tab(s.view === 'boq'), planTab: tab(s.view === 'plan'),
+      showElevation: () => this.setState({ view: 'elev' }), showBoq: () => this.setState({ view: 'boq' }), showPlan: () => this.setState({ view: 'plan' }),
+      rooms: rooms, layoutName: lay.name.toUpperCase(),
+      planDim: len.toFixed(1) + ' m × ' + W + ' m · ' + fmt(len * W) + ' m² footprint',
+      planLabel: 'Floor plan, ' + lay.name + ': ' + rooms.map((r) => r.label + ' ' + r.dims).join(', '),
+      planNote: isA ? 'Plus a sleeping loft above the living area, counted in the floor area. Layout changes go to an engineer before production.' : 'Room sizes are indicative. An engineer confirms the final layout before production.',
+      notReview: !isReview && !s.done, showActions: isReview && !s.done, isDone: !!s.done,
+      doneTitle: s.done === 'deposit' ? 'Deposit requested. Your slot is on hold.' : 'Sent for engineer review',
+      handoffs: handoffs,
+      atStart: s.step === 0, nextLabel: nextNames[s.step] || 'Next',
+      goBack: () => this.setState({ step: Math.max(0, s.step - 1), done: '' }),
+      goNext: () => this.setState({ step: Math.min(5, s.step + 1), view: s.step + 1 === 5 ? 'boq' : s.view }),
+      payDeposit: () => this.setState({ done: 'deposit', toast: '' }),
+      requestReview: () => this.setState({ done: 'review', toast: '' }),
+      downloadQuote: () => this.setState({ toast: 'Quote PDF for Q-0142 generated with plans, finishes and payment terms (prototype).' }),
+      save: () => this.setState({ toast: 'Saved to your account. Sales can see this configuration.' }),
+      share: () => this.setState({ toast: 'Share link copied (prototype).' }),
+      restart: () => this.setState({ step: 0, done: '', view: 'elev' }),
+      toastOn: !!s.toast, toast: s.toast,
+      svgLabel: 'Front elevation of the ' + b.name + ', ' + dimText,
+      cladFill: cladFill, pattern: pattern, doorFill: doorFill, winStroke: s.winType === 'UPV' ? '#F4F1EB' : '#1B1A17',
+      jointColor: isC ? '#1B1A17' : 'rgba(0,0,0,0.35)', jointW: isC ? 4 : 2,
+      bx: bx, by: by, bw: bw, bh: bh, bodyD: bodyD, railD: railD, railX: bx - 3, railY: by - 7, railW: bw + 6,
+      roofPts: roofPts, roofFill: roofFill, roofD: roofD, afD: afD, afOuter: afOuter, afInner: afInner,
+      door: door, rd: rd, deck: deck, dimX1: bx, dimX2: bx + bw, dimText: dimText
+    }, slots);
+  }
+}
+</script>
+</body>
+</html>

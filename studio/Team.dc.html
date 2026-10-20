@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Team portal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#E9E5DD}
+a{color:#6B4F22}a:hover{color:#4A3616}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;background:#8A6A33;color:#FFFFFF;border:0;border-radius:4px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+.btn:hover{background:#6B4F22;color:#FFFFFF}
+.btn-line{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;background:#FFFFFF;color:#1B1A17;border:1.5px solid #1B1A17;border-radius:4px;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.btn-line:hover{background:#1B1A17;color:#F4F1EB}
+.btn-line:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#1B1A17;background:#E9E5DD;min-height:100vh">
+
+<header style="background:#2F4550;color:#F4F1EB">
+<div style="padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px">
+<a href="Main.dc.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#F4F1EB;min-height:48px">
+<svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 26 L15 5 L27 26 Z" fill="none" stroke="#C9A46A" stroke-width="2.5" stroke-linejoin="round"></path><path d="M10 26 V18 H20 V26" fill="none" stroke="#F4F1EB" stroke-width="2"></path></svg>
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:21px;letter-spacing:.05em;text-transform:uppercase">Firmcop · Team portal</span>
+</a>
+<label for="q" style="position:absolute;left:-9999px">Search quotes and orders</label>
+<input id="q" type="search" placeholder="Search quotes, customers, SKUs" style="flex:1 1 260px;min-height:44px;padding:0 14px;border:0;border-radius:4px;font:inherit;font-size:15px;background:#F4F1EB;color:#1B1A17;max-width:520px">
+<span style="font-size:14px;color:#D4DDE1">Signed in as [Staff name]</span>
+</div>
+</header>
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-start">
+<nav aria-label="Team views" style="flex:1 1 220px;max-width:100%;padding:20px 16px;display:flex;flex-direction:column;gap:4px">
+<p style="margin:0 0 8px 8px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase;letter-spacing:.08em">View as</p>
+<sc-for list="{{roles}}" as="r" hint-placeholder-count="4">
+<button type="button" aria-current="{{r.current}}" onClick="{{r.pick}}" style="{{r.style}}"><span style="font-weight:600">{{r.label}}</span><span style="font-size:12px;opacity:.8">{{r.sub}}</span></button>
+</sc-for>
+<p style="margin:16px 8px 0;font-size:12px;color:#5C5850;line-height:1.5">One record per configuration. Every team edits the same quote, BOQ and model.</p>
+</nav>
+
+<main style="flex:999 1 900px;min-width:0;padding:20px 24px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
+<div>
+<p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase;letter-spacing:.08em">Pipeline · Sample data</p>
+<h1 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:44px;line-height:1;text-transform:uppercase">{{roleTitle}}</h1>
+</div>
+<span style="font-size:14px;color:#5C5850">{{roleHint}}</span>
+</div>
+
+<sc-if value="{{notDist}}" hint-placeholder-val="{{true}}">
+<section aria-label="Pipeline board" style="overflow-x:auto;padding-bottom:6px">
+<div style="display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;min-width:1040px">
+<sc-for list="{{cols}}" as="c" hint-placeholder-count="5">
+<div style="background:#F4F1EB;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:220px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 2px 4px"><h2 style="margin:0;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">{{c.name}}</h2><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{c.count}}</span></div>
+<sc-for list="{{c.cards}}" as="k" hint-placeholder-count="2">
+<button type="button" aria-pressed="{{k.pressed}}" onClick="{{k.pick}}" style="{{k.style}}">
+<span style="display:flex;justify-content:space-between;gap:6px;width:100%"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{k.id}}</span><span style="{{k.tagStyle}}">{{k.tag}}</span></span>
+<strong style="font-size:15px;line-height:1.25">{{k.model}}</strong>
+<span style="font-size:13px;color:#5C5850">{{k.customer}} · {{k.place}}</span>
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:19px">KES {{k.valueLabel}}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-label="Selected configuration" style="background:#FFFFFF;border:1px solid #D6CFC2;border-radius:6px;padding:22px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px">
+<div>
+<p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{sel.id}} · {{sel.stage}} · {{sel.owner}}</p>
+<h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:34px;text-transform:uppercase;line-height:1">{{sel.model}}</h2>
+<p style="margin:6px 0 0;font-size:15px;color:#3D3A34">{{sel.customer}} · {{sel.place}} · {{sel.spec}}</p>
+</div>
+<div style="text-align:right"><div style="font-size:13px;color:#5C5850">Quote value incl. VAT</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:34px">KES {{netValue}}</div></div>
+</div>
+
+<sc-if value="{{isSales}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;flex-wrap:wrap;gap:20px">
+<div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:10px">
+<h3 style="margin:0;font-size:16px">Quote versions</h3>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px">
+<li style="display:flex;justify-content:space-between;gap:8px;padding:10px 12px;background:#F4F1EB;border-radius:4px"><span>v3 · Customer swapped to uPVC windows</span><span style="font-family:'IBM Plex Mono',monospace">Current</span></li>
+<li style="display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid #EAE4D8;border-radius:4px;color:#5C5850"><span>v2 · Added solar and deck</span><span style="font-family:'IBM Plex Mono',monospace">Superseded</span></li>
+<li style="display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid #EAE4D8;border-radius:4px;color:#5C5850"><span>v1 · Saved from website</span><span style="font-family:'IBM Plex Mono',monospace">Superseded</span></li>
+</ol>
+<h3 style="margin:8px 0 0;font-size:16px">Activity</h3>
+<p style="margin:0;font-size:14px;color:#5C5850;line-height:1.5">Viewed the configurator 6 times. Downloaded the quote PDF. Opened the follow-up WhatsApp message.</p>
+</div>
+<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:12px;background:#F4F1EB;border-radius:6px;padding:16px">
+<h3 style="margin:0;font-size:16px">Discount</h3>
+<div style="display:flex;align-items:center;gap:12px">
+<button type="button" class="btn-line" aria-label="Lower discount" disabled="{{discMin}}" onClick="{{discDown}}">−</button>
+<output aria-live="polite" style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:30px;min-width:56px;text-align:center">{{disc}}%</output>
+<button type="button" class="btn-line" aria-label="Raise discount" disabled="{{discMax}}" onClick="{{discUp}}">+</button>
+</div>
+<p style="margin:0;font-size:13px;color:#5C5850;line-height:1.45">{{discNote}}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="btn" onClick="{{act}}">Send revised quote</button>
+<a class="btn-line" href="design-studio.html">Open in Studio</a>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isEng}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-wrap:wrap;gap:20px">
+<div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:10px">
+<h3 style="margin:0;font-size:16px">Checks raised by the configurator</h3>
+<sc-for list="{{selFlags}}" as="f" hint-placeholder-count="2">
+<label style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:#FFF1D6;border-radius:4px;font-size:14px;line-height:1.45;color:#5A3D00;cursor:pointer"><input type="checkbox" style="width:20px;height:20px;margin:0;flex:0 0 auto">{{f.text}}</label>
+</sc-for>
+<sc-if value="{{noFlags}}" hint-placeholder-val="{{false}}"><p style="margin:0;font-size:14px;color:#1F5A2E;background:#E3F1E6;padding:12px;border-radius:4px">Standard design. No structural checks flagged.</p></sc-if>
+<h3 style="margin:8px 0 0;font-size:16px">Add a variation</h3>
+<p style="margin:0;font-size:14px;color:#5C5850;line-height:1.5">Variations become priced BOQ lines the customer approves, for example an extra steel post or a thicker floor plate.</p>
+</div>
+<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:10px;background:#F4F1EB;border-radius:6px;padding:16px">
+<h3 style="margin:0;font-size:16px">Model and drawings</h3>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="btn-line" onClick="{{act}}">Export IFC</button>
+<button type="button" class="btn-line" onClick="{{act}}">Open in Revit</button>
+<button type="button" class="btn-line" onClick="{{act}}">DWG pack</button>
+</div>
+<button type="button" class="btn" onClick="{{act}}">Approve drawings and release to production</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isProc}}" hint-placeholder-val="{{false}}">
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:640px">
+<thead><tr style="text-align:left;color:#5C5850;font-size:12px;text-transform:uppercase;letter-spacing:.05em"><th scope="col" style="padding:8px 8px 8px 0;font-weight:500">SKU</th><th scope="col" style="padding:8px;font-weight:500">Item</th><th scope="col" style="padding:8px;font-weight:500;text-align:right">Needed</th><th scope="col" style="padding:8px;font-weight:500;text-align:right">On hand</th><th scope="col" style="padding:8px 0 8px 8px;font-weight:500">Status</th></tr></thead>
+<tbody>
+<sc-for list="{{bom}}" as="m" hint-placeholder-count="6">
+<tr style="border-top:1px solid #EAE4D8"><td style="padding:10px 8px 10px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{m.sku}}</td><td style="padding:10px 8px">{{m.name}}</td><td style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{m.need}}</td><td style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{m.have}}</td><td style="padding:10px 0 10px 8px"><span style="{{m.style}}">{{m.status}}</span></td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="btn" onClick="{{act}}">Raise purchase requests</button>
+<button type="button" class="btn-line" onClick="{{act}}">Print cut list</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isMkt}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-wrap:wrap;gap:20px">
+<div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px">
+<h3 style="margin:0;font-size:16px">Configurator funnel · last 30 days · sample</h3>
+<sc-for list="{{funnel}}" as="u" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>{{u.label}}</span><span style="font-family:'IBM Plex Mono',monospace">{{u.n}}</span></div><div style="height:10px;background:#EAE4D8;border-radius:2px"><div style="{{u.bar}}"></div></div></div>
+</sc-for>
+</div>
+<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:10px;background:#F4F1EB;border-radius:6px;padding:16px">
+<h3 style="margin:0;font-size:16px">Most chosen options · sample</h3>
+<ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8">
+<li>Container 40 ft, one unit</li><li>Fibre cement in charcoal</li><li>PIR board 100 mm</li><li>SPC vinyl flooring</li><li>Front deck</li>
+</ol>
+<button type="button" class="btn" onClick="{{act}}">Send follow-up to saved quotes</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+<p role="status" style="margin:0;padding:10px 14px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:14px">{{toast}}</p>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{isDist}}" hint-placeholder-val="{{false}}">
+<section aria-label="Channel health" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+<sc-for list="{{health}}" as="h" hint-placeholder-count="7">
+<div style="background:#FFFFFF;border:1px solid #D6CFC2;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+<strong style="font-size:14px">{{h.name}}</strong>
+<span style="{{h.style}}">{{h.status}}</span>
+<span style="font-size:12px;color:#5C5850">{{h.last}}</span>
+</div>
+</sc-for>
+</section>
+
+<section aria-labelledby="sim" style="background:#1B1A17;color:#F4F1EB;border-radius:6px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<h2 id="sim" style="margin:0;font-size:15px;font-weight:600;flex:1 1 240px">Fire a test event <span style="font-weight:400;color:#CFC8BA">and watch it fan out</span></h2>
+<sc-for list="{{sims}}" as="b" hint-placeholder-count="4">
+<button type="button" onClick="{{b.fire}}" style="min-height:44px;padding:0 14px;background:#F4F1EB;color:#1B1A17;border:0;border-radius:4px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{b.label}}</button>
+</sc-for>
+</section>
+
+<sc-if value="{{distToastOn}}" hint-placeholder-val="{{false}}">
+<p role="status" style="margin:0;padding:12px 16px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:14px">{{distToast}}</p>
+</sc-if>
+
+<section aria-label="Distribution console" style="background:#FFFFFF;border:1px solid #D6CFC2;border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:16px">
+<div role="group" aria-label="Distribution view" style="display:flex;border:1.5px solid #1B1A17;border-radius:4px;overflow:hidden;align-self:flex-start;flex-wrap:wrap">
+<sc-for list="{{distTabs}}" as="t" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{rulesTab}}" hint-placeholder-val="{{true}}">
+<div style="overflow-x:auto">
+<div role="table" aria-label="Event to channel rules" style="min-width:980px;font-size:14px">
+<div role="row" style="{{ruleGrid}};color:#5C5850;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding-bottom:8px">
+<span role="columnheader">Event</span>
+<sc-for list="{{chNames}}" as="c" hint-placeholder-count="7"><span role="columnheader" style="text-align:center">{{c.name}}</span></sc-for>
+<span role="columnheader">Publishing</span>
+</div>
+<sc-for list="{{ruleRows}}" as="r" hint-placeholder-count="6">
+<div role="row" style="{{ruleGrid}};border-top:1px solid #EAE4D8;padding:6px 0">
+<span role="rowheader" style="font-weight:600">{{r.name}}</span>
+<sc-for list="{{r.cells}}" as="c" hint-placeholder-count="7">
+<span role="cell" style="display:flex;justify-content:center;align-items:center;min-height:44px">
+<sc-if value="{{c.ok}}" hint-placeholder-val="{{true}}"><input type="checkbox" aria-label="{{c.label}}" checked="{{c.on}}" onChange="{{c.toggle}}" style="width:20px;height:20px;margin:0;cursor:pointer;accent-color:#8A6A33"></sc-if>
+<sc-if value="{{c.na}}" hint-placeholder-val="{{false}}"><span aria-label="Not applicable" style="color:#BDB29C">—</span></sc-if>
+</span>
+</sc-for>
+<span role="cell" style="font-size:13px;color:#3D3A34">{{r.mode}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<p style="margin:0;font-size:13px;color:#5C5850;line-height:1.5">Changes within 15 minutes are batched into one push. Factual updates (prices, stock, pages, feeds) go out automatically. Anything creative waits in the approval queue. Messages go only to people with a recorded opt-in.</p>
+</sc-if>
+
+<sc-if value="{{queueTab}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{queueEmpty}}" hint-placeholder-val="{{false}}"><p style="margin:0;font-size:15px;color:#5C5850">Nothing waiting. Fire a project or investment event to create drafts.</p></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+<sc-for list="{{queue}}" as="q" hint-placeholder-count="2">
+<article style="border:1px solid #D6CFC2;border-radius:6px;overflow:hidden;display:flex;flex-direction:column">
+<div style="aspect-ratio:16/9;background:#E2DCCF;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">[Media from the project record]</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:8px;flex:1">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{q.ch}} · from “{{q.ev}}”</span>
+<p style="margin:0;font-size:15px;line-height:1.5">{{q.text}}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:auto">
+<button type="button" class="btn" onClick="{{q.approve}}">Approve and publish</button>
+<button type="button" class="btn-line" onClick="{{q.edit}}">Edit</button>
+<button type="button" class="btn-line" onClick="{{q.reject}}">Reject</button>
+</div>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{logTab}}" hint-placeholder-val="{{false}}">
+<div style="overflow-x:auto">
+<div role="table" aria-label="Push log" style="min-width:900px;font-size:14px">
+<div role="row" style="{{logGrid}};color:#5C5850;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding-bottom:8px">
+<span role="columnheader">Time</span><span role="columnheader">Event</span><span role="columnheader">Channel</span><span role="columnheader">What was pushed</span><span role="columnheader">Status</span><span role="columnheader"><span style="position:absolute;left:-9999px">Action</span></span>
+</div>
+<sc-for list="{{logRows}}" as="l" hint-placeholder-count="6">
+<div role="row" style="{{logGrid}};border-top:1px solid #EAE4D8;padding:8px 0;align-items:center">
+<span role="cell" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">{{l.t}}</span>
+<span role="cell">{{l.ev}}</span>
+<span role="cell" style="font-weight:600">{{l.ch}}</span>
+<span role="cell" style="color:#3D3A34">{{l.target}}<sc-if value="{{l.hasErr}}" hint-placeholder-val="{{false}}"><span style="display:block;font-size:13px;color:#7A3A00">{{l.err}}</span></sc-if></span>
+<span role="cell"><span style="{{l.style}}">{{l.st}}</span></span>
+<span role="cell"><sc-if value="{{l.canRetry}}" hint-placeholder-val="{{false}}"><button type="button" class="btn-line" onClick="{{l.retry}}">Retry</button></sc-if></span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</section>
+</sc-if>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ role: 'sales', sel: 'Q-0142', disc: 0, toast: '' }, this.initDist());
+  }
+  initDist() {
+    return {
+      distTab: 'rules', seq: 0, distToast: '',
+      rules: {
+        price: { pages: true, indexnow: true, merchant: true, direct: true, team: true },
+        design: { pages: true, indexnow: true, gbp: true, social: true, direct: true },
+        project: { pages: true, indexnow: true, gbp: true, social: true, direct: true },
+        stock: { pages: true, merchant: true, direct: true, team: true },
+        invest: { pages: true, indexnow: true, social: true, direct: true, team: true },
+        report: { pages: true, indexnow: true, social: true, direct: true }
+      },
+      queue: [
+        { id: 'q1', ch: 'Instagram · carousel', ev: 'Project completed', text: 'Twenty-four cabins, one river. [Riverside eco-resort] is handed over, built in our yard in 14 weeks.' },
+        { id: 'q2', ch: 'Pinterest · pin', ev: 'Project completed', text: 'Riverside eco-resort: 20 ft container cabins with cypress cladding and composite decks.' }
+      ],
+      log: [
+        { id: 'l1', t: '21:41', ev: 'Project completed', ch: 'Business Profile', target: 'Post + 8 photos for [Riverside eco-resort]', st: 'Failed', err: 'Sign-in expired. Reconnect, then retry.' },
+        { id: 'l2', t: '21:41', ev: 'Project completed', ch: 'Pages + sitemap', target: 'Case study page + 3 guides refreshed', st: 'Sent' },
+        { id: 'l3', t: '21:41', ev: 'Project completed', ch: 'IndexNow', target: '4 URLs submitted', st: 'Sent' },
+        { id: 'l4', t: '21:42', ev: 'Project completed', ch: 'WhatsApp + email', target: 'Review request to [Client]', st: 'Sent' },
+        { id: 'l5', t: '21:12', ev: 'Price changed', ch: 'Merchant Center', target: 'Price updated on 3 SKUs', st: 'Sent' },
+        { id: 'l6', t: '21:12', ev: 'Price changed', ch: 'Pages + sitemap', target: '22 pages refreshed, sitemap dates updated', st: 'Sent' }
+      ]
+    };
+  }
+  distChannels() {
+    return [
+      { k: 'pages', name: 'Pages + sitemap' }, { k: 'indexnow', name: 'IndexNow' }, { k: 'merchant', name: 'Merchant Center' },
+      { k: 'gbp', name: 'Business Profile' }, { k: 'social', name: 'Social drafts' }, { k: 'direct', name: 'WhatsApp + email' }, { k: 'team', name: 'Team alert' }
+    ];
+  }
+  distEvents() {
+    return [
+      { k: 'price', name: 'Price changed', btn: 'PIR board price +5%', example: 'PIR board 100 mm, KES 1,850 to 1,940', mode: 'Automatic', drafts: [], targets: { pages: '14 pages refreshed: store, 2 designs, 9 cost guides, ROI defaults', indexnow: '14 URLs submitted', merchant: 'Price updated on INS-PIR100', direct: '38 people who saved affected designs (opted in)', team: 'Sales: 6 open draft quotes need recalculating' } },
+      { k: 'design', name: 'New design published', example: 'New design live', mode: 'Automatic, social needs approval', drafts: [{ ch: 'Instagram · post', text: 'New in the collection.' }], targets: { pages: 'Design page, catalog and 4 guides', indexnow: '6 URLs submitted', gbp: 'Product added to Business Profile', social: 'Drafts waiting for approval', direct: 'Newsletter item queued', team: 'Sales briefed' } },
+      { k: 'project', name: 'Project completed', btn: 'Project handed over', example: '[Hilltop pod village] handed over', mode: 'Automatic, social needs approval', drafts: [{ ch: 'Instagram · reel', text: 'Sixteen pods, one hilltop. [Hilltop pod village] is handed over, 12 weeks from yard to first guests.' }, { ch: 'YouTube · short', text: 'Time-lapse: a 20 ft pod from bare steel to finished cabin.' }], targets: { pages: 'Case study page + 3 guides', indexnow: '4 URLs submitted', gbp: 'Post + 8 photos', social: '2 drafts waiting for approval', direct: 'Review request to the client', team: 'Marketing notified' } },
+      { k: 'stock', name: 'Stock low or restocked', btn: 'Window stock low', example: 'uPVC window 1.2 × 1.2 m down to 2', mode: 'Automatic', drafts: [], targets: { pages: '2 store pages; configurator lead time +3 weeks', merchant: 'Availability set to limited stock', direct: '5 waitlisted buyers told', team: 'Procurement: purchase request drafted' } },
+      { k: 'invest', name: 'Investment opens or fills', btn: 'Opportunity opened', example: '[Lakeside cabins] open for reservation', mode: 'Automatic, social needs approval', drafts: [{ ch: 'LinkedIn · post', text: 'Now open: [Lakeside cabins]. Own a single cabin in a managed resort. Information pack and projections on our site.' }, { ch: 'Instagram · post', text: 'Own a cabin by the lake. Reservations for [Lakeside cabins] are open.' }], targets: { pages: 'Opportunity page + Invest page', indexnow: '2 URLs submitted', social: '2 drafts waiting for approval', direct: '212 opted-in investors, WhatsApp + email', team: 'Investment advisors alerted' } },
+      { k: 'report', name: 'Price index published', example: 'Q4 cost index live', mode: 'Automatic, press kit needs approval', drafts: [{ ch: 'LinkedIn · post', text: 'Our quarterly Modular Building Cost Index is out.' }], targets: { pages: 'Report page; 12 guides cite it', indexnow: '13 URLs submitted', social: '1 draft waiting for approval', direct: 'Newsletter to all subscribers', team: 'PR: press kit ready' } }
+    ];
+  }
+  renderVals() {
+    const fmt = (n) => Math.round(n).toLocaleString('en-KE');
+    const pill = 'font-family:IBM Plex Mono,monospace;font-size:11px;padding:2px 6px;border-radius:3px;white-space:nowrap;';
+    const configs = [
+      { id: 'Q-0142', model: 'Container 40 ft × 1', customer: '[Customer A]', place: '[Town]', value: 3920000, stage: 'Engineering review', owner: '[Sales rep]', spec: 'Fibre cement, PIR 100, SPC, deck', flags: [], back: 1 },
+      { id: 'Q-0139', model: 'A-frame, 3 bays', customer: '[Customer B]', place: '[Town]', value: 6180000, stage: 'Engineering review', owner: '[Sales rep]', spec: 'Cypress, uPVC × 6, oak, solar', flags: ['Fully glazed gable: confirm glazing loads.'], back: 2 },
+      { id: 'Q-0145', model: 'Container 20 ft × 1', customer: '[Customer C]', place: '[Town]', value: 1290000, stage: 'New configuration', owner: 'Unassigned', spec: 'Corrugated oxide red, PU 50', flags: [], back: 0 },
+      { id: 'Q-0146', model: 'Steel structure, 7 bays', customer: '[Customer D]', place: '[Town]', value: 11450000, stage: 'New configuration', owner: 'Unassigned', spec: 'Corrugated charcoal, rockwool, 1 roller door', flags: ['Building over 35 m long: confirm wind bracing.'], back: 1 },
+      { id: 'Q-0131', model: 'Timber cabin, 4 bays', customer: '[Customer E]', place: '[Town]', value: 4870000, stage: 'Quote sent', owner: '[Sales rep]', spec: 'WPC, mahogany, laminate', flags: [], back: 1 },
+      { id: 'SO-0128', model: 'Container 40 ft × 2', customer: '[Customer F]', place: '[Town]', value: 7340000, stage: 'Deposit paid', owner: '[Sales rep]', spec: 'Fibre cement sage, PIR, SPC, solar', flags: ['Solar on a three-unit row: confirm roof fixings.'], back: 0 },
+      { id: 'SO-0117', model: 'Container 40 ft × 3', customer: '[Customer G]', place: '[Town]', value: 9960000, stage: 'In production', owner: '[Sales rep]', spec: 'Site camp spec', flags: [], back: 0 }
+    ];
+    const stages = ['New configuration', 'Engineering review', 'Quote sent', 'Deposit paid', 'In production'];
+    const roleDefs = [
+      { k: 'sales', label: 'Sales', sub: 'Quotes, discounts, follow-up', title: 'Sales pipeline', hint: 'Saved and ordered configurations arrive here automatically.' },
+      { k: 'eng', label: 'Engineering', sub: 'Checks, BIM, drawings', title: 'Engineering queue', hint: 'Configurator rules flag what needs a structural check.' },
+      { k: 'proc', label: 'Procurement', sub: 'BOM, stock, purchasing', title: 'Materials and stock', hint: 'BOM lines reserve stock once a deposit lands.' },
+      { k: 'mkt', label: 'Marketing', sub: 'Funnel, demand, nurture', title: 'Demand and follow-up', hint: 'What people configure tells you what to promote.' },
+      { k: 'dist', label: 'Distribution', sub: 'Push to search, feeds, people', title: 'Distribution', hint: 'Every change in the database is pushed out from here.' }
+    ];
+    const role = this.state.role;
+    const rd = roleDefs.find((r) => r.k === role);
+    const roles = roleDefs.map((r) => { const on = r.k === role; return { label: r.label, sub: r.sub, current: on ? 'page' : 'false', pick: () => this.setState({ role: r.k, toast: '' }), style: 'display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:44px;padding:10px 12px;border-radius:4px;font:inherit;font-size:15px;cursor:pointer;border:0;' + (on ? 'background:#1B1A17;color:#F4F1EB' : 'background:transparent;color:#1B1A17') }; });
+    const tagFor = (c) => {
+      if (role === 'eng') return c.flags.length ? { t: c.flags.length + ' check', s: pill + 'background:#FFF1D6;color:#6B4A00' } : { t: 'Standard', s: pill + 'background:#E3F1E6;color:#1F5A2E' };
+      if (role === 'proc') return c.back ? { t: c.back + ' backorder', s: pill + 'background:#FBE3CF;color:#7A3A00' } : { t: 'Stock OK', s: pill + 'background:#E3F1E6;color:#1F5A2E' };
+      if (role === 'mkt') return c.stage === 'Quote sent' ? { t: 'Nurture', s: pill + 'background:#E3E9EC;color:#22343C' } : { t: '', s: 'display:none' };
+      return c.owner === 'Unassigned' ? { t: 'Assign', s: pill + 'background:#FBE3CF;color:#7A3A00' } : { t: '', s: 'display:none' };
+    };
+    const cols = stages.map((st) => {
+      const cards = configs.filter((c) => c.stage === st).map((c) => {
+        const on = c.id === this.state.sel; const tg = tagFor(c);
+        return Object.assign({}, c, { valueLabel: fmt(c.value), tag: tg.t, tagStyle: tg.s, pressed: on ? 'true' : 'false', pick: () => this.setState({ sel: c.id, disc: 0, toast: '' }), style: 'text-align:left;display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:5px;background:#FFFFFF;font:inherit;color:#1B1A17;cursor:pointer;border:1px solid ' + (on ? '#8A6A33' : '#DDD6CA') + ';box-shadow:' + (on ? '0 0 0 2px #8A6A33' : 'none') });
+      });
+      return { name: st, count: cards.length, cards: cards };
+    });
+    const sel = configs.find((c) => c.id === this.state.sel);
+    const disc = this.state.disc;
+    const bomBase = [
+      { sku: 'STR-C40', name: 'Container 40 ft shell', need: 1, have: 4 },
+      { sku: 'CLD-FCB9', name: 'Fibre cement board 9 mm', need: 78, have: 640 },
+      { sku: 'INS-PIR100', name: 'PIR board 100 mm', need: 112, have: 420 },
+      { sku: 'FLR-SPC5', name: 'SPC vinyl plank 5 mm', need: 32, have: 500 },
+      { sku: 'WIN-UPV12', name: 'uPVC window 1.2 × 1.2 m', need: 8, have: 6 },
+      { sku: 'DR-STL', name: 'Steel security door', need: 1, have: 22 },
+      { sku: 'DCK-WPC', name: 'Deck, WPC on steel', need: 30, have: 300 }
+    ];
+    const bom = bomBase.map((m) => { const ok = m.have >= m.need; return Object.assign({}, m, { status: ok ? (sel.stage === 'Deposit paid' || sel.stage === 'In production' ? 'Reserved' : 'Available') : 'Short ' + (m.need - m.have) + ' · PR needed', style: pill + (ok ? 'background:#E3F1E6;color:#1F5A2E' : 'background:#FBE3CF;color:#7A3A00') }); });
+    const funnelRaw = [['Opened configurator', 1840], ['Finished step 3', 920], ['Saved a quote', 410], ['Requested review', 160], ['Paid deposit', 48]];
+    const funnel = funnelRaw.map((f) => ({ label: f[0], n: fmt(f[1]), bar: 'height:10px;border-radius:2px;background:#8A6A33;width:' + Math.max(2, f[1] / 1840 * 100) + '%' }));
+    const ds = this.state;
+    const evs = this.distEvents(), chs = this.distChannels();
+    const stStyle = (st) => pill + (st === 'Sent' || st === 'Published' ? 'background:#E3F1E6;color:#1F5A2E' : (st === 'Failed' ? 'background:#FBE3CF;color:#7A3A00' : (st === 'Rejected' ? 'background:#ECE8E0;color:#4A463F' : 'background:#FFF1D6;color:#6B4A00')));
+    const clock = (seq) => { const m = 21 * 60 + 56 + seq; return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const tabStyle = (on) => 'min-height:44px;padding:0 16px;border:0;font:inherit;font-size:14px;font-weight:600;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB' : 'background:#FFFFFF;color:#1B1A17');
+    const distTabs = [['rules', 'Rules'], ['queue', 'Approval queue (' + ds.queue.length + ')'], ['log', 'Push log']].map((t) => ({ label: t[1], pressed: ds.distTab === t[0] ? 'true' : 'false', pick: () => this.setState({ distTab: t[0] }), style: tabStyle(ds.distTab === t[0]) }));
+    const ruleRows = evs.map((e) => ({ name: e.name, mode: e.mode, cells: chs.map((c) => {
+      const na = (c.k === 'merchant' && e.k !== 'price' && e.k !== 'stock') || (c.k === 'gbp' && e.k !== 'project' && e.k !== 'design');
+      const isOn = !!(ds.rules[e.k] && ds.rules[e.k][c.k]);
+      return { na: na, ok: !na, on: isOn, label: c.name + ' when ' + e.name.toLowerCase(), toggle: () => { const r = JSON.parse(JSON.stringify(ds.rules)); r[e.k][c.k] = !isOn; this.setState({ rules: r }); } };
+    }) }));
+    const fire = (k) => {
+      const e = evs.find((x) => x.k === k);
+      let seq = ds.seq, sent = 0;
+      const log = ds.log.slice(), queue = ds.queue.slice();
+      chs.forEach((c) => {
+        if (!ds.rules[k][c.k] || !e.targets[c.k]) return;
+        seq += 1; sent += 1;
+        if (c.k === 'social') {
+          e.drafts.forEach((d, j) => queue.unshift({ id: 'q' + seq + '-' + j, ch: d.ch, ev: e.name, text: d.text }));
+          log.unshift({ id: 'l' + seq, t: clock(seq), ev: e.name, ch: c.name, target: e.targets[c.k], st: 'Awaiting approval' });
+        } else {
+          log.unshift({ id: 'l' + seq, t: clock(seq), ev: e.name, ch: c.name, target: e.targets[c.k], st: 'Sent' });
+        }
+      });
+      this.setState({ log: log.slice(0, 40), queue: queue, seq: seq, distTab: 'log', distToast: e.name + ': ' + e.example + '. Pushed to ' + sent + ' channel' + (sent === 1 ? '' : 's') + ' in one batch.' });
+    };
+    const sims = evs.filter((e) => e.btn).map((e) => ({ label: e.btn, fire: () => fire(e.k) }));
+    const decide = (q, ok) => {
+      const seq = ds.seq + 1;
+      const log = [{ id: 'l' + seq, t: clock(seq), ev: q.ev, ch: q.ch.split(' · ')[0], target: q.text.slice(0, 70) + (q.text.length > 70 ? '…' : ''), st: ok ? 'Published' : 'Rejected' }].concat(ds.log);
+      this.setState({ seq: seq, log: log, queue: ds.queue.filter((x) => x.id !== q.id), distToast: ok ? 'Published to ' + q.ch.split(' · ')[0] + ' (prototype).' : 'Draft rejected. Nothing was posted.' });
+    };
+    const queue = ds.queue.map((q) => Object.assign({}, q, { approve: () => decide(q, true), reject: () => decide(q, false), edit: () => this.setState({ distToast: 'Opens the draft editor with media from the project record (prototype).' }) }));
+    const logRows = ds.log.map((l) => Object.assign({}, l, { style: stStyle(l.st), hasErr: !!l.err && l.st === 'Failed', canRetry: l.st === 'Failed', retry: () => { const lg = ds.log.map((x) => x.id === l.id ? Object.assign({}, x, { st: 'Sent', err: '' }) : x); this.setState({ log: lg, distToast: 'Reconnected and retried. ' + l.ch + ' accepted the push.' }); } }));
+    const health = chs.map((c) => {
+      const mine = ds.log.filter((l) => l.ch === c.name);
+      const bad = mine.some((l) => l.st === 'Failed');
+      return { name: c.name, status: bad ? 'Needs attention' : 'Connected', style: pill + 'align-self:flex-start;' + (bad ? 'background:#FBE3CF;color:#7A3A00' : 'background:#E3F1E6;color:#1F5A2E'), last: mine.length ? 'Last push ' + mine[0].t : 'No pushes yet' };
+    });
+    const isDist = role === 'dist';
+    return {
+      isDist: isDist, notDist: !isDist, health: health, sims: sims, distTabs: distTabs,
+      rulesTab: ds.distTab === 'rules', queueTab: ds.distTab === 'queue', logTab: ds.distTab === 'log',
+      chNames: chs, ruleRows: ruleRows, queue: queue, queueEmpty: queue.length === 0, logRows: logRows,
+      ruleGrid: 'display:grid;grid-template-columns:minmax(180px,1.6fr) repeat(7,minmax(84px,1fr)) minmax(150px,1.3fr);gap:8px;align-items:center',
+      logGrid: 'display:grid;grid-template-columns:64px minmax(140px,1fr) minmax(130px,1fr) minmax(240px,2.4fr) 150px 90px;gap:10px',
+      distToastOn: !!ds.distToast, distToast: ds.distToast,
+      roles, cols, sel, roleTitle: rd.title, roleHint: rd.hint,
+      isSales: role === 'sales', isEng: role === 'eng', isProc: role === 'proc', isMkt: role === 'mkt',
+      netValue: fmt(sel.value * (1 - disc / 100)),
+      disc: disc, discMin: disc <= 0, discMax: disc >= 8,
+      discNote: disc > 5 ? 'Above 5% needs sales manager approval. A request will go with the quote.' : 'Up to 5% you can approve yourself. Margin stays visible to managers only.',
+      discDown: () => this.setState({ disc: Math.max(0, disc - 1) }), discUp: () => this.setState({ disc: Math.min(8, disc + 1) }),
+      selFlags: sel.flags.map((t) => ({ text: t })), noFlags: sel.flags.length === 0,
+      bom, funnel,
+      act: () => this.setState({ toast: 'Done for ' + sel.id + '. The customer portal and other teams see the update (prototype).' }),
+      toastOn: !!this.state.toast, toast: this.state.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

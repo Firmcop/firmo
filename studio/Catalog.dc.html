@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Collection</title>
+<script src="./ds-config.js"></script>
+<script src="./ds-core.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=Manrope:wght@300;400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#0D0C0A}
+a{color:#C9A46A}a:hover{color:#E3C48F}
+.nav a{color:#E8DFD0;text-decoration:none;font-size:12px;letter-spacing:.22em;text-transform:uppercase;padding:14px 0;display:inline-block}
+.nav a:hover{color:#C9A46A}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;letter-spacing:-.01em}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase}
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 30px;background:#C9A46A;color:#0D0C0A;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
+.cta:hover{background:#E3C48F;color:#0D0C0A}
+.ghost{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:1px solid rgba(232,223,208,.5);color:#F2EBDF;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;background:transparent}
+.ghost:hover{border-color:#C9A46A;color:#C9A46A}
+.ghost-d{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 28px;border:1px solid #0D0C0A;color:#0D0C0A;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
+.ghost-d:hover{background:#0D0C0A;color:#F2EBDF}
+.lnk-l{color:#F2EBDF;text-decoration:none;font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;border-bottom:1px solid #C9A46A;padding:12px 0 4px;display:inline-block}
+.lnk-l:hover{color:#C9A46A}
+.card{display:flex;flex-direction:column;background:#141210;border:1px solid #24211C;transition:border-color .5s,transform .6s}
+.card:hover{border-color:#C9A46A;transform:translateY(-4px)}
+.sel{min-height:48px;padding:0 14px;background:#141210;color:#F2EBDF;border:1px solid #3A352D;font:inherit;font-size:13px;letter-spacing:.06em}
+@media (prefers-reduced-motion: no-preference){
+.rise{animation:rise 1.3s cubic-bezier(.2,.7,.2,1) both}
+.rise2{animation:rise 1.3s .2s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#F2EBDF;background:#0D0C0A">
+
+<header style="border-bottom:1px solid #1E1B17">
+<div style="max-width:1360px;margin:0 auto;padding:18px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 40px">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;text-decoration:none;color:#F2EBDF;min-height:48px;justify-content:center;line-height:1">
+<span class="serif" style="font-size:30px;letter-spacing:.18em">FIRMCOP</span>
+<span class="eyebrow" style="font-size:9px;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
+</a>
+<nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 32px;flex:1 1 auto;justify-content:center">
+<a href="Catalog.dc.html" aria-current="page" style="color:#C9A46A;box-shadow:inset 0 -1px 0 #C9A46A">Collection</a>
+<a href="Configurator.dc.html">Configure</a>
+<a href="Invest.dc.html">Invest</a>
+<a href="Projects.dc.html">Works</a>
+<a href="Store.dc.html">Atelier</a>
+<a href="design-studio.html">3D Studio</a>
+<a href="Portal.dc.html">My builds</a>
+</nav>
+<a class="ghost" href="Main.dc.html#visit" style="min-height:44px;padding:0 20px">Visit the yard</a>
+</div>
+</header>
+
+<section aria-labelledby="ttl" style="position:relative;overflow:hidden">
+<svg aria-hidden="true" viewBox="0 0 1600 520" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+<rect width="1600" height="520" fill="#0D0C0A"></rect>
+<path d="M0 400 C260 360 480 380 720 350 C960 320 1200 360 1600 330 V520 H0 Z" fill="#15120F"></path>
+<polygon points="1180,420 1260,270 1340,420" fill="#100E0C"></polygon>
+<polygon points="1212,420 1260,330 1308,420" fill="#C9A46A" opacity=".22"></polygon>
+<rect x="960" y="372" width="190" height="48" fill="#100E0C"></rect>
+<rect x="990" y="384" width="46" height="22" fill="#C9A46A" opacity=".2"></rect>
+<rect x="1056" y="384" width="46" height="22" fill="#C9A46A" opacity=".16"></rect>
+</svg>
+<div style="position:relative;max-width:1360px;margin:0 auto;padding:120px 32px 96px">
+<p class="eyebrow rise" style="margin:0 0 24px;color:#C9A46A">The collection · {{count}} designs</p>
+<h1 id="ttl" class="serif rise2" style="margin:0;font-size:clamp(52px,7.4vw,112px);line-height:.93;font-weight:400;max-width:960px">Find the one that<br><em style="color:#E3C48F">feels like yours.</em></h1>
+<p class="rise2" style="margin:28px 0 0;font-size:17px;line-height:1.8;color:#C9BFAF;max-width:560px;font-weight:300">Every design is a beginning. Open one in the configurator to change its size, layout and every finish. Planning a resort, strip mall or rentals? <a href="Invest.dc.html">Start with the plot planner</a>.</p>
+</div>
+</section>
+
+<section aria-label="Filters" style="background:#0D0C0A;border-top:1px solid #1E1B17;border-bottom:1px solid #1E1B17">
+<div style="max-width:1360px;margin:0 auto;padding:6px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 24px">
+<div role="group" aria-label="Building type" style="display:flex;flex-wrap:wrap;gap:0 28px">
+<sc-for list="{{types}}" as="t" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 0">
+<label for="use" class="eyebrow" style="font-size:10px;color:#A89E8E">Use</label>
+<select id="use" class="sel" onChange="{{pickUse}}">
+<option value="all">Any use</option>
+<option value="home">Home</option>
+<option value="hospitality">Airbnb and hospitality</option>
+<option value="commercial">Office and commercial</option>
+<option value="industrial">Industrial and storage</option>
+</select>
+<button type="button" class="sel" onClick="{{toggleSort}}" style="cursor:pointer">Price, {{sortLabel}}</button>
+</div>
+</div>
+</section>
+
+<section aria-label="Designs" style="max-width:1360px;margin:0 auto;padding:56px 32px 120px">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:28px">
+<sc-for list="{{designs}}" as="d" hint-placeholder-count="6">
+<article class="card">
+<a href="DesignDetail.dc.html" aria-label="{{d.viewLabel}}" style="display:block;aspect-ratio:4/3;position:relative;overflow:hidden">
+<img src="{{d.img}}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+<span class="eyebrow" style="position:absolute;right:12px;bottom:12px;font-size:9px;color:#C9BFAF;background:rgba(13,12,10,.6);padding:4px 8px">Illustrative render</span>
+<span class="eyebrow" style="position:absolute;left:16px;top:16px;font-size:10px;color:#C9A46A">{{d.type}}</span>
+</a>
+<div style="padding:26px 26px 24px;display:flex;flex-direction:column;gap:12px;flex:1">
+<h2 class="serif" style="margin:0;font-size:34px;line-height:1;font-weight:400">{{d.name}}</h2>
+<p style="margin:0;font-size:14px;line-height:1.7;color:#A89E8E">{{d.blurb}}</p>
+<p class="eyebrow" style="margin:4px 0 0;font-size:10px;color:#C9BFAF;letter-spacing:.2em">{{d.area}} m² · {{d.beds}} · {{d.weeks}} weeks</p>
+<div style="margin-top:auto;padding-top:20px;border-top:1px solid #24211C;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><div class="eyebrow" style="font-size:9px;color:#A89E8E">From</div><div class="serif" style="font-size:28px;line-height:1.1">KES {{d.priceLabel}}</div></div>
+<div style="display:flex;gap:20px">
+<a class="lnk-l" href="DesignDetail.dc.html">Details</a>
+<a class="lnk-l" href="{{d.cfgHref}}">Configure</a>
+<sc-if value="{{d.has3d}}" hint-placeholder-val="{{true}}"><a class="lnk-l" href="{{d.url3d}}" style="color:#E3C48F">Explore in 3D</a></sc-if>
+</div>
+</div>
+</div>
+</article>
+</sc-for>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<p class="serif" style="margin:0;padding:72px 24px;text-align:center;font-size:30px;color:#C9BFAF;border:1px solid #24211C">Nothing matches yet. <a href="Configurator.dc.html">Begin from a blank module</a>.</p>
+</sc-if>
+<p class="eyebrow" style="margin:48px 0 0;font-size:10px;color:#7F776B;letter-spacing:.16em">Sample prices · Excluding VAT, transport and site works</p>
+</section>
+
+<section aria-labelledby="help" style="background:#F2EBDF;color:#0D0C0A">
+<div style="max-width:1360px;margin:0 auto;padding:110px 32px;display:flex;flex-wrap:wrap;gap:40px;align-items:flex-end;justify-content:space-between">
+<div style="max-width:720px">
+<p class="eyebrow" style="margin:0 0 22px;color:#7A5C2A">A conversation first</p>
+<h2 id="help" class="serif" style="margin:0;font-size:clamp(40px,5vw,72px);line-height:1;font-weight:400">Not sure where to begin? <em style="color:#7A5C2A">Talk to a designer.</em></h2>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:14px">
+<a class="ghost-d" href="Main.dc.html#visit">Book a yard visit</a>
+<a class="ghost-d" href="Main.dc.html#visit">WhatsApp us</a>
+</div>
+</div>
+</section>
+
+<footer style="background:#070605;color:#A89E8E;font-size:14px">
+<div style="max-width:1360px;margin:0 auto;padding:40px 32px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center">
+<span class="serif" style="font-size:24px;letter-spacing:.18em;color:#F2EBDF">FIRMCOP</span>
+<span style="font-size:12px">© [Year] Firmcop Modular · <a href="Team.dc.html">Team portal</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'All', use: 'all', asc: true, live: null };
+    const cfg = window.FC_SUPA, DS = window.DS;
+    if (cfg && DS) {
+      fetch(cfg.url + '/rest/v1/rpc/ds_package', { method: 'POST', headers: { apikey: cfg.key, 'Content-Type': 'application/json' }, body: '{}' })
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .catch(() => fetch('ds-package.json').then((r) => r.json()))
+        .then((pkg) => {
+          DS.applyPackage(pkg);
+          const TYPE = { container: 'Container', aframe: 'A-frame', cabin: 'Cabin' };
+          const live = (pkg.designs || []).map((d) => {
+            const P = d.layout, G = DS.grid(P), R = DS.roomInfo(P, G), L = DS.lining(P, G), Q = DS.quote(P, G, R, L);
+            const beds = R.filter((r) => r.type === 'bed').length;
+            return { name: d.name, slug: d.slug, type: TYPE[d.system] || 'Container', area: Math.round(R.reduce((a, r) => a + r.area, 0) * 10) / 10,
+              beds: beds ? beds + ' bed' : 'Studio', weeks: Q.weeks, price: Math.round(Q.total), use: d.system === 'container' ? ['home', 'hospitality'] : ['home', 'hospitality'], blurb: d.summary || '', live: true };
+          });
+          this.setState({ live });
+        })
+        .catch(() => {});
+    }
+  }
+  renderVals() {
+    const all = [
+      { name: 'Container studio 20', code: 'DS-STUDIO', type: 'Container', area: 14.8, beds: 'Studio', weeks: 6, price: 1150000, use: ['home','hospitality'], blurb: 'A compact studio with shower room and kitchenette. A perfect guest suite or first rental.' },
+      { name: 'Container one-bed 40', type: 'Container', area: 29.7, beds: '1 bed', weeks: 7, price: 1980000, use: ['home','hospitality'], blurb: 'A full-length home with a closed bedroom, open living and a fitted kitchen.' },
+      { name: 'Twin 40 family', type: 'Container', area: 59.4, beds: '2 bed', weeks: 9, price: 3650000, use: ['home'], blurb: 'Two units joined side by side around an open-plan living core.' },
+      { name: 'Stacked duplex', code: 'DS-APT', type: 'Container', area: 59.4, beds: '2 bed', weeks: 10, price: 4200000, use: ['home','hospitality'], blurb: 'Two levels, an external steel stair and a roof deck for evenings.' },
+      { name: 'Site office 40', type: 'Container', area: 29.7, beds: 'Office', weeks: 5, price: 1450000, use: ['commercial','industrial'], blurb: 'Two offices and a meeting room, ready for site or yard.' },
+      { name: 'Pod resort cluster', type: 'Container', area: 178, beds: '12 pods', weeks: 12, price: 19800000, use: ['hospitality','commercial'], blurb: 'Twelve guest pods with decks, a reception and shared amenities. Investment-ready.' },
+      { name: 'Strip mall, 8 shops', type: 'Container', area: 118, beds: '8 shops', weeks: 9, price: 9600000, use: ['commercial'], blurb: 'A row of shop units with a covered walkway and parking in front.' },
+      { name: '2×4 Container Home', code: 'DS-2X4', type: 'Container', area: 143, beds: '3 bed', weeks: 16, price: 24500000, use: ['home'], blurb: 'Seven 20′ high cubes around a double-height glass living room, with a roof deck and two balconies.' },
+      { name: 'Schnitzelburg unit', code: 'DS-SCHN', type: 'Container', area: 59.4, beds: '2 bed', weeks: 11, price: 7900000, use: ['home','hospitality'], blurb: 'Four high cubes over two storeys with a roof terrace. A compact urban infill home.' },
+      { name: 'Container townhouse', code: 'DS-TOWN', type: 'Container', area: 89, beds: '3 bed', weeks: 13, price: 11200000, use: ['home'], blurb: 'Six 20′ modules stacked three storeys high, topped with a roof garden.' },
+      { name: 'Cantilever retreat', code: 'DS-CANT', type: 'Container', area: 44.5, beds: '1 bed', weeks: 10, price: 5600000, use: ['hospitality','home'], blurb: 'Three modules with an upper unit that cantilevers out over the view.' },
+      { name: 'Tropical cabin', code: 'DS-TROP', type: 'Container', area: 29.7, beds: '1 bed', weeks: 7, price: 2600000, use: ['hospitality','home'], blurb: 'A single 40′ with a shaded roof deck, built for coast and lakeside lets.' },
+      { name: 'Three-bed bungalow', code: 'DS-BUNG', type: 'Container', area: 89, beds: '3 bed', weeks: 11, price: 9400000, use: ['home'], blurb: 'Six 20′ modules on one level. Step-free living for a family plot.' },
+      { name: 'A-frame loft', type: 'A-frame', area: 48, beds: '1 bed + loft', weeks: 8, price: 2850000, use: ['hospitality','home'], blurb: 'A glazed gable, a sleeping loft and quiet ground-floor living.' },
+      { name: 'A-frame family', type: 'A-frame', area: 80, beds: '2 bed + loft', weeks: 10, price: 4600000, use: ['home','hospitality'], blurb: 'A wider span with two bedrooms and a mezzanine lounge.' },
+      { name: 'Veranda cabin', type: 'Cabin', area: 54, beds: '2 bed', weeks: 7, price: 3100000, use: ['home','hospitality'], blurb: 'Timber frame, cypress cladding and a deep covered veranda.' },
+      { name: 'Eco camp', type: 'Cabin', area: 216, beds: '8 cabins', weeks: 12, price: 26500000, use: ['hospitality','commercial'], blurb: 'Eight cabins with verandas, a dining hall and staff quarters.' },
+      { name: 'Warehouse 12 × 20', type: 'Steel', area: 240, beds: 'Open span', weeks: 10, price: 5900000, use: ['industrial','commercial'], blurb: 'A clear-span portal frame with roller door and roof lights.' },
+      { name: 'Workshop 15 × 30', type: 'Steel', area: 450, beds: 'Open span', weeks: 12, price: 9800000, use: ['industrial'], blurb: 'A clear-span workshop with mezzanine office and crane-ready columns.' }
+    ];
+    const labels = [['All', 'All'], ['Container', 'Container residences'], ['A-frame', 'A-frame retreats'], ['Cabin', 'Timber cabins'], ['Steel', 'Steel pavilions']];
+    const types = labels.map((l) => {
+      const on = this.state.type === l[0];
+      return { label: l[1], pressed: on ? 'true' : 'false', pick: () => this.setState({ type: l[0] }), style: 'min-height:48px;padding:0;background:transparent;border:0;font:inherit;font-size:11px;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;color:' + (on ? '#C9A46A' : '#C9BFAF') + ';box-shadow:' + (on ? 'inset 0 -1px 0 #C9A46A' : 'none') };
+    });
+    const liveRows = this.state.live || [];
+    const replaced = { 'Container studio 20': 1, 'Container one-bed 40': 1, 'Twin 40 family': 1, 'Veranda cabin': 1 };
+    const merged = liveRows.length ? liveRows.concat(all.filter((d) => !replaced[d.name] && !liveRows.some((l) => l.name === d.name))) : all;
+    let list = merged.filter((d) => (this.state.type === 'All' || d.type === this.state.type) && (this.state.use === 'all' || d.use.indexOf(this.state.use) >= 0));
+    list = list.slice().sort((a, b) => this.state.asc ? a.price - b.price : b.price - a.price);
+    const IMG = {
+      'Container studio 20': '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac', 'Container one-bed 40': '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',
+      'Twin 40 family': '/_blob/34e98516af54244cb1e1a80f0a5f434d', 'Stacked duplex': '/_blob/34e98516af54244cb1e1a80f0a5f434d',
+      'Site office 40': '/_blob/31faaccf8dfd53a2cf2e363b3365c3c0', 'Pod resort cluster': '/_blob/b63e77804b6d09a9cbb2a3a7b8ff94e5',
+      'Strip mall, 8 shops': '/_blob/c443aeb1df9da124515acb87cccc69cf', 'A-frame loft': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7',
+      'A-frame family': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', 'Veranda cabin': '/_blob/934cee1933bb4f74580e99cf52bfbbdc',
+      'Eco camp': '/_blob/1148ec4f8c7496bd7c3c61324e78a073', 'Warehouse 12 × 20': '/_blob/ad198461426af454fde500cf62dc0e6d',
+      'Workshop 15 × 30': '/_blob/ad198461426af454fde500cf62dc0e6d',
+      '2×4 Container Home': '/_blob/34e98516af54244cb1e1a80f0a5f434d', 'Schnitzelburg unit': '/_blob/34e98516af54244cb1e1a80f0a5f434d',
+      'Container townhouse': '/_blob/34e98516af54244cb1e1a80f0a5f434d', 'Cantilever retreat': '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',
+      'Tropical cabin': '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac', 'Three-bed bungalow': '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac'
+    };
+    const SYSIMG = { 'Container': '/_blob/34e98516af54244cb1e1a80f0a5f434d', 'A-frame': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', 'Cabin': '/_blob/934cee1933bb4f74580e99cf52bfbbdc' };
+    const designs = list.map((d) => Object.assign({}, d, {
+      img: IMG[d.name] || SYSIMG[d.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',
+      priceLabel: d.price.toLocaleString('en-KE'), viewLabel: 'View ' + d.name,
+      has3d: !!d.code, url3d: d.code ? 'studio.html?design=' + d.code : '',
+      cfgHref: d.slug ? 'design-studio.html?design=' + encodeURIComponent(d.slug) : 'Configurator.dc.html',
+      isContainer: d.type === 'Container', isAframe: d.type === 'A-frame', isCabin: d.type === 'Cabin', isSteel: d.type === 'Steel'
+    }));
+    return {
+      types, designs, count: designs.length, empty: designs.length === 0,
+      sortLabel: this.state.asc ? 'low to high' : 'high to low',
+      toggleSort: () => this.setState({ asc: !this.state.asc }),
+      pickUse: (e) => this.setState({ use: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

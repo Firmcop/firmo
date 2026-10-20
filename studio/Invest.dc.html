@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plot planner and ROI</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F4F1EB}
+a{color:#6B4F22}a:hover{color:#4A3616}
+.nav a{color:#E8DFD0;text-decoration:none;padding:12px 0;display:inline-block;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.nav a:hover{color:#FFFFFF}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;background:#8A6A33;color:#FFFFFF;border:0;border-radius:4px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:#6B4F22;color:#FFFFFF}
+.btn-line{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;background:#FFFFFF;color:#1B1A17;border:1.5px solid #1B1A17;border-radius:4px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn-line:hover{background:#1B1A17;color:#F4F1EB}
+.lbl{font-size:14px;font-weight:600;display:block;margin-bottom:8px}
+.sec{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:40px;text-transform:uppercase;margin:0;line-height:1}
+.num{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B4F22;letter-spacing:.08em}
+input[type=range]{width:100%;accent-color:#8A6A33;min-height:32px}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#1B1A17;background:#F4F1EB;min-height:100vh">
+
+<header style="background:#0D0C0A;color:#F2EBDF;border-bottom:1px solid #1E1B17">
+<div style="max-width:1320px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 32px">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:#F2EBDF;min-height:56px;line-height:1">
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:28px;letter-spacing:.18em">FIRMCOP</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
+</a>
+<nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 24px;flex:1 1 auto;font-size:15px">
+<a href="Catalog.dc.html">Collection</a>
+<a href="Configurator.dc.html">Configure</a>
+<a href="Store.dc.html">Atelier</a>
+<a href="Projects.dc.html">Works</a>
+<a href="Invest.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">Invest</a>
+<a href="design-studio.html">3D Studio</a>
+<a href="Portal.dc.html">My builds</a>
+<a href="Team.dc.html">Team portal</a>
+</nav>
+<a class="btn" href="Opportunities.dc.html">Opportunities</a>
+</div>
+</header>
+
+<section aria-labelledby="hero-t" style="position:relative;background:#0D0C0A;color:#F2EBDF;overflow:hidden">
+<svg aria-hidden="true" viewBox="0 0 1600 460" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%"><rect width="1600" height="460" fill="#0D0C0A"></rect><rect x="1060" y="70" width="380" height="320" fill="none" stroke="#C9A46A" stroke-width="1.5" opacity=".6"></rect><rect x="1080" y="88" width="340" height="250" fill="none" stroke="#C9A46A" stroke-width="1" stroke-dasharray="6 6" opacity=".4"></rect><g fill="#C9A46A" opacity=".35"><rect x="1100" y="104" width="34" height="80"></rect><rect x="1150" y="104" width="34" height="80"></rect><rect x="1200" y="104" width="34" height="80"></rect><rect x="1250" y="104" width="34" height="80"></rect><rect x="1300" y="104" width="34" height="80"></rect><rect x="1350" y="104" width="34" height="80"></rect><rect x="1100" y="210" width="34" height="80"></rect><rect x="1150" y="210" width="34" height="80"></rect><rect x="1200" y="210" width="34" height="80"></rect><rect x="1250" y="210" width="34" height="80"></rect><rect x="1300" y="210" width="34" height="80"></rect><rect x="1350" y="210" width="34" height="80"></rect></g><rect x="1060" y="398" width="380" height="14" fill="#2A2722"></rect></svg>
+<div style="position:relative;max-width:1320px;margin:0 auto;padding:110px 24px 84px">
+<p style="margin:0 0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A">Commercial and investment</p>
+<h1 id="hero-t" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(48px,6.6vw,100px);line-height:.94;max-width:860px">Spaces that<br><em style="color:#E3C48F">earn.</em></h1>
+<p style="margin:26px 0 0;font-size:17px;line-height:1.8;color:#C9BFAF;max-width:600px;font-weight:300">How many units fit your plot, and what could they return? Choose a model, enter your plot, and see the layout, unit count, build cost and yield in one place.</p>
+</div>
+</section>
+
+<section aria-labelledby="s1" style="max-width:1320px;margin:0 auto;padding:24px 24px 40px">
+<span class="num">STEP 01</span>
+<h2 id="s1" class="sec" style="margin:6px 0 20px">Choose a business model</h2>
+<div role="group" aria-label="Business model" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<sc-for list="{{models}}" as="m" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="{{m.style}}">
+<strong style="font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;text-transform:uppercase;line-height:1">{{m.name}}</strong>
+<span style="font-size:14px;color:#5C5850;line-height:1.45">{{m.desc}}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#22343C;background:#E3E9EC;padding:3px 7px;border-radius:3px;align-self:flex-start">{{m.tag}}</span>
+</button>
+</sc-for>
+</div>
+</section>
+
+<section aria-labelledby="s2" style="background:#FFFFFF;border-top:1px solid #DDD6CA;border-bottom:1px solid #DDD6CA">
+<div style="max-width:1320px;margin:0 auto;padding:48px 24px">
+<span class="num">STEP 02</span>
+<h2 id="s2" class="sec" style="margin:6px 0 24px">Plan the plot</h2>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+<div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div>
+<span class="lbl" id="plot-l">Plot size</span>
+<div role="group" aria-labelledby="plot-l" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{plots}}" as="p" hint-placeholder-count="4"><button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="{{p.style}}">{{p.label}}</button></sc-for>
+</div>
+<div style="display:flex;gap:12px;margin-top:12px">
+<div style="flex:1"><label for="pw" style="font-size:13px;color:#5C5850">Frontage (ft)</label><input id="pw" type="number" min="20" max="1000" value="{{plotW}}" onChange="{{setW}}" style="width:100%;box-sizing:border-box;min-height:44px;margin-top:4px;padding:0 12px;border:1.5px solid #8C8475;border-radius:4px;font:inherit;font-size:16px"></div>
+<div style="flex:1"><label for="pd" style="font-size:13px;color:#5C5850">Depth (ft)</label><input id="pd" type="number" min="20" max="1000" value="{{plotD}}" onChange="{{setD}}" style="width:100%;box-sizing:border-box;min-height:44px;margin-top:4px;padding:0 12px;border:1.5px solid #8C8475;border-radius:4px;font:inherit;font-size:16px"></div>
+</div>
+</div>
+<div>
+<span class="lbl" id="unit-l">Unit</span>
+<div role="group" aria-labelledby="unit-l" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{unitOpts}}" as="u" hint-placeholder-count="2"><button type="button" aria-pressed="{{u.pressed}}" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for>
+</div>
+</div>
+<div>
+<span class="lbl" id="or-l">Orientation to the road</span>
+<div role="group" aria-labelledby="or-l" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{orientOpts}}" as="o" hint-placeholder-count="2"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<div>
+<span class="lbl" id="lv-l">Levels</span>
+<div role="group" aria-labelledby="lv-l" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{levelOpts}}" as="o" hint-placeholder-count="3"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<div>
+<label class="lbl" for="gap">Space between units: {{gap}} m</label>
+<input id="gap" type="range" min="0" max="8" step="0.5" value="{{gap}}" onChange="{{setGap}}">
+</div>
+<div>
+<label class="lbl" for="park">Parking strip at the front: {{parking}} m</label>
+<input id="park" type="range" min="0" max="15" step="1" value="{{parking}}" onChange="{{setPark}}">
+</div>
+<div>
+<span class="lbl" id="cap-l">Maximum ground coverage</span>
+<div role="group" aria-labelledby="cap-l" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{capOpts}}" as="o" hint-placeholder-count="4"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+<p style="margin:8px 0 0;font-size:13px;color:#5C5850;line-height:1.45">Setbacks assumed: 3 m front, 2 m rear, 1.5 m sides. Coverage and setbacks vary by county, so we confirm them in a feasibility study.</p>
+</div>
+</div>
+
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:#EEE9DF;border-radius:6px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:8px">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{plotWLabel}}</span>
+<div role="img" aria-label="{{planAria}}" style="{{plotStyle}}">
+<div style="{{buildStyle}}"></div>
+<sc-if value="{{hasParking}}" hint-placeholder-val="{{false}}"><div style="{{parkStyle}}"><span style="background:#FFFFFF;padding:2px 6px;border-radius:3px">Parking · {{bays}} bays</span></div></sc-if>
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="8"><div style="{{c.style}}"></div></sc-for>
+</div>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850">{{plotDLabel}} deep</span>
+<div style="width:100%;max-width:{{roadW}}px;height:28px;background:#3D3A34;color:#F4F1EB;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px">ROAD FRONTAGE</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:#DDD6CA;border:1px solid #DDD6CA;border-radius:6px;overflow:hidden">
+<div style="background:#FFFFFF;padding:14px 16px"><div style="font-size:13px;color:#5C5850">{{unitWord}}</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:36px;line-height:1.1">{{total}}</div><div style="font-size:12px;color:#5C5850">{{ground}} on the ground × {{levels}}</div></div>
+<div style="background:#FFFFFF;padding:14px 16px"><div style="font-size:13px;color:#5C5850">Floor area</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:36px;line-height:1.1">{{gfa}} m²</div><div style="font-size:12px;color:#5C5850">Plot {{plotArea}} m²</div></div>
+<div style="background:#FFFFFF;padding:14px 16px"><div style="font-size:13px;color:#5C5850">Ground coverage</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:36px;line-height:1.1">{{coverage}}%</div><div style="font-size:12px;color:#5C5850">{{capNote}}</div></div>
+<div style="background:#FFFFFF;padding:14px 16px"><div style="font-size:13px;color:#5C5850">Plot ratio</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:36px;line-height:1.1">{{far}}</div><div style="font-size:12px;color:#5C5850">Floor area ÷ plot</div></div>
+</div>
+<sc-if value="{{hasWarn}}" hint-placeholder-val="{{false}}">
+<p style="margin:0;padding:12px 14px;background:#FFF1D6;color:#5A3D00;border-radius:4px;font-size:14px;line-height:1.45">{{warn}}</p>
+</sc-if>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="s3" style="max-width:1320px;margin:0 auto;padding:48px 24px">
+<span class="num">STEP 03</span>
+<h2 id="s3" class="sec" style="margin:6px 0 24px">Cost and return</h2>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+<div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:22px;background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:22px">
+<div>
+<label class="lbl" for="price">{{priceLabel}}: KES {{priceVal}}</label>
+<input id="price" type="range" min="{{priceMin}}" max="{{priceMax}}" step="{{priceStep}}" value="{{price}}" onChange="{{setPrice}}">
+</div>
+<div>
+<label class="lbl" for="occ">Occupancy: {{occ}}%</label>
+<input id="occ" type="range" min="20" max="100" step="5" value="{{occ}}" onChange="{{setOcc}}">
+</div>
+<div>
+<label class="lbl" for="opex">Operating costs: {{opex}}% of revenue</label>
+<input id="opex" type="range" min="5" max="60" step="1" value="{{opex}}" onChange="{{setOpex}}">
+<p style="margin:6px 0 0;font-size:13px;color:#5C5850">{{opexNote}}</p>
+</div>
+<label style="display:flex;gap:12px;align-items:center;min-height:44px;font-size:15px;cursor:pointer"><input type="checkbox" checked="{{withLand}}" onChange="{{toggleLand}}" style="width:20px;height:20px;margin:0">Include land cost in the investment</label>
+<sc-if value="{{withLand}}" hint-placeholder-val="{{false}}">
+<div><label for="land" style="font-size:13px;color:#5C5850">Land value (KES)</label><input id="land" type="number" min="0" step="100000" value="{{land}}" onChange="{{setLand}}" style="width:100%;box-sizing:border-box;min-height:44px;margin-top:4px;padding:0 12px;border:1.5px solid #8C8475;border-radius:4px;font:inherit;font-size:16px"></div>
+</sc-if>
+</div>
+
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+<div style="background:#1B1A17;color:#F4F1EB;border-radius:6px;padding:18px"><div style="font-size:13px;color:#CFC8BA">Total investment</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px">KES {{capexM}}</div></div>
+<div style="background:#1B1A17;color:#F4F1EB;border-radius:6px;padding:18px"><div style="font-size:13px;color:#CFC8BA">Net income a year</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px">KES {{noiM}}</div></div>
+<div style="background:#8A6A33;color:#FFFFFF;border-radius:6px;padding:18px"><div style="font-size:13px;color:#FBE3CF">Net yield</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px">{{yieldPct}}%</div></div>
+<div style="background:#1B1A17;color:#F4F1EB;border-radius:6px;padding:18px"><div style="font-size:13px;color:#CFC8BA">Payback</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px">{{payback}}</div></div>
+</div>
+
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:20px">
+<h3 style="margin:0 0 4px;font-size:16px">Cumulative cash over 10 years</h3>
+<p style="margin:0 0 14px;font-size:13px;color:#5C5850">Starts at minus the investment, then adds net income each year. No financing, inflation or rate increases assumed.</p>
+<div role="img" aria-label="{{chartAria}}" style="display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px;align-items:stretch;height:220px">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="11">
+<div style="display:flex;flex-direction:column;height:220px">
+<div style="{{b.upSpace}}"></div>
+<div style="{{b.up}}"></div>
+<div style="height:1px;background:#1B1A17"></div>
+<div style="{{b.down}}"></div>
+</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px;margin-top:6px">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="11"><span style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5C5850">Y{{b.y}}</span></sc-for>
+</div>
+</div>
+
+<div style="background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:20px;display:flex;flex-wrap:wrap;gap:24px">
+<div style="flex:1 1 260px;min-width:0">
+<h3 style="margin:0 0 10px;font-size:16px">Where the money goes</h3>
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:14px">
+<sc-for list="{{capexLines}}" as="l" hint-placeholder-count="4"><span style="color:#3D3A34">{{l.name}}</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{l.amount}}</span></sc-for>
+</div>
+</div>
+<div style="flex:1 1 260px;min-width:0;background:#F4F1EB;border-radius:6px;padding:16px">
+<h3 style="margin:0 0 8px;font-size:16px">Selling units to investors</h3>
+<p style="margin:0 0 10px;font-size:14px;color:#3D3A34;line-height:1.5">If each {{unitSingular}} is sold to an investor and run by an operator on a {{share}} revenue share:</p>
+<div style="display:grid;grid-template-columns:1fr auto;gap:6px 16px;font-size:14px">
+<span>Price per unit</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">KES {{unitPrice}}</span>
+<span>Investor income a year</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">KES {{unitIncome}}</span>
+<span>Investor yield</span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{unitYield}}%</span>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" class="btn" onClick="{{feasibility}}">Request a feasibility study</button>
+<a class="btn-line" href="Opportunities.dc.html">See live opportunities</a>
+<a class="btn-line" href="Configurator.dc.html">Configure a unit</a>
+</div>
+<sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}"><p role="status" style="margin:0;padding:12px 16px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:15px">{{toast}}</p></sc-if>
+<p style="margin:0;font-size:13px;color:#5C5850;line-height:1.5">Projections are illustrative, built on sample prices and the assumptions you set. They are not a forecast or financial advice. Speak to a licensed financial advisor before investing.</p>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ plotW: 50, plotD: 100, withLand: false, land: 3500000, toast: '' }, this.preset('pods'));
+  }
+  presets() {
+    return {
+      pods: { name: 'Airbnb pods', desc: 'Self-contained 20 ft studios for short stays.', tag: 'Nightly income', unit: '20', orient: 'across', gap: 3, levels: 1, cap: 40, parking: 5, rev: 'night', price: 6500, occ: 55, opex: 35, cost20: 1450000, cost40: 2450000, facilities: 1200000, maxRows: 0, word: 'Pods', singular: 'pod', share: '70/30' },
+      resort: { name: 'Eco-resort', desc: 'Spread-out cabins with landscaping and a shared lounge.', tag: 'Nightly income', unit: '20', orient: 'across', gap: 6, levels: 1, cap: 25, parking: 6, rev: 'night', price: 9500, occ: 50, opex: 40, cost20: 1750000, cost40: 2900000, facilities: 4500000, maxRows: 0, word: 'Cabins', singular: 'cabin', share: '60/40' },
+      mall: { name: 'Strip mall', desc: 'A row of shops facing the road, parking in front.', tag: 'Monthly rent', unit: '20', orient: 'along', gap: 0, levels: 1, cap: 60, parking: 12, rev: 'month', price: 45000, occ: 85, opex: 12, cost20: 950000, cost40: 1650000, facilities: 2500000, maxRows: 1, word: 'Shops', singular: 'shop', share: '85/15' },
+      apts: { name: 'Rental units', desc: 'Stacked one-bed rentals for long-term tenants.', tag: 'Monthly rent', unit: '40', orient: 'across', gap: 2.5, levels: 2, cap: 50, parking: 5, rev: 'month', price: 22000, occ: 90, opex: 15, cost20: 1250000, cost40: 2300000, facilities: 1800000, maxRows: 0, word: 'Units', singular: 'unit', share: '85/15' },
+      office: { name: 'Office park', desc: 'Small offices for SMEs, with parking.', tag: 'Monthly rent', unit: '40', orient: 'across', gap: 3, levels: 2, cap: 50, parking: 10, rev: 'month', price: 55000, occ: 80, opex: 18, cost20: 1150000, cost40: 2100000, facilities: 2200000, maxRows: 0, word: 'Offices', singular: 'office', share: '85/15' }
+    };
+  }
+  preset(k) {
+    const p = this.presets()[k];
+    return { model: k, unit: p.unit, orient: p.orient, gap: p.gap, levels: p.levels, cap: p.cap, parking: p.parking, price: p.price, occ: p.occ, opex: p.opex };
+  }
+  renderVals() {
+    const s = this.state;
+    const P = this.presets();
+    const p = P[s.model];
+    const fmt = (n) => Math.round(n).toLocaleString('en-KE');
+    const fmtM = (n) => (Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : fmt(n));
+    const chip = (on) => 'min-height:44px;padding:0 14px;border-radius:4px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB;border:1px solid #1B1A17' : 'background:#FFFFFF;color:#1B1A17;border:1px solid #BDB29C');
+
+    const models = Object.keys(P).map((k) => { const on = s.model === k; return { name: P[k].name, desc: P[k].desc, tag: P[k].tag, pressed: on ? 'true' : 'false', pick: () => this.setState(Object.assign({ toast: '' }, this.preset(k))), style: 'text-align:left;display:flex;flex-direction:column;gap:8px;padding:18px;border-radius:6px;font:inherit;color:#1B1A17;cursor:pointer;background:' + (on ? '#FFF6F1' : '#FFFFFF') + ';border:1px solid ' + (on ? '#8A6A33' : '#DDD6CA') + ';box-shadow:' + (on ? 'inset 0 0 0 1px #8A6A33' : 'none') }; });
+    const plotDefs = [[50, 100, '50 × 100 ft'], [100, 100, '100 × 100 ft'], [100, 200, '½ acre'], [200, 220, '1 acre']];
+    const plots = plotDefs.map((d) => { const on = s.plotW === d[0] && s.plotD === d[1]; return { label: d[2], pressed: on ? 'true' : 'false', pick: () => this.setState({ plotW: d[0], plotD: d[1] }), style: chip(on) }; });
+    const unitOpts = [['20', '20 ft container'], ['40', '40 ft container']].map((u) => ({ label: u[1], pressed: s.unit === u[0] ? 'true' : 'false', pick: () => this.setState({ unit: u[0] }), style: chip(s.unit === u[0]) }));
+    const orientOpts = [['across', 'Short end to road'], ['along', 'Long side to road']].map((o) => ({ label: o[1], pressed: s.orient === o[0] ? 'true' : 'false', pick: () => this.setState({ orient: o[0] }), style: chip(s.orient === o[0]) }));
+    const levelOpts = [1, 2, 3].map((l) => ({ label: l === 1 ? 'Single' : (l + ' stacked'), pressed: s.levels === l ? 'true' : 'false', pick: () => this.setState({ levels: l }), style: chip(s.levels === l) }));
+    const capOpts = [25, 40, 50, 60].map((c) => ({ label: c + '%', pressed: s.cap === c ? 'true' : 'false', pick: () => this.setState({ cap: c }), style: chip(s.cap === c) }));
+
+    const ft = 0.3048;
+    const PW = s.plotW * ft, PD = s.plotD * ft;
+    const setF = 3, setR = 2, setS = 1.5;
+    const L = s.unit === '20' ? 6.06 : 12.19, S = 2.44;
+    const uw = s.orient === 'along' ? L : S, ud = s.orient === 'along' ? S : L;
+    const bw = PW - 2 * setS, bd = PD - setF - setR - s.parking;
+    const gap = s.gap;
+    let cols = Math.max(0, Math.floor((bw + gap) / (uw + gap)));
+    let rows = Math.max(0, Math.floor((bd + gap) / (ud + gap)));
+    if (p.maxRows) rows = Math.min(rows, p.maxRows);
+    const fit = cols * rows;
+    const allowed = Math.floor((s.cap / 100) * PW * PD / (L * S));
+    const ground = Math.min(fit, allowed);
+    const total = ground * s.levels;
+    const gfa = total * L * S;
+    const coverage = ground * L * S / (PW * PD) * 100;
+    const far = gfa / (PW * PD);
+    const bays = s.parking >= 5 ? Math.floor(bw / 2.5) * Math.floor(s.parking / 5) : 0;
+
+    const k = Math.min(520 / PW, 560 / PD);
+    const gridW = cols * uw + Math.max(0, cols - 1) * gap;
+    const offX = setS + Math.max(0, (bw - gridW) / 2);
+    const fill = s.levels > 1 ? '#6B4F22' : '#8A6A33';
+    const cells = [];
+    for (let i = 0; i < ground; i++) {
+      const r = Math.floor(i / cols), c = i % cols;
+      const x = (offX + c * (uw + gap)) * k, y = (setR + r * (ud + gap)) * k;
+      cells.push({ style: 'position:absolute;left:' + x + 'px;top:' + y + 'px;width:' + Math.max(1, uw * k) + 'px;height:' + Math.max(1, ud * k) + 'px;background:' + fill + ';outline:1px solid #4A3616;box-sizing:border-box' });
+    }
+    const warns = [];
+    if (fit > allowed) warns.push((fit - allowed) + ' more would fit physically, but the ' + s.cap + '% coverage cap limits the ground floor to ' + allowed + '.');
+    if (s.levels === 3) warns.push('Three-level stacking needs a dedicated structural design and stair cores.');
+    if (ground === 0) warns.push('Nothing fits with these settings. Try a smaller gap, a smaller parking strip or the other orientation.');
+    if (gap > 0 && gap < 1.2 && p.rev === 'night') warns.push('Gaps under 1.2 m leave no walkway between units.');
+
+    const unitCost = s.unit === '20' ? p.cost20 : p.cost40;
+    const siteWork = 220000;
+    const capexLines = [
+      { name: total + ' × ' + p.singular + ' at KES ' + fmt(unitCost), raw: total * unitCost },
+      { name: 'Foundations, utilities and landscaping', raw: ground * siteWork + (s.levels > 1 ? ground * 180000 : 0) },
+      { name: 'Shared facilities' + (bays ? ' and ' + bays + ' parking bays' : ''), raw: p.facilities + bays * 60000 }
+    ];
+    if (s.withLand) capexLines.push({ name: 'Land', raw: Number(s.land) || 0 });
+    const capex = capexLines.reduce((a, l) => a + l.raw, 0);
+    const revenue = p.rev === 'night' ? total * s.price * 365 * s.occ / 100 : total * s.price * 12 * s.occ / 100;
+    const noi = revenue * (1 - s.opex / 100);
+    const yieldPct = capex > 0 ? noi / capex * 100 : 0;
+    const payback = noi > 0 ? capex / noi : 0;
+
+    const vals = [];
+    for (let y = 0; y <= 10; y++) vals.push(-capex + noi * y);
+    const mx = Math.max(1, Math.max.apply(null, vals.map(Math.abs)));
+    const maxPos = Math.max(0, Math.max.apply(null, vals)), maxNeg = Math.max(0, -Math.min.apply(null, vals));
+    const upH = 218 * maxPos / (maxPos + maxNeg || 1), downH = 218 - upH;
+    const bars = vals.map((v, y) => {
+      const h = v >= 0 ? upH * v / (maxPos || 1) : downH * -v / (maxNeg || 1);
+      return { y: y, upSpace: 'height:' + (v >= 0 ? upH - h : upH) + 'px', up: 'height:' + (v >= 0 ? h : 0) + 'px;background:#2E8B4E;border-radius:2px 2px 0 0', down: 'height:' + (v < 0 ? h : 0) + 'px;background:#8A6A33;border-radius:0 0 2px 2px' };
+    });
+    const shareInv = Number(p.share.split('/')[0]) / 100;
+    const unitPrice = total > 0 ? capex / total * 1.15 : 0;
+    const unitIncome = total > 0 ? (revenue / total) * shareInv * (1 - s.opex / 100 * 0.6) : 0;
+
+    const isNight = p.rev === 'night';
+    return {
+      models, plots, unitOpts, orientOpts, levelOpts, capOpts,
+      plotW: s.plotW, plotD: s.plotD, gap: s.gap, parking: s.parking, levels: s.levels,
+      setW: (e) => this.setState({ plotW: Math.max(20, Math.min(1000, Number(e.target.value) || 20)) }),
+      setD: (e) => this.setState({ plotD: Math.max(20, Math.min(1000, Number(e.target.value) || 20)) }),
+      setGap: (e) => this.setState({ gap: Number(e.target.value) }),
+      setPark: (e) => this.setState({ parking: Number(e.target.value) }),
+      plotWLabel: s.plotW + ' ft (' + PW.toFixed(1) + ' m) frontage', plotDLabel: s.plotD + ' ft (' + PD.toFixed(1) + ' m)',
+      plotStyle: 'position:relative;width:' + PW * k + 'px;height:' + PD * k + 'px;background:#D9E3C8;border:2px solid #1B1A17;box-sizing:content-box',
+      buildStyle: 'position:absolute;left:' + setS * k + 'px;top:' + setR * k + 'px;width:' + bw * k + 'px;height:' + Math.max(0, PD - setF - setR) * k + 'px;border:1.5px dashed #5C5850;box-sizing:border-box',
+      hasParking: s.parking > 0,
+      parkStyle: 'position:absolute;left:' + setS * k + 'px;top:' + (PD - setF - s.parking) * k + 'px;width:' + bw * k + 'px;height:' + s.parking * k + 'px;background-color:#C9C3B6;background-image:repeating-linear-gradient(90deg,#FFFFFF 0 2px,transparent 2px ' + 2.5 * k + 'px);display:flex;align-items:center;justify-content:center;font-family:IBM Plex Mono,monospace;font-size:11px;color:#1B1A17',
+      bays: bays, cells: cells, roadW: Math.round(PW * k) + 4,
+      planAria: 'Site plan: ' + ground + ' ' + p.word.toLowerCase() + ' on a ' + s.plotW + ' by ' + s.plotD + ' ft plot',
+      unitWord: p.word, total: total, ground: ground, gfa: fmt(gfa), plotArea: fmt(PW * PD), coverage: coverage.toFixed(0), far: far.toFixed(2),
+      capNote: 'Cap ' + s.cap + '%', warn: warns.join(' '), hasWarn: warns.length > 0,
+      priceLabel: isNight ? 'Nightly rate per ' + p.singular : 'Monthly rent per ' + p.singular,
+      priceVal: fmt(s.price), price: s.price, priceMin: isNight ? 2000 : 5000, priceMax: isNight ? 25000 : 150000, priceStep: isNight ? 500 : 1000,
+      setPrice: (e) => this.setState({ price: Number(e.target.value) }),
+      occ: s.occ, setOcc: (e) => this.setState({ occ: Number(e.target.value) }),
+      opex: s.opex, setOpex: (e) => this.setState({ opex: Number(e.target.value) }),
+      opexNote: isNight ? 'Cleaning, linen, booking fees, utilities, staff and upkeep.' : 'Service charge gap, maintenance, security and agent fees.',
+      withLand: s.withLand, toggleLand: () => this.setState({ withLand: !s.withLand }), land: s.land, setLand: (e) => this.setState({ land: Number(e.target.value) || 0 }),
+      capexM: fmtM(capex), noiM: fmtM(noi), yieldPct: yieldPct.toFixed(1), payback: noi > 0 ? payback.toFixed(1) + ' yrs' : 'n/a',
+      capexLines: capexLines.map((l) => ({ name: l.name, amount: fmt(l.raw) })),
+      bars: bars, chartAria: 'Cumulative cash turns positive after about ' + (noi > 0 ? payback.toFixed(1) + ' years' : 'never') + '.',
+      unitSingular: p.singular, share: p.share, unitPrice: fmt(unitPrice), unitIncome: fmt(unitIncome), unitYield: unitPrice > 0 ? (unitIncome / unitPrice * 100).toFixed(1) : '0',
+      feasibility: () => this.setState({ toast: 'Feasibility request sent with this layout and these assumptions. Our team will confirm county rules and costs (prototype).' }),
+      toastOn: !!s.toast, toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

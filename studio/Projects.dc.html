@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Projects</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F4F1EB}
+a{color:#6B4F22}a:hover{color:#4A3616}
+.nav a{color:#E8DFD0;text-decoration:none;padding:12px 0;display:inline-block;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.nav a:hover{color:#FFFFFF}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;background:#8A6A33;color:#FFFFFF;text-decoration:none;font-weight:600;border-radius:4px}
+.btn:hover{background:#6B4F22;color:#FFFFFF}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#1B1A17;background:#F4F1EB;min-height:100vh">
+
+<header style="background:#0D0C0A;color:#F2EBDF;border-bottom:1px solid #1E1B17">
+<div style="max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 32px">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:#F2EBDF;min-height:56px;line-height:1">
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:28px;letter-spacing:.18em">FIRMCOP</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
+</a>
+<nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 24px;flex:1 1 auto;font-size:15px">
+<a href="Catalog.dc.html">Collection</a>
+<a href="Configurator.dc.html">Configure</a>
+<a href="Store.dc.html">Atelier</a>
+<a href="Projects.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">Works</a>
+<a href="Invest.dc.html">Invest</a>
+<a href="Main.dc.html#resources">BIM and resources</a>
+<a href="design-studio.html">3D Studio</a>
+<a href="Portal.dc.html">My builds</a>
+<a href="Team.dc.html">Team portal</a>
+</nav>
+<a class="btn" href="Configurator.dc.html">Build yours</a>
+</div>
+</header>
+
+<section aria-labelledby="hero-t" style="position:relative;background:#0D0C0A;color:#F2EBDF;overflow:hidden">
+<svg aria-hidden="true" viewBox="0 0 1600 440" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%"><rect width="1600" height="440" fill="#0D0C0A"></rect><path d="M0 360 C300 330 640 348 960 326 C1240 308 1440 330 1600 320 V440 H0 Z" fill="#15120F"></path><polygon points="900,360 960,250 1020,360" fill="#100E0C"></polygon><polygon points="925,360 960,296 995,360" fill="#C9A46A" opacity=".25"></polygon><rect x="1060" y="316" width="160" height="44" fill="#100E0C"></rect><rect x="1084" y="328" width="40" height="18" fill="#C9A46A" opacity=".22"></rect><polygon points="1250,330 1330,300 1410,330" fill="#100E0C"></polygon><rect x="1262" y="328" width="136" height="32" fill="#100E0C"></rect><rect x="1290" y="336" width="28" height="16" fill="#C9A46A" opacity=".2"></rect><circle cx="1440" cy="110" r="20" fill="#EFE3CC" opacity=".4"></circle></svg>
+<div style="position:relative;max-width:1280px;margin:0 auto;padding:110px 24px 84px">
+<p style="margin:0 0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A">Works</p>
+<h1 id="hero-t" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(48px,6.6vw,100px);line-height:.94">Built, lived in,<br><em style="color:#E3C48F">loved.</em></h1>
+<p style="margin:26px 0 0;font-size:17px;line-height:1.8;color:#C9BFAF;max-width:560px;font-weight:300">Every project keeps the configuration it was built from. Open one and begin your own from the same spec.</p>
+</div>
+</section>
+
+<div style="max-width:1280px;margin:0 auto;padding:48px 24px 72px">
+
+<div role="group" aria-label="Filter projects" style="display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 28px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.label}}</button>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<section aria-label="Project list" style="flex:999 1 560px;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+<sc-for list="{{projects}}" as="p" hint-placeholder-count="6">
+<button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="{{p.style}}">
+<img src="{{p.img}}" alt="" style="aspect-ratio:4/3;width:100%;object-fit:cover;display:block">
+<span style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;text-align:left">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase">{{p.type}} · {{p.place}}</span>
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:24px;text-transform:uppercase;line-height:1.05">{{p.name}}</span>
+<span style="font-size:14px;color:#5C5850">{{p.area}} m² · {{p.weeks}} weeks · {{p.client}}</span>
+</span>
+</button>
+</sc-for>
+</section>
+
+<aside aria-label="Project detail" style="flex:1 1 360px;min-width:0;background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;overflow:hidden">
+<div style="position:relative;aspect-ratio:16/10;background:#171512"><img src="{{sel.img}}" alt="{{sel.alt}}" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;right:12px;bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#E8DFD0;background:rgba(13,12,10,.6);padding:4px 8px">Illustrative render</span></div>
+<div style="padding:22px;display:flex;flex-direction:column;gap:14px">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase">{{sel.type}} · {{sel.place}}</span>
+<h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px;text-transform:uppercase;line-height:1">{{sel.name}}</h2>
+<p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px">
+<dt style="color:#5C5850">Design</dt><dd style="margin:0">{{sel.design}}</dd>
+<dt style="color:#5C5850">Floor area</dt><dd style="margin:0">{{sel.area}} m²</dd>
+<dt style="color:#5C5850">Build time</dt><dd style="margin:0">{{sel.weeks}} weeks, yard to handover</dd>
+<dt style="color:#5C5850">Key finishes</dt><dd style="margin:0">{{sel.finishes}}</dd>
+</dl>
+<blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">[Client quote about the build]</blockquote>
+<a class="btn" href="Configurator.dc.html">Build something like this</a>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'All', sel: 0 };
+  }
+  renderVals() {
+    const all = [
+      { name: '[Highland A-frame retreat]', type: 'A-frame', place: '[Location]', area: 67, weeks: 9, client: 'Hospitality', design: 'A-frame loft, 2 bays', finishes: 'Cypress shiplap, uPVC glazing, engineered oak', story: 'Two rental A-frames on a sloping plot, delivered in sections and assembled on screw piles to avoid heavy earthworks.' },
+      { name: '[Twin 40 family home]', type: 'Container', place: '[Location]', area: 59, weeks: 10, client: 'Private home', design: 'Twin 40 family', finishes: 'Fibre cement in charcoal, PIR 100 mm, SPC vinyl', story: 'Two 40 ft units joined around an open living core, with a full-length deck and rooftop solar.' },
+      { name: '[Site camp, 12 units]', type: 'Container', place: '[Location]', area: 356, weeks: 7, client: 'Contractor', design: 'Site office 40 × 12', finishes: 'Corrugated steel, rockwool 75 mm, laminate', story: 'Offices, stores and ablutions for a road project, fitted out in parallel and delivered over two weeks.' },
+      { name: '[Veranda cabin]', type: 'Cabin', place: '[Location]', area: 54, weeks: 7, client: 'Private home', design: 'Veranda cabin, 3 bays', finishes: 'Composite WPC, mahogany doors, laminate', story: 'A two-bedroom cabin with a covered veranda on a farm plot, finished with low-maintenance composite cladding.' },
+      { name: '[Agro warehouse]', type: 'Steel', place: '[Location]', area: 240, weeks: 11, client: 'Agribusiness', design: 'Warehouse 12 × 20', finishes: 'Box-profile roofing, roller shutter, polished concrete', story: 'Produce store with roof lights and a raised loading apron, built on a reinforced slab.' },
+      { name: '[Highway strip mall]', type: 'Container', place: '[Town]', area: 178, weeks: 10, client: 'Commercial investor', design: 'Strip mall, 12 shops', finishes: 'Corrugated charcoal, roller shutters, covered walkway', story: 'Twelve 20 ft shops in a row on a 100 × 100 ft plot, with parking in front. Seven units were pre-leased before delivery and individual shops were sold to investors.' },
+      { name: '[Riverside eco-resort]', type: 'Container', place: '[Location]', area: 356, weeks: 14, client: 'Resort developer', design: 'Pod resort cluster, 24 cabins', finishes: 'Cypress shiplap, uPVC glazing, WPC decks', story: 'Twenty-four 20 ft cabins spaced for privacy around a lounge and pool deck. Cabins were offered to investors unit by unit, with an operator managing bookings.' },
+      { name: '[Roadside kiosk]', type: 'Container', place: '[Location]', area: 15, weeks: 5, client: 'Retail', design: 'Container studio 20', finishes: 'Corrugated steel in oxide red, aluminium windows', story: 'A 20 ft retail kiosk with a fold-up serving hatch, delivered complete and connected on arrival.' }
+    ];
+    const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];
+    const filters = labels.map((l) => { const on = this.state.type === l; return { label: l === 'All' ? 'All projects' : (l === 'Steel' ? 'Steel structures' : l + 's'), pressed: on ? 'true' : 'false', pick: () => { const first = all.findIndex((p) => l === 'All' || p.type === l); this.setState({ type: l, sel: first < 0 ? 0 : first }); }, style: 'min-height:44px;padding:0 18px;border-radius:999px;font:inherit;font-size:15px;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB;border:1px solid #1B1A17' : 'background:#FFFFFF;color:#1B1A17;border:1px solid #BDB29C') }; });
+    const projects = all.map((p, i) => Object.assign({}, p, { i: i })).filter((p) => this.state.type === 'All' || p.type === this.state.type).map((p) => {
+      const on = this.state.sel === p.i;
+      return Object.assign({}, p, { pressed: on ? 'true' : 'false', pick: () => this.setState({ sel: p.i }), style: 'padding:0;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;background:#FFFFFF;font:inherit;color:#1B1A17;cursor:pointer;border:1px solid ' + (on ? '#8A6A33' : '#DDD6CA') + ';box-shadow:' + (on ? '0 0 0 2px #8A6A33' : 'none') });
+    });
+    const IMG = {
+      'A-frame': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', 'Cabin': '/_blob/934cee1933bb4f74580e99cf52bfbbdc', 'Steel': '/_blob/ad198461426af454fde500cf62dc0e6d',
+      '[Twin 40 family home]': '/_blob/34e98516af54244cb1e1a80f0a5f434d', '[Site camp, 12 units]': '/_blob/31faaccf8dfd53a2cf2e363b3365c3c0',
+      '[Highway strip mall]': '/_blob/c443aeb1df9da124515acb87cccc69cf', '[Riverside eco-resort]': '/_blob/1148ec4f8c7496bd7c3c61324e78a073',
+      '[Roadside kiosk]': '/_blob/8f71d74f798a20f37854d9ceab7dbc74'
+    };
+    const imgFor = (p) => IMG[p.name] || IMG[p.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac';
+    const withImg = projects.map((p) => Object.assign({}, p, { img: imgFor(p) }));
+    const s0 = all[this.state.sel];
+    return { filters, projects: withImg, sel: Object.assign({}, s0, { img: imgFor(s0), alt: 'Illustrative render: ' + s0.design }) };
+  }
+}
+</script>
+</body>
+</html>

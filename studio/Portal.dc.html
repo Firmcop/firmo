@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My build</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F4F1EB}
+a{color:#6B4F22}a:hover{color:#4A3616}
+.nav a{color:#E8DFD0;text-decoration:none;padding:12px 0;display:inline-block;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.nav a:hover{color:#FFFFFF}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;background:#8A6A33;color:#FFFFFF;border:0;border-radius:4px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none}
+.btn:hover{background:#6B4F22;color:#FFFFFF}
+.btn-line{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;background:#FFFFFF;color:#1B1A17;border:1.5px solid #1B1A17;border-radius:4px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none}
+.btn-line:hover{background:#1B1A17;color:#F4F1EB}
+.card{background:#FFFFFF;border:1px solid #DDD6CA;border-radius:6px;padding:22px}
+.h{margin:0 0 14px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:26px;text-transform:uppercase}
+</style>
+</helmet>
+<div style="font-family:'Manrope',system-ui,sans-serif;color:#1B1A17;background:#F4F1EB;min-height:100vh">
+
+<header style="background:#0D0C0A;color:#F2EBDF;border-bottom:1px solid #1E1B17">
+<div style="max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 32px">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:#F2EBDF;min-height:56px;line-height:1">
+<span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:28px;letter-spacing:.18em">FIRMCOP</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
+</a>
+<nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 24px;flex:1 1 auto;font-size:15px">
+<a href="Catalog.dc.html">Collection</a>
+<a href="Configurator.dc.html">Configure</a>
+<a href="Store.dc.html">Atelier</a>
+<a href="Projects.dc.html">Works</a>
+<a href="Invest.dc.html">Invest</a>
+<a href="design-studio.html">3D Studio</a>
+<a href="Portal.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">My builds</a>
+</nav>
+<span style="font-size:14px;color:#D9D3C7">Signed in as [Customer A]</span>
+</div>
+</header>
+
+<section aria-labelledby="hero-t" style="position:relative;background:#0D0C0A;color:#F2EBDF;overflow:hidden">
+<svg aria-hidden="true" viewBox="0 0 1600 460" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%"><rect width="1600" height="460" fill="#0D0C0A"></rect><path d="M1180 400 V90 H1470" fill="none" stroke="#2A2722" stroke-width="10"></path><path d="M1180 90 L1260 160" stroke="#2A2722" stroke-width="6"></path><line x1="1400" y1="90" x2="1400" y2="200" stroke="#C9A46A" stroke-width="2" opacity=".6"></line><rect x="1300" y="200" width="200" height="50" fill="#15130F" stroke="#C9A46A" stroke-width="1" opacity=".9"></rect><rect x="1324" y="212" width="40" height="22" fill="#E9C487" opacity=".45"></rect><rect x="1384" y="212" width="40" height="22" fill="#E9C487" opacity=".35"></rect><rect x="0" y="400" width="1600" height="60" fill="#14110F"></rect></svg>
+<div style="position:relative;max-width:1280px;margin:0 auto;padding:100px 24px 64px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:32px">
+<div>
+<p style="margin:0 0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A">My builds · Order SO-0142 · Sample data</p>
+<h1 id="hero-t" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(44px,6vw,92px);line-height:.94">Your One-Bed Forty<br><em style="color:#E3C48F">is taking shape.</em></h1>
+<p style="margin:22px 0 0;font-size:15px;color:#C9BFAF;line-height:1.7">Container 40 ft · Fibre cement in charcoal · PIR 100 mm · SPC vinyl · Front deck · Delivering to [Town]</p>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:40px">
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#A89E8E">Estimated delivery</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1.1">Week of 16 Nov</div></div>
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#A89E8E">Progress</div><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;line-height:1.1">{{overall}}%</div></div>
+</div>
+</div>
+<div role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{overall}}" style="height:3px;background:#2A2722;overflow:hidden"><div style="{{overallBar}}"></div></div>
+</div>
+</section>
+
+<div style="max-width:1280px;margin:0 auto;padding:40px 24px 72px;display:flex;flex-direction:column;gap:24px">
+
+<sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+<p role="status" style="margin:0;padding:12px 16px;background:#2F4550;color:#F4F1EB;border-radius:4px;font-size:15px">{{toast}}</p>
+</sc-if>
+
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:24px">
+
+<section class="card" aria-labelledby="stages">
+<h2 id="stages" class="h">Build stages</h2>
+<ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+<sc-for list="{{stages}}" as="st" hint-placeholder-count="7">
+<li style="display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:1px solid #EAE4D8">
+<span aria-hidden="true" style="{{st.dot}}">{{st.mark}}</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px"><strong style="font-size:16px">{{st.name}}</strong><span style="font-size:14px;color:#5C5850">{{st.when}}</span></div>
+<span style="font-size:14px;color:#5C5850">{{st.note}}</span>
+<sc-if value="{{st.current}}" hint-placeholder-val="{{false}}">
+<div style="height:8px;background:#EAE4D8;border-radius:2px;overflow:hidden;max-width:360px"><div style="height:8px;width:60%;background:#8A6A33"></div></div>
+</sc-if>
+</div>
+</li>
+</sc-for>
+</ol>
+</section>
+
+<section class="card" aria-labelledby="updates">
+<h2 id="updates" class="h">Updates from the yard</h2>
+<div style="display:flex;flex-direction:column;gap:20px">
+<article style="display:flex;flex-wrap:wrap;gap:16px">
+<img src="/_blob/2c22d41bdd87f85716803400ede0e82b" alt="Illustrative render: the unit in the yard with wiring in its openings" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
+<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">19 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Electrical first fix done</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">Cables, back boxes and the distribution board are in. Insulation inspection passed before the walls were closed.</p></div>
+</article>
+<article style="display:flex;flex-wrap:wrap;gap:16px">
+<img src="/_blob/baf01406d1e201b29b1be20833ec2c9f" alt="Illustrative render: insulation boards fitted in the unit" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
+<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">15 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Insulation installed</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">112 m² of PIR board fitted to walls and roof, taped and sealed.</p></div>
+</article>
+<article style="display:flex;flex-wrap:wrap;gap:16px">
+<img src="/_blob/1ee10acb3ca6b3ba53a693fa596afbdd" alt="Illustrative render: window openings cut and framed in the unit" style="flex:0 0 200px;width:200px;aspect-ratio:4/3;object-fit:cover;display:block">
+<div style="flex:1 1 240px;min-width:0"><time style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5C5850">9 Oct</time><h3 style="margin:4px 0 6px;font-size:17px">Openings cut and framed</h3><p style="margin:0;font-size:15px;line-height:1.5;color:#3D3A34">Four window openings and the door opening cut, framed in box section and primed.</p></div>
+</article>
+</div>
+</section>
+
+<section class="card" aria-labelledby="payments">
+<h2 id="payments" class="h">Payments</h2>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;font-size:15px;min-width:520px">
+<thead><tr style="text-align:left;font-size:12px;color:#5C5850;text-transform:uppercase;letter-spacing:.05em"><th scope="col" style="padding:8px 8px 8px 0;font-weight:500">Milestone</th><th scope="col" style="padding:8px;font-weight:500;text-align:right">Amount</th><th scope="col" style="padding:8px;font-weight:500">Status</th><th scope="col" style="padding:8px 0 8px 8px;font-weight:500"><span style="position:absolute;left:-9999px">Action</span></th></tr></thead>
+<tbody>
+<sc-for list="{{payments}}" as="p" hint-placeholder-count="4">
+<tr style="border-top:1px solid #EAE4D8">
+<td style="padding:12px 8px 12px 0"><strong style="display:block">{{p.name}}</strong><span style="font-size:13px;color:#5C5850">{{p.note}}</span></td>
+<td style="padding:12px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;white-space:nowrap">KES {{p.amount}}</td>
+<td style="padding:12px 8px"><span style="{{p.style}}">{{p.status}}</span></td>
+<td style="padding:12px 0 12px 8px;text-align:right"><sc-if value="{{p.payable}}" hint-placeholder-val="{{false}}"><button type="button" class="btn" onClick="{{p.pay}}">Pay with M-Pesa</button></sc-if></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:14px;margin-top:6px;border-top:1.5px solid #1B1A17;font-size:15px">
+<span>Contract total incl. VAT <strong style="font-family:'IBM Plex Mono',monospace">KES {{contract}}</strong></span>
+<span>Paid <strong style="font-family:'IBM Plex Mono',monospace">KES {{paid}}</strong> · Balance <strong style="font-family:'IBM Plex Mono',monospace">KES {{balance}}</strong></span>
+</div>
+</section>
+</div>
+
+<aside style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:24px">
+
+<section aria-labelledby="approve" style="{{varCard}}">
+<h2 id="approve" class="h" style="margin-bottom:8px">{{varTitle}}</h2>
+<p style="margin:0 0 6px;font-size:15px;line-height:1.5">Burglar bars on 4 windows, powder-coated to match the trims.</p>
+<p style="margin:0 0 14px;font-family:'IBM Plex Mono',monospace;font-size:15px">+ KES 32,000 · no change to delivery date</p>
+<sc-if value="{{varPending}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="btn" onClick="{{approveVar}}">Approve</button>
+<button type="button" class="btn-line" onClick="{{declineVar}}">Decline</button>
+</div>
+</sc-if>
+<sc-if value="{{varDecided}}" hint-placeholder-val="{{false}}">
+<p style="margin:0;font-size:14px;color:#3D3A34">{{varResult}}</p>
+</sc-if>
+</section>
+
+<section class="card" aria-labelledby="site">
+<h2 id="site" class="h" style="margin-bottom:6px">Get your site ready</h2>
+<p style="margin:0 0 14px;font-size:14px;color:#5C5850">Complete these before the week of 16 Nov. {{siteDone}} of 5 done.</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{site}}" as="c" hint-placeholder-count="5">
+<label style="display:flex;gap:12px;align-items:center;min-height:44px;font-size:15px;cursor:pointer"><input type="checkbox" checked="{{c.on}}" onChange="{{c.toggle}}" style="width:20px;height:20px;margin:0;flex:0 0 auto">{{c.label}}</label>
+</sc-for>
+</div>
+</section>
+
+<section class="card" aria-labelledby="docs">
+<h2 id="docs" class="h">Documents</h2>
+<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+<sc-for list="{{docs}}" as="d" hint-placeholder-count="5">
+<li style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #EAE4D8">
+<span style="display:flex;flex-direction:column"><span style="font-size:15px">{{d.name}}</span><span style="font-size:13px;color:#5C5850">{{d.meta}}</span></span>
+<button type="button" aria-label="{{d.aria}}" disabled="{{d.locked}}" onClick="{{d.get}}" style="{{d.style}}">{{d.btn}}</button>
+</li>
+</sc-for>
+</ul>
+</section>
+
+<section class="card" aria-labelledby="pm">
+<h2 id="pm" class="h" style="margin-bottom:12px">Your project manager</h2>
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+<span aria-hidden="true" style="width:48px;height:48px;border-radius:50%;background:#2F4550;color:#F4F1EB;display:flex;align-items:center;justify-content:center;font-weight:600">PM</span>
+<span style="display:flex;flex-direction:column"><strong>[Project manager]</strong><span style="font-size:14px;color:#5C5850">Replies within a few hours</span></span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+<sc-for list="{{messages}}" as="m" hint-placeholder-count="2">
+<div style="{{m.style}}"><span style="display:block;font-size:12px;opacity:.75;margin-bottom:2px">{{m.who}}</span>{{m.text}}</div>
+</sc-for>
+</div>
+<label for="msg" style="font-size:14px;font-weight:600">Message</label>
+<textarea id="msg" rows="2" value="{{draft}}" onChange="{{typeDraft}}" placeholder="Ask about your build" style="width:100%;box-sizing:border-box;margin:6px 0 8px;padding:10px 12px;border:1.5px solid #8C8475;border-radius:4px;font:inherit;font-size:15px;resize:vertical"></textarea>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="btn" onClick="{{send}}">Send</button>
+<button type="button" class="btn-line" onClick="{{openWa}}">WhatsApp</button>
+</div>
+</section>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { variation: 'pending', paid3: false, site: [true, false, true, false, false], draft: '', messages: [{ me: false, text: 'Fabrication is on track. Bars for the windows can be added this week if you approve the variation.' }], toast: '' };
+  }
+  renderVals() {
+    const s = this.state;
+    const fmt = (n) => Math.round(n).toLocaleString('en-KE');
+    const pill = 'font-family:IBM Plex Mono,monospace;font-size:12px;padding:3px 8px;border-radius:3px;white-space:nowrap;';
+    const base = 3920000, varAmt = s.variation === 'approved' ? 32000 * 1.16 : 0;
+    const contract = base + varAmt;
+    const pays = [
+      { name: 'Deposit', note: 'Paid 21 Sep by M-Pesa', amount: base * 0.3, paid: true },
+      { name: 'Drawings approved', note: 'Paid 2 Oct by bank transfer', amount: base * 0.3, paid: true },
+      { name: 'Before delivery', note: varAmt ? 'Includes approved variation' : 'Due after your yard inspection', amount: base * 0.3 + varAmt, paid: s.paid3, due: true },
+      { name: 'Handover', note: 'On installation and sign-off', amount: base * 0.1, paid: false }
+    ];
+    const payments = pays.map((p) => ({ name: p.name, note: p.paid && p.due ? 'Paid today by M-Pesa' : p.note, amount: fmt(p.amount), status: p.paid ? 'Paid' : (p.due ? 'Due 9 Nov' : 'Upcoming'), style: pill + (p.paid ? 'background:#E3F1E6;color:#1F5A2E' : (p.due ? 'background:#FFF1D6;color:#6B4A00' : 'background:#ECE8E0;color:#4A463F')), payable: !!p.due && !p.paid, pay: () => this.setState({ paid3: true, toast: 'M-Pesa prompt sent to your phone. Payment confirmed (prototype).' }) }));
+    const paid = pays.filter((p) => p.paid).reduce((a, p) => a + p.amount, 0);
+    const stageDefs = [
+      ['Deposit paid', '21 Sep', 'Production slot reserved', 'done'],
+      ['Drawings approved', '2 Oct', 'Signed off by you and our engineer', 'done'],
+      ['Fabrication', 'In progress', 'Shell, openings, insulation and first fix', 'current'],
+      ['Fitout', 'From 28 Oct', 'Flooring, kitchen, bathroom, second fix', 'next'],
+      ['Yard inspection', 'Around 6 Nov', 'Walk through it before it leaves our yard', 'next'],
+      ['Delivery and install', 'Week of 16 Nov', 'Crane lift onto your plinths, connections', 'next'],
+      ['Handover', 'After install', 'Keys, manuals and warranty', 'next']
+    ];
+    const stages = stageDefs.map((d) => {
+      const done = d[3] === 'done', cur = d[3] === 'current';
+      return { name: d[0], when: d[1], note: d[2], current: cur, mark: done ? '✓' : '', dot: 'flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;' + (done ? 'background:#2E8B4E;color:#FFFFFF' : (cur ? 'background:#FFFFFF;border:3px solid #8A6A33;box-sizing:border-box' : 'background:#FFFFFF;border:2px solid #BDB29C;box-sizing:border-box')) };
+    });
+    const siteLabels = ['Plinths cast to our drawing', 'Access road cleared for a truck', 'Power line moved or confirmed clear', 'Water connection point ready', 'County approval on file'];
+    const site = siteLabels.map((l, i) => ({ label: l, on: !!s.site[i], toggle: () => { const c = s.site.slice(); c[i] = !c[i]; this.setState({ site: c }); } }));
+    const docDefs = [['Approved drawings', 'PDF · signed 2 Oct', false], ['Bill of quantities', 'PDF · version 3', false], ['Contract and payment terms', 'PDF', false], ['Plinth setting-out drawing', 'PDF · for your builder', false], ['Warranty certificate', 'Available at handover', true]];
+    const docs = docDefs.map((d) => ({ name: d[0], meta: d[1], locked: d[2], aria: 'Download ' + d[0], btn: d[2] ? 'Later' : 'Download', get: () => this.setState({ toast: d[0] + ' downloaded (prototype).' }), style: 'min-height:44px;padding:0 14px;border-radius:4px;font:inherit;font-size:14px;font-weight:600;background:#FFFFFF;color:#1B1A17;border:1.5px solid ' + (d[2] ? '#BDB29C' : '#1B1A17') + ';cursor:' + (d[2] ? 'not-allowed' : 'pointer') + ';opacity:' + (d[2] ? '0.5' : '1') }));
+    const messages = s.messages.map((m) => ({ who: m.me ? 'You' : '[Project manager]', text: m.text, style: 'padding:10px 12px;border-radius:6px;font-size:14px;line-height:1.45;max-width:90%;' + (m.me ? 'align-self:flex-end;background:#2F4550;color:#F4F1EB' : 'align-self:flex-start;background:#F4F1EB;color:#1B1A17') }));
+    const pending = s.variation === 'pending';
+    const overall = s.paid3 ? 72 : 58;
+    return {
+      overall, overallBar: 'height:3px;background:#C9A46A;width:' + overall + '%',
+      stages, payments, contract: fmt(contract), paid: fmt(paid), balance: fmt(contract - paid),
+      varPending: pending, varDecided: !pending,
+      varTitle: pending ? 'Your approval needed' : (s.variation === 'approved' ? 'Variation approved' : 'Variation declined'),
+      varResult: s.variation === 'approved' ? 'Added to your BOQ and the before-delivery payment. The yard and procurement have been told.' : 'No change to your build. You can ask your project manager to add it later.',
+      varCard: 'border-radius:6px;padding:22px;' + (pending ? 'background:#FFF1D6;border:1.5px solid #C77700' : 'background:#FFFFFF;border:1px solid #DDD6CA'),
+      approveVar: () => this.setState({ variation: 'approved', toast: '' }),
+      declineVar: () => this.setState({ variation: 'declined', toast: '' }),
+      site, siteDone: s.site.filter((x) => x).length,
+      docs, messages, draft: s.draft,
+      typeDraft: (e) => this.setState({ draft: e.target.value }),
+      send: () => { if (!s.draft.trim()) { this.setState({ toast: 'Type a message first.' }); return; } this.setState({ messages: s.messages.concat([{ me: true, text: s.draft.trim() }]), draft: '', toast: '' }); },
+      openWa: () => this.setState({ toast: 'Opens a WhatsApp chat with your project manager (prototype).' }),
+      toastOn: !!s.toast, toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
