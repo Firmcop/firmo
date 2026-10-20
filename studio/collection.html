@@ -64,7 +64,7 @@ nav.top a{text-decoration:none;color:var(--muted)} nav.top a:hover,nav.top a[ari
 <body>
 <header><div class="wrap">
   <a class="mark" href="index.html"><b>FIRMCOP</b><small>Modular · Kenya</small></a>
-  <nav class="top" aria-label="Main"><a href="Catalog.dc.html" aria-current="page">Collection</a><a href="design-studio.html">Design Studio</a><a href="design-manager.html">Team</a></nav>
+  <nav class="top" aria-label="Main"><a href="Catalog.dc.html" aria-current="page">Collection</a><a href="3d-studio.html">Design Studio</a><a href="design-manager.html">Team</a></nav>
 </div></header>
 <main class="wrap">
   <section class="hero">
@@ -109,7 +109,7 @@ nav.top a{text-decoration:none;color:var(--muted)} nav.top a:hover,nav.top a[ari
         <div class="bd"><h2>${esc(d.name)}</h2><p>${esc(d.summary || '')}</p>
         <div class="facts"><span>${d.area.toFixed(0)} m²</span><span>${d.beds ? d.beds + ' bed' : 'Studio'}</span><span>${d.baths} bath</span><span>${esc(d.size)}</span><span>${d.weeks} weeks</span></div>
         <div class="foot"><div class="price"><small>From, incl. VAT</small><b>${KSh(d.total)}</b></div>
-        <div class="acts"><a class="btn gold" href="design-studio.html?design=${encodeURIComponent(d.slug)}">Configure</a><a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a></div></div></div></article>`;
+        <div class="acts"><a class="btn gold" href="3d-studio.html?design=${encodeURIComponent(d.slug)}">Configure</a><a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a></div></div></div></article>`;
     }).join('') || '<p class="empty">No designs in this range yet.</p>';
   }
   document.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { FILTER = b.dataset.f; render(); } });

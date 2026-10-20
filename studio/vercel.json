@@ -14,7 +14,12 @@
     },
     {
       "source": "/design-studio",
-      "destination": "/design-studio.html",
+      "destination": "/3d-studio.html",
+      "permanent": false
+    },
+    {
+      "source": "/3d-studio",
+      "destination": "/3d-studio.html",
       "permanent": false
     },
     {

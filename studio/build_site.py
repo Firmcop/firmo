@@ -25,10 +25,11 @@ os.makedirs(os.path.join(out, 'img')); os.makedirs(os.path.join(out, '_blob'))
 
 def fix_links(s):
     # the 3D Studio lives on this site now
-    s = s.replace(f'<a href="{ARTIFACT}">3D Studio</a>', '<a href="design-studio.html">3D Studio</a>')
+    s = s.replace(f'<a href="{ARTIFACT}">3D Studio</a>', '<a href="3d-studio.html">3D Studio</a>')
     s = s.replace(f'href="{ARTIFACT}" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Firmcop 3D Studio</a>', 'href="tools.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Firmcop 3D tools</a>')
-    s = s.replace(f'href="{ARTIFACT}"', 'href="design-studio.html"')
-    s = s.replace('href="Studio.dc.html"', 'href="design-studio.html"')
+    s = s.replace(f'href="{ARTIFACT}"', 'href="3d-studio.html"')
+    s = s.replace('href="Studio.dc.html"', 'href="3d-studio.html"')
+    s = s.replace('href="design-studio.html', 'href="3d-studio.html')
     return s
 
 LIVE_CTOR = """    this.state = { type: 'All', use: 'all', asc: true, live: null };
@@ -62,7 +63,7 @@ for name in PAGES:
     let list = merged.filter(""", 1)
         s = s.replace("    const U3 = '" + ARTIFACT + "';", "    const SYSIMG = { 'Container': '/_blob/34e98516af54244cb1e1a80f0a5f434d', 'A-frame': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', 'Cabin': '/_blob/934cee1933bb4f74580e99cf52bfbbdc' };", 1)
         s = s.replace("      img: IMG[d.name] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',", "      img: IMG[d.name] || SYSIMG[d.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',", 1)
-        s = s.replace("      has3d: !!d.code, url3d: d.code ? U3 : '',", "      has3d: !!d.code, url3d: d.code ? 'studio.html?design=' + d.code : '',\n      cfgHref: d.slug ? 'design-studio.html?design=' + encodeURIComponent(d.slug) : 'Configurator.dc.html',", 1)
+        s = s.replace("      has3d: !!d.code, url3d: d.code ? U3 : '',", "      has3d: !!d.code, url3d: d.code ? 'studio.html?design=' + d.code : '',\n      cfgHref: d.slug ? '3d-studio.html?design=' + encodeURIComponent(d.slug) : 'Configurator.dc.html',", 1)
         s = s.replace('<a class="lnk-l" href="Configurator.dc.html">Configure</a>\n<sc-if', '<a class="lnk-l" href="{{d.cfgHref}}">Configure</a>\n<sc-if', 1)
         s = s.replace('<script src="./support.js"></script>', '<script src="./ds-config.js"></script>\n<script src="./ds-core.js"></script>\n<script src="./support.js"></script>', 1)
         for must in ['live: null', 'const merged', 'SYSIMG', 'cfgHref', '{{d.cfgHref}}', 'ds-core.js']:
@@ -80,6 +81,15 @@ for fn in os.listdir(os.path.join(f3d, 'img')):
 # 3D tools and data
 for fn in ['design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
+# the Studio as a page of the site: site header on top, Studio framed beneath
+shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))
+d = open(os.path.join(out, 'design-studio.html')).read()
+old = '<a class="mark" href="index.html">'
+assert old in d
+d = d.replace(old, '<a class="mark" href="Main.dc.html" target="_top">')
+# inside the site page the site header already carries the brand, so drop the Studio's own mark
+d = d.replace('</head>', '<script>if (window.top !== window) document.documentElement.classList.add("in-site");</script>\n<style>.in-site .mark{display:none}</style>\n</head>', 1)
+open(os.path.join(out, 'design-studio.html'), 'w').write(d)
 tools = open(os.path.join(f3d, 'index.html')).read()
 open(os.path.join(out, 'tools.html'), 'w').write(tools)
 x = open(os.path.join(out, '2x4.html')).read().replace('<a href="index.html" style="font-size:12px">← Back to Firmcop 3D</a>', '<a href="tools.html" style="font-size:12px">← Back to Firmcop 3D</a>')
@@ -93,7 +103,8 @@ vercel = {
   "rewrites": [{"source": "/", "destination": "/Main.dc.html"}],
   "redirects": [
     {"source": "/collection", "destination": "/Catalog.dc.html", "permanent": False},
-    {"source": "/design-studio", "destination": "/design-studio.html", "permanent": False},
+    {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},
+    {"source": "/3d-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/design-manager", "destination": "/design-manager.html", "permanent": False},
     {"source": "/studio", "destination": "/studio.html", "permanent": False},
     {"source": "/2x4", "destination": "/2x4.html", "permanent": False},
@@ -109,4 +120,8 @@ vercel = {
   ],
 }
 open(os.path.join(out, 'vercel.json'), 'w').write(json.dumps(vercel, indent=2) + '\n')
+# the tools pages also open the Studio inside the site
+for fn in ['tools.html', 'collection.html', 'design-manager.html']:
+    fp = os.path.join(out, fn); t = open(fp).read().replace("design-studio.html", "3d-studio.html")
+    open(fp, 'w').write(t)
 print('built', len(os.listdir(out)), 'entries in', out)

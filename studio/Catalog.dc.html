@@ -50,7 +50,7 @@ a{color:#C9A46A}a:hover{color:#E3C48F}
 <a href="Invest.dc.html">Invest</a>
 <a href="Projects.dc.html">Works</a>
 <a href="Store.dc.html">Atelier</a>
-<a href="design-studio.html">3D Studio</a>
+<a href="3d-studio.html">3D Studio</a>
 <a href="Portal.dc.html">My builds</a>
 </nav>
 <a class="ghost" href="Main.dc.html#visit" style="min-height:44px;padding:0 20px">Visit the yard</a>
@@ -220,7 +220,7 @@ class Component extends DCLogic {
       img: IMG[d.name] || SYSIMG[d.type] || '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac',
       priceLabel: d.price.toLocaleString('en-KE'), viewLabel: 'View ' + d.name,
       has3d: !!d.code, url3d: d.code ? 'studio.html?design=' + d.code : '',
-      cfgHref: d.slug ? 'design-studio.html?design=' + encodeURIComponent(d.slug) : 'Configurator.dc.html',
+      cfgHref: d.slug ? '3d-studio.html?design=' + encodeURIComponent(d.slug) : 'Configurator.dc.html',
       isContainer: d.type === 'Container', isAframe: d.type === 'A-frame', isCabin: d.type === 'Cabin', isSteel: d.type === 'Steel'
     }));
     return {

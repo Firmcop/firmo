@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D Studio · Firmcop Modular</title>
+<meta name="description" content="Design your container home, A-frame or cabin in 3D with a Firmcop designer: rooms, modular kitchen, stocked finishes and a live price in KSh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=Manrope:wght@300;400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+/* Site shell around the Design Studio: the website header stays, the Studio fills the rest of the window. */
+html,body{margin:0;height:100%;background:#0D0C0A;color:#F2EBDF;font-family:'Manrope',system-ui,sans-serif}
+.page{display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{border-bottom:1px solid #1E1B17;flex:0 0 auto}
+.bar{max-width:1360px;margin:0 auto;padding:10px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 40px}
+.brand{display:flex;flex-direction:column;text-decoration:none;color:#F2EBDF;min-height:44px;justify-content:center;line-height:1}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;letter-spacing:-.01em}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase}
+.nav{display:flex;flex-wrap:wrap;gap:0 32px;flex:1 1 auto;justify-content:center}
+.nav a{color:#E8DFD0;text-decoration:none;font-size:12px;letter-spacing:.22em;text-transform:uppercase;padding:12px 0;display:inline-block}
+.nav a:hover{color:#C9A46A}
+.nav a[aria-current=page]{color:#C9A46A;box-shadow:inset 0 -1px 0 #C9A46A}
+.ghost{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border:1px solid rgba(232,223,208,.5);color:#F2EBDF;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:.22em;text-transform:uppercase}
+.ghost:hover{border-color:#C9A46A;color:#C9A46A}
+:focus-visible{outline:2px solid #C9A46A;outline-offset:2px}
+main{flex:1 1 auto;min-height:0;position:relative}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#0D0C0A}
+@media (max-width:900px){.page{height:auto}.bar{padding:10px 16px}.nav{gap:0 18px;justify-content:flex-start}main{height:88vh}.ghost{display:none}}
+</style>
+</head>
+<body>
+<div class="page">
+<header><div class="bar">
+  <a class="brand" href="Main.dc.html"><span class="serif" style="font-size:26px;letter-spacing:.18em">FIRMCOP</span><span class="eyebrow" style="font-size:9px;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span></a>
+  <nav class="nav" aria-label="Main">
+    <a href="Catalog.dc.html">Collection</a>
+    <a href="Configurator.dc.html">Configure</a>
+    <a href="Invest.dc.html">Invest</a>
+    <a href="Projects.dc.html">Works</a>
+    <a href="Store.dc.html">Atelier</a>
+    <a href="3d-studio.html" aria-current="page">3D Studio</a>
+    <a href="Portal.dc.html">My builds</a>
+  </nav>
+  <a class="ghost" href="Main.dc.html#visit">Visit the yard</a>
+</div></header>
+<main><iframe id="studio" title="Firmcop Design Studio" allow="fullscreen" src="design-studio.html"></iframe></main>
+</div>
+<script>
+// pass ?design=... through to the Studio so Collection links open the right design
+(function () { var q = location.search; if (q) document.getElementById('studio').src = 'design-studio.html' + q; })();
+</script>
+</body>
+</html>
