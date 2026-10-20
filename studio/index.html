@@ -1,0 +1,154 @@
+<title>Firmcop 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one dark atelier band — hero line, two flagship tools, then the design library as a 4-up grid of launch tiles. Single deliberate dark look, same as the Firmcop site. */
+:root{
+  --ink:#0D0C0A; --panel:#141210; --panel2:#1b1815; --line:rgba(242,235,223,.12);
+  --ivory:#F2EBDF; --muted:rgba(242,235,223,.62); --brass:#C9A46A; --brass-hi:#E3C48F;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--ink);color:var(--ivory)}
+body{font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:18px;flex-wrap:wrap}
+.mark{display:flex;flex-direction:column;line-height:1}
+.mark b{font:500 22px/1 var(--serif);letter-spacing:.32em}
+.mark small{font:400 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:6px}
+.cur{font:400 11px/1.4 var(--mono);letter-spacing:.08em;color:var(--muted);text-align:right}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
+.hero{padding-block:56px 36px}
+.hero h1{font:400 clamp(40px,6vw,72px)/1.02 var(--serif);margin:14px 0 16px;text-wrap:balance;max-width:16ch}
+.hero h1 em{color:var(--brass-hi);font-style:italic}
+.hero p{max-width:60ch;color:var(--muted);margin:0}
+.flag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding-block:20px 48px}
+.tool{display:grid;grid-template-rows:auto 1fr;background:var(--panel);border:1px solid var(--line);text-decoration:none;transition:border-color .2s}
+.tool:hover,.tool:focus-visible{border-color:var(--brass)}
+.tool:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.tool.hero2{grid-column:1/-1;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-rows:none}
+.tool.hero2 .ph{aspect-ratio:auto;min-height:280px}
+@media (max-width:640px){.tool.hero2{grid-template-columns:1fr}.tool.hero2 .ph{min-height:200px}}
+.tool .ph{aspect-ratio:16/8;max-width:100%;background:#000 center/cover no-repeat;position:relative}
+.tool .ph span{position:absolute;left:14px;bottom:12px;font:400 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;background:rgba(13,12,10,.72);padding:6px 8px;color:var(--muted)}
+.tool .bd{padding:22px 24px 24px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.tool h2{font:500 30px/1.1 var(--serif);margin:0}
+.tool p{margin:0;color:var(--muted);font-size:14px}
+.tool ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.tool li{font:400 11px/1 var(--mono);letter-spacing:.04em;border:1px solid var(--line);padding:6px 8px;color:var(--ivory)}
+.go{margin-top:auto;padding-top:10px;font:600 13px/1 var(--sans);letter-spacing:.06em;color:var(--brass-hi)}
+.lib{border-top:1px solid var(--line);padding-block:40px 56px}
+.lib .top{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.lib h3{font:400 36px/1.1 var(--serif);margin:10px 0 0}
+.lib .top p{margin:0;color:var(--muted);max-width:44ch;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.d{background:var(--ink);padding:20px;display:flex;flex-direction:column;gap:6px;text-decoration:none;min-height:150px;transition:background .2s}
+.d:hover,.d:focus-visible{background:var(--panel2)}
+.d:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.d code{font:400 10.5px/1 var(--mono);letter-spacing:.1em;color:var(--brass)}
+.d b{font:500 22px/1.15 var(--serif)}
+.d small{color:var(--muted);font:400 12px/1.4 var(--mono)}
+.d .go{font-size:12px}
+.note{border-top:1px solid var(--line);padding-block:28px 40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;font-size:13.5px;color:var(--muted)}
+.note h4{margin:0 0 6px;font:500 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ivory)}
+.note p{margin:0}
+.contact{font-family:var(--mono);font-size:12.5px;color:var(--ivory);user-select:all}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.note{grid-template-columns:1fr}}
+@media (max-width:640px){.flag{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.cur{text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header><div class="wrap">
+  <div class="mark"><b>FIRMCOP</b><small>Modular · 3D</small></div>
+  <div class="cur">Prices shown in KSh · indicative rate 129 per USD<br>Sample price book, for demonstration</div>
+</div></header>
+
+<main>
+<section class="wrap hero">
+  <div class="eyebrow">Firmcop 3D · design and engineering core</div>
+  <h1>Stack it, cut it, <em>check it</em> in 3D.</h1>
+  <p>Firmcop's designers in one place. Start a client design in the Design Studio, or use the engineering tools to place 10′ to 45′ modules, stack and cantilever them, and check structure and building regulations as you go.</p>
+</section>
+
+<section class="wrap flag">
+  <a class="tool hero2" href="design-studio.html">
+    <div class="ph" style="background-image:url(img/cabin.jpg)"><span>Illustrative render</span></div>
+    <div class="bd">
+      <div class="eyebrow">New · sales desk</div>
+      <h2>Firmcop Design Studio</h2>
+      <p>The sales-assisted designer for containers, A-frames and cabins. Six steps: shell, plan, furnish, finish, render and share. Every stocked finish, modular kitchen and wardrobe flows into a live BOQ in KSh.</p>
+      <ul><li>2D plan + 3D</li><li>Modular kitchens</li><li>Finishes to BOQ</li><li>Walk-through &amp; 360°</li><li>Cloud render queue</li><li>Client proposal</li></ul>
+      <span class="go">Open the Design Studio →</span>
+    </div>
+  </a>
+  <a class="tool" href="studio.html">
+    <div class="ph" style="background-image:url(img/twin-container.jpg)"><span>Illustrative render</span></div>
+    <div class="bd">
+      <div class="eyebrow">Studio</div>
+      <h2>Container House Studio</h2>
+      <p>Free-form designer for any container layout. Six steps from site to bill of materials, with eight starter designs.</p>
+      <ul><li>Stacking &amp; cantilevers</li><li>Openings &amp; joins</li><li>Interior rooms</li><li>BOM · CSV export</li></ul>
+      <span class="go">Open the Studio →</span>
+    </div>
+  </a>
+  <a class="tool" href="2x4.html">
+    <div class="ph" style="background-image:url(img/interior-living.jpg)"><span>Illustrative render</span></div>
+    <div class="bd">
+      <div class="eyebrow">Flagship design</div>
+      <h2>2×4 Container Home</h2>
+      <p>7 × 20′ high cube, 3 bed, 2 bath, double-height living and a roof deck. Every window, balustrade and component is editable.</p>
+      <ul><li>EN 1993 member sizing</li><li>Corner posts &amp; pads</li><li>Render scenes</li><li>Calc report</li></ul>
+      <span class="go">Open the 2×4 →</span>
+    </div>
+  </a>
+</section>
+
+<section class="wrap" style="padding-block:0 40px">
+  <a class="tool" href="collection.html" style="grid-template-rows:none;margin-bottom:20px">
+    <div class="bd">
+      <div class="eyebrow">Public website</div>
+      <h2>The Collection</h2>
+      <p>The client-facing catalogue, read live from Firmcop2. Publishing a design in the Design Manager puts it here with its live price, and each card opens it in the Studio for a designer-led session.</p>
+      <span class="go">Open the Collection →</span>
+    </div>
+  </a>
+  <a class="tool" href="design-manager.html" style="grid-template-rows:none">
+    <div class="bd">
+      <div class="eyebrow">Back office</div>
+      <h2>Design Manager</h2>
+      <p>Every catalogue design and its configurator rules live in the Firmcop2 database. Designers save new versions from the Studio in Author mode; an admin reviews and publishes them. Catalogue prices and stock are edited here once and flow into every quote.</p>
+      <ul><li>Versions &amp; approvals</li><li>Configurator rules</li><li>Prices &amp; stock</li><li>Activity feed</li></ul>
+      <span class="go">Open the Design Manager →</span>
+    </div>
+  </a>
+</section>
+
+<section class="wrap lib">
+  <div class="top">
+    <div><div class="eyebrow">Design library</div><h3>Start from a design</h3></div>
+    <p>Each design opens in the Studio, ready to change. Codes match the Firmcop catalogue.</p>
+  </div>
+  <div class="grid">
+    <a class="d" href="studio.html?design=DS-2X4"><code>DS-2X4</code><b>2×4 Container Home</b><small>7 × 20′ HC · 3 bed · roof deck</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-SCHN"><code>DS-SCHN</code><b>Schnitzelburg unit</b><small>4 × 20′ HC · 2 storeys + roof</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-TOWN"><code>DS-TOWN</code><b>Townhouse</b><small>6 × 20′ · 3 storeys + roof</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-CANT"><code>DS-CANT</code><b>Cantilever retreat</b><small>3 × 20′ · roof terrace</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-TROP"><code>DS-TROP</code><b>Tropical cabin</b><small>1 × 40′ · roof deck</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-BUNG"><code>DS-BUNG</code><b>Three-bed bungalow</b><small>6 × 20′ · single storey</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-APT"><code>DS-APT</code><b>Two-storey apartment</b><small>3 modules · 2 storeys</small><span class="go">Open →</span></a>
+    <a class="d" href="studio.html?design=DS-STUDIO"><code>DS-STUDIO</code><b>Garden studio</b><small>1 × 20′</small><span class="go">Open →</span></a>
+  </div>
+</section>
+
+<section class="wrap note">
+  <div><h4>Checks</h4><p>Structural sizing is preliminary, for feasibility and costing. Regulation checks follow the UK Approved Documents for now; a Kenyan rules pack comes with the full build.</p></div>
+  <div><h4>Prices</h4><p>One shared price book drives every tool. Figures are sample values converted from USD at an assumed 129 KSh, not a live quote.</p></div>
+  <div><h4>Quote requests</h4><p>Requests go to the sales team by WhatsApp or email.<br><span class="contact">+254 714 521 170</span><br><span class="contact">info@firmcop.com</span></p></div>
+</section>
+</main>

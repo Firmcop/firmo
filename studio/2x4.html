@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firmcop 2×4 Home</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.184.0/examples/jsm/",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1c1b19;--muted:#6b6862;--line:#dedad2;--accent:oklch(0.62 0.16 45)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#e9e6df;color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--ink)} a:hover{color:var(--accent)}
+  button,select,input{font:inherit;color:inherit}
+  three-d-stage:not(:defined){visibility:hidden}
+  .app{display:grid;grid-template-columns:minmax(0,1fr) 360px;height:100vh}
+  three-d-stage{display:block;width:100%;height:100%}
+  .vp{position:relative;min-width:0}
+  .hint{position:absolute;left:16px;top:16px;background:rgba(251,250,247,.94);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.45;max-width:320px}
+  .hint b{font-weight:600}
+  aside{background:#fbfaf7;border-left:1px solid var(--line);overflow-y:auto;min-height:0}
+  .hd{padding:18px 20px;border-bottom:1px solid var(--line)}
+  .eyebrow{font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+  h1{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .sub{font:400 11px/1.5 "IBM Plex Mono",monospace;color:var(--muted);margin-top:5px}
+  .sec{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+  h2{margin:0;font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+  .seg button{flex:1;appearance:none;border:0;background:none;height:34px;font-size:12px;cursor:pointer;padding:0 6px}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--ink);color:#fff}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+  .row small{display:block;color:var(--muted);font-size:11px}
+  .sw{display:flex;gap:7px}
+  .sw button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0;outline-offset:3px}
+  .sw button.on{outline:2px solid var(--ink)}
+  select{border:1px solid var(--line);border-radius:5px;background:#fff;height:32px;padding:0 6px;font-size:12px;max-width:150px}
+  input[type=checkbox]{width:18px;height:18px;accent-color:#1c1b19}
+  input[type=range]{width:140px;accent-color:#1c1b19}
+  .op{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:7px 8px;border-radius:6px;font-size:12.5px}
+  .op.on{background:#efe9dd;box-shadow:inset 0 0 0 1px var(--ink)}
+  .op .cd{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted)}
+  .grp{font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .lines{display:flex;flex-direction:column;font-size:12px}
+  .lines div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #ece9e2}
+  .lines span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tot{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-top:4px}
+  .tot b{font-size:20px}
+  .note{font-size:11.5px;line-height:1.45;color:var(--muted);margin:0}
+  .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .g3 label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+  .g3 input{height:30px;border:1px solid var(--line);border-radius:5px;padding:0 6px;width:100%;background:#fff;font-size:12px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap}
+  .btns button{height:32px;padding:0 10px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;font-size:12px}
+  .btns button:hover{border-color:var(--ink)}
+  .insp{background:#f4efe6}
+  .insp .nm{font-weight:600;font-size:14px}
+  details.sec summary{cursor:pointer;font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .cl{cursor:pointer}.cl:hover{background:#f1ede5}.cl.off span{color:var(--muted);text-decoration:line-through}
+  .warn{font-size:12px;line-height:1.4;padding:8px 10px;border-radius:6px;background:#fff4e0;border:1px solid #efd7a8}
+  @media (max-width:860px){html,body{height:auto}.app{grid-template-columns:1fr;grid-template-rows:60vh auto;height:auto}aside{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="vp">
+    <three-d-stage name="2x4-container-home" background="#e9e6df"></three-d-stage>
+    <div class="hint" id="hint"><b>Click any part</b> — container, wall, balcony, roof, stair, furniture — to move, resize, recolour, swap, duplicate or remove it. Drag to orbit.</div>
+  </div>
+  <aside id="panel"></aside>
+</div>
+<script src="platform-rules.js"></script>
+<script src="firmcop-bridge.js"></script>
+<script src="three-d-stage.js"></script>
+<script type="module">
+const stage = document.querySelector('three-d-stage');
+const { THREE } = await stage.ready;
+const W = 2.438, L = 6.058, H = 2.896, FP = 0.15, RAIL = 0.14, FLR = 0.15, U2 = H + FLR;
+const $ = v => window.FirmcopBridge.fmt(v);
+
+const CONT = [
+  { id: 'c1', n: 1, x0: 0, z0: 2.438, ns: true, lvl: 0 }, { id: 'c2', n: 2, x0: 6.67, z0: 2.438, ns: true, lvl: 0 }, { id: 'c3', n: 3, x0: 9.108, z0: 2.438, ns: true, lvl: 0 },
+  { id: 'c4', n: 4, x0: 2.47, z0: 0, ns: false, lvl: 0 },
+  { id: 'c5', n: 5, x0: 0, z0: 2.438, ns: true, lvl: 1 }, { id: 'c6', n: 6, x0: 6.67, z0: 2.438, ns: true, lvl: 1 }, { id: 'c7', n: 7, x0: 9.108, z0: 2.438, ns: true, lvl: 1 }];
+CONT.forEach(c => { c.x1 = c.x0 + (c.ns ? W : L); c.z1 = c.z0 + (c.ns ? L : W); c.y0 = c.lvl * H; });
+const TYPES = {
+  slider: { label: 'Sliding glass door', w: 2.0, v0: 0.02, v1: 2.35, cols: 2, rows: 1, door: 1, price: 4200 },
+  french: { label: 'French doors', w: 1.6, v0: 0.02, v1: 2.2, cols: 2, rows: 1, door: 'both', price: 3200 },
+  door: { label: 'Glazed door', w: 0.95, v0: 0.02, v1: 2.13, cols: 1, rows: 1, door: 0, price: 1850 },
+  window: { label: 'Casement window', w: 1.2, v0: 0.9, v1: 2.2, cols: 2, rows: 2, price: 1100 },
+  tall: { label: 'Tall slot window', w: 0.6, v0: 0.3, v1: 2.4, cols: 1, rows: 3, price: 700 },
+  picture: { label: 'Picture window', w: 1.8, v0: 0.1, v1: 2.5, cols: 2, rows: 1, price: 2600 },
+  none: { label: 'None (solid wall)', price: 0 },
+};
+const DOORS = ['slider', 'french', 'door', 'window', 'picture', 'none'], WINS = ['window', 'tall', 'picture', 'none'];
+const SLOTS = [
+  { g: 'Ground floor', id: 'S1', label: 'Guest / den · south end', c: 'c1', f: 'S', u: 1.219, types: DOORS, def: 'slider', cd: 'open' },
+  { g: 'Ground floor', id: 'W1', label: 'Guest / den · west side', c: 'c1', f: 'W', u: 5.8, types: WINS, def: 'window' },
+  { g: 'Ground floor', id: 'N1', label: 'Guest closet · north end', c: 'c1', f: 'N', u: 1.219, types: WINS, def: 'none' },
+  { g: 'Ground floor', id: 'S2', label: 'Kitchen · south end (#2)', c: 'c2', f: 'S', u: 7.889, types: DOORS, def: 'slider', cd: 'open' },
+  { g: 'Ground floor', id: 'S3', label: 'Kitchen · south end (#3)', c: 'c3', f: 'S', u: 10.327, types: DOORS, def: 'slider', cd: 'open' },
+  { g: 'Ground floor', id: 'E3a', label: 'Kitchen · east side (sink)', c: 'c3', f: 'E', u: 5.3, types: WINS, def: 'window' },
+  { g: 'Ground floor', id: 'E3b', label: 'Kitchen · east side (south)', c: 'c3', f: 'E', u: 7.6, types: WINS, def: 'none' },
+  { g: 'Ground floor', id: 'N3', label: 'Laundry / mudroom · north end', c: 'c3', f: 'N', u: 10.327, types: ['door', 'window', 'tall', 'none'], def: 'door' },
+  { g: 'Ground floor', id: 'W4', label: 'Foyer · entry (west end of #4)', c: 'c4', f: 'W', u: 1.219, types: ['door', 'french', 'slider', 'none'], def: 'door', cd: 'open' },
+  { g: 'Ground floor', id: 'N4', label: 'Foyer · north side', c: 'c4', f: 'N', u: 3.6, types: WINS, def: 'window' },
+  { g: 'Ground floor', id: 'E4', label: 'Foyer · east end', c: 'c4', f: 'E', u: 1.219, types: ['door', 'window', 'tall', 'none'], def: 'none' },
+  { g: 'Upper floor', id: 'S5', label: 'Bedroom 2 · balcony door', c: 'c5', f: 'S', u: 1.219, types: DOORS, def: 'slider' },
+  { g: 'Upper floor', id: 'W5', label: 'Bedroom 2 · west side', c: 'c5', f: 'W', u: 5.8, types: WINS, def: 'window' },
+  { g: 'Upper floor', id: 'S6', label: 'Master · balcony door (#6)', c: 'c6', f: 'S', u: 7.889, types: DOORS, def: 'slider' },
+  { g: 'Upper floor', id: 'S7', label: 'Master · balcony door (#7)', c: 'c7', f: 'S', u: 10.327, types: DOORS, def: 'slider' },
+  { g: 'Upper floor', id: 'N7', label: 'Master closet · north end', c: 'c7', f: 'N', u: 10.327, types: ['door', ...WINS], def: 'window' },
+  { g: 'Upper floor', id: 'E7a', label: 'Master · east side', c: 'c7', f: 'E', u: 5.4, types: WINS, def: 'window' },
+  { g: 'Upper floor', id: 'E7b', label: 'Master · east side (south)', c: 'c7', f: 'E', u: 7.6, types: WINS, def: 'tall' },
+  { g: 'Sitting area (above foyer)', id: 'SW', label: 'Door to north balcony', c: 'sit', f: 'W', u: 1.219, types: ['french', 'door', 'window', 'none'], def: 'french' },
+  { g: 'Sitting area (above foyer)', id: 'SE', label: 'Door to rear landing', c: 'sit', f: 'E', u: 1.219, types: ['french', 'door', 'window', 'none'], def: 'french' },
+  { g: 'Sitting area (above foyer)', id: 'SN', label: 'North window', c: 'sit', f: 'N', u: 5.5, types: WINS, def: 'picture' },
+];
+const CCOL = [['#b7c7d3', 'Pale blue'], ['#e4e5e2', 'White'], ['#4b4f53', 'Graphite'], ['#8a3b2c', 'Oxide red']];
+const ICOL = [['#7d8559', 'Olive'], ['#5c5e60', 'Charcoal'], ['#8a6a4a', 'Timber'], ['#d9d6cf', 'Light grey']];
+const DEF = { view: 'full', ccol: CCOL[0][0], icol: ICOL[0][0], glass: 'full', cx: {}, dups: [], midW: 4.232, eng: { roofQ: 0.75, floorQ: 1.5, wind: 1.0, maxCut: 1.2, defl: 360, balQ: 2.5, pad: 0.6, bearing: 100 }, opw: {}, guards: {}, guardAll: {}, rnd: { env: 'studio', sun: 150, exp: 1, lawn: true, terrace: true, path: true, shrubs: true, hedge: false, fence: false, trees: 12, seed: 7, hq: true }, clere: true, mezz: 'part', slide: 0.35, deck: true, balS: true, balN: true, landing: true, furn: true, ops: {}, cds: {} };
+let S = JSON.parse(JSON.stringify(DEF)), SEL = null;
+try { S = { ...S, ...JSON.parse(localStorage.getItem('c2x4-cfg') || '{}') }; } catch (e) {}
+S.cx = S.cx || {}; S.dups = S.dups || []; S.midW = S.midW || 4.232; S.eng = { ...DEF.eng, ...(S.eng || {}) }; S.opw = S.opw || {}; S.guards = S.guards || {}; S.guardAll = S.guardAll || {}; S.rnd = { ...DEF.rnd, ...(S.rnd || {}) };
+SLOTS.forEach(s => { if (!S.ops[s.id]) S.ops[s.id] = s.def; if (s.cd && !S.cds[s.id]) S.cds[s.id] = s.cd; });
+const save = () => { try { localStorage.setItem('c2x4-cfg', JSON.stringify(S)); } catch (e) {} };
+
+function mats() {
+  const m = (name, color, r = 0.6, mt = 0, x = {}) => Object.assign(new THREE.MeshStandardMaterial({ color, roughness: r, metalness: mt, ...x }), { name });
+  return {
+    cont: m('container_steel', S.ccol, 0.5, 0.25), infill: m('infill_panel', S.icol, 0.8), charcoal: m('fibre_cement_charcoal', '#55585b', 0.8),
+    frame: m('container_frame', '#9aa3aa', 0.45, 0.35), casting: m('corner_casting', '#8b9399', 0.5, 0.4), roof: m('roof_membrane', '#6c6f72', 0.8),
+    store: m('window_frame', '#2b2e31', 0.4, 0.4), glass: m('glazing', '#a8c6d2', 0.05, 0.1, { transparent: true, opacity: 0.3, depthWrite: false }),
+    gyp: m('gypsum_white', '#f3f2ef', 0.9), floor: m('floor_concrete_polished', '#9c9892', 0.5), wood: m('wood_floor', '#8a7358', 0.75),
+    mesh: m('chain_link_mesh', '#3d4144', 0.5, 0.4, { transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false }),
+    bglass: m('balustrade_glass', '#b9d3d8', 0.05, 0.1, { transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false }), perf: m('perforated_steel', '#4a4e52', 0.5, 0.3, { transparent: true, opacity: 0.88, side: THREE.DoubleSide }),
+    rail: m('steel_white', '#e9eaea', 0.4, 0.3), deck: m('timber_deck', '#9c7d4f', 0.85), concrete: m('concrete', '#c9c6c0', 0.95),
+    cab: m('cabinet_white', '#f4f4f1', 0.5), stone: m('worktop', '#d9d8d3', 0.4), ceramic: m('ceramic', '#fafaf8', 0.2), fabric: m('fabric', '#6f7277', 0.95),
+    sheet: m('bed_linen', '#e9e8e4', 0.95), black: m('matte_black', '#1b1c1d', 0.6), steel: m('steel_grey', '#8f9396', 0.45, 0.5),
+  };
+}
+function box(p, name, w, h, d, x, y, z, mat) { const me = new THREE.Mesh(new THREE.BoxGeometry(Math.max(w, 0.001), Math.max(h, 0.001), Math.max(d, 0.001)), mat); me.name = name; me.position.set(x, y, z); p.add(me); return me; }
+function cyl(p, name, r, h, x, y, z, mat) { const me = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 12), mat); me.name = name; me.position.set(x, y, z); p.add(me); return me; }
+function grp(p, name, lvl) { const g = new THREE.Group(); g.name = name; if (lvl != null) g.userData.lvl = lvl; p.add(g); return g; }
+const sub = (base, cuts) => { let r = base; for (const [k0, k1] of cuts) r = r.flatMap(([a, b]) => b <= k0 || a >= k1 ? [[a, b]] : [[a, Math.min(b, k0)], [Math.max(a, k1), b]]); return r.filter(([a, b]) => b - a > 0.02); };
+
+// face: axis 'z' → plane z, u along x ; axis 'x' → plane x, u along z
+function wall(p, M, axis, plane, s, a0, a1, y0, h, ops, mat, o = {}) {
+  const corr = o.corr !== false, lining = o.lining !== false;
+  for (const [b0, b1] of sub([[a0, a1]], o.gaps || [])) {
+    const inside = ops.filter(q => q.u0 >= b0 - 0.01 && q.u1 <= b1 + 0.01).sort((a, b) => a.u0 - b.u0), rects = [];
+    let cur = b0;
+    for (const q of inside) { rects.push([cur, q.u0, 0, h], [q.u0, q.u1, 0, q.v0], [q.u0, q.u1, q.v1, h]); cur = q.u1; }
+    rects.push([cur, b1, 0, h]);
+    const put = (name, u0, u1, v0, v1, off, t, m) => { const cu = (u0 + u1) / 2, cv = y0 + (v0 + v1) / 2; return axis === 'z' ? box(p, name, u1 - u0, v1 - v0, t, cu, cv, plane + s * off, m) : box(p, name, t, v1 - v0, u1 - u0, plane + s * off, cv, cu, m); };
+    for (const [u0, u1, v0, v1] of rects) {
+      if (u1 - u0 < 0.01 || v1 - v0 < 0.01) continue;
+      put(corr ? 'corrugated_panel' : 'infill_panel', u0, u1, v0, v1, corr ? -0.01 : 0, corr ? 0.02 : 0.08, mat);
+      if (corr) for (let u = Math.ceil((u0 + 0.07) / 0.28) * 0.28; u + 0.06 < u1; u += 0.28) put('corrugation', u - 0.06, u + 0.06, v0, v1, 0.012, 0.025, mat);
+      if (lining) put('gypsum_lining', u0, u1, v0, v1, -0.13, 0.016, M.gyp);
+    }
+    for (const q of inside) storefront(p, M, axis, plane - s * 0.01, q, y0);
+  }
+}
+function storefront(p, M, axis, plane, o, y0) {
+  const g = grp(p, o.kind || 'storefront'); if (o.slot) g.userData.slot = o.slot;
+  const w = o.u1 - o.u0, h = o.v1 - o.v0, fw = 0.055, fd = 0.1;
+  const put = (name, u0, u1, v0, v1, d, m) => { const cu = (u0 + u1) / 2, cv = y0 + (v0 + v1) / 2; return axis === 'z' ? box(g, name, u1 - u0, v1 - v0, d, cu, cv, plane, m) : box(g, name, d, v1 - v0, u1 - u0, plane, cv, cu, m); };
+  put('frame', o.u0, o.u1, o.v1 - fw, o.v1, fd, M.store); put('frame', o.u0, o.u1, o.v0, o.v0 + fw, fd, M.store);
+  put('frame', o.u0, o.u0 + fw, o.v0, o.v1, fd, M.store); put('frame', o.u1 - fw, o.u1, o.v0, o.v1, fd, M.store);
+  const cols = o.cols || 1, rows = o.rows || 1, cw = w / cols, rh = h / rows;
+  for (let c = 1; c < cols; c++) put('mullion', o.u0 + c * cw - fw / 2, o.u0 + c * cw + fw / 2, o.v0, o.v1, fd, M.store);
+  for (let r = 1; r < rows; r++) put('transom', o.u0, o.u1, o.v0 + r * rh - fw / 2, o.v0 + r * rh + fw / 2, fd, M.store);
+  put('glass', o.u0 + fw, o.u1 - fw, o.v0 + fw, o.v1 - fw, 0.012, M.glass).userData.glass = true;
+  const doorCols = o.door === 'both' ? [...Array(cols).keys()] : o.door != null ? [o.door] : [];
+  for (const dc of doorCols) { const d0 = o.u0 + dc * cw; put('door_pull', d0 + (dc ? 0.12 : cw - 0.15), d0 + (dc ? 0.15 : cw - 0.12), o.v0 + 0.85, o.v0 + 1.25, fd * 2, M.steel); }
+}
+function frame(p, M, c, holes = []) {
+  const g = grp(p, 'container_frame'), dx = c.x1 - c.x0, dz = c.z1 - c.z0, y0 = c.y0;
+  for (const x of [c.x0 + FP / 2, c.x1 - FP / 2]) for (const z of [c.z0 + FP / 2, c.z1 - FP / 2]) {
+    box(g, 'corner_post', FP, H, FP, x, y0 + H / 2, z, M.frame);
+    for (const y of [y0 + 0.06, y0 + H - 0.06]) box(g, 'corner_casting', 0.18, 0.12, 0.17, x, y, z, M.casting);
+  }
+  for (const y of [y0 + RAIL / 2, y0 + H - RAIL / 2]) {
+    for (const z of [c.z0 + RAIL / 2, c.z1 - RAIL / 2]) box(g, 'rail', dx - 2 * FP, RAIL, RAIL, (c.x0 + c.x1) / 2, y, z, M.frame);
+    for (const x of [c.x0 + RAIL / 2, c.x1 - RAIL / 2]) box(g, 'rail', RAIL, RAIL, dz - 2 * FP, x, y, (c.z0 + c.z1) / 2, M.frame);
+  }
+  const rp = grp(g, 'roof_panel'); rp.userData.roofPanel = true;
+  if (!holes.length) box(rp, 'roof_panel', dx - 0.05, 0.04, dz - 0.05, (c.x0 + c.x1) / 2, y0 + H - 0.03, (c.z0 + c.z1) / 2, M.frame);
+  else for (const [x0, x1] of sub([[c.x0, c.x1]], holes.map(h => [h[0], h[1]]))) box(rp, 'roof_panel', x1 - x0, 0.04, dz - 0.05, (x0 + x1) / 2, y0 + H - 0.03, (c.z0 + c.z1) / 2, M.frame);
+  for (const h of holes) for (const [z0, z1] of sub([[c.z0, c.z1]], [[h[2], h[3]]])) box(rp, 'roof_panel', h[1] - h[0], 0.04, z1 - z0, (h[0] + h[1]) / 2, y0 + H - 0.03, (z0 + z1) / 2, M.frame);
+  box(g, c.ns ? 'wood_floor' : 'wood_floor', dx - 0.1, 0.03, dz - 0.1, (c.x0 + c.x1) / 2, y0 + FLR - 0.015, (c.z0 + c.z1) / 2, M.wood);
+}
+function guard(p, M, pts, y0, name = 'guardrail') {
+  const key = 'g:' + p.name + '/' + name, G = guardCfg(key), hh = G.h;
+  const g = grp(p, name); g.userData.guard = key;
+  let tot = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], len = Math.hypot(x1 - x0, z1 - z0); tot += len;
+    const sg = grp(g, 'guard_run'); sg.position.set((x0 + x1) / 2, y0, (z0 + z1) / 2); sg.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
+    infill(sg, M, G.type, len, hh);
+  }
+  GUARDQ.push({ key, len: tot, type: G.type, h: hh });
+}
+function infill(sg, M, T, len, hh) {
+  const n = Math.max(1, Math.round(len / 1.4)), bay = len / n, hr = (nm, r, y, mat) => { cyl(sg, nm, r, len, 0, y, 0, mat).rotation.z = Math.PI / 2; };
+  if (T === 'glass') {
+    box(sg, 'glass_base_shoe', len, 0.12, 0.08, 0, 0.06, 0, M.steel);
+    for (let k = 0; k < n; k++) box(sg, 'glass_panel', bay - 0.015, hh - 0.14, 0.017, -len / 2 + bay * (k + 0.5), 0.12 + (hh - 0.14) / 2, 0, M.bglass);
+    box(sg, 'glass_cap_rail', len, 0.035, 0.05, 0, hh - 0.01, 0, M.steel); return;
+  }
+  for (let k = 0; k <= n; k++) { if (T === 'slats') box(sg, 'timber_post', 0.07, hh, 0.07, -len / 2 + k * bay, hh / 2, 0, M.deck); else cyl(sg, 'guard_post', 0.025, hh, -len / 2 + k * bay, hh / 2, 0, M.rail); }
+  if (T === 'slats') box(sg, 'timber_handrail', len, 0.05, 0.1, 0, hh, 0, M.deck); else hr('top_rail', 0.025, hh, M.rail);
+  if (T === 'slats') box(sg, 'timber_bottom_rail', len, 0.05, 0.05, 0, 0.1, 0, M.deck); else if (T !== 'cable') hr('bottom_rail', 0.02, 0.1, M.rail);
+  const panel = (nm, mat, th) => { for (let k = 0; k < n; k++) box(sg, nm, bay - 0.06, hh - 0.16, th, -len / 2 + bay * (k + 0.5), (hh - 0.16) / 2 + 0.1, 0, mat); };
+  if (T === 'mesh') panel('chain_link_panel', M.mesh, 0.004);
+  else if (T === 'perf') panel('perforated_panel', M.perf, 0.004);
+  else if (T === 'solid') panel('steel_plate_panel', M.cont, 0.006);
+  else if (T === 'bars') for (let x = -len / 2 + 0.1; x < len / 2 - 0.05; x += 0.11) box(sg, 'baluster', 0.02, hh - 0.12, 0.02, x, 0.1 + (hh - 0.12) / 2, 0, M.rail);
+  else if (T === 'slats') for (let x = -len / 2 + 0.08; x < len / 2 - 0.05; x += 0.1) box(sg, 'timber_slat', 0.07, hh - 0.15, 0.025, x, 0.125 + (hh - 0.15) / 2, 0.04, M.deck);
+  else if (T === 'cable') for (let y = 0.1; y < hh - 0.06; y += 0.08) hr('cable', 0.003, y, M.steel);
+}
+function straightStair(p, M, name, x0, x1, zc, y0, y1, width, dirX) {
+  const g = grp(p, name), n = Math.round((y1 - y0) / 0.185), rise = (y1 - y0) / n, run = (x1 - x0) / (n - 1);
+  for (let k = 0; k < n - 1; k++) box(g, 'tread', Math.abs(run) + 0.03, 0.04, width, x0 + run * (k + 0.5), y0 + rise * (k + 1) - 0.02, zc, M.rail);
+  const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
+  for (const s of [-1, 1]) { const st = box(g, 'stringer', len, 0.22, 0.04, (x0 + x1) / 2, (y0 + y1) / 2 - 0.05, zc + s * (width / 2 + 0.02), M.rail); st.rotation.z = ang; }
+  const GK = 'g:' + name + '/stair_guard', G = guardCfg(GK), sgd = grp(g, 'stair_guard'), zg = zc + width / 2 + 0.03, hy = Math.max(0.85, G.h - 0.15), slat = G.type === 'slats';
+  sgd.userData.guard = GK;
+  const hr = cyl(sgd, slat ? 'timber_handrail' : 'handrail', slat ? 0.035 : 0.02, len, (x0 + x1) / 2, (y0 + y1) / 2 + hy, zg, slat ? M.deck : M.rail); hr.rotation.z = ang - Math.PI / 2;
+  if (G.type === 'bars' || slat) {
+    const n2 = Math.floor(len / (slat ? 0.1 : 0.11));
+    for (let k = 1; k < n2; k++) { const t = k / n2; box(sgd, slat ? 'timber_slat' : 'baluster', slat ? 0.07 : 0.02, hy - 0.1, slat ? 0.025 : 0.02, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t + 0.05 + (hy - 0.1) / 2, zg, slat ? M.deck : M.rail); }
+  } else if (G.type === 'cable') {
+    for (let yy = hy - 0.12; yy > 0.1; yy -= 0.1) cyl(sgd, 'cable', 0.003, len, (x0 + x1) / 2, (y0 + y1) / 2 + yy, zg, M.steel).rotation.z = ang - Math.PI / 2;
+  } else {
+    const mat = { glass: M.bglass, perf: M.perf, solid: M.cont }[G.type] || M.mesh;
+    const mp = box(sgd, 'stair_guard_panel', len, hy - 0.1, G.type === 'glass' ? 0.012 : 0.004, (x0 + x1) / 2, (y0 + y1) / 2 + 0.05 + (hy - 0.1) / 2, zg, mat); mp.rotation.z = ang;
+  }
+  GUARDQ.push({ key: GK, len, type: G.type, h: G.h, stair: true });
+  return { n, rise, going: Math.abs(run) };
+}
+function balcony(p, M, name, x0, x1, z0, z1, posts, sides, rodsTo) {
+  const g = grp(p, name, 1), y = U2;
+  box(g, 'balcony_frame', x1 - x0, 0.2, z1 - z0, (x0 + x1) / 2, y - 0.14, (z0 + z1) / 2, M.frame);
+  for (let z = z0 + 0.06; z < z1 - 0.05; z += 0.14) box(g, 'deck_board', x1 - x0 - 0.06, 0.03, 0.125, (x0 + x1) / 2, y - 0.02, z + 0.06, M.deck);
+  for (const [px, pz] of posts) { cyl(g, 'balcony_post', 0.05, y - 0.2, px, (y - 0.2) / 2, pz, M.rail); box(g, 'post_pad', 0.45, 0.2, 0.45, px, 0.1, pz, M.concrete); }
+  if (rodsTo) for (const [ax, az, bx, by, bz] of rodsTo) { const a = new THREE.Vector3(ax, y, az), b = new THREE.Vector3(bx, by, bz), m = cyl(g, 'tension_rod', 0.012, a.distanceTo(b), (ax + bx) / 2, (y + by) / 2, (az + bz) / 2, M.steel); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); }
+  guard(g, M, sides, y);
+}
+
+// stretch the middle bay: west containers stay, everything east of the bay (and the rear landing) moves / stretches
+function warpX(root, F, dW) {
+  if (Math.abs(dW) < 1e-4) return;
+  const kM = (4.232 + dW) / 4.232, kN = (3.018 + dW) / 3.018;
+  const fM = x => x <= 2.438 ? x : x >= 6.67 ? x + dW : 2.438 + (x - 2.438) * kM;
+  const fN = x => x <= 8.528 ? x : x >= 11.546 ? x + dW : 8.528 + (x - 8.528) * kN;
+  root.updateMatrixWorld(true);
+  const meshes = [];
+  root.traverse(n => { if (n.isMesh) meshes.push(n); });
+  const NORTH = new Set(['container_4_20ft_HC', 'interior_stair', 'sitting_box', 'north_balcony', 'rear_landing']), MAIN = new Set(['rooftop_deck', 'mezzanine', 'front_glass_wall', 'clerestory_walls']);
+  const info = meshes.map(me => {
+    const bb = new THREE.Box3().setFromObject(me), c = bb.getCenter(new THREE.Vector3());
+    let inF = false, zone = null;
+    for (let o = me; o; o = o.parent) { if (o === F) inF = true; if (!zone && NORTH.has(o.name)) zone = 'N'; if (!zone && MAIN.has(o.name)) zone = 'M'; }
+    if (!zone) zone = c.z < 2.3 ? 'N' : 'M';
+    return { me, bb, c, mw: me.matrixWorld.clone(), inF, zone };
+  });
+  for (const { me, bb, c, mw, inF, zone } of info) {
+    const f = zone === 'N' ? fN : fM, pinv = me.parent.matrixWorld.clone().invert();
+    if (inF || bb.max.x - bb.min.x < 0.5) {
+      const wp = new THREE.Vector3().setFromMatrixPosition(mw); wp.x += f(c.x) - c.x;
+      me.position.copy(wp.applyMatrix4(pinv)); continue;
+    }
+    me.geometry = me.geometry.clone();
+    me.geometry.applyMatrix4(mw);
+    const p = me.geometry.attributes.position; for (let i = 0; i < p.count; i++) p.setX(i, f(p.getX(i)));
+    me.geometry.applyMatrix4(pinv); me.position.set(0, 0, 0); me.quaternion.identity(); me.scale.set(1, 1, 1); me.updateMatrix();
+    me.geometry.computeBoundingBox(); me.geometry.computeBoundingSphere();
+  }
+}
+// preliminary structural check (EN 1990/1991/1993 style, simplified)
+const BAL = { mesh: ['Chain-link mesh', 240], glass: ['Frameless glass', 520], bars: ['Vertical bars', 310], cable: ['Horizontal cable', 360], slats: ['Timber slats', 280], perf: ['Perforated steel', 340], solid: ['Solid steel plate', 300] };
+const RU = () => window.PlatformRules.get(), ENG = () => ({ ...RU().structure, maxCut: RU().factory.maxCut });
+function syncRules() { const r = RU(); for (const k in r.balustrades) if (BAL[k]) BAL[k][1] = r.balustrades[k].price; }
+syncRules();
+let GUARDQ = [];
+const guardCfg = key => ({ type: RU().defaultBal || 'mesh', h: RU().compliance.guardBalcony, ...(S.guardAll || {}), ...((S.guards || {})[key] || {}) });
+const f1 = v => (Math.round(v * 10) / 10).toFixed(1), f2 = v => (Math.round(v * 100) / 100).toFixed(2);
+// [name, Wpl cm3, I cm4, kg/m, h mm, tw|t mm]
+const UB = [['UB 127×76×13', 84.2, 473, 13, 127, 4.0], ['UB 152×89×16', 123, 834, 16, 152.4, 4.5], ['UB 178×102×19', 171, 1360, 19, 177.8, 4.8], ['UB 203×133×25', 258, 2340, 25, 203.2, 5.7], ['UB 254×146×31', 393, 4410, 31, 251.4, 6.0], ['UB 305×165×40', 623, 8500, 40, 303.4, 6.0], ['UB 356×171×51', 896, 14100, 51, 355, 7.4], ['UB 406×178×60', 1200, 21600, 60, 406.4, 7.9]];
+const SHS = [['SHS 80×80×5', 34.9, 158, 11.3, 80, 5], ['SHS 100×100×5', 56.1, 314, 14.4, 100, 5], ['SHS 120×120×6', 97.6, 634, 20.7, 120, 6], ['SHS 150×150×6', 155, 1270, 26.4, 150, 6], ['SHS 200×200×8', 367, 4000, 47.7, 200, 8]];
+const FY = 355, EMOD = 210000, GM0 = 1.0, GKR = 1.0, GKF = 1.2, TARE = 22.0, AC = W * L;
+function member(name, table, Ls, gk, qk, trib, lim, x = {}) {
+  const xU = x.xU || 0, xS = x.xS || 0, wU = (1.35 * gk + 1.5 * qk) * trib + xU, wS = (gk + qk) * trib + xS, M = wU * Ls * Ls / 8, V = wU * Ls / 2;
+  const test = t => { const Mc = t[1] * FY / GM0 / 1000, Av = table === UB ? t[4] * t[5] : 2 * t[5] * (t[4] - t[5]), Vc = Av * FY / Math.sqrt(3) / GM0 / 1000, d = 5 * wS * Math.pow(Ls * 1000, 4) / (384 * EMOD * t[2] * 1e4), dl = Ls * 1000 / lim; return { t, Mc, Av, Vc, d, dl, uM: M / Mc, uV: V / Vc, uD: d / dl }; };
+  let r = table.map(test).find(y => y.uM <= 1 && y.uV <= 1 && y.uD <= 1); const ok = !!r; if (!r) r = test(table[table.length - 1]);
+  return { name, L: Ls, gk, qk, trib, lim, xU, xS, wU, wS, M, V, ...r, u: Math.max(r.uM, r.uV, r.uD), ok, load: x.load, note: x.note };
+}
+function structure() {
+  const E = ENG(), Lb = S.midW, md = LAST ? LAST.md : 2.8, R = [];
+  R.push(member('Clerestory roof beams', UB, Lb, GKR, E.roofQ, 1.5, E.defl, { load: `Span across the middle volume at 1.5 m centres. Roof build-up g<sub>k</sub> ${GKR} kN/m²; snow / maintenance q<sub>k</sub> ${E.roofQ} kN/m².`, note: 'The roof deck restrains the compression flange, so lateral-torsional buckling is not checked.' }));
+  if (md) {
+    R.push(member('Mezzanine joists', UB, Lb, GKF, E.floorQ, 1.2, E.defl, { load: `At 1.2 m centres. Floor build-up g<sub>k</sub> ${GKF} kN/m²; domestic imposed q<sub>k</sub> ${E.floorQ} kN/m² (EN 1991-1-1 cat. A).`, note: 'The floor deck restrains the compression flange.' }));
+    if (md < 6) R.push(member('Mezzanine edge beam', UB, Lb, GKF, E.floorQ, md / 2, E.defl, { xU: 1.35 * 0.3, xS: 0.3, load: `Carries half the mezzanine depth (${f2(md / 2)} m) plus 0.3 kN/m balustrade self-weight.`, note: 'Check the balustrade line load (0.74 kN/m horizontal, UK NA) in the post fixings.' }));
+  }
+  if (S.glass !== 'solid') { const hh = S.glass === 'lower' ? H - 0.1 : md >= 6 ? 3.4 : 6.45; R.push(member('Glass-wall mullions', SHS, hh, 0, E.wind, Lb / 3, 175, { load: `Vertical span ${f2(hh)} m; mullions at ${f2(Lb / 3)} m centres; wind pressure q<sub>k</sub> ${E.wind} kN/m².`, note: 'Wind only. Glass self-weight is carried by the transoms and the head. Glazing deflection limit L/175.' })); }
+  const posts = [], mis = [];
+  for (const up of CONT.filter(c => c.lvl === 1)) {
+    const lo = CONT.find(c => c.lvl === 0 && Math.abs(c.x0 - up.x0) < 0.01 && Math.abs(c.z0 - up.z0) < 0.01); if (!lo) continue;
+    const a = S.cx['@container_' + up.n + '_20ft_HC'] || {}, b = S.cx['@container_' + lo.n + '_20ft_HC'] || {};
+    if (a.hide || b.hide) { if (!a.hide && b.hide) mis.push(`#${up.n} has no container under it.`); continue; }
+    const dd = Math.hypot((a.dx || 0) - (b.dx || 0), (a.dz || 0) - (b.dz || 0));
+    if (dd > 0.05 || (a.rot || 0) !== (b.rot || 0)) mis.push(`#${up.n} is offset ${Math.round(dd * 1000)} mm from #${lo.n}. The corner posts don't line up, so it needs a transfer beam.`);
+    const deck = S.deck && up.n >= 6, rg = deck ? GKR + 0.5 : GKR, rq = deck ? E.floorQ : E.roofQ, adj = up.n === 5 || up.n === 6;
+    let G = TARE + GKF * AC + rg * AC, Qk = E.floorQ * AC + rq * AC;
+    if (adj) { G += GKR * Lb / 2 * L + (md ? GKF * Lb / 2 * md : 0); Qk += E.roofQ * Lb / 2 * L + (md ? E.floorQ * Lb / 2 * md : 0); }
+    const Ned = (1.35 * G + 1.5 * Qk) / 4, Nrd = 848 / 1.5, Gp = G + TARE + GKF * AC, Qp = Qk + E.floorQ * AC, Np = (Gp + Qp) / 4, Ap = E.pad * E.pad, p = Np / Ap;
+    posts.push({ up: up.n, lo: lo.n, deck, adj, G, Qk, Ned, Nrd, u: Ned / Nrd, Gp, Qp, Np, Ap, p, uP: p / E.bearing });
+  }
+  const rods = [];
+  if (S.balS) for (const [n, wd, nr] of [['Master balcony', 4.876, 3], ['Bedroom 2 balcony', 2.438, 2]]) {
+    const d = 1.604, s = 2.75 / Math.hypot(2.75, 0.75), wEd = 1.35 * 0.8 + 1.5 * E.balQ, Re = wEd * d / 2 * wd, T = Re / nr / s, Nt = 0.9 * 800 * 353 / 1.25 / 1000;
+    rods.push({ n, wd, d, nr, s, wEd, Re, T, Nt, u: T / Nt });
+  }
+  const cuts = [['#1 east wall (to living)', 6.058], ['#2 west wall (to living)', 4.546], ['#2 / #3 party wall', 6.058], ['#6 / #7 party wall', 6.058], ['#4 south wall (to bay)', 4.2]].filter(c => c[1] > E.maxCut);
+  return { R, posts, rods, cuts, mis, md };
+}
+function build() {
+  const M = mats(), root = new THREE.Group(); root.name = 'container_home_2x4';
+  const G0 = grp(root, 'ground_floor', 0), G1 = grp(root, 'upper_floor', 1), GR = grp(root, 'roofs', 2), SITE = grp(root, 'site');
+  const Q = { openings: {}, opRatio: {}, deckA: 0, guardM: 0, mezzA: 0 }; GUARDQ = [];
+  box(SITE, 'foundation_slab', 11.9, 0.15, 8.9, 5.77, -0.075, 4.35, M.concrete);
+  const opsFor = (cid, f, y) => SLOTS.filter(s => s.c === cid && s.f === f && S.ops[s.id] !== 'none').map(s => {
+    const t = TYPES[S.ops[s.id]], o = S.opw[s.id] || {}, C = CONT.find(c => c.id === cid), maxW = (s.c !== 'sit' && (f === 'N' || f === 'S') === C?.ns) ? 2.08 : 5.6;
+    const w = Math.min(Math.max(0.4, o.w ?? t.w), maxW), v0 = t.door ? t.v0 : Math.max(0.05, o.sill ?? t.v0), v1 = Math.min(2.45, v0 + Math.max(0.3, o.h ?? (t.v1 - t.v0)));
+    let u0 = s.u - w / 2, u1 = s.u + w / 2;
+    if (C) { const lo = (f === 'N' || f === 'S' ? C.x0 : C.z0) + FP + 0.05, hi = (f === 'N' || f === 'S' ? C.x1 : C.z1) - FP - 0.05; if (u0 < lo) { u1 += lo - u0; u0 = lo; } if (u1 > hi) { u0 = Math.max(lo, u0 - (u1 - hi)); u1 = hi; } }
+    Q.openings[s.id] = S.ops[s.id]; Q.opRatio[s.id] = ((u1 - u0) * (v1 - v0)) / (t.w * (t.v1 - t.v0));
+    return { u0, u1, v0: v0 + y, v1: v1 + y, cols: t.cols, rows: t.rows, door: t.door, slot: s.id, kind: S.ops[s.id] };
+  });
+  const SPEC = {
+    c1: { E: { gaps: [[2.438, 8.496]] } }, c2: { W: { gaps: [[3.95, 8.496]] }, E: { gaps: [[2.438, 8.496]] } }, c3: { W: { gaps: [[2.438, 8.496]] } },
+    c4: { S: { gaps: [[2.47, 6.67]] } }, c6: { E: { gaps: [[2.438, 8.496]] }, W: { idoors: [3.2, 4.7] } }, c7: { W: { gaps: [[2.438, 8.496]] } }, c5: { E: { idoors: [4.3] } },
+  };
+  const stairHole = [4.45, 8.05, 1.35, 2.32];
+  for (const c of CONT) {
+    const cg = grp(c.lvl ? G1 : G0, `container_${c.n}_20ft_HC`);
+    frame(cg, M, c, c.id === 'c4' ? [stairHole] : []);
+    const y0 = c.y0 + RAIL, hh = H - 2 * RAIL, sp = SPEC[c.id] || {};
+    const faces = { N: ['z', c.z0, -1, c.x0 + FP, c.x1 - FP], S: ['z', c.z1, 1, c.x0 + FP, c.x1 - FP], W: ['x', c.x0, -1, c.z0 + FP, c.z1 - FP], E: ['x', c.x1, 1, c.z0 + FP, c.z1 - FP] };
+    for (const [f, [ax, pl, s, a0, a1]] of Object.entries(faces)) {
+      const spec = sp[f] || {};
+      const ops = opsFor(c.id, f, FLR - RAIL);
+      for (const u of spec.idoors || []) ops.push({ u0: u - 0.45, u1: u + 0.45, v0: FLR - RAIL, v1: FLR - RAIL + 2.05, cols: 1, rows: 1, kind: 'interior_door' });
+      if (c.id === 'c1' && f === 'E') continue;
+      wall(cg, M, ax, pl, s, a0, a1, y0, hh, ops, M.cont, { gaps: spec.gaps || [] });
+    }
+    const cdSlot = SLOTS.find(s => s.c === c.id && s.cd);
+    if (cdSlot && S.cds[cdSlot.id] !== 'removed') {
+      const dg = grp(cg, 'container_doors_' + S.cds[cdSlot.id]), lw = (c.ns ? c.x1 - c.x0 : c.z1 - c.z0) / 2 - 0.08, lh = H - 0.3;
+      const leaves = [];
+      if (cdSlot.f === 'S') { if (S.cds[cdSlot.id] === 'open') leaves.push([c.x0 + 0.04, c.z1 + lw / 2, 'x'], [c.x1 - 0.04, c.z1 + lw / 2, 'x']); else leaves.push([c.x0 + 0.08 + lw / 2, c.z1 + 0.06, 'z'], [c.x1 - 0.08 - lw / 2, c.z1 + 0.06, 'z']); }
+      else { if (S.cds[cdSlot.id] === 'open') leaves.push([c.x0 - lw / 2, c.z0 + 0.04, 'z'], [c.x0 - lw / 2, c.z1 - 0.04, 'z']); else leaves.push([c.x0 - 0.06, c.z0 + 0.08 + lw / 2, 'x'], [c.x0 - 0.06, c.z1 - 0.08 - lw / 2, 'x']); }
+      for (const [x, z, ax] of leaves) {
+        box(dg, 'container_door_leaf', ax === 'x' ? 0.05 : lw, lh, ax === 'x' ? lw : 0.05, x, c.y0 + lh / 2 + 0.12, z, M.cont);
+        for (const k of [-0.25, 0.25]) { const bx = ax === 'x' ? x + 0.04 : x + k * lw, bz = ax === 'x' ? z + k * lw : z + 0.04; cyl(dg, 'locking_bar', 0.018, lh - 0.2, bx, c.y0 + lh / 2 + 0.12, bz, M.frame); }
+      }
+    }
+  }
+  // sliding corrugated wall on #1 east side
+  const sw = grp(G0, 'sliding_corrugated_wall');
+  box(sw, 'top_track', 0.08, 0.06, 5.8, 2.49, H - 0.2, 5.47, M.steel);
+  const pw = 2.5, zA = 2.62 + pw / 2, zB = zA + S.slide * pw;
+  for (const [z, off] of [[zA, 0.53], [zB + (1 - S.slide) * 0, 0.6]]) {
+    const pz = z === zA ? zA + (S.slide >= 0.99 ? 0 : 0) : z;
+    box(sw, 'sliding_panel', 0.03, H - 0.45, pw, 2.438 + off - 0.4, (H - 0.45) / 2 + 0.15, pz + (z === zA ? 0 : 0), M.cont);
+    for (let u = -pw / 2 + 0.14; u < pw / 2 - 0.1; u += 0.28) box(sw, 'corrugation', 0.025, H - 0.45, 0.12, 2.438 + off - 0.37, (H - 0.45) / 2 + 0.15, pz + u, M.cont);
+  }
+  // middle volume: glass wall, clerestory, sitting
+  const mid = grp(root, 'double_height_volume');
+  const top = 6.6;
+  const GW = grp(mid, 'front_glass_wall');
+  if (S.glass === 'full') {
+    wall(GW, M, 'z', 8.496, 1, 2.438, 6.67, FLR, top - FLR, [{ u0: 2.46, u1: 6.65, v0: 0, v1: top - FLR - 0.05, cols: 3, rows: 4, door: 1, kind: 'glass_wall' }], M.infill, { corr: false, lining: false });
+  } else if (S.glass === 'transom') {
+    wall(GW, M, 'z', 8.496, 1, 2.438, 6.67, FLR, top - FLR, [{ u0: 2.46, u1: 6.65, v0: 0, v1: H - 0.1, cols: 3, rows: 1, door: 1, kind: 'glass_wall' }, { u0: 2.46, u1: 6.65, v0: H + 0.05, v1: top - FLR - 0.05, cols: 3, rows: 2, kind: 'glass_transoms' }], M.infill, { corr: false, lining: false });
+  } else if (S.glass === 'lower') {
+    wall(GW, M, 'z', 8.496, 1, 2.438, 6.67, FLR, top - FLR, [{ u0: 2.46, u1: 6.65, v0: 0, v1: H - 0.1, cols: 3, rows: 1, door: 1, kind: 'glass_wall' }], M.infill, { corr: false, lining: false });
+  } else wall(GW, M, 'z', 8.496, 1, 2.438, 6.67, FLR, top - FLR, [{ u0: 3.55, u1: 5.55, v0: 0, v1: 2.35, cols: 2, rows: 1, door: 1, kind: 'slider' }], M.infill, { corr: false, lining: false });
+  const U = grp(mid, 'upper_parts', 1);
+  const CL = grp(U, 'clerestory_walls'), SB = grp(U, 'sitting_box');
+  for (const x of [2.438, 6.67]) {
+    const ops = S.clere ? [{ u0: 2.5, u1: 8.44, v0: 0.05, v1: top - 2 * H - 0.05, cols: 5, rows: 1, kind: 'clerestory' }] : [];
+    wall(CL, M, 'x', x, x < 3 ? -1 : 1, 2.438, 8.496, 2 * H, top - 2 * H, ops, M.infill, { corr: false, lining: false });
+  }
+  // sitting level walls above #4
+  wall(SB, M, 'z', 0, -1, 2.47, 8.528, H, top - H, opsFor('sit', 'N', FLR), M.charcoal, { corr: false });
+  wall(SB, M, 'x', 2.47, -1, 0, 2.438, H, top - H, opsFor('sit', 'W', FLR), M.charcoal, { corr: false });
+  wall(SB, M, 'x', 8.528, 1, 0, 2.438, H, top - H, opsFor('sit', 'E', FLR), M.charcoal, { corr: false });
+  for (const [x0, x1, z0, z1] of [[2.55, 8.45, 0.15, 1.35], [2.55, 4.45, 1.35, 2.35], [8.05, 8.45, 1.35, 2.35]]) box(SB, 'sitting_floor', x1 - x0, 0.03, z1 - z0, (x0 + x1) / 2, U2 - 0.015, (z0 + z1) / 2, M.wood);
+  guard(SB, M, [[4.45, 2.3], [4.45, 1.35], [8.05, 1.35]], U2, 'stair_opening_guard');
+  const st = straightStair(G0, M, 'interior_stair', 4.55, 8.0, 1.85, FLR, U2, 0.9);
+  // mezzanine
+  const md = S.mezz === 'none' ? 0 : S.mezz === 'full' ? 6.058 : 2.8;
+  if (md) {
+    const mz = grp(U, 'mezzanine');
+    box(mz, 'mezzanine_floor', 4.232, 0.28, md, 4.554, U2 - 0.14, 2.438 + md / 2, M.gyp);
+    box(mz, 'mezzanine_finish', 4.232, 0.02, md, 4.554, U2 + 0.005, 2.438 + md / 2, M.wood);
+    if (md < 6) { box(mz, 'mezzanine_edge_beam', 4.232, 0.3, 0.12, 4.554, U2 - 0.15, 2.438 + md, M.rail); guard(mz, M, [[2.5, 2.438 + md], [6.61, 2.438 + md]], U2, 'mezzanine_guard'); }
+    Q.mezzA = 4.232 * md;
+  }
+  box(G0, 'double_height_floor', 4.232, 0.03, 6.058, 4.554, FLR - 0.015, 5.467, M.floor);
+  // balconies & landing
+  if (S.balS) {
+    balcony(root, M, 'south_balcony_bedroom2', 0, 2.438, 8.496, 10.1, [], [[0.03, 8.52], [0.03, 10.07], [2.41, 10.07], [2.41, 8.52]], [[0.1, 10.05, 0.1, 5.8, 9.3], [2.34, 10.05, 2.34, 5.8, 9.3]]);
+    balcony(root, M, 'south_balcony_master', 6.67, 11.546, 8.496, 10.1, [], [[6.7, 8.52], [6.7, 10.07], [11.52, 10.07], [11.52, 8.52]], [[6.75, 10.05, 6.75, 5.8, 9.2], [9.1, 10.05, 9.1, 5.8, 9.2], [11.48, 10.05, 11.48, 5.8, 9.2]]);
+  }
+  if (S.balN) balcony(root, M, 'north_balcony', 0.8, 2.47, 0.1, 2.438, [[0.85, 0.15], [0.85, 2.38]], [[2.44, 0.13], [0.83, 0.13], [0.83, 2.41]]);
+  const deckOK = S.deck && S.landing;
+  if (S.landing) {
+    balcony(root, M, 'rear_landing', 8.528, 11.546, 0.25, 2.438, [[11.49, 0.3], [11.49, 2.38], [8.6, 0.3]], deckOK ? [[8.55, 0.28], [11.52, 0.28], [11.52, 1.4]] : [[8.55, 0.28], [11.52, 0.28], [11.52, 2.41]]);
+  }
+  // roofs
+  const R = grp(GR, 'roof_slabs');
+  for (const [x0, x1, z0, z1] of [[2.3, 8.76, -0.3, 2.44], [2.3, 6.9, 2.44, 8.9]]) box(R, 'clerestory_roof', x1 - x0, 0.25, z1 - z0, (x0 + x1) / 2, top + 0.125, (z0 + z1) / 2, M.roof);
+  box(R, 'bedroom_roof', 2.69, 0.2, 7.1, 1.095, 2 * H + 0.1, 5.85, M.roof);
+  box(R, 'master_roof_canopy', 5.15, 0.2, 6.7, 9.125, 2 * H + 0.1, 5.65, M.roof);
+  if (S.deck) {
+    const d = grp(GR, 'rooftop_deck'), y = 2 * H + 0.2;
+    for (let z = 2.35; z < 8.95; z += 0.15) box(d, 'deck_board', 4.95, 0.03, 0.135, 9.15, y + 0.015, z + 0.07, M.deck);
+    const pts = deckOK ? [[10.9, 2.33], [6.95, 2.33], [6.95, 8.97], [11.66, 8.97], [11.66, 2.33], [11.45, 2.33]] : [[6.95, 2.33], [6.95, 8.97], [11.66, 8.97], [11.66, 2.33], [6.95, 2.33]];
+    guard(d, M, pts, y + 0.03);
+    Q.deckA = 4.71 * 6.64; Q.guardM = pts.slice(1).reduce((a, p, i) => a + Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]), 0);
+    if (deckOK) straightStair(d, M, 'roof_access_stair', 8.8, 11.1, 1.85, U2, y + 0.03, 0.8);
+  }
+  // interior partitions & furniture
+  const F = grp(root, 'fit_out'); F.userData.furn = true;
+  const F0 = grp(F, 'ground', 0), F1 = grp(F, 'upper', 1), ph = H - FLR - 0.16;
+  const part = (p, x0, x1, z0, z1, y, door) => {
+    const along = x1 - x0 > z1 - z0, len = along ? x1 - x0 : z1 - z0;
+    for (const [a, b] of sub([[0, len]], door ? [[door - 0.42, door + 0.42]] : [])) along ? box(p, 'partition', b - a, ph, 0.1, x0 + (a + b) / 2, y + ph / 2, z0, M.gyp) : box(p, 'partition', 0.1, ph, b - a, x0, y + ph / 2, z0 + (a + b) / 2, M.gyp);
+    if (door) along ? box(p, 'partition_head', 0.84, ph - 2.05, 0.1, x0 + door, y + 2.05 + (ph - 2.05) / 2, z0, M.gyp) : box(p, 'partition_head', 0.1, ph - 2.05, 0.84, x0, y + 2.05 + (ph - 2.05) / 2, z0 + door, M.gyp);
+  };
+  for (const [p, y] of [[F0, FLR], [F1, U2]]) {
+    part(p, 6.82, 11.4, 3.95, 3.95, y, y < 1 ? 1.0 : 1.2); part(p, 9.108, 9.108, 2.59, 3.95, y); part(p, 0.15, 2.29, 3.35, 3.35, y, 1.5);
+  }
+  part(F1, 9.108, 9.108, 3.95, 3.95, U2);
+  if (S.furn) {
+    const y = FLR, u = U2;
+    box(F0, 'guest_bed', 1.4, 0.5, 2.0, 1.2, y + 0.25, 6.4, M.sheet); box(F0, 'closet', 2.0, 2.1, 0.55, 1.22, y + 1.05, 2.9, M.wood);
+    box(F0, 'wc', 0.38, 0.4, 0.66, 7.5, y + 0.2, 2.95, M.ceramic); box(F0, 'basin', 0.55, 0.85, 0.45, 6.95, y + 0.43, 3.2, M.cab); box(F0, 'shower', 0.85, 0.06, 0.85, 8.55, y + 0.03, 3.1, M.ceramic);
+    box(F0, 'washer', 0.6, 0.85, 0.6, 10.9, y + 0.43, 2.95, M.cab); box(F0, 'utility_sink', 0.6, 0.9, 0.55, 10.2, y + 0.45, 2.95, M.cab);
+    box(F0, 'kitchen_counter', 0.62, 0.9, 3.4, 11.12, y + 0.45, 5.9, M.cab); box(F0, 'worktop', 0.64, 0.04, 3.4, 11.12, y + 0.92, 5.9, M.stone);
+    box(F0, 'wall_cabinets', 0.35, 0.7, 2.2, 11.25, y + 1.85, 6.3, M.cab); box(F0, 'fridge', 0.75, 2.0, 0.7, 11.1, y + 1.0, 7.95, M.cab);
+    box(F0, 'kitchen_island', 0.9, 0.92, 2.0, 8.0, y + 0.46, 5.9, M.cab); box(F0, 'island_top', 1.0, 0.04, 2.1, 8.0, y + 0.94, 5.9, M.stone);
+    box(F0, 'dining_table', 2.0, 0.04, 0.95, 4.55, y + 0.74, 3.5, M.wood); for (const x of [3.8, 5.3]) box(F0, 'table_leg', 0.06, 0.72, 0.8, x, y + 0.36, 3.5, M.black);
+    box(F0, 'sofa', 2.6, 0.45, 0.9, 4.55, y + 0.22, 6.6, M.fabric); box(F0, 'sofa_back', 2.6, 0.4, 0.2, 4.55, y + 0.62, 6.25, M.fabric); box(F0, 'coffee_table', 1.1, 0.4, 0.6, 4.55, y + 0.2, 7.6, M.wood);
+    box(F1, 'bed_2', 1.5, 0.5, 2.0, 1.22, u + 0.25, 6.2, M.sheet); box(F1, 'closet_2', 2.0, 2.1, 0.55, 1.22, u + 1.05, 2.9, M.wood);
+    box(F1, 'master_bed', 1.8, 0.5, 2.1, 10.2, u + 0.25, 6.3, M.sheet); box(F1, 'master_headboard', 1.8, 1.0, 0.08, 10.2, u + 0.5, 5.2, M.wood);
+    box(F1, 'wc', 0.38, 0.4, 0.66, 7.5, u + 0.2, 2.95, M.ceramic); box(F1, 'vanity', 1.1, 0.85, 0.5, 8.4, u + 0.43, 2.85, M.cab); box(F1, 'bathtub', 0.75, 0.55, 1.2, 6.95, u + 0.28, 3.25, M.ceramic);
+    box(F1, 'walk_in_closet', 1.9, 2.1, 0.55, 10.33, u + 1.05, 2.9, M.wood);
+    box(F1, 'sitting_sofa', 2.2, 0.45, 0.85, 3.8, u + 0.22, 0.75, M.fabric); box(F1, 'lounge_chair', 0.8, 0.45, 0.8, 5.9, u + 0.22, 0.8, M.fabric);
+  }
+  Q.stair = st; Q.md = md; Q.guards = GUARDQ;
+  warpX(root, F, S.midW - 4.232);
+  Q.mezzA = (S.midW) * md;
+  return { root, Q, P: [root, G0, G1, GR, R, SITE, mid, U, F, F0, F1] };
+}
+
+let current = null, first = true, LAST = null, COMPINFO = {}, listOpen = false;
+const CATS = { ground_floor: 'Ground floor structure', upper_floor: 'Upper floor structure', roofs: 'Roof', roof_slabs: 'Roof', site: 'Site', container_home_2x4: 'Balconies & landing', double_height_volume: 'Middle volume', upper_parts: 'Middle volume', ground: 'Ground fit-out', upper: 'Upper fit-out' };
+const human = id => { const s = id.slice(1).replace(/~(\d+)/, ' (copy $1)').replace(/#(\d+)/, ' $1').replace(/_/g, ' '); return s[0].toUpperCase() + s.slice(1); };
+const VARIANTS = {
+  '@front_glass_wall': ['glass', [['full', 'Full-height grid'], ['transom', 'Large panes + transoms'], ['lower', 'Ground floor only'], ['solid', 'Solid + slider']]],
+  '@mezzanine': ['mezz', [['part', '2.8 m deep'], ['full', 'Full depth'], ['none', 'None']]],
+};
+const FIN = [['#b7c7d3', 'Pale blue'], ['#e4e5e2', 'White'], ['#4b4f53', 'Graphite'], ['#8a3b2c', 'Oxide red'], ['#7d8559', 'Olive'], ['#8a6a4a', 'Timber'], ['#d9d6cf', 'Light grey'], ['#1f2022', 'Black']];
+const PIVOT = new THREE.Matrix4(), T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
+function applyComps(root, parents) {
+  COMPINFO = {};
+  const seen = {}, set = new Set(parents), list = [];
+  for (const P of parents) for (const o of [...P.children]) if (!set.has(o)) {
+    let id = '@' + o.name; seen[id] = (seen[id] || 0) + 1; if (seen[id] > 1) id += '#' + seen[id];
+    o.userData.comp = id; list.push([o, P]);
+  }
+  for (const d of S.dups) {
+    const src = list.find(([o]) => o.userData.comp === d.src); if (!src) continue;
+    const c = src[0].clone(true); c.traverse(n => { delete n.userData.slot; delete n.userData.comp; });
+    c.userData.comp = d.id; c.userData.dupOf = d.src; src[1].add(c); list.push([c, src[1]]);
+  }
+  root.updateMatrixWorld(true);
+  for (const [o, P] of list) {
+    const id = o.userData.comp, bb = new THREE.Box3().setFromObject(o); if (bb.isEmpty()) continue;
+    const c = bb.getCenter(new THREE.Vector3()), s = bb.getSize(new THREE.Vector3());
+    COMPINFO[id] = { label: human(id), cat: CATS[P.name] || 'Other', base: [s.x, s.z, s.y], dup: !!o.userData.dupOf };
+    const x = S.cx[id]; if (!x) continue;
+    if (isMid(id)) { delete x.sx; }
+    if (x.hide) { o.visible = false; continue; }
+    o.updateMatrix();
+    const m = T(c.x + (x.dx || 0), bb.min.y + (x.dy || 0), c.z + (x.dz || 0)).multiply(new THREE.Matrix4().makeRotationY((x.rot || 0) * Math.PI / 180)).multiply(new THREE.Matrix4().makeScale(x.sx || 1, x.sy || 1, x.sz || 1)).multiply(T(-c.x, -bb.min.y, -c.z)).multiply(o.matrix);
+    o.matrix.copy(m); o.matrixAutoUpdate = false;
+    if (x.col) o.traverse(n => { if (n.isMesh && !n.material.transparent) { n.material = n.material.clone(); n.material.color.set(x.col); } });
+  }
+}
+const MIDC = ['@front_glass_wall', '@mezzanine', '@double_height_floor', '@clerestory_walls', '@clerestory_roof#2'];
+const isMid = id => MIDC.includes(String(id).replace(/~\d+$/, ''));
+const cxOf = id => S.cx[id] || (S.cx[id] = {});
+const shown = id => !(S.cx[id] && S.cx[id].hide);
+const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xd9622b); selBox.visible = false; stage._scene.add(selBox);
+function lvlOf(n) { let o = n; while (o) { if (o.userData.lvl != null) return o.userData.lvl; o = o.parent; } return null; }
+function rebuild() {
+  const { root, Q, P } = build();
+  applyComps(root, P);
+  root.traverse(n => {
+    const lv = lvlOf(n);
+    if (S.view !== 'full' && (n.userData.lvl === 2 || (n.userData.roofPanel && lv === 1))) n.visible = false;
+    if (S.view === 'ground' && (n.userData.lvl === 1 || (n.userData.roofPanel && lv === 0))) n.visible = false;
+  });
+  stage.setObject(root, { reframe: first });
+  root.traverse(n => { if (n.isMesh && n.material.transparent) n.castShadow = false; });
+  if (current) current.traverse(n => { if (n.isMesh) n.geometry.dispose(); });
+  current = root; first = false; LAST = Q;
+  updateSel(); renderEstimate(); applyEnv(); save();
+}
+function updateSel() {
+  let t = null; if (SEL && current) current.traverse(n => { if ((n.userData.slot === SEL || n.userData.comp === SEL || n.userData.guard === SEL) && !t) t = n; });
+  if (!t || !t.visible || lvlHidden(t)) { selBox.visible = false; return; }
+  selBox.box.setFromObject(t); selBox.box.expandByScalar(0.06); selBox.visible = true;
+}
+function lvlHidden(n) { let o = n; while (o) { if (!o.visible) return true; o = o.parent; } return false; }
+
+// picking
+const ray = new THREE.Raycaster(), canvas = stage.shadowRoot.querySelector('canvas');
+let down = null;
+stage.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+stage.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const r = canvas.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), stage._camera);
+  const hit = ray.intersectObject(current, true).find(h => !lvlHidden(h.object));
+  if (TAB === 'render') return;
+  let o = hit && hit.object, slot = null, comp = null, gd = null; while (o) { slot = slot || o.userData.slot; gd = gd || o.userData.guard; comp = comp || o.userData.comp; o = o.parent; }
+  SEL = slot || gd || comp || null; TAB = 'design'; updateSel(); renderPanel();
+  if (gd && !slot) { document.getElementById('panel').scrollTop = 0; return; }
+  if (comp && !slot) { document.getElementById('panel').scrollTop = 0; return; }
+  if (slot) { const row = document.querySelector(`[data-row="${slot}"]`), pn = document.getElementById('panel'); if (row) pn.scrollTop = row.offsetTop - pn.clientHeight / 3; }
+});
+
+// UI
+const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${S[key] === v ? 'on' : ''}" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
+const sws = (key, list) => `<div class="sw">${list.map(([c, n]) => `<button class="${S[key] === c ? 'on' : ''}" style="background:${c}" data-k="${key}" data-v="${c}" title="${n}" aria-label="${n}"></button>`).join('')}</div>`;
+const tog = (key, label, sub2) => `<label class="row"><span>${label}${sub2 ? `<small>${sub2}</small>` : ''}</span><input type="checkbox" data-t="${key}" ${S[key] ? 'checked' : ''}></label>`;
+function inspector() {
+  const I = COMPINFO[SEL]; if (!I) return '';
+  const x = S.cx[SEL] || {}, f = v => (Math.round(v * 100) / 100);
+  const V = VARIANTS[SEL];
+  const num = (k, l, v) => `<label>${l}<input type="number" step="0.05" data-cx="${k}" value="${f(v)}"></label>`;
+  return `<div class="sec insp"><h2>Selected component</h2>
+    <div class="row"><span class="nm">${I.label}</span><small style="color:var(--muted)">${I.cat}</small></div>
+    ${V ? `<div class="row"><span>Substitute with</span><select data-s="${V[0]}">${V[1].map(([v, l]) => `<option value="${v}" ${S[V[0]] === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>` : ''}
+    <div class="grp">Move (m)</div><div class="g3">${num('dx', 'East–west', x.dx || 0)}${num('dz', 'North–south', x.dz || 0)}${num('dy', 'Up–down', x.dy || 0)}</div>
+    <div class="grp">Size (m)</div><div class="g3">${isMid(SEL) ? `<label>Width · resizes house<input type="number" step="0.1" min="3" max="6" data-cx="w" value="${f(S.midW)}"></label>` : num('w', 'Width', I.base[0] * (x.sx || 1))}${num('d', 'Depth', I.base[1] * (x.sz || 1))}${num('h', 'Height', I.base[2] * (x.sy || 1))}</div>
+    <label class="row"><span>Rotate <small>${x.rot || 0}°</small></span><input type="range" min="-180" max="180" step="15" value="${x.rot || 0}" data-cx="rot"></label>
+    <div class="row"><span>Finish</span><div class="sw">${FIN.map(([c, n]) => `<button class="${x.col === c ? 'on' : ''}" style="background:${c};width:22px;height:22px" data-cxcol="${c}" title="${n}" aria-label="${n}"></button>`).join('')}</div></div>
+    <div class="btns"><button data-act="dup">Duplicate</button><button data-act="hide">${I.dup ? 'Delete' : 'Remove'}</button><button data-act="reset">Reset</button><button data-act="close">Done</button></div>
+  </div>`;
+}
+const gov = r => r.uM >= r.uV && r.uM >= r.uD ? 'bending' : r.uD >= r.uV ? 'deflection' : 'shear';
+const ucol = u => u > 1 ? '#b3261e' : u > 0.9 ? '#9a6200' : '#2e6b3a';
+function structPanel() {
+  const A = structure(), E = ENG();
+  const line = (n, sub, u) => `<div><span>${n}<br><small style="color:var(--muted)">${sub}</small></span><span style="color:${ucol(u)};font-weight:600">${Math.round(u * 100)}%</span></div>`;
+  const pm = A.posts.reduce((m, p) => p.u > m.u ? p : m, { u: -1 }), pp = A.posts.reduce((m, p) => p.uP > m.uP ? p : m, { uP: -1 });
+  const bad = [...A.R.map(r => r.u), ...A.posts.map(p => Math.max(p.u, p.uP)), ...A.rods.map(r => r.u)].filter(u => u > 1).length + A.mis.length;
+  const inp = (k, l, st) => `<label>${l}<input type="number" step="${st}" data-eng="${k}" value="${E[k]}"></label>`;
+  return `<div class="sec"><h2>Structure check · preliminary</h2><div class="lines">
+    ${A.R.map(r => line(r.name, `${r.t[0]} · span ${f2(r.L)} m · ${gov(r)} governs`, r.u)).join('')}
+    ${A.posts.length ? line('Container corner posts', `worst: #${pm.up} on #${pm.lo} · N<sub>Ed</sub> ${f1(pm.Ned)} kN per post`, pm.u) : ''}
+    ${A.posts.length ? line('Foundation pads', `${E.pad} × ${E.pad} m · ${f1(pp.p)} kPa vs ${E.bearing} kPa`, pp.uP) : ''}
+    ${A.rods.map(r => line(r.n + ' hangers', `${r.nr} × M24 grade 8.8 · T ${f1(r.T)} kN`, r.u)).join('')}
+  </div>
+  ${A.mis.map(m => `<div class="warn">${m}</div>`).join('')}
+  ${A.cuts.length ? `<p class="note"><b>Wall cuts wider than ${E.maxCut} m need a reinforcement frame</b> (posts and lintel): ${A.cuts.map(([n, w]) => `${n} ${f2(w)} m`).join(', ')}.</p>` : ''}
+  <div class="btns"><button data-rep style="background:var(--ink);color:#fff;border-color:var(--ink)">Open full calculations</button></div>
+  <p class="note">${bad ? bad + ' item(s) need attention.' : 'All members pass.'} Utilisation is the worst of bending, shear and deflection. This is an early sizing guide, not a substitute for a structural engineer's design.</p></div>
+  <div class="sec"><h2>Design inputs · shared with every design</h2><div class="g3">${inp('roofQ', 'Roof / snow kN/m²', 0.05)}${inp('floorQ', 'Floor imposed kN/m²', 0.1)}${inp('balQ', 'Balcony kN/m²', 0.1)}${inp('wind', 'Wind kN/m²', 0.1)}${inp('maxCut', 'Max cut width m', 0.1)}${inp('defl', 'Deflection L/', 10)}${inp('pad', 'Pad size m', 0.05)}${inp('bearing', 'Soil bearing kPa', 5)}</div><a href="index.html" style="font-size:12px">← Back to Firmcop 3D</a></div>`;
+}
+const repCSS = p => `${p}.doc{font:12px/1.45 "IBM Plex Sans",system-ui,sans-serif;color:#1c1b19;max-width:860px;margin:0 auto;padding:36px 44px;background:#fff}
+${p}.doc h1{font-size:22px;margin:4px 0}${p}.doc h2{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6862;margin:28px 0 8px;border-top:1px solid #dedad2;padding-top:14px}
+${p}.doc h3{font-size:13.5px;margin:18px 0 2px}${p}.doc table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px}${p}.doc td,${p}.doc th{border-bottom:1px solid #ece9e2;padding:5px 6px;text-align:left;vertical-align:top}${p}.doc th{font-weight:600;color:#6b6862}
+${p}.doc td.n{font-variant-numeric:tabular-nums;white-space:nowrap}${p}.doc .ok{color:#2e6b3a}${p}.doc .ng{color:#b3261e}${p}.doc .ld,${p}.doc .nt{color:#55524c;margin:2px 0 4px}${p}.doc .meta{font:400 11px/1.5 "IBM Plex Mono",monospace;color:#6b6862}
+${p}.doc h3,${p}.doc table{break-inside:avoid}`;
+function reportBody() {
+  const A = structure(), E = ENG(), dt = new Date().toISOString().slice(0, 10);
+  const ok = u => u <= 1 ? '<b class="ok">OK</b>' : '<b class="ng">FAIL</b>', pc = u => u == null ? '' : `${Math.round(u * 100)}% ${ok(u)}`;
+  const tr = (a, b, c, u) => `<tr><td>${a}</td><td>${b}</td><td class="n">${c}</td><td class="n">${pc(u)}</td></tr>`;
+  const th = '<tr><th>Item</th><th>Expression</th><th>Value</th><th>Utilisation</th></tr>';
+  let n = 1;
+  const beams = A.R.map(r => `<h3>2.${n++} ${r.name}</h3><p class="ld">${r.load}</p><table>${th}
+    ${tr('Span', 'L', f2(r.L) + ' m')}
+    ${tr('Tributary width', 's', f2(r.trib) + ' m')}
+    ${tr('Characteristic loads', 'g<sub>k</sub> / q<sub>k</sub>', `${f2(r.gk)} / ${f2(r.qk)} kN/m²`)}
+    ${tr('ULS line load (EN 1990 eq. 6.10)', `w<sub>Ed</sub> = (1.35·${f2(r.gk)} + 1.5·${f2(r.qk)})·${f2(r.trib)}${r.xU ? ' + ' + f2(r.xU) : ''}`, f2(r.wU) + ' kN/m')}
+    ${tr('SLS line load', `w<sub>ser</sub> = (${f2(r.gk)} + ${f2(r.qk)})·${f2(r.trib)}${r.xS ? ' + ' + f2(r.xS) : ''}`, f2(r.wS) + ' kN/m')}
+    ${tr('Design moment', 'M<sub>Ed</sub> = w<sub>Ed</sub>·L²/8', f2(r.M) + ' kNm')}
+    ${tr('Design shear', 'V<sub>Ed</sub> = w<sub>Ed</sub>·L/2', f2(r.V) + ' kN')}
+    ${tr('Section (S355)', r.t[0], `W<sub>pl</sub> ${r.t[1]} cm³ · I ${r.t[2]} cm⁴ · A<sub>v</sub> ${Math.round(r.Av)} mm² · ${r.t[3]} kg/m`)}
+    ${tr('Bending resistance (EN 1993-1-1 6.2.5)', 'M<sub>c,Rd</sub> = W<sub>pl</sub>·f<sub>y</sub>/γ<sub>M0</sub>', f2(r.Mc) + ' kNm', r.uM)}
+    ${tr('Shear resistance (6.2.6)', 'V<sub>c,Rd</sub> = A<sub>v</sub>·(f<sub>y</sub>/√3)/γ<sub>M0</sub>', f2(r.Vc) + ' kN', r.uV)}
+    ${tr('Deflection', `δ = 5·w<sub>ser</sub>·L⁴/(384·E·I) ≤ L/${r.lim}`, `${f1(r.d)} mm ≤ ${f1(r.dl)} mm`, r.uD)}
+  </table>${r.note ? `<p class="nt">${r.note}</p>` : ''}${r.ok ? '' : '<p class="ng">No section in the catalogue passes. Reduce the span or add an intermediate support.</p>'}`).join('');
+  const posts = A.posts.length ? `<p class="ld">Each upper container bears on the four corner posts of the one below. Per stack: G<sub>k</sub> = tare 22 kN + floor ${GKF}·A + roof (or deck) · A, plus half the middle-volume roof and mezzanine where the container borders the bay; A = ${f2(AC)} m². N<sub>Ed</sub> = (1.35 G<sub>k</sub> + 1.5 Q<sub>k</sub>)/4. N<sub>Rd</sub> = ISO 1496-1 corner-post test load 848 kN / 1.5.</p>
+    <table><tr><th>Stack</th><th>G<sub>k</sub> kN</th><th>Q<sub>k</sub> kN</th><th>N<sub>Ed</sub> per post</th><th>N<sub>Rd</sub></th><th>Utilisation</th></tr>${A.posts.map(p => `<tr><td>#${p.up} on #${p.lo}${p.deck ? ' · roof deck' : ''}${p.adj ? ' · bay reactions' : ''}</td><td class="n">${f1(p.G)}</td><td class="n">${f1(p.Qk)}</td><td class="n">${f1(p.Ned)} kN</td><td class="n">${f1(p.Nrd)} kN</td><td class="n">${pc(p.u)}</td></tr>`).join('')}</table>` : '<p class="ld">No stacked containers.</p>';
+  const pads = A.posts.length ? `<p class="ld">One pad under each lower corner post. Serviceability load N = (G<sub>k</sub> + Q<sub>k</sub>)/4, including the lower container's own tare and floor. Pressure p = N / (${E.pad} × ${E.pad} m).</p>
+    <table><tr><th>Under</th><th>G<sub>k</sub> kN</th><th>Q<sub>k</sub> kN</th><th>N per pad</th><th>p</th><th>Allowable</th><th>Utilisation</th></tr>${A.posts.map(p => `<tr><td>#${p.lo}</td><td class="n">${f1(p.Gp)}</td><td class="n">${f1(p.Qp)}</td><td class="n">${f1(p.Np)} kN</td><td class="n">${f1(p.p)} kPa</td><td class="n">${E.bearing} kPa</td><td class="n">${pc(p.uP)}</td></tr>`).join('')}</table>` : '';
+  const rods = A.rods.length ? `<p class="ld">South balconies hang from inclined rods. Balcony g<sub>k</sub> 0.8 kN/m², q<sub>k</sub> ${E.balQ} kN/m²; depth 1.60 m. The outer edge reaction R = w<sub>Ed</sub>·d/2·width is shared by the rods; T = R / (n·sin θ). N<sub>t,Rd</sub> = 0.9·f<sub>ub</sub>·A<sub>s</sub>/γ<sub>M2</sub> with M24 grade 8.8 (A<sub>s</sub> 353 mm²).</p>
+    <table><tr><th>Balcony</th><th>w<sub>Ed</sub></th><th>R edge</th><th>Rods</th><th>sin θ</th><th>T per rod</th><th>N<sub>t,Rd</sub></th><th>Utilisation</th></tr>${A.rods.map(r => `<tr><td>${r.n} (${f2(r.wd)} m wide)</td><td class="n">${f2(r.wEd)} kN/m²</td><td class="n">${f1(r.Re)} kN</td><td class="n">${r.nr}</td><td class="n">${f2(r.s)}</td><td class="n">${f1(r.T)} kN</td><td class="n">${f1(r.Nt)} kN</td><td class="n">${pc(r.u)}</td></tr>`).join('')}</table>` : '<p class="ld">South balconies are off.</p>';
+  const all = [...A.R.map(r => [r.name, r.t[0], r.u]), ...A.posts.map(p => [`Corner posts #${p.up} on #${p.lo}`, 'ISO corner post', p.u]), ...A.posts.map(p => [`Pad under #${p.lo}`, `${E.pad} m square`, p.uP]), ...A.rods.map(r => [r.n + ' hangers', 'M24 gr 8.8', r.u])];
+  return `<div class="doc">
+    <div class="meta">Preliminary structural calculations · ${dt}</div>
+    <h1>2×4 Container Home</h1>
+    <div class="meta">7 × 20′ HC · middle volume ${f2(S.midW)} m · mezzanine depth ${f2(A.md)} m · glass wall: ${S.glass}</div>
+    <h2>1. Basis of design</h2><table>
+      <tr><td>Codes</td><td>EN 1990 (eq. 6.10), EN 1991-1-1 / -1-3 / -1-4, EN 1993-1-1, with UK National Annexes assumed</td></tr>
+      <tr><td>Steel</td><td>S355: f<sub>y</sub> = 355 N/mm², E = 210 000 N/mm², γ<sub>M0</sub> = 1.0. Bolts grade 8.8, γ<sub>M2</sub> = 1.25</td></tr>
+      <tr><td>Combinations</td><td>ULS 1.35 G<sub>k</sub> + 1.5 Q<sub>k</sub>; SLS G<sub>k</sub> + Q<sub>k</sub></td></tr>
+      <tr><td>Loads</td><td>Roof g<sub>k</sub> ${GKR}, q<sub>k</sub> ${E.roofQ} · Floor g<sub>k</sub> ${GKF}, q<sub>k</sub> ${E.floorQ} · Balcony q<sub>k</sub> ${E.balQ} · Wind ${E.wind} kN/m² · Container tare 22 kN</td></tr>
+      <tr><td>Limits</td><td>Beams L/${E.defl} · Glazing L/175 · Max unreinforced cut ${E.maxCut} m · Pads ${E.pad} × ${E.pad} m on ${E.bearing} kPa</td></tr></table>
+    <h2>2. Steel members</h2>${beams}
+    <h2>3. Container corner posts</h2>${posts}
+    <h2>4. Foundation pads</h2>${pads}
+    <h2>5. Balcony hangers</h2>${rods}
+    <h2>6. Openings and alignment</h2>
+    ${A.cuts.length ? `<p class="ld">These wall cuts exceed the ${E.maxCut} m factory limit and need a welded reinforcement frame (posts plus lintel), sized by the fabricator:</p><table><tr><th>Cut</th><th>Width</th></tr>${A.cuts.map(([c, w]) => `<tr><td>${c}</td><td class="n">${f2(w)} m</td></tr>`).join('')}</table>` : '<p class="ld">No cuts exceed the factory limit.</p>'}
+    ${A.mis.length ? A.mis.map(m => `<p class="ng">${m}</p>`).join('') : '<p class="ld">All stacked containers sit on aligned corner posts.</p>'}
+    <h2>7. Summary</h2><table><tr><th>Element</th><th>Section</th><th>Utilisation</th></tr>${all.map(([a, b, u]) => `<tr><td>${a}</td><td>${b}</td><td class="n">${pc(u)}</td></tr>`).join('')}</table>
+    <p class="nt" style="margin-top:18px">Preliminary sizing for feasibility and costing only. Section properties are approximate catalogue values. Connections, lateral stability, lateral-torsional buckling of unrestrained members, fire, corrosion and foundations must be designed and checked by a qualified structural engineer before fabrication.</p></div>`;
+}
+function reportCSV() {
+  const A = structure(), rows = [['Element', 'Section / detail', 'Check', 'Design value', 'Resistance / limit', 'Utilisation']];
+  for (const r of A.R) rows.push([r.name, r.t[0], 'Bending', f2(r.M) + ' kNm', f2(r.Mc) + ' kNm', f2(r.uM)], [r.name, r.t[0], 'Shear', f2(r.V) + ' kN', f2(r.Vc) + ' kN', f2(r.uV)], [r.name, r.t[0], 'Deflection', f1(r.d) + ' mm', f1(r.dl) + ' mm', f2(r.uD)]);
+  for (const p of A.posts) rows.push([`Corner post #${p.up}/#${p.lo}`, 'ISO 1496 corner post', 'Axial', f1(p.Ned) + ' kN', f1(p.Nrd) + ' kN', f2(p.u)], [`Pad under #${p.lo}`, `${ENG().pad} m square`, 'Bearing', f1(p.p) + ' kPa', ENG().bearing + ' kPa', f2(p.uP)]);
+  for (const r of A.rods) rows.push([r.n + ' hanger', 'M24 gr 8.8', 'Tension', f1(r.T) + ' kN', f1(r.Nt) + ' kN', f2(r.u)]);
+  return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+}
+function dl(name, data, type) { const a = document.createElement('a'); a.href = typeof data === 'string' && data.startsWith('data:') ? data : URL.createObjectURL(new Blob([data], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+function openReport() {
+  let el = document.getElementById('rep'); if (!el) { el = document.createElement('div'); el.id = 'rep'; document.body.appendChild(el); }
+  el.innerHTML = `<div class="bar"><b>Structural calculations</b><span style="flex:1"></span><button data-rb="print">Print / PDF</button><button data-rb="html">Download HTML</button><button data-rb="csv">Download CSV</button><button data-rb="close">Close</button></div>${reportBody()}`;
+  el.onclick = e => {
+    const b = e.target.closest('[data-rb]'); if (!b) { if (e.target === el) el.remove(); return; }
+    const k = b.dataset.rb;
+    if (k === 'close') el.remove(); else if (k === 'print') window.print();
+    else if (k === 'html') dl('2x4-structural-calcs.html', `<!DOCTYPE html><html><head><meta charset="utf-8"><title>2×4 structural calculations</title><style>body{margin:0}${repCSS('')}</style></head><body>${reportBody()}</body></html>`, 'text/html');
+    else dl('2x4-structural-calcs.csv', reportCSV(), 'text/csv');
+  };
+}
+const XS = document.createElement('style');
+XS.textContent = repCSS('#rep ') + `
+#rep{position:fixed;inset:0;background:rgba(28,27,25,.55);overflow:auto;z-index:50;padding:0 0 40px}
+#rep .bar{position:sticky;top:0;display:flex;gap:8px;align-items:center;padding:10px 16px;background:#1c1b19;color:#fff;font-size:13px;z-index:1}
+#rep .bar button{height:32px;padding:0 12px;border:1px solid #55524c;border-radius:5px;background:#2b2a27;color:#fff;cursor:pointer;font-size:12px}
+#rep .doc{margin-top:24px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.tabs{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fbfaf7;z-index:2}
+.tabs button{flex:1;height:42px;border:0;background:none;cursor:pointer;font-size:12.5px;border-bottom:2px solid transparent;color:var(--muted)}
+.tabs button.on{border-bottom-color:var(--ink);color:var(--ink);font-weight:600}
+.envs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.envs button{height:34px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;font-size:12px}
+.envs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+@media print{body>*:not(#rep){display:none!important}html,body{height:auto!important;background:#fff!important}#rep{position:static!important;background:#fff!important;overflow:visible!important;padding:0!important}#rep .bar{display:none!important}#rep .doc{box-shadow:none!important;margin:0 auto!important}}`;
+document.head.appendChild(XS);
+
+// balustrades
+const gLabel = k => { const s = String(k).slice(2).split('/').map(x => x.replace(/_/g, ' ')).join(' · '); return s[0].toUpperCase() + s.slice(1); };
+const balOpts = cur => Object.entries(BAL).filter(([k]) => k === cur || RU().balustrades[k]?.on !== false).map(([k, [l]]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${l}</option>`).join('');
+function guardInsp() {
+  const G = guardCfg(SEL), stair = /stair/.test(SEL), min = stair ? RU().compliance.guardStair : RU().compliance.guardBalcony, warns = [];
+  if (G.h < min - 1e-6) warns.push(`Approved Doc K: guarding here needs at least ${Math.round(min * 1000)} mm.`);
+  if (G.type === 'cable') warns.push('Horizontal cables are easy to climb. Approved Doc K asks for non-climbable guarding in homes where children may be present.');
+  if (G.type === 'glass') warns.push('Use toughened laminated glass to BS 6180, with a fixed handrail or an interlinking cap rail.');
+  return `<div class="sec insp"><h2>Selected balustrade</h2><div class="row"><span class="nm">${gLabel(SEL)}</span></div>
+    <div class="row"><span>Type</span><select data-gtype="${SEL}">${balOpts(G.type)}</select></div>
+    <label class="row"><span>Height<small>${Math.round(G.h * 1000)} mm</small></span><input type="range" min="0.8" max="1.5" step="0.05" value="${G.h}" data-gh="${SEL}"></label>
+    ${warns.map(w => `<div class="warn">${w}</div>`).join('')}
+    <div class="btns"><button data-gact="all">Apply to all balustrades</button><button data-gact="reset">Reset</button><button data-act="close">Done</button></div></div>`;
+}
+function balSec() {
+  const gs = (LAST && LAST.guards) || [];
+  return `<div class="sec"><h2>Balustrades</h2>
+    <div class="row"><span>Set all to</span><select data-gall><option value="">Choose…</option>${balOpts('')}</select></div>
+    ${gs.map(g => `<div class="op${SEL === g.key ? ' on' : ''}"><span data-gpick="${g.key}" style="cursor:pointer">${gLabel(g.key)}<small style="display:block;color:var(--muted)">${f2(g.len)} m · ${Math.round(g.h * 1000)} mm</small></span><select data-gtype="${g.key}">${balOpts(g.type)}</select></div>`).join('')}</div>`;
+}
+
+// render environment
+const ENVS = {
+  studio: { l: 'Studio' },
+  day: { l: 'Clear day', skyP: [3, 1.2, 0.005, 0.8], bgI: 0.55, envI: 0.5, sky: ['#5f9bd6', '#dce9f3'], hemi: ['#d6e6ff', '#6d7a4c', 0.9], sun: ['#fff4e2', 3.0], el: 52, fog: '#dce9f3', grass: '#6f8a47' },
+  golden: { l: 'Golden hour', skyP: [6, 2.5, 0.01, 0.85], skyEl: 5, bgI: 0.5, envI: 0.45, sky: ['#6f7fae', '#f5c48a'], hemi: ['#ffd9a8', '#5a5040', 0.6], sun: ['#ffb266', 2.8], el: 11, fog: '#f0c9a0', grass: '#6c7f42' },
+  overcast: { l: 'Overcast', skyP: [18, 0.4, 0.05, 0.6], bgI: 0.55, envI: 0.7, sky: ['#aeb4ba', '#dde0e2'], hemi: ['#eef0f2', '#7b8470', 1.6], sun: ['#ffffff', 0.5], el: 70, fog: '#d5d9dc', grass: '#667a4a' },
+  dusk: { l: 'Dusk', skyP: [3, 3, 0.005, 0.8], skyEl: -1.5, bgI: 1.2, envI: 0.3, sky: ['#0e1830', '#4a4a6a'], hemi: ['#3a4666', '#141414', 0.45], sun: ['#9fb2ff', 0.35], el: 25, fog: '#2c3048', grass: '#3b4a30', night: true },
+  winter: { l: 'Winter', skyP: [4, 1.0, 0.008, 0.8], skyEl: 18, bgI: 0.55, envI: 0.55, sky: ['#9fb6cc', '#eef2f5'], hemi: ['#e8f0ff', '#dfe4e8', 1.1], sun: ['#fffaf0', 2.0], el: 22, fog: '#e6ebef', grass: '#eef1f3', snow: true },
+};
+const sc = stage._scene, rdr = stage._renderer, KEY = stage._key;
+const HEMI = sc.children.find(o => o.isHemisphereLight), FILL = sc.children.find(o => o.isDirectionalLight && o !== KEY);
+const BASE = { hemi: [HEMI.color.getHex(), HEMI.groundColor.getHex(), HEMI.intensity], key: [KEY.color.getHex(), KEY.intensity], fill: FILL ? FILL.intensity : 0, tm: rdr.toneMapping, exp: rdr.toneMappingExposure };
+sc.add(KEY.target);
+// realism: physical sky environment, ambient occlusion, procedural surface textures
+const FX = {}; let lastSkyKey = '';
+Promise.all([import('three/addons/objects/Sky.js'), import('three/addons/postprocessing/EffectComposer.js'), import('three/addons/postprocessing/RenderPass.js'), import('three/addons/postprocessing/GTAOPass.js'), import('three/addons/postprocessing/OutputPass.js')]).then(([SkyM, EC, RP, GT, OP]) => {
+  FX.envSky = new SkyM.Sky(); FX.envSky.scale.setScalar(450); FX.envScene = new THREE.Scene(); FX.envScene.add(FX.envSky);
+  FX.pmrem = new THREE.PMREMGenerator(rdr);
+  const sz = rdr.getDrawingBufferSize(new THREE.Vector2());
+  FX.composer = new EC.EffectComposer(rdr, new THREE.WebGLRenderTarget(sz.x, sz.y, { type: THREE.HalfFloatType, samples: 4 }));
+  FX.composer.addPass(new RP.RenderPass(sc, stage._camera));
+  FX.gtao = new GT.GTAOPass(sc, stage._camera, sz.x, sz.y); FX.gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.5, scale: 1.0 }); FX.gtao.blendIntensity = 1.0;
+  FX.composer.addPass(FX.gtao); FX.composer.addPass(new OP.OutputPass());
+  FX.ready = true; lastSkyKey = ''; applyEnv();
+}).catch(err => console.warn('Realism effects unavailable', err));
+const useFX = () => FX.ready && S.rnd.hq !== false && S.rnd.env !== 'studio';
+const baseLoop = stage._loop; let fxW = 0, fxH = 0, fxPR = 0;
+function fxSize(pr) { const cv = rdr.domElement, w = cv.clientWidth, h = cv.clientHeight; if (w !== fxW || h !== fxH || pr !== fxPR) { FX.composer.setPixelRatio(pr); FX.composer.setSize(w, h); fxW = w; fxH = h; fxPR = pr; } }
+rdr.setAnimationLoop(() => { if (!useFX()) return baseLoop(); fxSize(rdr.getPixelRatio()); stage._controls.update(); FX.composer.render(); });
+function updateSky(E, R) {
+  const k = R.env + ',' + R.sun;
+  if (k !== lastSkyKey) {
+    lastSkyKey = k;
+    const el = (E.skyEl ?? E.el) * Math.PI / 180, az = R.sun * Math.PI / 180, u = FX.envSky.material.uniforms;
+    u.turbidity.value = E.skyP[0]; u.rayleigh.value = E.skyP[1]; u.mieCoefficient.value = E.skyP[2]; u.mieDirectionalG.value = E.skyP[3];
+    u.sunPosition.value.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
+    if (FX.envRT) FX.envRT.dispose(); FX.envRT = FX.pmrem.fromScene(FX.envScene, 0, 0.1, 1000);
+  }
+  sc.environment = FX.envRT.texture; sc.background = FX.envRT.texture; sc.backgroundIntensity = E.bgI; sc.environmentIntensity = E.envI; sc.backgroundBlurriness = 0;
+}
+const TEXC = {};
+function canvasNoise(seed, draw) { const N = 512, c = document.createElement('canvas'); c.width = c.height = N; draw(c.getContext('2d'), N, rng(seed)); return c; }
+function blotch(g, N, r, cw, ch, alpha, lo, hi) { const s = document.createElement('canvas'); s.width = cw; s.height = ch; const sg = s.getContext('2d'), id = sg.createImageData(cw, ch); for (let i = 0; i < id.data.length; i += 4) { const v = lo + r() * (hi - lo); id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } sg.putImageData(id, 0, 0); g.globalAlpha = alpha; g.imageSmoothingEnabled = true; g.drawImage(s, 0, 0, N, N); g.globalAlpha = 1; }
+const mkTex = (c, srgb) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+function getTex(k) {
+  if (TEXC[k]) return TEXC[k];
+  const fine = seed => mkTex(canvasNoise(seed, (g, N, r) => { g.fillStyle = '#808080'; g.fillRect(0, 0, N, N); blotch(g, N, r, 16, 16, 0.5, 60, 200); blotch(g, N, r, 256, 256, 0.35, 0, 255); }));
+  let T;
+  if (k === 'steel') T = { rough: mkTex(canvasNoise(11, (g, N, r) => { g.fillStyle = '#999'; g.fillRect(0, 0, N, N); blotch(g, N, r, 8, 8, 0.6, 90, 200); blotch(g, N, r, 64, 64, 0.35, 60, 230); })), bump: fine(12) };
+  else if (k === 'wood') { const m = mkTex(canvasNoise(21, (g, N, r) => { g.fillStyle = '#e8e8e8'; g.fillRect(0, 0, N, N); blotch(g, N, r, 3, 96, 0.55, 150, 255); blotch(g, N, r, 2, 400, 0.35, 120, 255); g.fillStyle = 'rgba(0,0,0,.35)'; for (let y = 0; y < N; y += N / 6) g.fillRect(0, y, N, 2); for (let i = 0; i < 6; i++) g.fillRect(r() * N, i * N / 6, 2, N / 6); }), true); T = { map: m, bump: m }; }
+  else if (k === 'concrete') T = { map: mkTex(canvasNoise(31, (g, N, r) => { g.fillStyle = '#ededed'; g.fillRect(0, 0, N, N); blotch(g, N, r, 6, 6, 0.5, 170, 255); blotch(g, N, r, 128, 128, 0.35, 120, 255); }), true), bump: fine(32) };
+  else if (k === 'grass') { const m = mkTex(canvasNoise(41, (g, N, r) => { g.fillStyle = '#d0d0d0'; g.fillRect(0, 0, N, N); blotch(g, N, r, 8, 8, 0.6, 120, 255); blotch(g, N, r, 200, 200, 0.6, 60, 255); }), true); T = { map: m, bump: m }; }
+  else { const m = mkTex(canvasNoise(51, (g, N, r) => { g.fillStyle = '#cfcfcf'; g.fillRect(0, 0, N, N); blotch(g, N, r, 160, 160, 0.8, 90, 255); }), true); T = { map: m, bump: m }; }
+  return (TEXC[k] = T);
+}
+const TEXMAP = { container_steel: ['steel', 0.5], container_frame: ['steel', 0.5], corner_casting: ['steel', 0.5], steel_grey: ['steel', 0.5], infill_panel: ['steel', 0.5], fibre_cement_charcoal: ['concrete', 0.5], wood_floor: ['wood', 0.7], timber_deck: ['wood', 0.7], concrete: ['concrete', 0.33], floor_concrete_polished: ['concrete', 0.33], roof_membrane: ['concrete', 0.5], lawn_grass: ['grass', 0.17], paving: ['concrete', 0.5], gravel: ['gravel', 0.8] };
+function worldUV(me, s) {
+  const gm = me.geometry, p = gm.attributes.position, nr = gm.attributes.normal; if (!nr || gm.userData.wuv === s) return;
+  me.updateMatrixWorld(); const m = me.matrixWorld, nm = new THREE.Matrix3().getNormalMatrix(m), v = new THREE.Vector3(), n = new THREE.Vector3(), uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i).applyMatrix4(m); n.fromBufferAttribute(nr, i).applyMatrix3(nm);
+    const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+    const [a, b] = ay >= ax && ay >= az ? [v.x, v.z] : ax >= az ? [v.z, v.y] : [v.x, v.y];
+    uv[2 * i] = a * s; uv[2 * i + 1] = b * s;
+  }
+  gm.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); gm.userData.wuv = s;
+}
+function texturize(root) {
+  root.traverse(me => {
+    if (!me.isMesh || !me.material || Array.isArray(me.material)) return;
+    const d = TEXMAP[me.material.name]; if (!d) return;
+    worldUV(me, d[1]);
+    const mt = me.material; if (mt.userData.tex) return; mt.userData.tex = 1;
+    const T = getTex(d[0]);
+    if (T.rough) mt.roughnessMap = T.rough; if (T.map) mt.map = T.map;
+    mt.bumpMap = T.bump; mt.bumpScale = d[0] === 'grass' ? 1.2 : d[0] === 'steel' ? 0.4 : 0.5; mt.needsUpdate = true;
+  });
+}
+let LAND = null, lastLandKey = '';
+const ENVCACHE = {};
+function skyTex(a, b) { const c = document.createElement('canvas'); c.width = 2; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, 2, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function applyEnv() {
+  if (!current) return;
+  const R = S.rnd, E = ENVS[R.env] || ENVS.studio, studio = !E.sky;
+  const bb = new THREE.Box3().setFromObject(current), c = bb.getCenter(new THREE.Vector3());
+  const az = R.sun * Math.PI / 180, el = (studio ? 48 : E.el) * Math.PI / 180;
+  KEY.position.copy(c).add(new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(45));
+  KEY.target.position.copy(c); KEY.target.updateMatrixWorld();
+  const sh = KEY.shadow.camera; sh.left = -22; sh.right = 22; sh.top = 22; sh.bottom = -22; sh.near = 1; sh.far = 120; sh.updateProjectionMatrix();
+  const ms = !studio && R.hq !== false ? 4096 : 2048; if (KEY.shadow.mapSize.x !== ms) { KEY.shadow.mapSize.set(ms, ms); if (KEY.shadow.map) { KEY.shadow.map.dispose(); KEY.shadow.map = null; } } KEY.shadow.normalBias = 0.03;
+  if (studio) {
+    HEMI.color.setHex(BASE.hemi[0]); HEMI.groundColor.setHex(BASE.hemi[1]); HEMI.intensity = BASE.hemi[2]; KEY.color.setHex(BASE.key[0]); KEY.intensity = BASE.key[1];
+    if (FILL) FILL.intensity = BASE.fill; rdr.toneMapping = BASE.tm; rdr.toneMappingExposure = BASE.exp * R.exp; sc.background = null; sc.fog = null; sc.environment = null;
+  } else {
+    HEMI.color.set(E.hemi[0]); HEMI.groundColor.set(E.hemi[1]); HEMI.intensity = E.hemi[2]; KEY.color.set(E.sun[0]); KEY.intensity = E.sun[1];
+    if (FILL) FILL.intensity = E.night ? 0.05 : 0.35; rdr.toneMapping = THREE.ACESFilmicToneMapping; rdr.toneMappingExposure = 1.15 * R.exp;
+    sc.fog = new THREE.Fog(E.fog, 70, 260);
+    if (FX.ready && R.hq !== false) { updateSky(E, R); HEMI.intensity = E.hemi[2] * 0.4; }
+    else { sc.environment = null; sc.backgroundIntensity = 1; sc.background = ENVCACHE[R.env] || (ENVCACHE[R.env] = skyTex(E.sky[0], E.sky[1])); }
+  }
+  current.traverse(n => { if (n.isMesh && n.material && n.material.name === 'glazing') { n.material.emissive.set(E.night ? '#ffc070' : '#000000'); n.material.emissiveIntensity = E.night ? 0.9 : 0; } });
+  const k = JSON.stringify([R.env, R.lawn, R.terrace, R.path, R.shrubs, R.hedge, R.fence, R.trees, R.seed, R.hq, Math.round(bb.min.x * 10), Math.round(bb.max.x * 10), Math.round(bb.max.z * 10), S.midW]);
+  if (!studio && k !== lastLandKey) { lastLandKey = k; buildLand(bb, R, E); }
+  if (LAND) LAND.visible = !studio;
+  stage._ground.visible = studio || !R.lawn;
+  if (!studio && R.hq !== false) { texturize(current); if (LAND) texturize(LAND); }
+}
+function buildLand(bb, R, E) {
+  if (LAND) { sc.remove(LAND); LAND.traverse(n => { if (n.isMesh) n.geometry.dispose(); }); }
+  LAND = new THREE.Group(); LAND.name = 'landscape'; sc.add(LAND);
+  const mk = (color, r = 0.95, x = {}) => new THREE.MeshStandardMaterial({ color, roughness: r, ...x }), snow = !!E.snow;
+  const grass = mk(E.grass || '#6f8a47', 1), pave = mk(snow ? '#e8ecef' : '#cbc5b8', 0.85), grav = mk(snow ? '#e4e8eb' : '#b5ab98', 1), bark = mk('#5a4636', 0.9), hedgeM = mk(snow ? '#d8e0e4' : '#3d5a2d', 1), fenceM = mk('#77604a', 0.85);
+  grass.name = 'lawn_grass'; pave.name = 'paving'; grav.name = 'gravel';
+  const leaf = (snow ? ['#dce4e6', '#c9d5d2', '#5d6f5a'] : ['#4e6a34', '#5c7a3b', '#3e592b', '#6b8a44']).map(c => mk(c, 1, { flatShading: true }));
+  const add = (geo, mat, x, y, z, name) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.name = name; m.castShadow = m.receiveShadow = true; LAND.add(m); return m; };
+  const x0 = bb.min.x, x1 = bb.max.x, z0 = bb.min.z, z1 = bb.max.z, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, bayX = 2.438 + S.midW / 2, front = 8.496;
+  const rnd = rng(R.seed * 9973 + 1), PX0 = x0 - 12, PX1 = x1 + 12, PZ0 = z0 - 12, PZ1 = z1 + 16;
+  if (R.lawn) { const g = add(new THREE.PlaneGeometry(300, 300), grass, cx, -0.03, cz, 'lawn'); g.rotation.x = -Math.PI / 2; g.castShadow = false; }
+  if (R.terrace) add(new THREE.BoxGeometry(x1 - x0 + 0.4, 0.08, 3.4), pave, cx, 0.0, front + 1.7, 'paved_terrace');
+  if (R.path) add(new THREE.BoxGeometry(1.4, 0.05, 18), grav, bayX, -0.005, front + 12.4, 'gravel_path');
+  if (R.shrubs) {
+    const put = (x, z) => { const r = 0.35 + rnd() * 0.35, m = add(new THREE.IcosahedronGeometry(r, 1), leaf[Math.floor(rnd() * leaf.length)], x, r * 0.7, z, 'shrub'); m.scale.y = 0.8; };
+    for (let x = 0.4; x < x1 - 0.3; x += 1.6 + rnd()) put(x, -0.9);
+    for (let z = 0.6; z < front - 0.3; z += 1.7 + rnd()) { put(-0.9, z); put(x1 + 0.9, z); }
+  }
+  if (R.hedge) { for (const x of [PX0, PX1]) add(new THREE.BoxGeometry(1.0, 1.5, PZ1 - PZ0), hedgeM, x, 0.75, (PZ0 + PZ1) / 2, 'boundary_hedge'); add(new THREE.BoxGeometry(PX1 - PX0, 1.5, 1.0), hedgeM, cx, 0.75, PZ0, 'boundary_hedge'); }
+  if (R.fence) {
+    const run = (ax, az, bx, bz) => {
+      const len = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(len / 2.4)), g = new THREE.Group(); g.position.set((ax + bx) / 2, 0, (az + bz) / 2); g.rotation.y = Math.atan2(-(bz - az), bx - ax); LAND.add(g);
+      for (let k = 0; k <= n; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.1), fenceM); m.position.set(-len / 2 + k * len / n, 0.6, 0); m.castShadow = true; m.name = 'fence_post'; g.add(m); }
+      for (const y of [0.35, 1.0]) { const m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.09, 0.03), fenceM); m.position.set(0, y, 0.06); m.castShadow = true; m.name = 'fence_rail'; g.add(m); }
+    };
+    const a = PX0 + 0.8, b = PX1 - 0.8, n0 = PZ0 + 0.6, s0 = PZ1 - 0.6;
+    run(a, n0, b, n0); run(a, n0, a, s0); run(b, n0, b, s0); run(a, s0, bayX - 1.5, s0); run(bayX + 1.5, s0, b, s0);
+  }
+  const exc = new THREE.Box3(new THREE.Vector3(x0 - 3.5, -1, z0 - 3.5), new THREE.Vector3(x1 + 3.5, 20, z1 + 4.5)), v = new THREE.Vector3();
+  let placed = 0, tries = 0;
+  while (placed < R.trees && tries++ < R.trees * 40) {
+    const x = PX0 + 2 + rnd() * (PX1 - PX0 - 4), z = PZ0 + 2 + rnd() * (PZ1 - PZ0 - 4);
+    if (exc.containsPoint(v.set(x, 0, z)) || (Math.abs(x - bayX) < 4 && z > z1)) continue;
+    const con = snow ? rnd() < 0.7 : rnd() < 0.3, s = 0.75 + rnd() * 0.6, lm = leaf[Math.floor(rnd() * leaf.length)];
+    if (con) { add(new THREE.CylinderGeometry(0.12 * s, 0.16 * s, s, 7), bark, x, 0.5 * s, z, 'tree_trunk'); const h = (3.8 + rnd() * 2.5) * s; add(new THREE.ConeGeometry((1.1 + rnd() * 0.5) * s, h, 8), lm, x, 0.8 * s + h / 2, z, 'conifer_canopy'); }
+    else { const th = (1.8 + rnd()) * s, r = (1.5 + rnd() * 0.9) * s; add(new THREE.CylinderGeometry(0.11 * s, 0.17 * s, th + r * 0.5, 7), bark, x, (th + r * 0.5) / 2, z, 'tree_trunk'); add(new THREE.IcosahedronGeometry(r, 1), lm, x, th + r * 0.7, z, 'tree_canopy').scale.y = 0.85; }
+    placed++;
+  }
+  if (E.night) { const dx = S.midW - 4.232; for (const [x, y, z] of [[bayX, 2.3, 5.6], [1.2, 1.8, 6.2], [10 + dx, 1.8, 6.0], [10.2 + dx, 4.8, 6.3], [1.2, 4.8, 6.2], [bayX, 4.6, 3.2]]) { const l = new THREE.PointLight('#ffc27a', 14, 11, 2); l.position.set(x, y, z); LAND.add(l); } }
+}
+function camView(k) {
+  const bb = new THREE.Box3().setFromObject(current), c = bb.getCenter(new THREE.Vector3()), r = bb.getSize(new THREE.Vector3()).length(), bayX = 2.438 + S.midW / 2;
+  const P = { front: [[c.x + r * 0.15, 2.2, bb.max.z + r * 0.9], [c.x, 3, c.z]], rear: [[c.x - r * 0.3, 3, bb.min.z - r * 0.85], [c.x, 3, c.z]], aerial: [[c.x + r * 0.7, r * 0.95, c.z + r * 0.75], [c.x, 2, c.z]], eye: [[bayX + 7, 1.6, bb.max.z + 11], [bayX, 3.2, c.z]], interior: [[bayX + 0.6, 1.6, 8.0], [bayX - 0.6, 2.6, 3.0]] }[k];
+  stage._controls.autoRotate = false; stage._camera.position.set(...P[0]); stage._controls.target.set(...P[1]); stage._controls.update();
+}
+function capture() {
+  const cv = rdr.domElement, w = cv.clientWidth, h = cv.clientHeight, pr = rdr.getPixelRatio(), sv = selBox.visible;
+  const hp = Math.min(3, pr * 2), fx = useFX();
+  selBox.visible = false; rdr.setPixelRatio(hp); rdr.setSize(w, h, false);
+  if (fx) { fxSize(hp); FX.composer.render(); } else rdr.render(sc, stage._camera);
+  const url = cv.toDataURL('image/png');
+  rdr.setPixelRatio(pr); rdr.setSize(w, h, false); if (fx) fxSize(pr); selBox.visible = sv;
+  dl(`2x4-${S.rnd.env}.png`, url);
+}
+function renderTab() {
+  const R = S.rnd, t = (k, l) => `<label class="row"><span>${l}</span><input type="checkbox" data-rt="${k}" ${R[k] ? 'checked' : ''}></label>`;
+  return `<div class="sec"><h2>Environment</h2><div class="envs">${Object.entries(ENVS).map(([k, e]) => `<button class="${R.env === k ? 'on' : ''}" data-env="${k}">${e.l}</button>`).join('')}</div>
+    <div class="row"><span>Realism<small>Sky reflections, surface textures, contact shadows</small></span><div class="seg" style="width:150px"><button class="${R.hq !== false ? 'on' : ''}" data-hq="1">High</button><button class="${R.hq === false ? 'on' : ''}" data-hq="0">Standard</button></div></div>
+    <label class="row"><span>Sun direction<small>${R.sun}° from north</small></span><input type="range" min="0" max="360" step="5" value="${R.sun}" data-rr="sun"></label>
+    <label class="row"><span>Exposure</span><input type="range" min="0.5" max="1.8" step="0.05" value="${R.exp}" data-rr="exp"></label></div>
+  <div class="sec"><h2>Landscape</h2>${R.env === 'studio' ? '<p class="note">Pick an environment above to show the site and landscaping.</p>' : ''}
+    ${t('lawn', 'Lawn')}${t('terrace', 'Paved terrace')}${t('path', 'Gravel path')}${t('shrubs', 'Shrubs along walls')}${t('hedge', 'Boundary hedges')}${t('fence', 'Timber boundary fence')}
+    <label class="row"><span>Trees<small>${R.trees}</small></span><input type="range" min="0" max="40" step="1" value="${R.trees}" data-rr="trees"></label>
+    <div class="btns"><button data-ract="seed">Shuffle trees</button></div></div>
+  <div class="sec"><h2>Camera</h2><div class="btns">${[['front', 'Front'], ['rear', 'Rear'], ['aerial', 'Aerial'], ['eye', 'Eye level'], ['interior', 'Inside living']].map(([k, l]) => `<button data-cam="${k}">${l}</button>`).join('')}</div>
+    <label class="row"><span>Turntable</span><input type="checkbox" data-turn ${stage._controls.autoRotate ? 'checked' : ''}></label></div>
+  <div class="sec"><h2>Output</h2><div class="btns"><button data-ract="shot" style="background:var(--ink);color:#fff;border-color:var(--ink)">Save image · 2×</button></div><p class="note">A real-time render of the current configuration. Trees and planting are simple stand-ins for massing and mood.</p></div>`;
+}
+function compList() {
+  const ids = Object.keys(COMPINFO), cats = [...new Set(ids.map(i => COMPINFO[i].cat))];
+  return `<details class="sec" ${listOpen ? 'open' : ''} id="clist"><summary>All components (${ids.length})</summary>${cats.map(c => `<div class="grp">${c}</div>` + ids.filter(i => COMPINFO[i].cat === c).map(i => `<div class="op cl${SEL === i ? ' on' : ''}${shown(i) ? '' : ' off'}" data-pick="${i}"><span>${COMPINFO[i].label}</span><input type="checkbox" data-vis="${i}" ${shown(i) ? 'checked' : ''} aria-label="Show"></div>`).join('')).join('')}</details>`;
+}
+let TAB = 'design';
+function opRow(s) {
+  const ty = S.ops[s.id], t = TYPES[ty], o = S.opw[s.id] || {}, sel = SEL === s.id;
+  const cd = s.cd ? `<div class="cd"><span>Container doors</span><select data-cd="${s.id}">${[['open', 'Open 90°'], ['closed', 'Closed'], ['removed', 'Removed']].map(([v, l]) => `<option value="${v}" ${S.cds[s.id] === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>` : '';
+  const inp = (k, l, v, dis) => `<label>${l}<input type="number" step="0.05" data-opw="${k}" data-slot="${s.id}" value="${f2(v)}" ${dis ? 'disabled' : ''}></label>`;
+  const rz = sel && ty !== 'none' ? `<div class="g3" style="grid-column:1/-1;margin-top:4px">${inp('w', 'Width m', o.w ?? t.w)}${inp('h', 'Height m', o.h ?? (t.v1 - t.v0))}${inp('sill', t.door ? 'Sill (door)' : 'Sill m', t.door ? 0 : (o.sill ?? t.v0), t.door)}</div>` : '';
+  return `<div class="op${sel ? ' on' : ''}" data-row="${s.id}"><span data-selrow="${s.id}" style="cursor:pointer">${s.label}</span><select data-op="${s.id}">${s.types.map(x => `<option value="${x}" ${ty === x ? 'selected' : ''}>${TYPES[x].label}</option>`).join('')}</select>${cd}${rz}</div>`;
+}
+function renderPanel() {
+  const md = LAST ? LAST.md : 2.8;
+  const tabs = `<div class="tabs">${[['design', 'Configure'], ['structure', 'Structure'], ['render', 'Render']].map(([k, l]) => `<button class="${TAB === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>`;
+  const head = `<div class="hd"><div class="eyebrow">Design library · configurable</div><h1>2×4 Container Home</h1><div class="sub">7 × 20′ high cube · 3 bed · 2 bath<br>${(143.1 + (S.midW - 4.232) * (6.058 + md)).toFixed(1)} m² · roof deck ≈ 30 m² · 7.1 m high</div></div>${tabs}`;
+  let body;
+  if (TAB === 'structure') body = structPanel();
+  else if (TAB === 'render') body = renderTab();
+  else {
+    let groups = '';
+    for (const g of [...new Set(SLOTS.map(s => s.g))]) groups += `<div class="grp">${g}</div>` + SLOTS.filter(s => s.g === g).map(opRow).join('');
+    const opt = (k, list) => list.map(([v, l]) => `<option value="${v}" ${S[k] === v ? 'selected' : ''}>${l}</option>`).join('');
+    body = `${SEL && String(SEL).startsWith('g:') ? guardInsp() : inspector()}
+  <div class="sec"><h2>View</h2>${seg('view', [['full', 'Full'], ['roof', 'Roofs off'], ['ground', 'Ground floor']])}</div>
+  <div class="sec"><h2>Finishes</h2><div class="row"><span>Containers</span>${sws('ccol', CCOL)}</div><div class="row"><span>Infill panels</span>${sws('icol', ICOL)}</div></div>
+  <div class="sec"><h2>Components</h2>
+    <div class="row"><span>Front glass wall</span><select data-s="glass">${opt('glass', [['full', 'Full height (2 storeys)'], ['transom', 'Large panes + transoms'], ['lower', 'Ground floor only'], ['solid', 'Solid + slider']])}</select></div>
+    <div class="row"><span>Mezzanine</span><select data-s="mezz">${opt('mezz', [['part', '2.8 m deep (double-height living)'], ['full', 'Full depth (no double height)'], ['none', 'None (full double height)']])}</select></div>
+    <label class="row"><span>Middle volume width<small>${S.midW.toFixed(2)} m · containers 2, 3, 6, 7 and the rear landing move with it</small></span><input type="range" min="3" max="6" step="0.1" value="${S.midW}" data-r="midW"></label>
+    <label class="row"><span>Sliding corrugated wall<small>Guest/den to living</small></span><input type="range" min="0" max="1" step="0.05" value="${S.slide}" data-r="slide"></label>
+    ${tog('clere', 'Clerestory glazing', 'High windows above the bedrooms')}
+    ${tog('deck', 'Rooftop deck', 'Over containers 6 and 7')}
+    ${tog('balS', 'South balconies', 'Bedroom 2 and master, rod-hung')}
+    ${tog('balN', 'North balcony', 'Off the sitting area, on posts')}
+    ${tog('landing', 'Rear landing', 'Needed for the roof deck stair')}
+    ${tog('furn', 'Furniture & fit-out')}
+    ${S.deck && !S.landing ? '<div class="warn">The roof deck has no access without the rear landing and its stair.</div>' : ''}
+  </div>
+  ${balSec()}
+  <div class="sec"><h2>Windows &amp; doors</h2><p class="note">Click a name, or the opening in the model, to set its width, height and sill.</p>${groups}</div>
+  ${compList()}
+  <div class="sec"><h2>Estimate <span style="text-transform:none;letter-spacing:0">· sample prices</span></h2><div id="est"></div></div>`;
+  }
+  document.getElementById('panel').innerHTML = head + body;
+  renderEstimate();
+}
+function renderEstimate() {
+  const el = document.getElementById('est'); if (!el || !LAST) return;
+  const Q = LAST, L2 = [];
+  const add = (n, q, u, p) => { if (q > 0) L2.push([n, q, u, q * p]); };
+  const nC = CONT.filter(c => shown('@container_' + c.n + '_20ft_HC')).length, nS = ['@south_balcony_bedroom2', '@south_balcony_master'].filter(shown).length;
+  add('20′ HC container, converted shell', nC, 'ea', RU().prices.m20); add('Module connections', 8, 'ea', RU().prices.connection);
+  add(S.glass === 'full' ? 'Two-storey glass wall' : S.glass === 'lower' ? 'Ground-floor glass wall + infill' : 'Infill wall + slider', 1, 'ea', (S.glass === 'full' ? 16800 : S.glass === 'transom' ? 17600 : S.glass === 'lower' ? 9400 : 5200) * S.midW / 4.232);
+  if (S.clere) add('Clerestory glazing', 2, 'run', 2600);
+  add('Steel frame, infill & clerestory roof', 1, 'lot', 21500 * S.midW / 4.232);
+  add('Mezzanine floor', Math.round(Q.mezzA * 10) / 10, 'm²', 420); if (shown('@interior_stair')) add('Interior stair', 1, 'ea', 5800); if (shown('@sliding_corrugated_wall')) add('Sliding corrugated wall', 1, 'ea', 3400);
+  const mod = Object.entries(S.cx).filter(([k, v]) => COMPINFO[k] && !v.hide && (v.dx || v.dy || v.dz || v.rot || (v.sx && v.sx !== 1) || (v.sy && v.sy !== 1) || (v.sz && v.sz !== 1) || v.col)).length;
+  add('Custom modifications (rework allowance)', mod, 'ea', 450);
+  const counts = {}; Object.entries(Q.openings).forEach(([id, t]) => { const c = counts[t] || (counts[t] = [0, 0]); c[0]++; c[1] += TYPES[t].price * (0.6 + 0.4 * (Q.opRatio[id] || 1)); });
+  for (const [t, [n, a]] of Object.entries(counts)) add(TYPES[t].label, n, 'ea', a / n);
+  if (S.balS) add('South balconies (rod-hung)', nS, 'ea', 6600); if (S.balN && shown('@north_balcony')) add('North balcony on posts', 1, 'ea', 5200); if (S.landing && shown('@rear_landing')) add('Rear landing on posts', 1, 'ea', 5600);
+  if (S.deck) { add('Rooftop deck', Math.round(Q.deckA * 10) / 10, 'm²', 260); if (S.landing) add('Roof access stair', 1, 'ea', 3800); }
+  const gt = {}; (Q.guards || []).forEach(g => { gt[g.type] = (gt[g.type] || 0) + g.len * g.h / 1.1; }); for (const [t, m] of Object.entries(gt)) add('Balustrade · ' + BAL[t][0], Math.round(m * 10) / 10, 'm', BAL[t][1]);
+  add('Wall-cut reinforcement frame', structure().cuts.length, 'ea', RU().prices.wideFrame + RU().factory.frameWeldHours * RU().prices.labourRate);
+  add('Engineering & permit set', 1, 'lot', RU().prices.engineering); add('Crane & set', 2, 'day', RU().prices.crane);
+  { const sub = L2.reduce((a, l) => a + l[3], 0), mg = RU().prices.margin || 0; if (mg) L2.push(['Fabricator margin ' + mg + '%', 1, 'lot', sub * mg / 100]); }
+  const tot = L2.reduce((a, l) => a + l[3], 0);
+  el.innerHTML = `<div class="lines">${L2.map(([n, q, u, t]) => `<div><span>${n} <span style="color:var(--muted)">× ${q} ${u}</span></span><span>${$(t)}</span></div>`).join('')}</div><div class="tot"><span>Structure, shell &amp; openings</span><b>${$(tot)}</b></div><p class="note">Stair: ${Q.stair.n} risers of ${Math.round(Q.stair.rise * 1000)} mm, going ${Math.round(Q.stair.going * 1000)} mm. Furniture is shown for visualisation and not priced.</p><button id="fc-rq" type="button" style="margin-top:10px;width:100%;height:46px;border:none;border-radius:4px;background:#FF6A1A;color:#16171a;font:inherit;font-weight:700;font-size:14px;cursor:pointer">Request a quote</button>`;
+  window.__fcEst = { L2, tot }; window.FirmcopBridge.estimate(tot);
+}
+function fcPayload() {
+  const { L2, tot } = window.__fcEst || { L2: [], tot: 0 };
+  let snapshot = ''; try { stage._renderer.render(stage._scene, stage._camera); snapshot = stage.shadowRoot.querySelector('canvas').toDataURL('image/jpeg', 0.8); } catch (e) {}
+  const cfg = JSON.stringify(S); let h = 0; for (let i = 0; i < cfg.length; i++) h = (Math.imul(h, 31) + cfg.charCodeAt(i)) | 0;
+  const rate = window.FirmcopBridge.currency().rate || 1;
+  return { ref: 'FC-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + (h >>> 0).toString(36).toUpperCase().slice(0, 5), design: { id: 'twobyfour', name: '2×4 Container Home' },
+    total: Math.round(tot * rate), lines: L2.map(([name, qty, unit, amount]) => ({ name, qty, unit, amount: Math.round(amount * rate) })),
+    summary: { containers: 7, floorAreaM2: 143.1, bedrooms: 3, bathrooms: 2, middleWidthM: S.midW }, config: S, shareUrl: location.href.split('#')[0], snapshot };
+}
+document.addEventListener('click', e => { if (e.target.closest('#fc-rq')) window.FirmcopBridge.requestQuoteUI(fcPayload); });
+window.FirmcopBridge.init({ id: 'twobyfour', name: '2×4 Container Home' });
+const PN = document.getElementById('panel');
+PN.addEventListener('click', e => {
+  const q = s => e.target.closest(s); let el;
+  if ((el = q('[data-tab]'))) { TAB = el.dataset.tab; renderPanel(); if (TAB === 'design') updateSel(); else selBox.visible = false; PN.scrollTop = 0; return; }
+  if ((el = q('[data-env]'))) { S.rnd.env = el.dataset.env; rebuild(); renderPanel(); return; }
+  if ((el = q('[data-hq]'))) { S.rnd.hq = el.dataset.hq === '1'; rebuild(); renderPanel(); return; }
+  if ((el = q('[data-cam]'))) { camView(el.dataset.cam); return; }
+  if ((el = q('[data-ract]'))) { if (el.dataset.ract === 'seed') { S.rnd.seed++; applyEnv(); save(); } else capture(); return; }
+  if ((el = q('[data-rep]'))) { openReport(); return; }
+  if ((el = q('[data-selrow]'))) { SEL = SEL === el.dataset.selrow ? null : el.dataset.selrow; updateSel(); renderPanel(); return; }
+  if ((el = q('[data-gpick]'))) { SEL = el.dataset.gpick; updateSel(); renderPanel(); PN.scrollTop = 0; return; }
+  if ((el = q('[data-gact]'))) { if (!SEL) return; const G = guardCfg(SEL); if (el.dataset.gact === 'all') { S.guardAll = { type: G.type, h: G.h }; S.guards = {}; } else delete S.guards[SEL]; rebuild(); renderPanel(); return; }
+  const pk = q('[data-pick]');
+  if (pk && !e.target.dataset.vis) { SEL = pk.dataset.pick; updateSel(); renderPanel(); PN.scrollTop = 0; return; }
+  const cc = q('[data-cxcol]');
+  if (cc && SEL) { const x = cxOf(SEL); x.col = x.col === cc.dataset.cxcol ? null : cc.dataset.cxcol; rebuild(); renderPanel(); return; }
+  const a = q('[data-act]');
+  if (a && SEL) {
+    const act = a.dataset.act;
+    if (act === 'close') SEL = null;
+    else if (act === 'reset') delete S.cx[SEL];
+    else if (act === 'hide') { if (COMPINFO[SEL] && COMPINFO[SEL].dup) { S.dups = S.dups.filter(d => d.id !== SEL); delete S.cx[SEL]; } else cxOf(SEL).hide = true; SEL = null; }
+    else if (act === 'dup') { const src = COMPINFO[SEL].dup ? S.dups.find(d => d.id === SEL).src : SEL, id = src + '~' + (S.dups.length + 1); S.dups.push({ id, src }); S.cx[id] = { ...(S.cx[SEL] || {}), hide: false, dx: ((S.cx[SEL] || {}).dx || 0) + 0.6 }; SEL = id; }
+    rebuild(); renderPanel(); return;
+  }
+  const b = q('button[data-k]'); if (!b) return;
+  S[b.dataset.k] = b.dataset.v; rebuild(); renderPanel();
+});
+PN.addEventListener('change', e => {
+  const t = e.target, d = t.dataset;
+  if (d.vis) { cxOf(d.vis).hide = !t.checked; rebuild(); renderPanel(); return; }
+  if (d.opw) { const o = S.opw[d.slot] = { ...(S.opw[d.slot] || {}) }; o[d.opw] = Math.max(0.05, +t.value); SEL = d.slot; rebuild(); renderPanel(); return; }
+  if (d.gtype) { S.guards[d.gtype] = { ...(S.guards[d.gtype] || {}), type: t.value }; rebuild(); renderPanel(); return; }
+  if (d.gall !== undefined) { if (t.value) { S.guardAll = { ...S.guardAll, type: t.value }; for (const k in S.guards) delete S.guards[k].type; } rebuild(); renderPanel(); return; }
+  if (d.gh) { S.guards[d.gh] = { ...(S.guards[d.gh] || {}), h: +t.value }; rebuild(); renderPanel(); return; }
+  if (d.rt) { S.rnd[d.rt] = t.checked; applyEnv(); save(); return; }
+  if (d.rr) { save(); renderPanel(); return; }
+  if (t.hasAttribute('data-turn')) { stage._controls.autoRotate = t.checked; return; }
+  if (d.cx && SEL && COMPINFO[SEL]) {
+    const x = cxOf(SEL), k = d.cx, v = +t.value, B = COMPINFO[SEL].base;
+    if (k === 'w' && isMid(SEL)) { S.midW = Math.min(6, Math.max(3, v)); rebuild(); renderPanel(); return; }
+    if (k === 'w') x.sx = Math.max(0.05, v) / B[0]; else if (k === 'd') x.sz = Math.max(0.05, v) / B[1]; else if (k === 'h') x.sy = Math.max(0.05, v) / B[2]; else x[k] = v;
+    rebuild(); renderPanel(); return;
+  }
+  if (d.eng) { const v = +t.value; window.PlatformRules.set(d.eng === 'maxCut' ? { factory: { maxCut: v } } : { structure: { [d.eng]: v } }); return; }
+  if (d.op) { S.ops[d.op] = t.value; delete S.opw[d.op]; SEL = d.op; }
+  else if (d.cd) S.cds[d.cd] = t.value;
+  else if (d.s) S[d.s] = t.value;
+  else if (d.t) S[d.t] = t.checked;
+  else if (d.r) { renderPanel(); return; }
+  else return;
+  rebuild(); renderPanel();
+});
+PN.addEventListener('toggle', e => { if (e.target.id === 'clist') listOpen = e.target.open; }, true);
+PN.addEventListener('input', e => {
+  const t = e.target, d = t.dataset;
+  if (d.cx === 'rot' && SEL) { cxOf(SEL).rot = +t.value; rebuild(); return; }
+  if (d.rr) { S.rnd[d.rr] = +t.value; applyEnv(); const sm = t.parentElement.querySelector('small'); if (sm) sm.textContent = d.rr === 'sun' ? t.value + '° from north' : t.value; return; }
+  if (d.r === 'midW') { S.midW = +t.value; rebuild(); const sm = t.parentElement.querySelector('small'); if (sm) sm.textContent = S.midW.toFixed(2) + ' m · containers 2, 3, 6, 7 and the rear landing move with it'; return; }
+  if (d.r) { S.slide = +t.value; rebuild(); }
+});
+window.PlatformRules.onChange(() => { syncRules(); rebuild(); renderPanel(); });
+rebuild(); renderPanel();
+</script>
+</body>
+</html>

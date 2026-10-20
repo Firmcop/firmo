@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firmcop Studio</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f2f0eb;--panel:#fbfaf7;--ink:#1c1b19;--muted:#6b6862;--line:#dedad2;--accent:oklch(0.62 0.16 45);--warn:oklch(0.66 0.14 75);--err:oklch(0.55 0.18 28);--ok:oklch(0.58 0.12 150)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+  a{color:var(--ink)} a:hover{color:var(--accent)}
+  button{font:inherit;color:inherit}
+  three-d-stage:not(:defined){visibility:hidden}
+  .app{display:grid;grid-template-columns:292px minmax(0,1fr) 320px;height:100vh}
+  .side{background:var(--panel);display:flex;flex-direction:column;min-height:0}
+  .cat{border-right:1px solid var(--line)}
+  .props{border-left:1px solid var(--line)}
+  .sh{padding:18px 18px 12px;border-bottom:1px solid var(--line)}
+  .eyebrow{font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+  h1{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .search{margin-top:12px;width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:9px 10px;background:#fff}
+  .search:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:transparent}
+  .scroll{overflow-y:auto;min-height:0;flex:1}
+  .grp{border-bottom:1px solid var(--line)}
+  .grp>summary{list-style:none;cursor:pointer;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .grp>summary::-webkit-details-marker{display:none}
+  .grp>summary::after{content:"+";font-size:14px;color:var(--muted)}
+  .grp[open]>summary::after{content:"–"}
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 14px 14px}
+  .card{border:1px solid var(--line);border-radius:7px;background:#fff;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;overflow:hidden;transition:border-color .12s}
+  .card:hover{border-color:#aaa498}
+  .card .th{aspect-ratio:4/3;background:#efece6;display:flex;align-items:center;justify-content:center}
+  .card .th img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+  .card .th span{font:400 10px "IBM Plex Mono",monospace;color:var(--muted)}
+  .card b{font-size:12px;font-weight:500;padding:7px 8px 0;line-height:1.25}
+  .card i{font-style:normal;font:400 10.5px/1.3 "IBM Plex Mono",monospace;color:var(--muted);padding:2px 8px 8px}
+  .viewport{position:relative;min-height:0;min-width:0}
+  three-d-stage{display:block;width:100%;height:100%}
+  .tb{position:absolute;top:14px;left:14px;right:14px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none}
+  .tb>*{pointer-events:auto}
+  .seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:7px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .seg button{appearance:none;border:0;background:none;padding:0 11px;height:34px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--ink);color:#fff}
+  .seg button[disabled]{opacity:.35;pointer-events:none}
+  .hintbar{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);background:rgba(28,27,25,.88);color:#fff;font-size:12.5px;padding:8px 13px;border-radius:6px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .15s}
+  .hintbar.show{opacity:1}
+  .hintbar.bad{background:var(--err)}
+  .ph{padding:18px;border-bottom:1px solid var(--line)}
+  .pc{padding:16px 18px 24px;display:flex;flex-direction:column;gap:20px}
+  h2{margin:0 0 9px;font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+  h2 span{color:var(--ink);letter-spacing:0;text-transform:none;font-family:"IBM Plex Sans";font-size:12px}
+  .title{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .sub{font:400 11px/1.4 "IBM Plex Mono",monospace;color:var(--muted);margin-top:4px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:40px;justify-content:center}
+  .opt:hover{border-color:#aaa498}
+  .opt b{font-size:12.5px;font-weight:500}
+  .opt i{font-style:normal;font:400 10.5px/1.25 "IBM Plex Mono",monospace;color:var(--muted)}
+  .opt.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+  .opt[disabled]{opacity:.35;pointer-events:none}
+  .swatches{display:flex;gap:7px;flex-wrap:wrap}
+  .sw{width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0;outline-offset:3px}
+  .sw.on{outline:2px solid var(--ink)}
+  .btns{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:6px;padding:0 12px;height:36px;font-size:12.5px;cursor:pointer}
+  .btn:hover{border-color:var(--ink)}
+  .btn.danger{color:var(--err)}
+  .btn[disabled]{opacity:.35;pointer-events:none}
+  .checks{display:flex;flex-direction:column;gap:6px}
+  .ck{display:flex;gap:9px;font-size:12px;line-height:1.4;padding:8px 10px;border-radius:6px;background:#fff;border:1px solid var(--line)}
+  .ck::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;margin-top:5px;background:var(--muted)}
+  .ck.warn::before{background:var(--warn)} .ck.error{border-color:var(--err)} .ck.error::before{background:var(--err)} .ck.ok::before{background:var(--ok)}
+  .ck b{font-weight:600}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}
+  .kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+  .lines{font-size:12px;display:flex;flex-direction:column}
+  .lines div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #ece9e2}
+  .lines div span:first-child{color:#3c3a36}
+  .lines .auto{font:500 9px/1 "IBM Plex Mono",monospace;color:var(--accent);border:1px solid currentColor;border-radius:3px;padding:2px 3px;margin-left:5px;vertical-align:1px}
+  .total{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-top:4px}
+  .total b{font-size:20px;font-weight:600}
+  .note{font-size:12px;color:var(--muted);line-height:1.45;margin:0}
+  .keys{font:400 11px/1.8 "IBM Plex Mono",monospace;color:var(--muted)}
+  .keys kbd{font:inherit;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:#fff;color:var(--ink)}
+  .chip{position:fixed;z-index:30;pointer-events:none;width:96px;background:#fff;border:1px solid var(--ink);border-radius:7px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translate(-50%,-60%);display:none}
+  .chip img{width:100%;display:block;background:#efece6}
+  .chip b{display:block;font-size:11px;font-weight:500;padding:4px 6px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:10px 15px;border-radius:6px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:40}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:12px 12px 0}
+  .step{appearance:none;border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 8px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-height:44px}
+  .step:hover{border-color:#aaa498}
+  .step i{font:500 9.5px/1 "IBM Plex Mono",monospace;color:var(--muted);font-style:normal}
+  .step b{font-size:12px;font-weight:500}
+  .step.on{background:var(--ink);color:#fff;border-color:var(--ink)} .step.on i{color:#bdb8ae}
+  .dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.2);margin-right:6px;vertical-align:-1px}
+  .link{appearance:none;border:0;background:none;padding:0;font:400 11px "IBM Plex Mono",monospace;color:var(--muted);text-decoration:underline;cursor:pointer}
+  .bom{width:100%;border-collapse:collapse;font-size:12px}
+  .bom td{padding:5px 0;border-bottom:1px solid #ece9e2;vertical-align:top}
+  .bom td.n{text-align:right;white-space:nowrap;padding-left:8px;font-variant-numeric:tabular-nums}
+  .bom .auto{font:500 9px/1 "IBM Plex Mono",monospace;color:var(--accent);border:1px solid currentColor;border-radius:3px;padding:2px 3px;margin-left:5px;vertical-align:1px}
+  #print{display:none}
+  @media print{html,body{overflow:visible!important;height:auto!important}.app,.toast,.chip{display:none!important}#print{display:block;font:10.5pt "IBM Plex Sans",sans-serif;color:#1c1b19}#print table{width:100%;border-collapse:collapse;margin-top:8px}#print td,#print th{padding:4px 0;border-bottom:1px solid #ddd;text-align:left}#print .n{text-align:right}#print img{width:100%;max-height:320px;object-fit:contain;background:#e9e6df}#print tr{break-inside:avoid}}
+  @media (max-width:1100px){.app{grid-template-columns:250px minmax(0,1fr) 280px}}
+  @media (max-width:800px){html,body{overflow:auto}.app{grid-template-columns:1fr;grid-template-rows:55vh auto auto;height:auto}.viewport{order:-1}.cat,.props{border:0;border-top:1px solid var(--line)}.scroll{max-height:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side cat">
+    <nav class="steps" id="steps"></nav>
+    <div class="sh">
+      <div class="eyebrow" id="cat-eyebrow">Step 1 · Modules</div>
+      <h1>Catalog</h1>
+      <input class="search" id="search" placeholder="Search modules, doors, windows…" autocomplete="off">
+    </div>
+    <div class="scroll" id="catalog"></div>
+  </aside>
+  <main class="viewport">
+    <three-d-stage name="container-house-studio" background="#e9e6df"></three-d-stage>
+    <div class="tb" id="toolbar"></div>
+    <div class="hintbar" id="hint"></div>
+  </main>
+  <aside class="side props">
+    <div class="scroll" id="props"></div>
+  </aside>
+</div>
+<div class="chip" id="chip"><img alt=""><b></b></div>
+<div class="toast" id="toast"></div>
+<div id="print"></div>
+<script src="platform-rules.js"></script>
+<script src="firmcop-bridge.js"></script>
+<script src="three-d-stage.js"></script>
+<script type="module">
+const stage = document.querySelector('three-d-stage');
+const { THREE } = await stage.ready;
+const RU = () => window.PlatformRules.get();
+const renderer = stage._renderer, camera = stage._camera, controls = stage._controls, scene = stage._scene;
+renderer.localClippingEnabled = true;
+controls.maxPolarAngle = Math.PI / 2 - 0.04;
+const canvas = stage.shadowRoot.querySelector('canvas');
+
+// ---------- constants ----------
+const W = 2.438, F = 0.16, FT = 0.12, PLINTH = 0.3, DEPTH = 0.038;
+const LEN = { 10: 2.991, 20: 6.058, 40: 12.192, 45: 13.716 };
+const HEIGHTS = { std: 2.591, hc: 2.896 };
+const FT_PER_M = 3.28084, MAX_LVL = 3;
+const IN = 0.125;
+const clone = o => JSON.parse(JSON.stringify(o));
+const $ = v => window.FirmcopBridge.fmt(v);
+const mm = v => Math.round(v * 1000).toLocaleString('en-GB') + ' mm';
+const ftIn = m => { const t = Math.round(m * FT_PER_M * 12); return `${Math.floor(t / 12)}′${t % 12 ? ' ' + (t % 12) + '″' : ''}`; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const snap = (v, s) => Math.round(v / s) * s;
+let uidN = 0;
+const uid = p => p + Date.now().toString(36).slice(-5) + (uidN++).toString(36);
+
+const CATALOG = [
+  { group: 'Modules', items: [
+    { sku: 'M10', name: '10′ module', kind: 'module', len: 10, price: 9800 },
+    { sku: 'M20', name: '20′ module', kind: 'module', len: 20, price: 18500 },
+    { sku: 'M40', name: '40′ module', kind: 'module', len: 40, price: 29500 },
+    { sku: 'M45', name: '45′ module', kind: 'module', len: 45, price: 33500 },
+  ] },
+  { group: 'Doors', items: [
+    { sku: 'D-SGL', name: 'Entry door', kind: 'opening', open: 'door', w: 0.9, h: 2.1, sill: 0, price: 1850, uk: 'Clear opening 800 mm — meets Approved Doc M (≥ 775 mm).', entrance: true },
+    { sku: 'D-WIDE', name: 'Wide entry door', kind: 'opening', open: 'door', w: 1.0, h: 2.1, sill: 0, price: 2150, uk: 'Clear opening 900 mm — Approved Doc M accessible entrance.', entrance: true },
+    { sku: 'D-FR', name: 'French doors', kind: 'opening', open: 'french', w: 1.6, h: 2.1, sill: 0, price: 3200, uk: 'Safety glazing required (Approved Doc K). Counts as entrance.', entrance: true },
+    { sku: 'D-SLD', name: 'Sliding patio door', kind: 'opening', open: 'slider', w: 2.4, h: 2.1, sill: 0, price: 4200, uk: 'Safety glazing required (Approved Doc K). Counts as entrance.', entrance: true },
+    { sku: 'D-BIF', name: 'Bi-fold doors', kind: 'opening', open: 'bifold', w: 3.6, h: 2.1, sill: 0, price: 6900, uk: 'Wide cut — steel frame usually needed. Safety glazing (Doc K).', entrance: true },
+  ] },
+  { group: 'Windows', items: [
+    { sku: 'W-SQ', name: 'Square window', kind: 'opening', open: 'window', w: 0.6, h: 0.6, sill: 1.3, mull: 1, price: 520, uk: 'Not an escape window — Approved Doc B needs ≥ 0.33 m² and 450 mm clear.' },
+    { sku: 'W-STD', name: 'Casement window', kind: 'opening', open: 'window', w: 1.2, h: 1.2, sill: 0.9, mull: 2, price: 1100, uk: 'Escape-compliant casement: sill 900 mm (≤ 1100 mm, Approved Doc B).' },
+    { sku: 'W-WIDE', name: 'Wide window', kind: 'opening', open: 'window', w: 2.0, h: 1.2, sill: 0.9, mull: 3, price: 1750, uk: 'Escape-compliant if one casement opens ≥ 450 mm (Approved Doc B).' },
+    { sku: 'W-STRIP', name: 'Clerestory strip', kind: 'opening', open: 'window', w: 2.4, h: 0.45, sill: 1.9, mull: 3, price: 1400, uk: 'High-level light and ventilation (Approved Doc F). Not an escape window.' },
+    { sku: 'W-PIC', name: 'Full-height glazing', kind: 'opening', open: 'window', w: 1.8, h: 2.3, sill: 0, mull: 1, price: 2600, uk: 'Glazing below 800 mm must be safety glass (Approved Doc K).' },
+  ] },
+  { group: 'Structure', items: [
+    { sku: 'S-COL', name: 'Steel column', kind: 'floor', price: 650, uk: '150 × 150 SHS on pad foundation, to underside of level 2.' },
+    { sku: 'S-STAIR', name: 'External stair', kind: 'floor', price: 5800, uk: '' },
+    { sku: 'S-BAL', name: 'Balcony', kind: 'wall', depth: 1.6, len: 4.0, price: 6600, uk: '1100 mm balustrade, gaps < 100 mm (Approved Doc K).' },
+    { sku: 'S-CAN', name: 'Entrance canopy', kind: 'wall', depth: 1.2, len: 2.6, price: 2100, uk: 'Steel canopy over a door, 1.2 m projection.' },
+  ] },
+  { group: 'Roof', items: [
+    { sku: 'S-RAIL', name: 'Roof balustrade', kind: 'roof', perM: 240, uk: '1100 mm perforated-mesh balustrade (Approved Doc K).' },
+    { sku: 'S-DECK', name: 'Roof deck', kind: 'roof', perM2: 260, uk: 'Timber on pedestals. Needs a balustrade and access.' },
+    { sku: 'S-SOLAR', name: 'Solar array', kind: 'roof', perPanel: 420, uk: '400 W panels, tilted 10°.' },
+  ] },
+];
+const ROOMS = { KitchenLiving: ['Kitchen / living', '#e7d9b8'], Living: ['Living', '#eadfc6'], Kitchen: ['Kitchen', '#d8e2c9'], Dining: ['Dining', '#efd3bd'], Bedroom: ['Bedroom', '#cdd6e6'], Bathroom: ['Bathroom', '#c9e2e3'], Office: ['Study', '#e1d3e6'], Hall: ['Hall / utility', '#dddad3'] };
+const FLOORS = { oak: ['Oak', '#b9956a'], walnut: ['Walnut', '#6b4a33'], concrete: ['Concrete', '#a9a59d'], tile: ['Porcelain tile', '#d9d6cf'], carpet: ['Carpet', '#8d8479'] };
+const LININGS = { plaster: ['White plaster', '#eeebe4'], ply: ['Birch plywood', '#d6b98c'], sage: ['Sage paint', '#b7c1ad'], charcoal: ['Charcoal', '#4a4b4d'] };
+const FABRICS = ['#8d9199', '#c9bfae', '#5b6b5a', '#9a5b45', '#2f3a4a'];
+function cyl(g, name, rt, rb, h, x, y, z, mat) { const me = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 24), mat); me.name = name; me.position.set(x, y, z); g.add(me); return me; }
+function sph(g, name, r, x, y, z, mat) { const me = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), mat); me.name = name; me.position.set(x, y, z); g.add(me); return me; }
+function legs(g, M, w, d, h, t = 0.04) { for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, 'leg', t, h, t, sx * (w / 2 - t), h / 2, sz * (d / 2 - t), M.black); }
+function chair(g, M, x, z, face) { const c = new THREE.Group(); c.name = 'chair'; c.position.set(x, 0, z); c.rotation.y = face; g.add(c); box(c, 'chair_seat', 0.44, 0.04, 0.42, 0, 0.45, 0, M.woodL); box(c, 'chair_back', 0.44, 0.38, 0.03, 0, 0.68, -0.2, M.woodL); legs(c, M, 0.42, 0.4, 0.43, 0.03); }
+function kitchenRun(g, M, len) {
+  box(g, 'kitchen_plinth', len, 0.1, 0.54, 0, 0.05, 0.02, M.black);
+  box(g, 'base_units', len, 0.77, 0.58, 0, 0.485, -0.02, M.white);
+  for (let x = -len / 2 + 0.6; x < len / 2 - 0.1; x += 0.6) box(g, 'door_gap', 0.006, 0.7, 0.004, x, 0.5, 0.272, M.black);
+  box(g, 'worktop', len, 0.04, 0.62, 0, 0.89, 0, M.stone);
+  box(g, 'sink', 0.55, 0.02, 0.4, -len / 2 + 0.9, 0.905, 0, M.metal);
+  cyl(g, 'tap', 0.015, 0.015, 0.26, -len / 2 + 0.9, 1.04, -0.22, M.metal);
+  box(g, 'hob', 0.6, 0.01, 0.5, len / 2 - 0.7, 0.915, 0, M.black);
+  box(g, 'wall_units', len, 0.7, 0.34, 0, 1.8, -0.14, M.white);
+}
+function bed(g, M, it, w, d) {
+  box(g, 'bed_frame', w, 0.28, d, 0, 0.14, 0, M.woodL);
+  box(g, 'mattress', w - 0.06, 0.2, d - 0.12, 0, 0.38, 0.03, M.sheet);
+  box(g, 'headboard', w, 1.0, 0.07, 0, 0.5, -d / 2 + 0.035, M.woodL);
+  box(g, 'duvet', w - 0.02, 0.06, d * 0.62, 0, 0.5, d / 2 - d * 0.31, M.fab(it.color || '#c9bfae'));
+  const n = w > 1.2 ? 2 : 1; for (let k = 0; k < n; k++) box(g, 'pillow', w / n - 0.14, 0.12, 0.4, -w / 2 + (k + 0.5) * w / n, 0.54, -d / 2 + 0.33, M.sheet);
+}
+const FURN = [
+ ['Living', [
+  { sku: 'F-SOFA', name: '3-seat sofa', w: 2.1, d: 0.9, h: 0.85, back: 1, fabric: '#8d9199', room: 'Living', build(g, M, it) { const f = M.fab(it.color || this.fabric); box(g, 'sofa_base', 2.1, 0.26, 0.9, 0, 0.21, 0, f); box(g, 'sofa_back', 2.1, 0.5, 0.22, 0, 0.6, -0.34, f); for (const s of [-1, 1]) box(g, 'sofa_arm', 0.2, 0.34, 0.9, s * 0.95, 0.51, 0, f); for (let k = 0; k < 3; k++) box(g, 'seat_cushion', 0.54, 0.12, 0.62, -0.57 + k * 0.57, 0.4, 0.1, f); legs(g, M, 2.0, 0.8, 0.08, 0.05); } },
+  { sku: 'F-ARM', name: 'Armchair', w: 0.85, d: 0.85, h: 0.8, back: 1, fabric: '#c9bfae', room: 'Living', build(g, M, it) { const f = M.fab(it.color || this.fabric); box(g, 'chair_base', 0.85, 0.26, 0.85, 0, 0.21, 0, f); box(g, 'chair_back', 0.85, 0.46, 0.2, 0, 0.57, -0.325, f); for (const s of [-1, 1]) box(g, 'chair_arm', 0.15, 0.3, 0.85, s * 0.35, 0.49, 0, f); legs(g, M, 0.8, 0.8, 0.08, 0.05); } },
+  { sku: 'F-COF', name: 'Coffee table', w: 1.1, d: 0.6, h: 0.4, room: 'Living', build(g, M) { box(g, 'table_top', 1.1, 0.04, 0.6, 0, 0.38, 0, M.woodL); legs(g, M, 1.0, 0.5, 0.36); } },
+  { sku: 'F-TV', name: 'Media unit + TV', w: 1.8, d: 0.42, h: 1.45, back: 1, room: 'Living', build(g, M) { box(g, 'media_unit', 1.8, 0.45, 0.42, 0, 0.275, 0, M.woodD); box(g, 'tv', 1.3, 0.75, 0.05, 0, 1.05, -0.1, M.black); box(g, 'tv_stand', 0.3, 0.2, 0.2, 0, 0.6, -0.08, M.black); } },
+  { sku: 'F-RUG', name: 'Rug', w: 2.0, d: 1.4, h: 0.012, rug: 1, build(g, M) { box(g, 'rug', 2.0, 0.012, 1.4, 0, 0.006, 0, M.rug); } },
+  { sku: 'F-LAMP', name: 'Floor lamp', w: 0.4, d: 0.4, h: 1.6, build(g, M) { cyl(g, 'lamp_base', 0.17, 0.18, 0.03, 0, 0.015, 0, M.black); cyl(g, 'lamp_pole', 0.015, 0.015, 1.35, 0, 0.7, 0, M.black); cyl(g, 'lamp_shade', 0.15, 0.2, 0.3, 0, 1.45, 0, M.lamp); } },
+ ]],
+ ['Dining', [
+  { sku: 'F-DIN4', name: 'Table + 4 chairs', w: 1.4, d: 1.6, h: 0.76, room: 'Dining', build(g, M) { box(g, 'table_top', 1.4, 0.04, 0.8, 0, 0.74, 0, M.woodL); legs(g, M, 1.3, 0.7, 0.72, 0.05); for (const x of [-0.35, 0.35]) { chair(g, M, x, -0.58, 0); chair(g, M, x, 0.58, Math.PI); } } },
+  { sku: 'F-DIN2', name: 'Bistro table + 2', w: 0.7, d: 1.3, h: 0.76, room: 'Dining', build(g, M) { cyl(g, 'table_top', 0.35, 0.35, 0.03, 0, 0.74, 0, M.woodL); cyl(g, 'pedestal', 0.03, 0.03, 0.72, 0, 0.36, 0, M.black); cyl(g, 'table_base', 0.22, 0.22, 0.02, 0, 0.01, 0, M.black); chair(g, M, 0, -0.45, 0); chair(g, M, 0, 0.45, Math.PI); } },
+ ]],
+ ['Kitchen', [
+  { sku: 'F-K24', name: 'Kitchen run 2.4 m', w: 2.4, d: 0.62, h: 2.15, back: 1, room: 'Kitchen', build(g, M) { kitchenRun(g, M, 2.4); } },
+  { sku: 'F-K36', name: 'Kitchen run 3.6 m', w: 3.6, d: 0.62, h: 2.15, back: 1, room: 'Kitchen', build(g, M) { kitchenRun(g, M, 3.6); } },
+  { sku: 'F-ISL', name: 'Island', w: 1.8, d: 0.9, h: 0.92, room: 'Kitchen', build(g, M) { box(g, 'island_base', 1.7, 0.86, 0.8, 0, 0.43, 0, M.white); box(g, 'island_top', 1.8, 0.04, 0.9, 0, 0.9, 0, M.stone); } },
+  { sku: 'F-FRG', name: 'Tall fridge', w: 0.7, d: 0.66, h: 2.1, back: 1, room: 'Kitchen', build(g, M) { box(g, 'fridge', 0.7, 2.1, 0.66, 0, 1.05, 0, M.white); box(g, 'fridge_gap', 0.7, 0.006, 0.004, 0, 0.9, 0.332, M.black); box(g, 'handle', 0.02, 0.7, 0.03, 0.3, 1.3, 0.345, M.metal); } },
+ ]],
+ ['Bedroom', [
+  { sku: 'F-BEDD', name: 'Double bed', w: 1.45, d: 2.1, h: 1.0, back: 1, fabric: '#c9bfae', room: 'Bedroom', build(g, M, it) { bed(g, M, it, 1.45, 2.1); } },
+  { sku: 'F-BEDK', name: 'King bed', w: 1.65, d: 2.15, h: 1.0, back: 1, fabric: '#c9bfae', room: 'Bedroom', build(g, M, it) { bed(g, M, it, 1.65, 2.15); } },
+  { sku: 'F-BEDS', name: 'Single bed', w: 0.95, d: 2.05, h: 1.0, back: 1, fabric: '#c9bfae', room: 'Bedroom', build(g, M, it) { bed(g, M, it, 0.95, 2.05); } },
+  { sku: 'F-WARD', name: 'Wardrobe', w: 1.2, d: 0.6, h: 2.1, back: 1, room: 'Bedroom', build(g, M) { box(g, 'wardrobe', 1.2, 2.1, 0.6, 0, 1.05, 0, M.woodL); box(g, 'door_gap', 0.006, 2.0, 0.004, 0, 1.05, 0.302, M.black); for (const s of [-1, 1]) box(g, 'handle', 0.02, 0.3, 0.03, s * 0.06, 1.1, 0.315, M.metal); } },
+  { sku: 'F-SIDE', name: 'Bedside table', w: 0.45, d: 0.4, h: 0.9, back: 1, room: 'Bedroom', build(g, M) { box(g, 'bedside', 0.45, 0.5, 0.4, 0, 0.25, 0, M.woodL); cyl(g, 'lamp_base', 0.05, 0.06, 0.22, 0, 0.61, 0, M.black); cyl(g, 'lamp_shade', 0.09, 0.12, 0.16, 0, 0.8, 0, M.lamp); } },
+ ]],
+ ['Bathroom', [
+  { sku: 'F-SHWR', name: 'Shower', w: 0.9, d: 0.9, h: 2.0, back: 1, room: 'Bathroom', build(g, M) { box(g, 'shower_tray', 0.9, 0.06, 0.9, 0, 0.03, 0, M.ceramic); box(g, 'shower_screen', 0.88, 1.9, 0.01, 0, 1.01, 0.445, M.glass).userData.glass = true; box(g, 'shower_screen', 0.01, 1.9, 0.88, 0.445, 1.01, 0, M.glass).userData.glass = true; cyl(g, 'shower_riser', 0.012, 0.012, 1.0, 0, 1.45, -0.42, M.metal); cyl(g, 'shower_head', 0.1, 0.1, 0.02, 0, 1.95, -0.3, M.metal); } },
+  { sku: 'F-WC', name: 'WC', w: 0.4, d: 0.68, h: 0.8, back: 1, room: 'Bathroom', build(g, M) { box(g, 'cistern', 0.38, 0.4, 0.18, 0, 0.6, -0.25, M.ceramic); box(g, 'wc_pan', 0.36, 0.4, 0.5, 0, 0.2, 0.05, M.ceramic); box(g, 'wc_seat', 0.38, 0.03, 0.46, 0, 0.415, 0.06, M.white); } },
+  { sku: 'F-BAS', name: 'Vanity basin', w: 0.6, d: 0.46, h: 1.85, back: 1, room: 'Bathroom', build(g, M) { box(g, 'vanity', 0.6, 0.5, 0.44, 0, 0.55, -0.01, M.woodL); box(g, 'basin', 0.5, 0.12, 0.4, 0, 0.86, 0, M.ceramic); cyl(g, 'tap', 0.012, 0.012, 0.18, 0, 1.0, -0.16, M.metal); box(g, 'mirror', 0.5, 0.7, 0.02, 0, 1.5, -0.22, M.metal); } },
+  { sku: 'F-BATH', name: 'Bath', w: 1.7, d: 0.75, h: 0.58, back: 1, room: 'Bathroom', build(g, M) { box(g, 'bath_base', 1.7, 0.4, 0.75, 0, 0.2, 0, M.ceramic); for (const s of [-1, 1]) { box(g, 'bath_rim', 1.7, 0.18, 0.06, 0, 0.49, s * 0.345, M.ceramic); box(g, 'bath_rim', 0.06, 0.18, 0.75, s * 0.82, 0.49, 0, M.ceramic); } box(g, 'bath_inner', 1.58, 0.02, 0.63, 0, 0.41, 0, M.water); } },
+  { sku: 'F-WASH', name: 'Washing machine', w: 0.6, d: 0.6, h: 0.85, back: 1, room: 'Hall', build(g, M) { box(g, 'washer', 0.6, 0.85, 0.6, 0, 0.425, 0, M.white); cyl(g, 'washer_door', 0.2, 0.2, 0.03, 0, 0.45, 0.305, M.black).rotation.x = Math.PI / 2; } },
+ ]],
+ ['Study & decor', [
+  { sku: 'F-DESK', name: 'Desk + chair', w: 1.2, d: 1.1, h: 1.2, back: 1, room: 'Office', build(g, M) { box(g, 'desk_top', 1.2, 0.03, 0.6, 0, 0.74, -0.25, M.woodL); for (const sx of [-1, 1]) box(g, 'desk_leg', 0.04, 0.72, 0.56, sx * 0.56, 0.36, -0.25, M.black); box(g, 'monitor', 0.55, 0.34, 0.03, 0, 1.0, -0.45, M.black); cyl(g, 'chair_base', 0.26, 0.26, 0.04, 0, 0.03, 0.3, M.black); cyl(g, 'chair_stem', 0.03, 0.03, 0.4, 0, 0.24, 0.3, M.black); box(g, 'chair_seat', 0.48, 0.08, 0.48, 0, 0.48, 0.3, M.fab('#2f3a4a')); box(g, 'chair_back', 0.44, 0.5, 0.06, 0, 0.8, 0.52, M.fab('#2f3a4a')); } },
+  { sku: 'F-SHELF', name: 'Bookcase', w: 0.9, d: 0.35, h: 1.9, back: 1, room: 'Office', build(g, M) { for (const s of [-1, 1]) box(g, 'shelf_side', 0.02, 1.9, 0.35, s * 0.44, 0.95, 0, M.woodD); box(g, 'shelf_back', 0.9, 1.9, 0.01, 0, 0.95, -0.17, M.woodD); const cs = ['#8a3b2c', '#2d3f56', '#c28b3c', '#7c8a74', '#e6e3dc']; for (let k = 0; k < 5; k++) { box(g, 'shelf', 0.86, 0.02, 0.33, 0, 0.01 + k * 0.44, 0, M.woodD); if (k < 4) { let x = -0.4, n = 0; while (x < 0.3) { const bw = 0.04 + ((k * 7 + n * 3) % 5) * 0.012; box(g, 'book', bw, 0.26 + ((n + k) % 3) * 0.04, 0.22, x + bw / 2, 0.02 + k * 0.44 + 0.15, 0, M.fab(cs[(n + k) % 5])); x += bw + 0.005; n++; } } } } },
+  { sku: 'F-PLANT', name: 'Plant', w: 0.5, d: 0.5, h: 1.3, build(g, M) { cyl(g, 'pot', 0.2, 0.16, 0.4, 0, 0.2, 0, M.pot); sph(g, 'foliage', 0.34, 0, 0.82, 0, M.green); sph(g, 'foliage', 0.24, 0.08, 1.12, 0.05, M.green); } },
+ ]],
+];
+CATALOG.push(
+  { group: 'Rooms', step: 'interior', items: Object.entries(ROOMS).map(([k, v]) => ({ sku: 'R-' + k, name: v[0], kind: 'room', roomType: k })) },
+  { group: 'Partitions', step: 'interior', items: [
+    { sku: 'P-WALL', name: 'Partition wall', kind: 'part', price: 420, uk: '100 mm stud partition, full height, boarded and painted.' },
+    { sku: 'P-DOOR', name: 'Partition + door', kind: 'part', door: 1, price: 1150, uk: '100 mm stud partition with an 800 mm door leaf (775 mm clear opening, Approved Doc M).' }] },
+  ...FURN.map(([group, items]) => ({ group, step: 'interior', items: items.map(it => ({ ...it, kind: 'furn' })) })));
+const R4 = Math.PI / 2;
+const dItems = (o = [], f = [], x = []) => [
+  ...o.map(([sku, mod, side, u], k) => side ? { id: 'o' + k, sku, mod, side, u } : { id: 'o' + k, sku, mod }),
+  ...f.map(([sku, mod, lx, lz, q], k) => ({ id: 'f' + k, sku, mod, lx, lz, rot: (q || 0) * R4 })),
+  ...x.map((it, k) => ({ id: 'x' + k, ...it }))];
+const pm = (id, len, x, z, lvl, color, extra = {}) => ({ id, len, x, z, rot: 0, lvl, finish: 'painted', color, ...extra });
+const DESIGNS = {
+  'DS-APT': { name: 'Two-storey apartment', sub: '3 modules · 2 storeys', make: example },
+  'DS-TOWN': { name: 'Townhouse', sub: '6 × 20′ · 3 storeys + roof', make: () => ({
+    mods: [pm('a0', 20, 0, 1.219, 0, '#e6e3dc'), pm('b0', 20, 0, -1.219, 0, '#8cc63f'), pm('a1', 20, 0, 1.219, 1, '#e6e3dc'), pm('b1', 20, 0, -1.219, 1, '#8cc63f'), pm('a2', 20, 0, 1.219, 2, '#e6e3dc'), pm('b2', 20, 0, -1.219, 2, '#8cc63f', { keep: ['+z'] })],
+    items: dItems([
+      ['W-PIC', 'a0', '+z', -1.6], ['W-PIC', 'a0', '+z', 1.4], ['D-FR', 'a0', '-x', 0], ['W-PIC', 'a0', '+x', 0], ['W-PIC', 'b0', '+x', 0], ['W-STD', 'b0', '-x', 0],
+      ['W-PIC', 'a1', '+z', -1.6], ['W-PIC', 'a1', '+z', 1.4], ['D-FR', 'a1', '-x', 0], ['S-BAL', 'a1', '-x', 0], ['W-PIC', 'a1', '+x', 0], ['W-STD', 'b1', '+x', 0], ['W-STRIP', 'b1', '-z', 0],
+      ['W-PIC', 'a2', '+z', -1.6], ['W-PIC', 'a2', '+z', 1.4], ['D-FR', 'a2', '-x', 0], ['S-BAL', 'a2', '-x', 0], ['W-PIC', 'a2', '+x', 0], ['W-STD', 'b2', '+x', 0], ['W-STRIP', 'b2', '-z', -1.6], ['D-SGL', 'b2', '+z', -1.2],
+      ['S-DECK', 'a2'], ['S-RAIL', 'a2'], ['S-DECK', 'b2'], ['S-RAIL', 'b2']],
+     [['F-K36', 'b0', 0, -0.784], ['F-SOFA', 'a0', 0.6, 0.644, 2], ['F-DIN2', 'a0', -1.4, -0.2], ['F-BEDD', 'a1', 1.854, 0.369, 3], ['F-WARD', 'b1', -1.5, -0.794], ['F-DESK', 'b1', 1.2, -0.544],
+      ['F-SHWR', 'b2', 2.45, -0.644], ['F-WC', 'b2', 1.5, -0.754], ['F-BAS', 'b2', 0.85, -0.864], ['F-BEDD', 'a2', 1.854, 0.369, 3]],
+     [{ sku: 'P-DOOR', mod: 'b2', lx: 0.2 }, { sku: 'S-STAIR', x: -5.2, z: 0, rot: 0 }]),
+    rooms: [{ mod: 'b2', lx: -1.4, type: 'Hall' }] }) },
+  'DS-CANT': { name: 'Cantilever retreat', sub: '3 × 20′ · roof terrace', make: () => ({
+    mods: [pm('A', 20, -3.05, 0, 0, '#2f3236'), pm('B', 20, 3.008, 0, 0, '#2f3236'), pm('U', 20, -5.5, 0, 1, '#6a6d70')],
+    items: dItems([
+      ['W-PIC', 'A', '+z', -1.2], ['D-FR', 'A', '+z', 1.2], ['W-PIC', 'A', '-x', 0], ['W-STD', 'B', '+z', 1.5], ['W-SQ', 'B', '-z', -1.5],
+      ['W-PIC', 'U', '+z', -1.5], ['W-PIC', 'U', '+z', 1.2], ['W-PIC', 'U', '-x', 0], ['D-SGL', 'U', '-z', 1.5], ['S-DECK', 'B'], ['S-RAIL', 'B']],
+     [['F-K24', 'A', 1.2, -0.784], ['F-SOFA', 'A', -1.6, 0.644, 2], ['F-SHWR', 'B', 2.45, -0.644], ['F-WC', 'B', 1.5, -0.754], ['F-BAS', 'B', 0.6, -0.864], ['F-BEDD', 'U', 1.854, 0.369, 3], ['F-WARD', 'U', -2.2, 0.794, 2]],
+     [{ sku: 'P-DOOR', mod: 'B', lx: -0.6 }, { sku: 'S-COL', x: -8.2, z: 0, rot: 0 }, { sku: 'S-STAIR', x: -9.125, z: -1.72, rot: R4 }]),
+    rooms: [] }) },
+  'DS-TROP': { name: 'Tropical cabin', sub: '1 × 40′ · roof deck', make: () => ({
+    mods: [pm('t', 40, 0, 0, 0, '#3b3e41')],
+    items: dItems([
+      ['D-SLD', 't', '+z', -4], ['S-BAL', 't', '+z', -4], ['S-CAN', 't', '+z', -4], ['W-STD', 't', '+z', 0.8], ['W-SQ', 't', '+z', 2.2], ['W-STD', 't', '+z', 4.5], ['W-SQ', 't', '+x', 0], ['W-STD', 't', '-x', 0], ['S-DECK', 't'], ['S-RAIL', 't']],
+     [['F-SOFA', 't', -1.8, -0.644], ['F-COF', 't', -1.8, 0.35], ['F-K24', 't', 0.9, -0.784], ['F-BEDD', 't', 4.921, -0.369, 3], ['F-PLANT', 't', -5.6, -0.75]],
+     [{ sku: 'P-DOOR', mod: 't', lx: 2.9 }, { sku: 'S-STAIR', x: 1.1, z: 1.75, rot: R4 }]),
+    rooms: [] }) },
+  'DS-BUNG': { name: 'Three-bed bungalow', sub: '6 × 20′ · single storey', make: () => {
+    const xs = [-6.095, -3.657, -1.219, 1.219, 3.657, 6.095], fin = ['cedar', 'painted', 'painted', 'painted', 'painted', 'cedar'], keep = [['+z'], ['+z'], [], ['+z'], [], []];
+    return {
+    mods: xs.map((x, k) => pm('F' + (k + 1), 20, x, 0, 0, '#2f3236', { rot: R4, finish: fin[k], keep: keep[k] })),
+    items: dItems([
+      ['W-STD', 'F1', '-x', 0], ['W-SQ', 'F1', '+x', 0], ['D-SGL', 'F1', '+z', -1.8], ['W-STD', 'F2', '-x', 0], ['D-SGL', 'F2', '+z', -1.8],
+      ['D-SGL', 'F3', '-x', 0.4], ['S-CAN', 'F3', '-x', 0], ['W-STD', 'F3', '+x', 0], ['W-PIC', 'F4', '-x', 0], ['D-SGL', 'F4', '+x', 0], ['D-SGL', 'F4', '+z', -1.8],
+      ['W-STD', 'F5', '-x', 0], ['W-STD', 'F5', '+x', 0], ['W-STD', 'F6', '-x', 0], ['W-STD', 'F6', '+x', 0]],
+     [['F-WARD', 'F1', -1.0, -0.794], ['F-SHWR', 'F1', 2.45, -0.644], ['F-WC', 'F1', 1.5, -0.754], ['F-BAS', 'F1', 0.8, -0.864],
+      ['F-BEDD', 'F2', 0.9, -0.044], ['F-SIDE', 'F2', 2.0, -0.894], ['F-K36', 'F3', 1.0, -0.784], ['F-DIN2', 'F3', -0.9, 0.3],
+      ['F-ISL', 'F4', 1.1, 0.2], ['F-SOFA', 'F4', -1.2, -0.644], ['F-RUG', 'F4', -1.2, 0.2], ['F-BEDD', 'F5', -1.854, 0.369, 1], ['F-BEDS', 'F5', 1.9, -0.069],
+      ['F-WARD', 'F6', -1.8, 0.794, 2], ['F-DESK', 'F6', 1.8, 0.544, 2]],
+     [{ sku: 'P-DOOR', mod: 'F1', lx: 0.3 }, { sku: 'P-DOOR', mod: 'F5', lx: 0.3 }, { sku: 'P-DOOR', mod: 'F6', lx: 0.3 }]),
+    rooms: [{ mod: 'F1', lx: -1.3, type: 'Hall' }] }; } },
+  'DS-SCHN': { name: 'Schnitzelburg unit', sub: '4 × 20′ HC · 2 storeys + roof', make: () => ({
+    mods: [pm('C1', 20, 0, -1.219, 0, '#e6e3dc', { keep: [{ side: '+z', u0: -3.03, u1: -0.75 }] }), pm('C2', 20, 0, 1.219, 0, '#35c4c6'), pm('C3', 20, 0, -1.219, 1, '#e6e3dc', { keep: [{ side: '+z', u0: -3.03, u1: -0.75 }] }), pm('C4', 20, 0, 1.219, 1, '#35c4c6')],
+    items: dItems([
+      ['D-FR', 'C1', '+x', 0], ['D-FR', 'C2', '+x', 0], ['D-FR', 'C3', '+x', 0], ['D-FR', 'C4', '+x', 0], ['S-BAL', 'C3', '+x', 0], ['S-BAL', 'C4', '+x', 0],
+      ['D-SGL', 'C2', '-x', -0.3], ['S-CAN', 'C2', '-x', 0], ['W-PIC', 'C4', '-x', 0], ['W-WIDE', 'C2', '+z', -1.6], ['W-PIC', 'C4', '+z', -1.6],
+      ['S-DECK', 'C3'], ['S-RAIL', 'C3'], ['S-DECK', 'C4'], ['S-RAIL', 'C4']],
+     [['F-WC', 'C1', -1.3, -0.754], ['F-BAS', 'C1', -2.2, -0.864], ['F-WASH', 'C1', -2.5, 0.794, 2], ['F-K36', 'C1', 1.2, -0.784], ['F-ISL', 'C2', 0.2, -0.6], ['F-SOFA', 'C2', -1.8, 0.644, 2],
+      ['F-BATH', 'C3', -2.529, 0.244, 1], ['F-WC', 'C3', -1.3, -0.754], ['F-BAS', 'C3', -1.8, -0.864], ['F-BEDD', 'C3', 1.0, -0.044], ['F-DESK', 'C4', -1.8, 0.544, 2], ['F-WARD', 'C4', -2.2, -0.794]],
+     [{ sku: 'P-DOOR', mod: 'C1', lx: -0.75 }, { sku: 'P-DOOR', mod: 'C3', lx: -0.75 }, { sku: 'S-STAIR', x: 0.375, z: -2.95, rot: R4 }]),
+    rooms: [] }) },
+  'DS-2X4': { name: '2×4 Container Home', sub: '7 × 20′ HC · 3 bed · roof deck', make: () => {
+    const zc = 5.467, K = [{ side: '+z', u0: 1.517, u1: 3.03 }];
+    return {
+    mods: [pm('c1', 20, 1.219, zc, 0, '#b7c7d3', { rot: R4, open: ['+z'] }), pm('c2', 20, 7.889, zc, 0, '#b7c7d3', { rot: R4, keep: [...K, '+x'], open: [{ side: '-z', u0: -1.517, u1: 3.03 }] }), pm('c3', 20, 10.327, zc, 0, '#b7c7d3', { rot: R4 }),
+      pm('c4', 20, 5.5, 1.219, 0, '#b7c7d3', { open: [{ side: '+z', u0: -3.03, u1: 1.17 }], hole: [-1.05, 2.55, 0.13, 1.1] }), pm('c5', 20, 1.219, zc, 1, '#b7c7d3', { rot: R4 }), pm('c6', 20, 7.889, zc, 1, '#b7c7d3', { rot: R4, keep: K }), pm('c7', 20, 10.327, zc, 1, '#b7c7d3', { rot: R4 })],
+    items: dItems([
+      ['D-FR', 'c1', '-x', 0], ['W-STD', 'c1', '-z', 0.333], ['D-FR', 'c2', '-x', 0], ['D-FR', 'c3', '-x', 0], ['W-STD', 'c3', '+z', 0.167], ['D-SGL', 'c3', '+x', 0],
+      ['D-SGL', 'c4', '-x', 0], ['W-STD', 'c4', '-z', 1.9],
+      ['D-FR', 'c5', '-x', 0], ['W-STD', 'c5', '-z', 0.333], ['D-SGL', 'c5', '+z', 1.167], ['S-BAL', 'c5', '-x', 0], ['S-BAL', 'c5', '+x', 0],
+      ['D-FR', 'c6', '-x', 0], ['D-SGL', 'c6', '-z', -0.767], ['S-BAL', 'c6', '-x', 0], ['D-FR', 'c7', '-x', 0], ['S-BAL', 'c7', '-x', 0], ['W-STD', 'c7', '+x', 0], ['W-STD', 'c7', '+z', 0.067], ['W-STD', 'c7', '+z', -2.1],
+      ['S-DECK', 'c6'], ['S-RAIL', 'c6'], ['S-DECK', 'c7'], ['S-RAIL', 'c7']],
+     [['F-BEDD', 'c1', -0.933, -0.044], ['F-WC', 'c2', 2.3, -0.754], ['F-BAS', 'c2', 2.1, 0.864, 2], ['F-ISL', 'c2', -0.6, 0.2], ['F-K36', 'c3', -0.6, 0.784, 2], ['F-WASH', 'c3', 2.4, 0.794, 2],
+      ['F-BEDD', 'c5', -0.933, -0.044], ['F-WC', 'c6', 2.3, -0.754], ['F-BAS', 'c6', 2.1, 0.864, 2], ['F-BEDK', 'c7', -1.0, 0.019, 2], ['F-WARD', 'c7', 2.5, 0.794, 2]],
+     [{ sku: 'P-DOOR', mod: 'c1', lx: 2.117 }, { sku: 'P-DOOR', mod: 'c2', lx: 1.517 }, { sku: 'P-DOOR', mod: 'c3', lx: 1.517 }, { sku: 'P-DOOR', mod: 'c6', lx: 1.517 }, { sku: 'P-DOOR', mod: 'c7', lx: 1.517 }, { sku: 'S-ATRIUM', x: 0, z: 0, rot: 0, glass: 'full', mezz: 'part', clere: true, slide: 0.4 }]),
+    rooms: [{ mod: 'c1', lx: 2.5, type: 'Hall' }, { mod: 'c7', lx: 2.3, type: 'Hall' }] }; } },
+  'DS-STUDIO': { name: 'Garden studio', sub: '1 × 20′', make: () => ({
+    mods: [pm('s', 20, 0, 0, 0, '#b9bdc1')],
+    items: dItems([['D-FR', 's', '+z', 0], ['W-STD', 's', '+z', -1.9], ['W-STD', 's', '+z', 1.9], ['W-SQ', 's', '-x', 0]],
+      [['F-BEDD', 's', -1.854, -0.369, 1], ['F-K24', 's', 1.6, -0.784], ['F-ARM', 's', 2.4, 0.669, 2]]),
+    rooms: [] }) },
+};
+CATALOG.unshift({ group: 'Designs', items: Object.entries(DESIGNS).map(([sku, d]) => ({ sku, name: d.name, sub: d.sub, kind: 'design' })) });
+CATALOG.push({ group: 'Atrium', step: 'none', items: [{ sku: 'S-ATRIUM', name: 'Double-height glazed atrium', kind: 'floor', price: 38500, uk: 'Steel-framed bay between containers: two-storey glass wall (safety glazing, Approved Doc K), clerestory, mezzanine with 1100 mm guarding, internal stair, sitting room over container 4.' }] });
+const STEP_OF = { Designs: 'modules', Modules: 'modules', Doors: 'openings', Windows: 'openings', Structure: 'structure', Roof: 'roof' };
+CATALOG.forEach(g => { g.step = g.step || STEP_OF[g.group]; });
+const CATX = {};
+CATALOG.forEach(g => g.items.forEach(it => { CATX[it.sku] = { ...it, group: g.group }; }));
+
+const FINISH = { painted: 'Painted steel', corten: 'Corten', cedar: 'Cedar', charred: 'Charred timber' };
+const PAINTS = ['#e6e3dc', '#2f3236', '#7c8a74', '#8a3b2c', '#c28b3c', '#2d3f56', '#8cc63f'];
+const TRIMS = [['#1c1c1c', 'Black'], ['#3b3e41', 'Graphite'], ['#ecebe6', 'White'], ['#a4a9ad', 'Galvanised']];
+
+function example() {
+  return { h: 'hc', trim: '#1c1c1c',
+    mods: [
+      { id: 'm1', len: 40, x: 0, z: 0, rot: 0, lvl: 0, finish: 'painted', color: '#e6e3dc' },
+      { id: 'm2', len: 40, x: 0, z: 0, rot: 0, lvl: 1, finish: 'painted', color: '#e6e3dc' },
+      { id: 'm3', len: 20, x: 3.067, z: -2.438, rot: 0, lvl: 0, finish: 'painted', color: '#8cc63f' }],
+    items: [
+      { id: 'i1', sku: 'D-SLD', mod: 'm1', side: '+z', u: -2.5 }, { id: 'i2', sku: 'W-WIDE', mod: 'm1', side: '+z', u: 2.4 },
+      { id: 'i3', sku: 'W-SQ', mod: 'm1', side: '-x', u: 0 }, { id: 'i4', sku: 'W-PIC', mod: 'm1', side: '+x', u: 0 },
+      { id: 'i5', sku: 'D-FR', mod: 'm2', side: '+z', u: -3 }, { id: 'i6', sku: 'W-WIDE', mod: 'm2', side: '+z', u: 4 },
+      { id: 'i7', sku: 'S-BAL', mod: 'm2', side: '+z', u: -3 }, { id: 'i8', sku: 'W-STRIP', mod: 'm3', side: '-z', u: 1.4 },
+      { id: 'i9', sku: 'W-STD', mod: 'm3', side: '+x', u: 0 }, { id: 'i10', sku: 'S-STAIR', x: -3.13, z: -1.77, rot: Math.PI / 2 },
+      { id: 'i11', sku: 'D-SGL', mod: 'm2', side: '-z', u: 1.0 }, { id: 'i12', sku: 'S-RAIL', mod: 'm2' },
+      { id: 'i13', sku: 'S-DECK', mod: 'm2' }, { id: 'i14', sku: 'S-SOLAR', mod: 'm3' }, { id: 'i15', sku: 'S-CAN', mod: 'm1', side: '+z', u: -2.5 },
+      { id: 'i16', sku: 'W-STD', mod: 'm2', side: '+x', u: 0 }, { id: 'i17', sku: 'W-STD', mod: 'm3', side: '-z', u: -1.6 },
+      { id: 'i18', sku: 'W-SQ', mod: 'm2', side: '+z', u: 1.2 },
+      { id: 'p1', sku: 'P-DOOR', mod: 'm1', lx: -3.9 }, { id: 'p2', sku: 'P-DOOR', mod: 'm2', lx: -2 }, { id: 'p3', sku: 'P-DOOR', mod: 'm2', lx: 0 }, { id: 'p4', sku: 'P-DOOR', mod: 'm2', lx: 2.4 },
+      ...[['F-SHWR', 'm1', -5.5, -0.644, 0], ['F-WC', 'm1', -4.55, -0.754, 0], ['F-BAS', 'm1', -5.5, 0.864, 2], ['F-K36', 'm1', -1.95, -0.784, 0],
+        ['F-SOFA', 'm1', 3, -0.644, 0], ['F-RUG', 'm1', 3, 0.05, 0], ['F-COF', 'm1', 3, 0.35, 0], ['F-LAMP', 'm1', 1.6, -0.8, 0], ['F-PLANT', 'm1', 5.6, 0.75, 0],
+        ['F-DIN4', 'm3', -1.2, 0, 0], ['F-DESK', 'm3', 1.6, -0.544, 0], ['F-PLANT', 'm3', 2.6, 0.7, 0],
+        ['F-BEDD', 'm2', -4.921, -0.2, 1], ['F-SIDE', 'm2', -5.771, 0.8, 1], ['F-WARD', 'm2', -3, -0.794, 0],
+        ['F-SHWR', 'm2', 0.5, -0.644, 0], ['F-WC', 'm2', 1.3, -0.754, 0], ['F-BAS', 'm2', 2, -0.864, 0],
+        ['F-BEDS', 'm2', 4.946, -0.619, 3], ['F-DESK', 'm2', 3.1, -0.544, 0]].map(([sku, mod, lx, lz, q], k) => ({ id: 'f' + k, sku, mod, lx, lz, rot: q * Math.PI / 2 }))],
+    rooms: [{ mod: 'm2', lx: -1, type: 'Hall' }],
+  };
+}
+const KEY = 'chs-project-v2';
+let P;
+try { P = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!P || !Array.isArray(P.mods)) P = example();
+{ const qd = new URLSearchParams(location.search).get('design'); if (qd && DESIGNS[qd]) P = { h: 'hc', trim: '#1c1c1c', rooms: [], ...clone(DESIGNS[qd].make()) }; }
+if (!P.rooms) P.rooms = [];
+const V = { step: 'modules', mode: '3d', level: 'all', roof: true, cut: 1.2 };
+const isInt = () => V.step === 'interior';
+let SEL = null;
+const UNDO = [], REDO = [];
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+const H = () => HEIGHTS[P.h];
+const modById = id => P.mods.find(m => m.id === id);
+
+// ---------- spatial ----------
+function rectOf(m) {
+  const L = LEN[m.len], r = Math.abs(Math.sin(m.rot || 0)) > 0.5;
+  const hx = r ? W / 2 : L / 2, hz = r ? L / 2 : W / 2;
+  return { x0: m.x - hx, x1: m.x + hx, z0: m.z - hz, z1: m.z + hz };
+}
+const interArea = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.z1, b.z1) - Math.max(a.z0, b.z0));
+function toWorld(m, lx, lz) { const c = Math.cos(m.rot || 0), s = Math.sin(m.rot || 0); return [m.x + lx * c + lz * s, m.z - lx * s + lz * c]; }
+const SIDES = ['+z', '-z', '+x', '-x'];
+const sideLen = (m, side) => side[1] === 'z' ? LEN[m.len] : W;
+function sideLocal(side, L, u) { return side === '+z' ? [u, W / 2] : side === '-z' ? [-u, -W / 2] : side === '+x' ? [L / 2, -u] : [-L / 2, u]; }
+function stairDims() { const total = PLINTH + H() + F, n = Math.ceil(total / 0.19), go = 0.25, run = (n - 1) * go; return { total, n, rise: total / n, go, run, Ls: run + 0.9, w: 0.95 }; }
+function floorRect(it) {
+  const d = it.sku === 'S-STAIR' ? stairDims() : null;
+  const fw = d ? d.w : 0.15, fd = d ? d.Ls : 0.15, r = Math.abs(Math.sin(it.rot || 0)) > 0.5;
+  const hx = (r ? fd : fw) / 2, hz = (r ? fw : fd) / 2;
+  return { x0: it.x - hx, x1: it.x + hx, z0: it.z - hz, z1: it.z + hz };
+}
+function supportOf(m, mods) {
+  const L = LEN[m.len], lower = mods.filter(o => o.lvl === m.lvl - 1 && o.id !== m.id).map(rectOf);
+  const N = Math.round(L / 0.1), sup = [];
+  for (let k = 0; k <= N; k++) {
+    const [wx, wz] = toWorld(m, -L / 2 + L * k / N, 0);
+    sup.push(lower.some(r => wx >= r.x0 - 0.01 && wx <= r.x1 + 0.01 && wz >= r.z0 - 0.01 && wz <= r.z1 + 0.01));
+  }
+  const frac = sup.filter(Boolean).length / sup.length, lead = sup.indexOf(true), trail = [...sup].reverse().indexOf(true);
+  return { frac, overhang: lead < 0 ? L : Math.max(lead, trail) * L / N };
+}
+function analyze(mods) {
+  const rects = mods.map(rectOf), issues = [];
+  const A = mods.map(() => ({ sides: {}, covered: false, overhang: 0, joins: new Set() }));
+  mods.forEach((m, i) => {
+    const L = LEN[m.len];
+    for (const side of SIDES) {
+      const len = sideLen(m, side);
+      const a = toWorld(m, ...sideLocal(side, L, -len / 2)), b = toWorld(m, ...sideLocal(side, L, len / 2));
+      const alongZ = Math.abs(a[0] - b[0]) < 1e-3;
+      const plane = alongZ ? a[0] : a[1], out = Math.sign(plane - (alongZ ? m.x : m.z));
+      const tA = alongZ ? a[1] : a[0], tB = alongZ ? b[1] : b[0], lo = Math.min(tA, tB), hi = Math.max(tA, tB), ivs = [];
+      mods.forEach((n, j) => {
+        if (j === i || n.lvl !== m.lvl) return;
+        const R = rects[j], edge = alongZ ? (out > 0 ? R.x0 : R.x1) : (out > 0 ? R.z0 : R.z1);
+        if (Math.abs(edge - plane) > 0.05) return;
+        const s0 = Math.max(lo, alongZ ? R.z0 : R.x0), s1 = Math.min(hi, alongZ ? R.z1 : R.x1);
+        if (s1 - s0 < 0.05) return;
+        const toU = t => -len / 2 + (t - tA) / (tB - tA) * len, u0 = toU(s0), u1 = toU(s1);
+        ivs.push([Math.min(u0, u1), Math.max(u0, u1), n.id]);
+        A[i].joins.add(n.id);
+      });
+      ivs.sort((p, q) => p[0] - q[0]);
+      const mg = [];
+      for (const v of ivs) { const l = mg[mg.length - 1]; if (l && v[0] <= l[1] + 0.01) { l[1] = Math.max(l[1], v[1]); l[2] += ',' + v[2]; } else mg.push([...v]); }
+      const omit = mg.some(v => v[0] <= -len / 2 + F + 0.02 && v[1] >= len / 2 - F - 0.02);
+      A[i].sides[side] = { omit, skips: mg, with: mg.map(v => v[2]).join(',') };
+    }
+    mods.forEach((n, j) => { if (j > i && n.lvl === m.lvl && interArea(rects[i], rects[j]) > 0.05) issues.push({ level: 'error', text: `${label(m)} and ${label(n)} overlap` }); });
+    A[i].covered = mods.some((n, j) => n.lvl === m.lvl + 1 && interArea(rects[i], rects[j]) > 0.1);
+    if (m.lvl > 0) {
+      const s = supportOf(m, mods);
+      A[i].overhang = s.overhang;
+      if (s.frac < 0.33) issues.push({ level: 'error', text: `${label(m)} is not adequately supported (${Math.round(s.frac * 100)}% bearing)` });
+      else if (s.overhang > RU().factory.maxCantilever) issues.push({ level: 'warn', text: `${label(m)} cantilevers ${s.overhang.toFixed(1)} m — steel reinforcement added, structural engineer sign-off required` });
+    }
+  });
+  return { A, issues };
+}
+function label(m) { const i = P.mods.indexOf(m); return i >= 0 ? `M${i + 1}` : 'Module'; }
+
+// ---------- materials & geometry ----------
+const PROFILES = {
+  corr: { p: 0.278, d: 0.036, t: 0.002, k: [[0, 0], [0.18, 0], [0.32, 1], [0.68, 1], [0.82, 0], [1, 0]] },
+  timber: { p: 0.12, d: 0.018, t: 0.02, k: [[0, 0], [0.06, 0], [0.065, 1], [0.995, 1], [1, 0]] },
+};
+function profH(pr, u) {
+  let f = (u / pr.p) % 1; if (f < 0) f += 1;
+  for (let i = 1; i < pr.k.length; i++) if (f <= pr.k[i][0]) { const a = pr.k[i - 1], b = pr.k[i], t = (f - a[0]) / (b[0] - a[0] || 1); return pr.t + pr.d * (a[1] + (b[1] - a[1]) * t); }
+  return pr.t;
+}
+function cladSeg(pr, u0, u1, v0, v1, mat) {
+  const pts = [u0, u1];
+  for (let n = Math.floor(u0 / pr.p); n <= Math.ceil(u1 / pr.p); n++) for (const [f] of pr.k) { const u = (n + f) * pr.p; if (u > u0 + 1e-4 && u < u1 - 1e-4) pts.push(u); }
+  pts.sort((a, b) => a - b);
+  const s = new THREE.Shape();
+  s.moveTo(u0, -DEPTH); for (const u of pts) s.lineTo(u, -DEPTH + profH(pr, u)); s.lineTo(u1, -DEPTH); s.closePath();
+  const me = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: v1 - v0, bevelEnabled: false, steps: 1 }), mat);
+  me.rotation.x = Math.PI / 2; me.position.y = v1; me.name = 'cladding';
+  return me;
+}
+function mats(p) {
+  const std = (name, color, r, m, extra = {}) => Object.assign(new THREE.MeshStandardMaterial({ color, roughness: r, metalness: m, ...extra }), { name });
+  const cache = {};
+  return {
+    clad(m) {
+      const k = m.finish === 'painted' ? 'p' + m.color : m.finish;
+      if (!cache[k]) cache[k] = m.finish === 'painted' ? std('cladding_' + m.color.slice(1), m.color, 0.55, 0.25)
+        : m.finish === 'corten' ? std('cladding_corten', '#7d4124', 0.88, 0.2) : m.finish === 'cedar' ? std('cladding_cedar', '#a36b3c', 0.8, 0) : std('cladding_charred', '#221f1d', 0.95, 0);
+      return cache[k];
+    },
+    roof: std('roof_steel', '#6a6d70', 0.6, 0.25),
+    frame: std('frame_trim', p.trim, 0.45, 0.3),
+    glass: std('glass', '#a9c2cc', 0.05, 0.1, { transparent: true, opacity: 0.32, depthWrite: false }),
+    floor: std('interior_floor', '#b9956a', 0.7, 0), deck: std('deck_timber', '#8a6a4a', 0.85, 0),
+    concrete: std('concrete', '#b8b4ac', 0.95, 0), alu: std('aluminium', '#b9bdc1', 0.4, 0.35),
+    mesh: std('perforated_mesh', '#8e9296', 0.5, 0.35, { transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false }),
+    solar: std('solar_cell', '#1b2740', 0.25, 0.35),
+    fab(c) { const k = 'f' + c; return cache[k] || (cache[k] = std('fabric_' + c.slice(1), c, 0.95, 0)); },
+    floorFin(f) { const k = 'fl' + f; return cache[k] || (cache[k] = std('floor_' + f, FLOORS[f][1], f === 'tile' ? 0.35 : f === 'concrete' ? 0.6 : f === 'carpet' ? 1 : 0.7, 0)); },
+    lining(l) { const k = 'ln' + l; return cache[k] || (cache[k] = std('lining_' + l, LININGS[l][1], 0.9, 0)); },
+    woodL: std('wood_light', '#c8a57a', 0.7, 0), woodD: std('wood_dark', '#6e4d36', 0.7, 0), white: std('laminate_white', '#f1efea', 0.5, 0),
+    black: std('black_metal', '#2a2a2a', 0.5, 0.4), metal: std('chrome', '#c3c6c9', 0.25, 0.85), ceramic: std('ceramic', '#f7f7f4', 0.15, 0),
+    sheet: std('bed_linen', '#efede8', 0.95, 0), stone: std('worktop', '#3a3a3a', 0.35, 0), green: std('foliage', '#5f7a45', 0.9, 0),
+    pot: std('terracotta', '#b06a4a', 0.85, 0), rug: std('rug', '#b7ad9c', 1, 0), water: std('bath_inner', '#e3ecee', 0.15, 0),
+    lamp: std('lamp_shade', '#fff2d6', 0.6, 0, { emissive: new THREE.Color('#ffe2b0'), emissiveIntensity: 0.8 }),
+  };
+}
+function box(parent, name, w, h, d, x, y, z, mat) {
+  const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  me.name = name; me.position.set(x, y, z); parent.add(me); return me;
+}
+function railing(g, segs, y0, M, rh = RU().compliance.guardBalcony) {
+  const T = RU().defaultBal;
+  for (const [x0, z0, x1, z1] of segs) {
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    const sg = new THREE.Group(); sg.name = 'balustrade';
+    sg.position.set((x0 + x1) / 2, y0, (z0 + z1) / 2); sg.rotation.y = Math.atan2(-(z1 - z0), x1 - x0); g.add(sg);
+    const n = Math.max(1, Math.ceil(len / 1.5)), bay = len / n;
+    for (let i = 0; i <= n; i++) box(sg, 'balustrade_post', 0.04, rh, 0.04, -len / 2 + bay * i, rh / 2, 0, M.frame);
+    box(sg, 'balustrade_top_rail', len + 0.04, 0.05, 0.05, 0, rh, 0, M.frame);
+    if (T === 'bars' || T === 'slats') for (let x = -len / 2 + 0.1; x < len / 2 - 0.05; x += T === 'bars' ? 0.11 : 0.1) box(sg, T === 'bars' ? 'baluster' : 'timber_slat', T === 'bars' ? 0.02 : 0.07, rh - 0.12, T === 'bars' ? 0.02 : 0.025, x, (rh - 0.12) / 2 + 0.06, 0, T === 'bars' ? M.frame : M.deck);
+    else if (T === 'cable') for (let y = 0.1; y < rh - 0.06; y += 0.08) box(sg, 'cable', len, 0.006, 0.006, 0, y, 0, M.frame);
+    else for (let i = 0; i < n; i++) box(sg, T === 'glass' ? 'glass_panel' : 'mesh_panel', bay - 0.06, rh - 0.14, T === 'glass' ? 0.017 : 0.006, -len / 2 + bay * (i + 0.5), (rh - 0.14) / 2 + 0.06, 0, T === 'glass' ? M.glass : T === 'solid' ? M.roof : M.mesh);
+  }
+}
+function opDims(it, h) {
+  const d = CATX[it.sku], v0 = F + d.sill, v1 = Math.min(v0 + d.h, h - FT - 0.02);
+  return { d, u0: it.u - d.w / 2, u1: it.u + d.w / 2, v0, v1 };
+}
+function buildOpening(og, o, M) {
+  const { d, u0, u1, v0, v1 } = o, w = u1 - u0, hh = v1 - v0, cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+  const fw = 0.05, fd = DEPTH + 0.03, fz = -DEPTH / 2 + 0.015, gz = -DEPTH / 2;
+  box(og, 'opening_frame', w, fw, fd, cu, v1 - fw / 2, fz, M.frame);
+  for (const u of [u0 + fw / 2, u1 - fw / 2]) box(og, 'opening_frame', fw, hh, fd, u, cv, fz, M.frame);
+  const pane = (name, a, b, y0, y1) => { const p = box(og, name, b - a, y1 - y0, 0.012, (a + b) / 2, (y0 + y1) / 2, gz, M.glass); p.userData.glass = true; };
+  const iu0 = u0 + fw, iu1 = u1 - fw;
+  if (d.open === 'door') {
+    box(og, 'door_leaf', iu1 - iu0, hh - fw, 0.045, cu, cv - fw / 2, gz, M.frame);
+    box(og, 'door_handle', 0.025, 0.22, 0.06, iu1 - 0.12, v0 + 1.0, gz + 0.03, M.alu);
+    return;
+  }
+  const bottom = d.open === 'window' ? fw : 0.09;
+  box(og, 'opening_frame', w, bottom, fd, cu, v0 + bottom / 2, fz, M.frame);
+  const panes = d.open === 'french' ? 2 : d.open === 'slider' ? 2 : d.open === 'bifold' ? 4 : (d.mull || 1);
+  const pw = (iu1 - iu0) / panes;
+  for (let k = 0; k < panes; k++) pane('glazing', iu0 + k * pw, iu0 + (k + 1) * pw, v0 + bottom, v1 - fw);
+  for (let k = 1; k < panes; k++) box(og, 'mullion', d.open === 'window' ? 0.04 : 0.07, hh - fw - bottom, fd * 0.8, iu0 + k * pw, (v0 + bottom + v1 - fw) / 2, fz, M.frame);
+  if (d.open !== 'window') box(og, 'door_handle', 0.025, 0.22, 0.06, cu + (panes === 2 ? -0.1 : 0), v0 + 1.0, gz + 0.03, M.alu);
+}
+function buildWallHost(hg, it, m, len, h, M) {
+  const d = CATX[it.sku], Lh = Math.min(d.len, len - 0.3), u = it.u, BD = d.depth;
+  if (it.sku === 'S-BAL') {
+    box(hg, 'balcony_slab', Lh, 0.14, BD, u, F - 0.07, BD / 2 + 0.01, M.frame);
+    box(hg, 'balcony_decking', Lh - 0.04, 0.02, BD - 0.04, u, F + 0.005, BD / 2 + 0.01, M.deck);
+    box(hg, 'balcony_fascia', Lh, 0.2, 0.04, u, F - 0.1, BD, M.frame);
+    const drop = PLINTH + m.lvl * h + F - 0.14;
+    for (const sx of [-1, 1]) box(hg, 'balcony_column', 0.12, drop, 0.12, u + sx * (Lh / 2 - 0.1), F - 0.14 - drop / 2, BD - 0.1, M.frame);
+    railing(hg, [[u - Lh / 2 + 0.04, 0.05, u - Lh / 2 + 0.04, BD - 0.04], [u - Lh / 2 + 0.04, BD - 0.04, u + Lh / 2 - 0.04, BD - 0.04], [u + Lh / 2 - 0.04, BD - 0.04, u + Lh / 2 - 0.04, 0.05]], F + 0.015, M);
+  } else {
+    const cy = h - FT - 0.06;
+    box(hg, 'canopy_plate', Lh, 0.05, BD, u, cy, BD / 2, M.frame);
+    box(hg, 'canopy_fascia', Lh, 0.16, 0.03, u, cy - 0.055, BD, M.frame);
+    for (const sx of [-1, 1]) box(hg, 'canopy_side', 0.03, 0.16, BD, u + sx * Lh / 2, cy - 0.055, BD / 2, M.frame);
+  }
+}
+function buildRoofItem(rg, it, m, h, M, info) {
+  const L = LEN[m.len];
+  if (it.sku === 'S-RAIL') {
+    const ex = L / 2 - 0.08, ez = W / 2 - 0.08;
+    railing(rg, [[-ex, -ez, ex, -ez], [ex, -ez, ex, ez], [ex, ez, -ex, ez], [-ex, ez, -ex, -ez]], h + 0.05, M);
+    info.railM = 2 * (2 * ex + 2 * ez);
+  } else if (it.sku === 'S-DECK') {
+    const bw = 0.14, n = Math.floor((W - 0.2) / bw);
+    for (let k = 0; k < n; k++) box(rg, 'roof_deck_board', L - 0.2, 0.03, bw - 0.012, 0, h + 0.035, -((n - 1) / 2) * bw + k * bw, M.deck);
+    box(rg, 'roof_hatch', 0.9, 0.22, 0.9, -L / 2 + 0.75, h + 0.16, 0.5, M.frame);
+    info.deckM2 = (L - 0.2) * (W - 0.2);
+  } else if (it.sku === 'S-SOLAR') {
+    const n = Math.max(1, Math.floor((L - 0.4) / 1.8)), x0 = -((n - 1) / 2) * 1.8;
+    info.panels = 0;
+    for (let k = 0; k < n; k++) for (const j of [-1, 1]) {
+      const cx = x0 + k * 1.8;
+      box(rg, 'solar_panel', 1.7, 0.035, 1.0, cx, h + 0.32, j * 0.53, M.solar).rotation.z = -0.17;
+      box(rg, 'solar_rack', 0.04, 0.2, 0.9, cx + 0.7, h + 0.1, j * 0.53, M.alu);
+      box(rg, 'solar_rack', 0.04, 0.44, 0.9, cx - 0.7, h + 0.22, j * 0.53, M.alu);
+      info.panels++;
+    }
+  }
+}
+function buildFloorItem(fg, it, h, M) {
+  if (it.sku === 'S-ATRIUM') return buildAtrium(fg, it, h, M);
+  if (it.sku === 'S-COL') {
+    box(fg, 'column', 0.15, PLINTH + h, 0.15, 0, (PLINTH + h) / 2, 0, M.frame);
+    box(fg, 'column_pad', 0.5, 0.05, 0.5, 0, 0.025, 0, M.concrete);
+    return;
+  }
+  const { total, n, rise, go, run, Ls, w } = stairDims(), z0 = -Ls / 2;
+  for (let k = 0; k < n - 1; k++) box(fg, 'stair_tread', w, 0.04, 0.27, 0, rise * (k + 1) - 0.02, z0 + k * go + go / 2, M.frame);
+  box(fg, 'stair_landing', w, 0.06, 0.9, 0, total - 0.03, z0 + run + 0.45, M.frame);
+  const dz = run + go / 2, L = Math.hypot(dz, total), ang = -Math.atan2(total, dz);
+  for (const sx of [-1, 1]) {
+    box(fg, 'stair_stringer', 0.05, 0.25, L, sx * (w / 2 + 0.025), total / 2 - 0.1, z0 + dz / 2, M.frame).rotation.x = ang;
+    box(fg, 'stair_handrail', 0.04, 0.04, L, sx * (w / 2 + 0.03), total / 2 + 0.9, z0 + dz / 2, M.frame).rotation.x = ang;
+    for (let k = 1; k < 6; k++) { const t = k / 6; box(fg, 'stair_baluster', 0.02, 0.9, 0.02, sx * (w / 2 + 0.03), t * total + 0.45, z0 + t * dz, M.frame); }
+    box(fg, 'landing_post', 0.08, total, 0.08, sx * (w / 2 - 0.04), total / 2, z0 + run + 0.85, M.frame);
+  }
+}
+
+function buildProject(p, opts = {}) {
+  const h = HEIGHTS[p.h], M = mats(p), { A, issues } = analyze(p.mods);
+  const root = new THREE.Group(); root.name = 'container_house';
+  const OBJ = {}, info = { roof: {}, walls: [], zones: [] };
+  p.mods.forEach((m, i) => {
+    const L = LEN[m.len];
+    const g = new THREE.Group();
+    g.name = `M${i + 1}_${m.len}ft_level${m.lvl + 1}`;
+    g.position.set(m.x, PLINTH + m.lvl * h, m.z); g.rotation.y = m.rot || 0;
+    g.userData.pick = { type: 'mod', id: m.id }; g.userData.modId = m.id; g.userData.lvl = m.lvl;
+    OBJ[m.id] = g; root.add(g);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, 'corner_post', F, h, F, sx * (L / 2 - F / 2), h / 2, sz * (W / 2 - F / 2), M.frame);
+    for (const sz of [-1, 1]) {
+      box(g, 'bottom_side_rail', L - 2 * F, F, F * 0.8, 0, F / 2, sz * (W / 2 - F * 0.4), M.frame);
+      box(g, 'top_side_rail', L - 2 * F, FT, FT, 0, h - FT / 2, sz * (W / 2 - FT / 2), M.frame);
+    }
+    for (const sx of [-1, 1]) {
+      box(g, 'bottom_end_rail', F * 0.8, F, W - 2 * F, sx * (L / 2 - F * 0.4), F / 2, 0, M.frame);
+      box(g, 'top_end_rail', FT, FT, W - 2 * F, sx * (L / 2 - FT / 2), h - FT / 2, 0, M.frame);
+    }
+    const roofPieces = (y, t, mat, name, w0, d0) => { const hl = m.hole; if (!hl) return [box(g, name, w0, t, d0, 0, y, 0, mat)]; const out = []; for (const [a, b] of subIv([[-w0 / 2, w0 / 2]], [[hl[0], hl[1]]])) out.push(box(g, name, b - a, t, d0, (a + b) / 2, y, 0, mat)); for (const [a, b] of subIv([[-d0 / 2, d0 / 2]], [[hl[2], hl[3]]])) out.push(box(g, name, hl[1] - hl[0], t, b - a, (hl[0] + hl[1]) / 2, y, (a + b) / 2, mat)); return out; };
+    roofPieces(h - 0.03, 0.04, M.roof, 'roof_panel', L - 0.04, W - 0.04).forEach(r => { r.userData.roofPart = true; });
+    zoneList(m, p).forEach((z, zi) => {
+      const a = z.x0 === -L / 2 ? z.x0 + 0.03 : z.x0, b2 = z.x1 === L / 2 ? z.x1 - 0.03 : z.x1;
+      const fl = box(g, 'floor', b2 - a, 0.04, W - 0.06, (a + b2) / 2, F - 0.02, 0, M.floorFin(z.floor));
+      fl.userData.pick = { type: 'room', mod: m.id, zi }; OBJ[m.id + ':' + zi] = fl;
+      info.zones.push({ ...z, mod: m.id, zi, lvl: m.lvl, key: m.id + ':' + zi });
+      if (opts.labels === m.lvl && z.type) { const lb = makeLabel(ROOMS[z.type][0], z.area.toFixed(1) + ' m²', Math.max(0.6, Math.min(1.7, z.x1 - z.x0 - 0.3))); lb.position.set((z.bx0 + z.bx1) / 2, F + 0.03, 0); g.add(lb); }
+    });
+    roofPieces(h - FT - 0.01, 0.02, M.lining(m.lining || 'plaster'), 'ceiling', L - 2 * F, W - 2 * IN).forEach(r => { r.userData.roofPart = true; });
+    if (m.lvl === 0) { const xs = m.len >= 40 ? [-L / 2 + 0.25, 0, L / 2 - 0.25] : [-L / 2 + 0.25, L / 2 - 0.25]; for (const x of xs) for (const sz of [-1, 1]) box(g, 'footing', 0.45, PLINTH, 0.45, x, -PLINTH / 2, sz * (W / 2 - 0.2), M.concrete); }
+    const pr = m.finish === 'cedar' || m.finish === 'charred' ? PROFILES.timber : PROFILES.corr, cm = M.clad(m);
+    const SP = { '+z': [L, 0, 0, W / 2], '-z': [L, Math.PI, 0, -W / 2], '+x': [W, Math.PI / 2, L / 2, 0], '-x': [W, -Math.PI / 2, -L / 2, 0] };
+    for (const [side, [len, rot, px, pz]] of Object.entries(SP)) {
+      const sInfo = A[i].sides[side], kept = (m.keep || []).includes(side), part = keptIv(m, side), eff = subIv(sInfo.omit ? [[-len / 2, len / 2]] : sInfo.skips.map(s => [s[0], s[1]]), part);
+      if ((sInfo.omit && !kept && !part.length) || (m.open || []).includes(side)) continue;
+      const wg = new THREE.Group();
+      wg.name = `wall_${side.replace('+', 'p').replace('-', 'n')}`;
+      wg.rotation.y = rot; wg.position.set(px - Math.sin(rot) * 0.015, 0, pz - Math.cos(rot) * 0.015);
+      wg.userData.wall = { mod: m.id, side, len };
+      g.add(wg);
+      const ua = -len / 2 + F, ub = len / 2 - F, va = F, vb = h - FT;
+      const ops = p.items.filter(it => it.mod === m.id && it.side === side && CATX[it.sku].kind === 'opening').map(it => ({ it, ...opDims(it, h) }))
+        .filter(o => o.u0 >= ua - 0.01 && o.u1 <= ub + 0.01).sort((a, b) => a.u0 - b.u0);
+      let cur = ua, cut = 0;
+      const lm = M.lining(m.lining || 'plaster');
+      const seg = (u0, u1, v0, v1) => {
+        let pieces = [[u0, u1]];
+        for (const [s0, s1] of [...(kept ? [] : eff), ...openIv(m, side)]) pieces = pieces.flatMap(([a, b]) => b <= s0 || a >= s1 ? [[a, b]] : [[a, Math.min(b, s0)], [Math.max(a, s1), b]]);
+        for (const [a, b] of pieces) if (b - a > 0.01 && v1 - v0 > 0.01) { wg.add(cladSeg(pr, a, b, v0, v1, cm)); box(wg, 'wall_lining', b - a, v1 - v0, 0.02, (a + b) / 2, (v0 + v1) / 2, -0.11, lm); }
+      };
+      for (const o of ops) {
+        if (o.u0 < cur - 0.01) continue;
+        seg(cur, o.u0, va, vb); seg(o.u0, o.u1, va, o.v0); seg(o.u0, o.u1, o.v1, vb);
+        cur = o.u1; cut += o.u1 - o.u0;
+        const og = new THREE.Group(); og.name = CATX[o.it.sku].name.toLowerCase().replace(/\W+/g, '_');
+        og.userData.pick = { type: 'item', id: o.it.id }; OBJ[o.it.id] = og; wg.add(og);
+        buildOpening(og, o, M);
+      }
+      seg(cur, ub, va, vb);
+      info.walls.push({ mod: m.id, side, len, cut, lvl: m.lvl });
+      for (const it of p.items.filter(it => it.mod === m.id && it.side === side && CATX[it.sku].kind === 'wall')) {
+        const hg = new THREE.Group(); hg.name = CATX[it.sku].name.toLowerCase().replace(/\W+/g, '_');
+        hg.userData.pick = { type: 'item', id: it.id }; OBJ[it.id] = hg; wg.add(hg);
+        buildWallHost(hg, it, m, len, h, M);
+      }
+    }
+    for (const it of p.items.filter(it => it.mod === m.id && (CATX[it.sku].kind === 'part' || CATX[it.sku].kind === 'furn'))) {
+      const d = CATX[it.sku], fg = new THREE.Group();
+      fg.name = d.name.toLowerCase().replace(/\W+/g, '_');
+      fg.userData.pick = { type: 'item', id: it.id }; OBJ[it.id] = fg; g.add(fg);
+      if (d.kind === 'part') { fg.position.set(it.lx, 0, 0); buildPartition(fg, it, h, M, M.lining(m.lining || 'plaster')); }
+      else { fg.position.set(it.lx, F, it.lz); fg.rotation.y = it.rot || 0; d.build(fg, M, it); }
+    }
+    const rItems = p.items.filter(it => it.mod === m.id && CATX[it.sku].kind === 'roof');
+    if (rItems.length && A[i].covered) issues.push({ level: 'warn', text: `${label(m)} roof is covered by a module above — its roof items are hidden` });
+    else for (const it of rItems) {
+      const rg = new THREE.Group(); rg.name = CATX[it.sku].name.toLowerCase().replace(/\W+/g, '_');
+      rg.userData.pick = { type: 'item', id: it.id }; rg.userData.roofPart = true; OBJ[it.id] = rg; g.add(rg);
+      const ri = {}; buildRoofItem(rg, it, m, h, M, ri); info.roof[it.id] = ri;
+    }
+  });
+  for (const it of p.items.filter(it => CATX[it.sku].kind === 'floor')) {
+    const fg = new THREE.Group(); fg.name = CATX[it.sku].name.toLowerCase().replace(/\W+/g, '_');
+    fg.position.set(it.x, 0, it.z); fg.rotation.y = it.rot || 0;
+    fg.userData.pick = { type: 'item', id: it.id }; OBJ[it.id] = fg; root.add(fg);
+    buildFloorItem(fg, it, h, M);
+  }
+  return { root, A, issues, OBJ, info };
+}
+function disposeTree(o) { const ms = new Set(); o.traverse(n => { if (n.isMesh) { n.geometry.dispose(); ms.add(n.material); } }); ms.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }
+
+// ---------- interior model ----------
+function zoneList(m, p) {
+  const L = LEN[m.len], parts = p.items.filter(i => i.mod === m.id && CATX[i.sku]?.kind === 'part').map(i => i.lx).sort((a, b) => a - b);
+  const xs = [-L / 2, ...parts, L / 2];
+  return xs.slice(0, -1).map((x0, k) => {
+    const x1 = xs[k + 1], last = k === xs.length - 2, inZ = x => x >= x0 && (x < x1 || (last && x <= x1));
+    const bx0 = k === 0 ? x0 + IN : x0 + 0.05, bx1 = last ? x1 - IN : x1 - 0.05;
+    const rec = (p.rooms || []).find(r => r.mod === m.id && inZ(r.lx)) || {};
+    const furn = p.items.filter(i => i.mod === m.id && CATX[i.sku]?.kind === 'furn' && inZ(i.lx));
+    const type = rec.type || inferRoom(furn);
+    return { x0, x1, bx0, bx1, type, auto: !rec.type && !!type, floor: rec.floor || (type === 'Bathroom' ? 'tile' : 'oak'), area: (bx1 - bx0) * (W - 2 * IN), furn };
+  });
+}
+function inferRoom(furn) {
+  const s = new Set(furn.map(i => CATX[i.sku].room).filter(Boolean));
+  return s.has('Bathroom') ? 'Bathroom' : s.has('Kitchen') && s.has('Living') ? 'KitchenLiving' : s.has('Kitchen') ? 'Kitchen' : s.has('Bedroom') ? 'Bedroom' : s.has('Dining') ? 'Dining' : s.has('Living') ? 'Living' : s.has('Office') ? 'Office' : s.has('Hall') ? 'Hall' : null;
+}
+function makeLabel(t1, t2, w) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = 'rgba(251,250,247,0.92)'; x.beginPath(); x.roundRect(4, 4, 504, 120, 18); x.fill();
+  x.fillStyle = '#1c1b19'; x.textAlign = 'center'; x.font = '600 46px "IBM Plex Sans", sans-serif'; x.fillText(t1, 256, 62);
+  x.fillStyle = '#6b6862'; x.font = '400 30px "IBM Plex Mono", monospace'; x.fillText(t2, 256, 104);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const me = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
+  me.rotation.x = -Math.PI / 2; me.renderOrder = 6; me.name = 'room_label'; me.userData.noPick = true;
+  return me;
+}
+function buildPartition(pg, it, h, M, lm) {
+  const hh = h - FT - F, zi = W / 2 - IN, s = it.flip ? -1 : 1;
+  if (!CATX[it.sku].door) { box(pg, 'partition', 0.1, hh, 2 * zi, 0, F + hh / 2, 0, lm); return; }
+  const a = zi - 0.95, b = zi - 0.1;
+  box(pg, 'partition', 0.1, hh, zi + a, 0, F + hh / 2, s * (a - zi) / 2, lm);
+  box(pg, 'partition', 0.1, hh, zi - b, 0, F + hh / 2, s * (b + zi) / 2, lm);
+  if (hh > 2.1) box(pg, 'partition_head', 0.1, hh - 2.05, b - a, 0, F + 2.05 + (hh - 2.05) / 2, s * (a + b) / 2, lm);
+  for (const zz of [a, b]) box(pg, 'door_frame', 0.12, 2.05, 0.03, 0, F + 1.025, s * zz, M.frame);
+  box(pg, 'door_leaf', 0.8, 2.0, 0.04, 0.42, F + 1.0, s * (b - 0.03), M.white);
+}
+function fp(sku, lx, lz, rot) { const d = CATX[sku], r = Math.abs(Math.sin(rot || 0)) > 0.5, fw = r ? d.d : d.w, fd = r ? d.w : d.d; return { x0: lx - fw / 2, x1: lx + fw / 2, z0: lz - fd / 2, z1: lz + fd / 2, fw, fd }; }
+const ov = (a, b) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 0.005 && Math.min(a.z1, b.z1) - Math.max(a.z0, b.z0) > 0.005;
+function keepOuts(m, p) {
+  const L = LEN[m.len], zi = W / 2 - IN, xi = L / 2 - IN, K = [];
+  for (const it of p.items) {
+    if (it.mod !== m.id) continue;
+    const d = CATX[it.sku];
+    if (d.kind === 'opening' && d.open !== 'window') {
+      const w = d.w / 2, n = d.name.toLowerCase();
+      if (it.side === '+z') K.push({ x0: it.u - w, x1: it.u + w, z0: zi - 0.9, z1: zi, n });
+      else if (it.side === '-z') K.push({ x0: -it.u - w, x1: -it.u + w, z0: -zi, z1: -zi + 0.9, n });
+      else if (it.side === '+x') K.push({ x0: xi - 0.9, x1: xi, z0: -it.u - w, z1: -it.u + w, n });
+      else K.push({ x0: -xi, x1: -xi + 0.9, z0: it.u - w, z1: it.u + w, n });
+    } else if (d.kind === 'part' && d.door) {
+      const s = it.flip ? -1 : 1, a = s * (zi - 0.95), b = s * (zi - 0.1);
+      K.push({ x0: it.lx - 0.9, x1: it.lx + 0.9, z0: Math.min(a, b), z1: Math.max(a, b), n: 'partition doorway' });
+    }
+  }
+  return K;
+}
+function checkFurn(m, p, sku, lx, lz, rot, excl) {
+  const d = CATX[sku], r = fp(sku, lx, lz, rot);
+  if (d.h > H() - FT - F - 0.02) return { valid: false, reason: 'Too tall for this module' };
+  if (d.rug) return { valid: true };
+  for (const it of p.items) {
+    if (it.id === excl || it.mod !== m.id) continue;
+    const e = CATX[it.sku];
+    if (e.kind === 'furn' && !e.rug && ov(r, fp(it.sku, it.lx, it.lz, it.rot))) return { valid: false, reason: `Overlaps the ${e.name.toLowerCase()}` };
+    if (e.kind === 'part' && ov(r, { x0: it.lx - 0.05, x1: it.lx + 0.05, z0: -W, z1: W })) return { valid: false, reason: 'Crosses a partition' };
+  }
+  const k = keepOuts(m, p).find(k => ov(r, k));
+  if (k) return { valid: false, reason: `Blocks the ${k.n} — keep 900 mm clear` };
+  return { valid: true };
+}
+function zoneOpenings(m, p, z) {
+  const L = LEN[m.len];
+  return p.items.filter(it => {
+    if (it.mod !== m.id || CATX[it.sku].kind !== 'opening') return false;
+    const w = CATX[it.sku].w / 2;
+    if (it.side === '+x') return z.x1 === L / 2;
+    if (it.side === '-x') return z.x0 === -L / 2;
+    const x = it.side === '+z' ? it.u : -it.u;
+    return Math.min(z.x1, x + w) - Math.max(z.x0, x - w) >= 0.3;
+  });
+}
+function zoneOpenTo(m, z, A) {
+  const a = A[P.mods.indexOf(m)]; if (!a) return '';
+  const L = LEN[m.len], ids = new Set(), addIds = s => String(s[2]).split(',').forEach(id => ids.add(id));
+  for (const sd of ['+z', '-z']) for (const s of a.sides[sd].skips) for (const [p0, p1] of subIv([[s[0], s[1]]], keptIv(m, sd))) { const x0 = sd === '+z' ? p0 : -p1, x1 = sd === '+z' ? p1 : -p0; if (Math.min(z.x1, x1) - Math.max(z.x0, x0) > 0.3) addIds(s); }
+  if (z.x1 === L / 2) a.sides['+x'].skips.forEach(addIds);
+  if (z.x0 === -L / 2) a.sides['-x'].skips.forEach(addIds);
+  return [...ids].filter(id => modById(id) && !keptBetween(A, P.mods, m, modById(id))).map(id => label(modById(id))).join(', ');
+}
+function keptIv(m, side) { return (m.keep || []).filter(k => typeof k === 'object' && k.side === side).map(k => [k.u0, k.u1]); }
+function openIv(m, side) { return (m.open || []).filter(k => typeof k === 'object' && k.side === side).map(k => [k.u0, k.u1]); }
+function atriumOk(p, m, it) {
+  const a = p.items.find(i => i.sku === 'S-ATRIUM'); if (!a || m.lvl !== 1) return false;
+  const [dx, dz] = toWorld(m, ...sideLocal(it.side, LEN[m.len], it.u)), md = a.mezz === 'none' ? 0 : a.mezz === 'full' ? 6.058 : 2.8, x = dx - a.x, z = dz - a.z;
+  return x > 2.3 && x < 6.8 && z > 2.3 && z < 2.438 + md + 0.05;
+}
+function glazeGrid(g, M, axis, plane, a0, a1, y0, y1, cols, rows, name) {
+  const put = (w, hh, u, v) => axis === 'z' ? box(g, name + '_frame', w, hh, 0.09, u, v, plane, M.frame) : box(g, name + '_frame', 0.09, hh, w, plane, v, u, M.frame);
+  const gl = axis === 'z' ? box(g, name + '_glass', a1 - a0, y1 - y0, 0.012, (a0 + a1) / 2, (y0 + y1) / 2, plane, M.glass) : box(g, name + '_glass', 0.012, y1 - y0, a1 - a0, plane, (y0 + y1) / 2, (a0 + a1) / 2, M.glass); gl.userData.glass = true;
+  for (let c = 0; c <= cols; c++) put(0.06, y1 - y0, a0 + (a1 - a0) * c / cols, (y0 + y1) / 2);
+  for (let r = 0; r <= rows; r++) put(a1 - a0, 0.06, (a0 + a1) / 2, y0 + (y1 - y0) * r / rows);
+}
+function panelBox(g, axis, plane, a0, a1, y0, y1, mat, name) { return axis === 'z' ? box(g, name, a1 - a0, y1 - y0, 0.08, (a0 + a1) / 2, (y0 + y1) / 2, plane, mat) : box(g, name, 0.08, y1 - y0, a1 - a0, plane, (y0 + y1) / 2, (a0 + a1) / 2, mat); }
+function buildAtrium(g, it, h, M) {
+  const B = PLINTH, g0 = B + F, u2 = B + h + F, top = B + 2 * h, crown = B + 6.6, olive = M.fab('#7d8559'), char = M.fab('#55585b');
+  const md = it.mezz === 'none' ? 0 : it.mezz === 'full' ? 6.058 : 2.8, glass = it.glass || 'full';
+  box(g, 'atrium_plinth', 4.232, g0 - 0.04, 6.058, 4.554, (g0 - 0.04) / 2, 5.467, M.concrete);
+  box(g, 'atrium_floor', 4.232, 0.04, 6.058, 4.554, g0 - 0.02, 5.467, M.floorFin('oak'));
+  if (glass === 'full') glazeGrid(g, M, 'z', 8.496, 2.438, 6.67, g0, crown, 3, 4, 'glass_wall');
+  else if (glass === 'lower') { glazeGrid(g, M, 'z', 8.496, 2.438, 6.67, g0, B + h, 3, 1, 'glass_wall'); panelBox(g, 'z', 8.496, 2.438, 6.67, B + h, crown, olive, 'infill_panel'); }
+  else { panelBox(g, 'z', 8.496, 2.438, 6.67, g0 + 2.2, crown, olive, 'infill_panel'); panelBox(g, 'z', 8.496, 2.438, 3.55, g0, g0 + 2.2, olive, 'infill_panel'); panelBox(g, 'z', 8.496, 5.55, 6.67, g0, g0 + 2.2, olive, 'infill_panel'); glazeGrid(g, M, 'z', 8.496, 3.55, 5.55, g0, g0 + 2.2, 2, 1, 'slider'); }
+  for (const x of [2.438, 6.67]) { if (it.clere !== false) glazeGrid(g, M, 'x', x, 2.438, 8.496, top, crown, 5, 1, 'clerestory'); else panelBox(g, 'x', x, 2.438, 8.496, top, crown, olive, 'infill_panel'); }
+  panelBox(g, 'z', 0, 2.47, 3.9, B + h, crown, char, 'sitting_wall'); panelBox(g, 'z', 0, 7.1, 8.528, B + h, crown, char, 'sitting_wall');
+  panelBox(g, 'z', 0, 3.9, 7.1, B + h, u2 + 0.1, char, 'sitting_wall'); panelBox(g, 'z', 0, 3.9, 7.1, u2 + 2.5, crown, char, 'sitting_wall'); glazeGrid(g, M, 'z', 0, 3.9, 7.1, u2 + 0.1, u2 + 2.5, 2, 1, 'sitting_window');
+  for (const x of [2.47, 8.528]) { panelBox(g, 'x', x, 0, 0.42, B + h, crown, char, 'sitting_wall'); panelBox(g, 'x', x, 2.02, 2.438, B + h, crown, char, 'sitting_wall'); panelBox(g, 'x', x, 0.42, 2.02, u2 + 2.2, crown, char, 'sitting_wall'); glazeGrid(g, M, 'x', x, 0.42, 2.02, u2, u2 + 2.2, 2, 1, 'french_door'); }
+  for (const [x0, x1, z0, z1] of [[2.55, 8.45, 0.15, 1.3], [2.55, 4.4, 1.3, 2.3], [8.1, 8.45, 1.3, 2.3]]) box(g, 'sitting_floor', x1 - x0, F, z1 - z0, (x0 + x1) / 2, B + h + F / 2, (z0 + z1) / 2, M.woodL);
+  railing(g, [[4.45, 2.3, 4.45, 1.3], [4.45, 1.3, 8.05, 1.3]], u2, M);
+  const n = 17, rise = (u2 - g0) / n, run = (8.0 - 4.6) / (n - 1);
+  for (let k = 0; k < n - 1; k++) box(g, 'stair_tread', run + 0.03, 0.04, 0.9, 4.6 + run * (k + 0.5), g0 + rise * (k + 1) - 0.02, 1.85, M.frame);
+  const sl = Math.hypot(3.4, u2 - g0), sa = Math.atan2(u2 - g0, 3.4);
+  for (const s of [-1, 1]) box(g, 'stair_stringer', sl, 0.22, 0.04, 6.3, (g0 + u2) / 2 - 0.05, 1.85 + s * 0.47, M.frame).rotation.z = sa;
+  if (md) { box(g, 'mezzanine_floor', 4.232, 0.28, md, 4.554, u2 - 0.14, 2.438 + md / 2, M.lining('plaster')); box(g, 'mezzanine_finish', 4.232, 0.02, md, 4.554, u2 + 0.005, 2.438 + md / 2, M.floorFin('oak')); if (md < 6) railing(g, [[2.5, 2.438 + md, 6.61, 2.438 + md]], u2, M); }
+  const s = it.slide ?? 0.4, pw = 2.5, zA = 2.62 + pw / 2, pm2 = M.clad({ finish: 'painted', color: '#b7c7d3' });
+  box(g, 'sliding_track', 0.08, 0.06, 5.8, 2.5, B + h - 0.2, 5.47, M.frame);
+  for (const [z, x] of [[zA, 2.52], [zA + s * pw, 2.58]]) box(g, 'sliding_corrugated_panel', 0.04, h - 0.45, pw, x, g0 + (h - 0.45) / 2, z, pm2);
+  for (const [x0, x1, z0, z1] of [[2.3, 8.76, -0.3, 2.44], [2.3, 6.9, 2.44, 8.9]]) box(g, 'clerestory_roof', x1 - x0, 0.25, z1 - z0, (x0 + x1) / 2, crown + 0.125, (z0 + z1) / 2, M.roof).userData.roofPart = true;
+  box(g, 'bedroom_roof', 2.69, 0.2, 7.1, 1.095, top + 0.1, 5.85, M.roof).userData.roofPart = true;
+  box(g, 'master_canopy', 5.15, 0.18, 0.85, 9.125, top - 0.02, 8.9, M.roof).userData.roofPart = true;
+}
+function subIv(base, cut) { let r = base; for (const [k0, k1] of cut) r = r.flatMap(([p0, p1]) => p1 <= k0 || p0 >= k1 ? [[p0, p1]] : [[p0, Math.min(p1, k0)], [Math.max(p0, k1), p1]]); return r.filter(([p0, p1]) => p1 - p0 > 0.05); }
+function keptBetween(A, mods, a, b) {
+  const ia = mods.indexOf(a), ib = mods.indexOf(b);
+  return (a.keep || []).some(s => typeof s === 'string' && A[ia].sides[s].with.split(',').includes(b.id)) || (b.keep || []).some(s => typeof s === 'string' && A[ib].sides[s].with.split(',').includes(a.id));
+}
+const DCACHE = {};
+function designData(sku) { return DCACHE[sku] || (DCACHE[sku] = DESIGNS[sku].make()); }
+function resolveDesign(sku) {
+  const pt = groundPoint(); if (!pt) return null;
+  const D = designData(sku), rs = D.mods.map(rectOf);
+  const x0 = Math.min(...rs.map(r => r.x0)), x1 = Math.max(...rs.map(r => r.x1)), z0 = Math.min(...rs.map(r => r.z0)), z1 = Math.max(...rs.map(r => r.z1));
+  const dx = Math.round((pt.x - (x0 + x1) / 2) * 10) / 10, dz = Math.round((pt.z - (z0 + z1) / 2) * 10) / 10;
+  let res = { valid: true, reason: `${DESIGNS[sku].name} · ${D.mods.length} modules · ${(x1 - x0).toFixed(1)} × ${(z1 - z0).toFixed(1)} m` };
+  for (const m of D.mods) { const r = rectOf({ ...m, x: m.x + dx, z: m.z + dz }), c = P.mods.find(o => o.lvl === m.lvl && interArea(rectOf(o), r) > 0.05); if (c) { res = { valid: false, reason: `Overlaps ${label(c)}` }; break; } }
+  const hh = PLINTH + (Math.max(...D.mods.map(m => m.lvl)) + 1) * H();
+  setGhost(new THREE.Vector3((x0 + x1) / 2 + dx, hh / 2, (z0 + z1) / 2 + dz), 0, [x1 - x0, hh, z1 - z0], res.valid);
+  return { ...res, place: { dx, dz } };
+}
+function placeDesign(sku, dx, dz) {
+  const D = clone(designData(sku)), map = {};
+  D.mods.forEach(m => { map[m.id] = uid('m'); });
+  commit(p => {
+    D.mods.forEach(m => p.mods.push({ ...m, id: map[m.id], x: Math.round((m.x + dx) * 1000) / 1000, z: Math.round((m.z + dz) * 1000) / 1000 }));
+    D.items.forEach(it => p.items.push({ ...it, id: uid('i'), ...(it.mod ? { mod: map[it.mod] } : { x: it.x + dx, z: it.z + dz }) }));
+    (D.rooms || []).forEach(r => p.rooms.push({ ...r, mod: map[r.mod] }));
+  }, true);
+}
+
+// ---------- checks & estimate ----------
+function evaluate(p, r) {
+  const issues = [...r.issues], lines = [], add = (name, qty, unit, price, auto) => { if (qty > 0) lines.push({ name, qty, unit, total: qty * price, auto }); };
+  const h = HEIGHTS[p.h];
+  for (const len of [10, 20, 40, 45]) add(`${len}′ module shell`, p.mods.filter(m => m.len === len).length, 'ea', RU().prices['m' + len] ?? CATX['M' + len].price);
+  if (p.h === 'hc') add('High-cube upgrade', p.mods.length, 'ea', RU().prices.hcUpgrade);
+  const footings = p.mods.filter(m => m.lvl === 0).reduce((a, m) => a + (m.len >= 40 ? 6 : 4), 0);
+  add('Concrete pad footing', footings, 'ea', RU().prices.footing, true);
+  const pairs = new Set(), open = new Set();
+  r.A.forEach((a, i) => { a.joins.forEach(j => pairs.add([p.mods[i].id, j].sort().join('|'))); for (const s of SIDES) if (a.sides[s].omit) open.add([p.mods[i].id, a.sides[s].with].sort().join('|')); });
+  add('Module-to-module connection', pairs.size, 'ea', RU().prices.connection, true);
+  let keptN = 0; pairs.forEach(k => { const [a, b] = k.split('|').map(modById); if (a && b && keptBetween(r.A, p.mods, a, b)) keptN++; });
+  add('Opened shared wall + steel beam', pairs.size - keptN, 'ea', RU().prices.openedWall, true);
+  const cant = r.A.filter(a => a.overhang > RU().factory.maxCantilever).length;
+  add('Cantilever reinforcement', cant, 'ea', RU().prices.cantilever, true);
+  const counts = {};
+  for (const it of p.items) { const d = CATX[it.sku]; if (d.price && r.OBJ[it.id]) counts[it.sku] = (counts[it.sku] || 0) + 1; }
+  for (const [sku, n] of Object.entries(counts)) add(CATX[sku].name, n, 'ea', CATX[sku].price);
+  let railM = 0, deckM2 = 0, panels = 0;
+  Object.values(r.info.roof).forEach(ri => { railM += ri.railM || 0; deckM2 += ri.deckM2 || 0; panels += ri.panels || 0; });
+  { const bt = RU().balustrades[RU().defaultBal] || RU().balustrades.mesh; add('Roof balustrade · ' + bt.label, Math.round(railM * 10) / 10, 'm', bt.price); }
+  add('Roof deck', Math.round(deckM2 * 10) / 10, 'm²', 260);
+  add('Solar panel 400 W', panels, 'ea', 420);
+  if (panels) add('Inverter + monitoring', 1, 'ea', 2200, true);
+  let frames = 0;
+  for (const wl of r.info.walls) if (wl.len > 5 && wl.cut > wl.len * RU().factory.frameFraction) { frames++; const m = modById(wl.mod); issues.push({ level: 'info', text: `${label(m)} ${sideName(wl.side)}: openings take ${Math.round(wl.cut / wl.len * 100)}% of the wall — steel frame added` }); }
+  add('Steel frame around wide openings', frames, 'wall', RU().prices.wideFrame + RU().factory.frameWeldHours * RU().prices.labourRate, true);
+  // UK rules
+  if (p.mods.length) {
+    const entrances = p.items.filter(it => CATX[it.sku].entrance && modById(it.mod)?.lvl === 0 && r.OBJ[it.id]);
+    if (!entrances.length) issues.push({ level: 'warn', text: '<b>Approved Doc M</b> — add an entrance door on the ground floor (≥ 775 mm clear)' });
+    const levels = Math.max(...p.mods.map(m => m.lvl)) + 1;
+    const stairs = p.items.filter(it => it.sku === 'S-STAIR');
+    if (levels > 1 && !stairs.length && !p.items.some(i => i.sku === 'S-ATRIUM')) issues.push({ level: 'warn', text: '<b>Approved Doc K</b> — the upper level needs a stair. Drag an external stair from Structure.' });
+    for (const it of p.items) {
+      const d = CATX[it.sku], m = modById(it.mod);
+      if (d.kind !== 'opening' || d.open === 'window' || !m || m.lvl === 0 || !r.OBJ[it.id] || r.A[p.mods.indexOf(m)].sides[it.side].skips.length || atriumOk(p, m, it)) continue;
+      const bal = p.items.some(b => b.sku === 'S-BAL' && b.mod === it.mod && b.side === it.side && Math.abs(b.u - it.u) <= Math.min(CATX['S-BAL'].len, sideLen(m, it.side) - 0.3) / 2);
+      const [dx, dz] = toWorld(m, ...sideLocal(it.side, LEN[m.len], it.u));
+      const st = stairs.some(s => { const S = stairDims(), lz = S.Ls / 2 - 0.45; return Math.hypot(s.x + lz * Math.sin(s.rot || 0) - dx, s.z + lz * Math.cos(s.rot || 0) - dz) < 1.6; });
+      if (!bal && !st) issues.push({ level: 'warn', text: `<b>Approved Doc K</b> — ${d.name.toLowerCase()} on ${label(m)} opens onto a drop. Add a balcony or stair landing.` });
+    }
+    const decks = p.items.filter(it => it.sku === 'S-DECK' && r.OBJ[it.id]);
+    for (const dk of decks) if (!p.items.some(it => it.sku === 'S-RAIL' && it.mod === dk.mod)) issues.push({ level: 'warn', text: `<b>Approved Doc K</b> — roof deck on ${label(modById(dk.mod))} needs a 1100 mm balustrade` });
+  } else issues.push({ level: 'info', text: 'Drag a module from the catalog onto the site to start.' });
+  let fansB = 0, fansK = 0;
+  for (const z of r.info.zones) {
+    if (!z.type) continue;
+    const m = modById(z.mod); if (!m) continue;
+    const nm = `${ROOMS[z.type][0]} (${label(m)})`, ops = zoneOpenings(m, p, z), skus = new Set(z.furn.map(i => i.sku));
+    const push = (level, text) => issues.push({ level, text, room: z.key });
+    if (['Living', 'KitchenLiving', 'Bedroom', 'Office', 'Dining'].includes(z.type) && !ops.some(o => o.sku !== 'W-PIC')) push('warn', `<b>Approved Doc F</b> — ${nm} needs an openable window for purge ventilation`);
+    if (z.type === 'Bedroom') {
+      if (!ops.some(o => o.sku === 'W-STD' || o.sku === 'W-WIDE' || CATX[o.sku].open !== 'window')) push('warn', `<b>Approved Doc B</b> — ${nm} needs an escape window (casement or wide) or an external door`);
+      const dbl = skus.has('F-BEDD') || skus.has('F-BEDK'), need = dbl ? 11.5 : 7.5;
+      if (z.area < need) push('info', `NDSS (planning) — ${dbl ? 'double' : 'single'} bedroom guide is ${need} m²; ${nm} is ${z.area.toFixed(1)} m²`);
+    }
+    if (z.type === 'Bathroom') {
+      fansB++;
+      if (skus.has('F-WC') && !skus.has('F-BAS')) push('warn', `<b>Approved Doc G</b> — the WC in ${nm} needs a washbasin in the same room`);
+      const open = zoneOpenTo(m, z, r.A);
+      if (open) push('warn', `${nm} is open to ${open} where modules join — move it to an enclosed zone`);
+    }
+    if (z.type === 'Kitchen' || z.type === 'KitchenLiving') { fansK++; if (skus.has('F-WC')) push('warn', `<b>Approved Doc G</b> — a WC can’t sit in ${nm}; separate it with a partition`); }
+  }
+  if (fansB + fansK) issues.push({ level: 'info', room: true, text: `<b>Approved Doc F</b> — extract added: ${[fansB ? fansB + ' bathroom fan (15 l/s)' : '', fansK ? fansK + ' cooker hood (30 l/s)' : ''].filter(Boolean).join(', ')}` });
+  add('Extract fan — bathroom 15 l/s', fansB, 'ea', 320, true);
+  add('Cooker hood extract — 30 l/s', fansK, 'ea', 450, true);
+  { const sub = lines.reduce((a, l) => a + l.total, 0), mg = RU().prices.margin || 0; if (mg) add('Fabricator margin ' + mg + '%', 1, 'lot', sub * mg / 100, true); }
+  const total = lines.reduce((a, l) => a + l.total, 0);
+  const area = p.mods.reduce((a, m) => a + LEN[m.len] * W, 0);
+  const levels = p.mods.length ? Math.max(...p.mods.map(m => m.lvl)) + 1 : 0;
+  return { issues, lines, total, area, levels };
+}
+const sideName = s => ({ '+z': 'front wall', '-z': 'back wall', '+x': 'right end', '-x': 'left end' }[s]);
+
+// ---------- scene overlays ----------
+const overlay = new THREE.Group(); scene.add(overlay);
+const grid = new THREE.GridHelper(80, 80, 0xbdb7ab, 0xd6d1c7); grid.position.y = 0.003; overlay.add(grid);
+const ghostMat = new THREE.MeshBasicMaterial({ color: 0x3aa76d, transparent: true, opacity: 0.28, depthWrite: false });
+const ghost = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), ghostMat);
+const ghostEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), new THREE.LineBasicMaterial({ color: 0x1f7a4a }));
+ghost.add(ghostEdge); ghost.visible = false; ghost.renderOrder = 10; overlay.add(ghost);
+const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xd9622b); selBox.visible = false; overlay.add(selBox);
+
+let CUR = null, EVAL = null, firstBuild = true;
+function cutY() { return V.level === 'all' || !V.cut ? Infinity : PLINTH + V.level * H() + V.cut; }
+function rebuild(reframe = false) {
+  const r = buildProject(P, { labels: V.level !== 'all' && (isInt() || V.mode === 'plan') ? V.level : null });
+  const cy = cutY(), plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), cy);
+  const hideRoof = !V.roof || V.mode === 'plan';
+  r.root.traverse(n => {
+    if (n.userData.lvl != null && V.level !== 'all' && n.userData.lvl > V.level) n.visible = false;
+    if (n.userData.roofPart && hideRoof) n.visible = false;
+    if (n.isMesh && isFinite(cy)) n.material.clippingPlanes = [plane];
+  });
+  const wasEmpty = !CUR || !CUR.root.children.length;
+  stage.setObject(r.root, { reframe: reframe || firstBuild || (wasEmpty && r.root.children.length > 0) });
+  r.root.traverse(n => { if (n.userData.glass || n.userData.noPick) { n.castShadow = false; n.receiveShadow = false; } });
+  if (isFinite(cy)) { const wp = new THREE.Vector3(); r.root.updateMatrixWorld(true); r.root.traverse(n => { if (n.isMesh && n.getWorldPosition(wp).y > cy - 0.2) n.castShadow = false; }); }
+  stage._ground.position.y = 0;
+  if (CUR) disposeTree(CUR.root);
+  CUR = r; firstBuild = false;
+  EVAL = evaluate(P, r);
+  if (SEL && !findSel()) SEL = null;
+  updateSel(); renderProps(); renderToolbar();
+}
+function findSel() { return SEL && (SEL.type === 'room' ? CUR.info.zones.find(z => z.key === SEL.id) : SEL.type === 'mod' ? modById(SEL.id) : P.items.find(i => i.id === SEL.id)); }
+function updateSel() {
+  const o = SEL && CUR.OBJ[SEL.id];
+  if (!o || !o.visible) { selBox.visible = false; return; }
+  selBox.box.setFromObject(o); selBox.box.expandByScalar(0.03); selBox.visible = true;
+}
+function commit(fn, reframe) {
+  UNDO.push(JSON.stringify(P)); if (UNDO.length > 80) UNDO.shift(); REDO.length = 0;
+  fn(P); save(); rebuild(reframe);
+}
+function undo() { if (!UNDO.length) return; REDO.push(JSON.stringify(P)); P = JSON.parse(UNDO.pop()); save(); rebuild(); }
+function redo() { if (!REDO.length) return; UNDO.push(JSON.stringify(P)); P = JSON.parse(REDO.pop()); save(); rebuild(); }
+
+// ---------- picking & resolving ----------
+const ray = new THREE.Raycaster();
+function setRay(e) { const r = canvas.getBoundingClientRect(); ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera); }
+function inCanvas(e) { const r = canvas.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }
+function visibleChain(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function hits() {
+  if (!CUR) return [];
+  const cy = cutY();
+  return ray.intersectObject(CUR.root, true).filter(h => !h.object.userData.noPick && visibleChain(h.object) && h.point.y <= cy + 1e-3).map(h => {
+    let o = h.object, pick = null, wall = null, wallObj = null, modId = null;
+    while (o && o !== CUR.root) { if (!pick && o.userData.pick) pick = o.userData.pick; if (!wall && o.userData.wall) { wall = o.userData.wall; wallObj = o; } if (!modId && o.userData.modId) modId = o.userData.modId; o = o.parent; }
+    return { h, pick, wall, wallObj, modId };
+  });
+}
+function groundPoint() { const p = new THREE.Vector3(); return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null; }
+function nearest(v, cands, tol) { let best = v, bd = tol; for (const c of cands) { const d = Math.abs(c - v); if (d < bd) { bd = d; best = c; } } return best; }
+function setGhost(pos, rotY, scale, valid, quat) {
+  ghost.visible = true; ghost.position.copy(pos); ghost.scale.set(...scale);
+  if (quat) ghost.quaternion.copy(quat); else ghost.rotation.set(0, rotY, 0);
+  ghostMat.color.set(valid ? 0x3aa76d : 0xd0453a); ghostEdge.material.color.set(valid ? 0x1f7a4a : 0x9c2a22);
+}
+
+function resolveModule(len, rot, excludeId) {
+  const h = H(), L = LEN[len];
+  const all = hits().filter(x => x.modId && x.modId !== excludeId);
+  let lvl = 0, pt = null;
+  const top = all.find(x => { const m = modById(x.modId); return x.h.point.y >= PLINTH + (m.lvl + 1) * h - 0.12; });
+  if (top) { lvl = modById(top.modId).lvl + 1; pt = top.h.point; } else pt = groundPoint();
+  if (!pt) return null;
+  const cand = { len, rot, lvl, x: snap(pt.x, 0.1), z: snap(pt.z, 0.1), id: excludeId || '_new' };
+  const r0 = rectOf(cand), hx = (r0.x1 - r0.x0) / 2, hz = (r0.z1 - r0.z0) / 2;
+  const others = P.mods.filter(o => o.id !== excludeId && (o.lvl === lvl || o.lvl === lvl - 1));
+  const xs = [], zs = [];
+  for (const o of others) { const R = rectOf(o); xs.push(R.x1 + hx, R.x0 - hx, R.x0 + hx, R.x1 - hx, (R.x0 + R.x1) / 2); zs.push(R.z1 + hz, R.z0 - hz, R.z0 + hz, R.z1 - hz, (R.z0 + R.z1) / 2); }
+  cand.x = Math.round(nearest(cand.x, xs, 0.45) * 1000) / 1000; cand.z = Math.round(nearest(cand.z, zs, 0.45) * 1000) / 1000;
+  let valid = true, reason = '';
+  const mods = P.mods.filter(o => o.id !== excludeId);
+  const rc = rectOf(cand);
+  const clash = mods.find(o => o.lvl === lvl && interArea(rectOf(o), rc) > 0.05);
+  if (lvl >= MAX_LVL) { valid = false; reason = `Maximum ${MAX_LVL} storeys`; }
+  else if (clash) { valid = false; reason = `Overlaps ${label(clash)}`; }
+  else if (lvl === 0 && P.items.some(it => CATX[it.sku].kind === 'floor' && interArea(floorRect(it), rc) > 0.01)) { valid = false; reason = 'Clashes with a column or stair'; }
+  else if (lvl > 0) { const s = supportOf(cand, mods); if (s.frac < 0.33) { valid = false; reason = `Needs support — only ${Math.round(s.frac * 100)}% bears on the level below`; } else if (s.overhang > 4) { valid = false; reason = `Cantilever ${s.overhang.toFixed(1)} m exceeds 4.0 m`; } else if (s.overhang > 2.5) reason = `Cantilever ${s.overhang.toFixed(1)} m — reinforcement will be added`; }
+  if (valid && excludeId && P.mods.some(o => o.lvl === modById(excludeId).lvl + 1 && interArea(rectOf(o), rectOf(modById(excludeId))) > 0.1)) { valid = false; reason = 'Move the module above first'; }
+  if (valid && !reason) {
+    const joins = mods.filter(o => o.lvl === lvl && (Math.abs(rectOf(o).x1 - rc.x0) < 0.02 || Math.abs(rectOf(o).x0 - rc.x1) < 0.02 || Math.abs(rectOf(o).z1 - rc.z0) < 0.02 || Math.abs(rectOf(o).z0 - rc.z1) < 0.02) && Math.min(rectOf(o).x1, rc.x1) - Math.max(rectOf(o).x0, rc.x0) > -0.02 && Math.min(rectOf(o).z1, rc.z1) - Math.max(rectOf(o).z0, rc.z0) > -0.02);
+    reason = joins.length ? `Joins ${joins.map(label).join(', ')}` : (lvl ? `Stacks on level ${lvl}` : 'Free-standing');
+  }
+  setGhost(new THREE.Vector3(cand.x, PLINTH + lvl * h + h / 2, cand.z), rot, [L, h, W], valid);
+  return { valid, reason, place: cand };
+}
+function validOpening(mod, side, u, sku, excludeId) {
+  const m = modById(mod), d = CATX[sku], len = sideLen(m, side), h = H();
+  const a = CUR.A[P.mods.indexOf(m)].sides[side];
+  const kept = (m.keep || []).includes(side);
+  if (a.omit && !kept) return { valid: false, reason: 'This wall is shared — it has been opened up' };
+  if (d.w > len - 2 * F - 0.1) return { valid: false, reason: `Too wide for this wall (${mm(len - 2 * F - 0.1)} available)` };
+  if (u - d.w / 2 < -len / 2 + F + 0.05 || u + d.w / 2 > len / 2 - F - 0.05) return { valid: false, reason: 'Crosses a corner post' };
+  if (!kept) for (const s of a.skips) if (u + d.w / 2 > s[0] - 0.05 && u - d.w / 2 < s[1] + 0.05) return { valid: false, reason: 'Wall is joined to another module here' };
+  if (side === '+z' || side === '-z') for (const o of P.items) if (o.mod === mod && CATX[o.sku].kind === 'part' && Math.abs(o.lx - (side === '+z' ? u : -u)) < d.w / 2 + 0.1) return { valid: false, reason: 'Crosses a partition' };
+  for (const o of P.items) {
+    if (o.id === excludeId || o.mod !== mod || o.side !== side || CATX[o.sku].kind !== 'opening') continue;
+    if (Math.abs(o.u - u) < (d.w + CATX[o.sku].w) / 2 + 0.15) return { valid: false, reason: `Too close to ${CATX[o.sku].name.toLowerCase()} (min 150 mm pier)` };
+  }
+  return { valid: true, reason: `${sideName(side)} of ${label(m)} · ${mm(d.w)} wide` };
+}
+function resolveWallThing(sku, excludeId) {
+  const hit = hits().find(x => x.wall);
+  if (!hit) return null;
+  const { mod, side, len } = hit.wall, wg = hit.wallObj, d = CATX[sku], m = modById(mod), h = H();
+  const lp = wg.worldToLocal(hit.h.point.clone());
+  let u = snap(lp.x, 0.05), res;
+  const q = new THREE.Quaternion(); wg.getWorldQuaternion(q);
+  if (d.kind === 'opening') {
+    const lim = len / 2 - F - 0.05 - d.w / 2;
+    if (lim > 0) u = Math.max(-lim, Math.min(lim, u));
+    res = validOpening(mod, side, u, sku, excludeId);
+    const v0 = F + d.sill, v1 = Math.min(v0 + d.h, h - FT - 0.02);
+    setGhost(wg.localToWorld(new THREE.Vector3(u, (v0 + v1) / 2, -0.01)), 0, [d.w, v1 - v0, 0.16], res.valid, q);
+  } else {
+    const Lh = Math.min(d.len, len - 0.3), lim = len / 2 - Lh / 2 - 0.15;
+    u = Math.max(-Math.max(0, lim), Math.min(Math.max(0, lim), u));
+    res = { valid: true, reason: `${sideName(side)} of ${label(m)} · ${Lh.toFixed(1)} m` };
+    for (const o of P.items) if (o.id !== excludeId && o.sku === sku && o.mod === mod && o.side === side && Math.abs(o.u - u) < Lh) res = { valid: false, reason: `Already a ${d.name.toLowerCase()} here` };
+    if (sku === 'S-BAL' && m.lvl === 0) res.reason += ' · ground-level terrace';
+    const y = sku === 'S-BAL' ? F - 0.07 : h - FT - 0.06;
+    setGhost(wg.localToWorld(new THREE.Vector3(u, y, d.depth / 2)), 0, [Lh, sku === 'S-BAL' ? 0.3 : 0.15, d.depth], res.valid, q);
+  }
+  return { ...res, place: { mod, side, u: Math.round(u * 1000) / 1000 } };
+}
+function resolveRoof(sku, excludeId) {
+  const h = H();
+  const hit = hits().find(x => x.modId && x.h.point.y >= PLINTH + (modById(x.modId).lvl + 1) * h - 0.12);
+  if (!hit) return null;
+  const m = modById(hit.modId), i = P.mods.indexOf(m), L = LEN[m.len];
+  let res = { valid: true, reason: `Roof of ${label(m)}` };
+  if (CUR.A[i].covered) res = { valid: false, reason: 'Roof is covered by a module above' };
+  else if (P.items.some(o => o.id !== excludeId && o.mod === m.id && o.sku === sku)) res = { valid: false, reason: `${label(m)} already has a ${CATX[sku].name.toLowerCase()}` };
+  else if ((sku === 'S-DECK' && P.items.some(o => o.mod === m.id && o.sku === 'S-SOLAR' && o.id !== excludeId)) || (sku === 'S-SOLAR' && P.items.some(o => o.mod === m.id && o.sku === 'S-DECK' && o.id !== excludeId))) res = { valid: false, reason: 'Roof deck and solar can’t share one roof' };
+  const g = CUR.OBJ[m.id], q = new THREE.Quaternion(); g.getWorldQuaternion(q);
+  setGhost(g.localToWorld(new THREE.Vector3(0, h + 0.1, 0)), 0, [L - 0.1, 0.18, W - 0.1], res.valid, q);
+  return { ...res, place: { mod: m.id } };
+}
+function resolveFloor(sku, rot, excludeId) {
+  const pt = groundPoint(); if (!pt) return null;
+  const it = { sku, x: snap(pt.x, 0.05), z: snap(pt.z, 0.05), rot };
+  const S = stairDims(), r = floorRect(it);
+  let res = { valid: true, reason: sku === 'S-STAIR' ? `${S.n} risers of ${mm(S.rise)} · going 250 mm` : 'Ground' };
+  const clash = P.mods.find(m => m.lvl === 0 && interArea(rectOf(m), r) > 0.005);
+  if (clash) res = { valid: false, reason: `Clashes with ${label(clash)}` };
+  else if (P.items.some(o => o.id !== excludeId && CATX[o.sku].kind === 'floor' && interArea(floorRect(o), r) > 0.005)) res = { valid: false, reason: 'Clashes with another item' };
+  const hgt = sku === 'S-STAIR' ? S.total : PLINTH + H();
+  setGhost(new THREE.Vector3(it.x, hgt / 2, it.z), rot, sku === 'S-STAIR' ? [S.w, hgt, S.Ls] : [0.3, hgt, 0.3], res.valid);
+  return { ...res, place: { x: it.x, z: it.z, rot } };
+}
+function floorHit() {
+  const x = hits().find(x => x.pick && x.pick.type === 'room');
+  if (!x) return null;
+  const m = modById(x.pick.mod), g = CUR.OBJ[m.id];
+  return { m, g, lp: g.worldToLocal(x.h.point.clone()), z: CUR.info.zones.find(z => z.key === m.id + ':' + x.pick.zi) };
+}
+function ghostLocal(g, lx, y, lz, rot, size, valid) {
+  const q = new THREE.Quaternion(); g.getWorldQuaternion(q); q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot));
+  setGhost(g.localToWorld(new THREE.Vector3(lx, y, lz)), 0, size, valid, q);
+}
+function resolveFurn(sku, rot, excl) {
+  const f = floorHit(); if (!f) return null;
+  const { m, g, lp, z } = f, d = CATX[sku], zi = W / 2 - IN;
+  let q = ((Math.round((rot || 0) / (Math.PI / 2)) % 4) + 4) % 4;
+  if (d.back && !(DRAG && DRAG.manual)) q = [[lp.z + zi, 0], [lp.x - z.bx0, 1], [zi - lp.z, 2], [z.bx1 - lp.x, 3]].sort((a, b) => a[0] - b[0])[0][1];
+  rot = q * Math.PI / 2;
+  if (DRAG) DRAG.rot = rot;
+  const r0 = fp(sku, 0, 0, rot), cl = (v, a, b) => a > b ? (a + b) / 2 : Math.max(a, Math.min(b, v)), fl = (v, a, b) => Math.abs(v - a) < 0.3 ? a : Math.abs(v - b) < 0.3 ? b : v;
+  const xa = z.bx0 + r0.fw / 2, xb = z.bx1 - r0.fw / 2, za = -zi + r0.fd / 2, zb = zi - r0.fd / 2;
+  let lx = fl(cl(snap(lp.x, 0.05), xa, xb), xa, xb), lz = fl(cl(snap(lp.z, 0.05), za, zb), za, zb);
+  if (d.back) { if (q === 0) lz = za; else if (q === 2) lz = zb; else if (q === 1) lx = xa; else lx = xb; }
+  const res = xa > xb + 1e-3 || za > zb + 1e-3 ? { valid: false, reason: 'Doesn’t fit this room' } : checkFurn(m, P, sku, lx, lz, rot, excl);
+  if (res.valid) res.reason = `${z.type ? ROOMS[z.type][0] : 'Room'} · ${label(m)} · ${mm(d.w)} × ${mm(d.d)}`;
+  const hh = Math.max(d.h, 0.02);
+  ghostLocal(g, lx, F + hh / 2, lz, rot, [d.w, hh, d.d], res.valid);
+  return { ...res, place: { mod: m.id, lx: Math.round(lx * 1000) / 1000, lz: Math.round(lz * 1000) / 1000, rot } };
+}
+function resolvePart(sku, excl) {
+  const f = floorHit(); if (!f) return null;
+  const { m, g, lp } = f, L = LEN[m.len], zi = W / 2 - IN, d = CATX[sku], hh = H() - FT - F, it = P.items.find(i => i.id === excl);
+  const lx = Math.max(-L / 2 + 0.9, Math.min(L / 2 - 0.9, snap(lp.x, 0.05)));
+  let res = L < 1.9 ? { valid: false, reason: 'Module too short to divide' } : { valid: true, reason: `${label(m)} · divides at ${lx >= 0 ? '+' : ''}${lx.toFixed(2)} m` };
+  const rect = { x0: lx - 0.05, x1: lx + 0.05, z0: -zi, z1: zi };
+  for (const o of P.items) {
+    if (!res.valid || o.id === excl || o.mod !== m.id) continue;
+    const e = CATX[o.sku];
+    if (e.kind === 'part' && Math.abs(o.lx - lx) < 0.9) res = { valid: false, reason: 'Too close to another partition (min 900 mm)' };
+    else if (e.kind === 'opening' && (o.side === '+z' || o.side === '-z') && Math.abs((o.side === '+z' ? o.u : -o.u) - lx) < e.w / 2 + 0.1) res = { valid: false, reason: `Would cut through the ${e.name.toLowerCase()}` };
+    else if (e.kind === 'furn' && !e.rug && ov(rect, fp(o.sku, o.lx, o.lz, o.rot))) res = { valid: false, reason: `Blocked by the ${e.name.toLowerCase()}` };
+  }
+  if (res.valid) { const k = keepOuts(m, { items: P.items.filter(o => o.id !== excl) }).find(k => ov(rect, k)); if (k) res = { valid: false, reason: `Blocks the ${k.n}` }; }
+  if (res.valid && d.door) { const K = keepOuts(m, { items: [{ sku, mod: m.id, lx, flip: it && it.flip }] })[0]; const bad = P.items.find(o => o.id !== excl && o.mod === m.id && CATX[o.sku].kind === 'furn' && !CATX[o.sku].rug && ov(K, fp(o.sku, o.lx, o.lz, o.rot))); if (bad) res = { valid: false, reason: `Doorway blocked by the ${CATX[bad.sku].name.toLowerCase()}` }; }
+  ghostLocal(g, lx, F + hh / 2, 0, 0, [0.1, hh, 2 * zi], res.valid);
+  return { ...res, place: { mod: m.id, lx: Math.round(lx * 1000) / 1000 } };
+}
+function resolveRoomTag(sku) {
+  const f = floorHit(); if (!f) return null;
+  const { m, g, z } = f;
+  ghostLocal(g, (z.bx0 + z.bx1) / 2, F + 0.05, 0, 0, [z.bx1 - z.bx0, 0.1, W - 2 * IN], true);
+  return { valid: true, reason: `${label(m)} · ${z.area.toFixed(1)} m² → ${ROOMS[CATX[sku].roomType][0]}`, place: { mod: m.id, zi: z.zi } };
+}
+function setRoom(mod, zi, patch) {
+  const z = CUR.info.zones.find(z => z.key === mod + ':' + zi); if (!z) return;
+  const L = LEN[modById(mod).len], inZ = r => r.mod === mod && r.lx >= z.x0 && (r.lx < z.x1 || (z.x1 === L / 2 && r.lx <= z.x1));
+  commit(p => {
+    const prev = p.rooms.find(inZ) || {};
+    p.rooms = p.rooms.filter(r => !inZ(r));
+    const rec = { ...prev, ...patch, mod, lx: Math.round((z.x0 + z.x1) / 2 * 1000) / 1000 };
+    if (rec.type === 'auto') delete rec.type;
+    p.rooms.push(rec);
+  });
+}
+function resolve(sku, rot, excludeId) {
+  const d = CATX[sku];
+  if (d.kind === 'module') return resolveModule(d.len, rot, excludeId);
+  if (d.kind === 'opening' || d.kind === 'wall') return resolveWallThing(sku, excludeId);
+  if (d.kind === 'roof') return resolveRoof(sku, excludeId);
+  if (d.kind === 'furn') return resolveFurn(sku, rot, excludeId);
+  if (d.kind === 'part') return resolvePart(sku, excludeId);
+  if (d.kind === 'room') return resolveRoomTag(sku);
+  if (d.kind === 'design') return resolveDesign(sku);
+  if (sku === 'S-ATRIUM') return null;
+  return resolveFloor(sku, rot, excludeId);
+}
+
+// ---------- drag interaction ----------
+let DRAG = null;
+const hintEl = document.getElementById('hint'), chip = document.getElementById('chip');
+function showHint(t, bad) { hintEl.innerHTML = t; hintEl.classList.toggle('show', !!t); hintEl.classList.toggle('bad', !!bad); }
+function dragMove(e) {
+  if (!DRAG) return;
+  if (DRAG.src === 'move' && !DRAG.moving) { if (Math.hypot(e.clientX - DRAG.sx, e.clientY - DRAG.sy) < 5) return; DRAG.moving = true; if (DRAG.target) DRAG.target.visible = false; }
+  if (DRAG.src === 'catalog') { chip.style.display = inCanvas(e) ? 'none' : 'block'; chip.style.left = e.clientX + 'px'; chip.style.top = e.clientY + 'px'; }
+  DRAG.last = e;
+  if (!inCanvas(e)) { ghost.visible = false; DRAG.res = null; showHint(''); return; }
+  setRay(e);
+  const res = resolve(DRAG.sku, DRAG.rot, DRAG.id);
+  DRAG.res = res;
+  if (!res) { ghost.visible = false; const k = CATX[DRAG.sku].kind; showHint(k === 'opening' || k === 'wall' ? 'Drop onto a wall' : k === 'roof' ? 'Drop onto a module roof' : ['furn', 'part', 'room'].includes(k) ? 'Drop onto a floor' : 'Drop onto the site', true); return; }
+  showHint(`${res.valid ? '' : 'Can’t place — '}${res.reason}${['module', 'floor', 'furn'].includes(CATX[DRAG.sku].kind) ? ' · <b>R</b> rotate' : ''}`, !res.valid);
+}
+function dragEnd(e) {
+  if (!DRAG) return;
+  const D = DRAG; DRAG = null;
+  ghost.visible = false; chip.style.display = 'none'; showHint('');
+  controls.enabled = true;
+  if (D.target) D.target.visible = true;
+  if (D.src === 'move' && !D.moving) return;
+  const res = D.res;
+  if (!res || !inCanvas(e)) return;
+  if (!res.valid) { toast(res.reason); return; }
+  const kind = CATX[D.sku].kind;
+  if (D.src === 'catalog') {
+    if (kind === 'design') { SEL = null; return placeDesign(D.sku, res.place.dx, res.place.dz); }
+    if (kind === 'room') { SEL = { type: 'room', id: res.place.mod + ':' + res.place.zi }; return setRoom(res.place.mod, res.place.zi, { type: CATX[D.sku].roomType }); }
+    const id = uid(kind === 'module' ? 'm' : 'i');
+    commit(p => {
+      if (kind === 'module') { const last = p.mods[p.mods.length - 1]; p.mods.push({ id, len: res.place.len, x: res.place.x, z: res.place.z, rot: res.place.rot, lvl: res.place.lvl, finish: last ? last.finish : 'painted', color: last ? last.color : '#e6e3dc' }); }
+      else p.items.push({ id, sku: D.sku, ...res.place });
+    });
+    SEL = { type: kind === 'module' ? 'mod' : 'item', id }; rebuild();
+  } else {
+    commit(p => {
+      if (kind === 'module') { const m = p.mods.find(x => x.id === D.id); Object.assign(m, { x: res.place.x, z: res.place.z, lvl: res.place.lvl, rot: res.place.rot }); }
+      else { const it = p.items.find(x => x.id === D.id); Object.assign(it, res.place); }
+    });
+  }
+}
+window.addEventListener('pointermove', dragMove);
+window.addEventListener('pointerup', dragEnd);
+function pickable(pk) {
+  if (V.step === 'bom') return false;
+  if (pk.type === 'room') return true;
+  if (pk.type === 'mod') return !isInt();
+  const it = P.items.find(i => i.id === pk.id), k = it && CATX[it.sku].kind;
+  return isInt() ? k === 'furn' || k === 'part' : k !== 'furn' && k !== 'part';
+}
+stage.addEventListener('pointerdown', e => {
+  if (DRAG || e.button !== 0) return;
+  setRay(e);
+  const hit = hits().find(x => x.pick && pickable(x.pick));
+  if (!hit) { DRAG = null; const sx = e.clientX, sy = e.clientY; const up = ev => { window.removeEventListener('pointerup', up); if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5 && SEL) { SEL = null; updateSel(); renderProps(); } }; window.addEventListener('pointerup', up); return; }
+  let pk = hit.pick;
+  if (pk.type === 'room') {
+    if (isInt()) { SEL = { type: 'room', id: pk.mod + ':' + pk.zi }; updateSel(); renderProps(); return; }
+    pk = { type: 'mod', id: pk.mod };
+  }
+  SEL = { type: pk.type, id: pk.id }; updateSel(); renderProps();
+  const sku = pk.type === 'mod' ? 'M' + modById(pk.id).len : P.items.find(i => i.id === pk.id).sku;
+  const rot = pk.type === 'mod' ? modById(pk.id).rot || 0 : P.items.find(i => i.id === pk.id).rot || 0;
+  controls.enabled = false;
+  DRAG = { src: 'move', sku, id: pk.id, rot, sx: e.clientX, sy: e.clientY, moving: false, target: CUR.OBJ[pk.id] };
+}, true);
+
+// ---------- thumbnails ----------
+const THUMBS = {};
+function makeThumbs() {
+  const tr = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  tr.setPixelRatio(2); tr.setSize(160, 120);
+  const ts = new THREE.Scene();
+  ts.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 1.1));
+  const dl = new THREE.DirectionalLight(0xffffff, 2); dl.position.set(4, 7, 5); ts.add(dl);
+  const tc = new THREE.PerspectiveCamera(30, 4 / 3, 0.01, 200);
+  const base = { h: 'hc', trim: '#1c1c1c' };
+  const mod = (len) => ({ id: 't', len, x: 0, z: 0, rot: 0, lvl: 0, finish: 'painted', color: '#d9d5cc' });
+  for (const sku of Object.keys(CATX)) {
+    const d = CATX[sku];
+    if (d.kind === 'room') continue;
+    if (d.kind === 'furn') {
+      const fg = new THREE.Group(); d.build(fg, mats(base), {}); ts.add(fg);
+      const sp = new THREE.Box3().setFromObject(fg).getBoundingSphere(new THREE.Sphere()), dd = sp.radius / Math.sin((tc.fov * Math.PI) / 360) * 1.05;
+      tc.position.copy(sp.center).add(new THREE.Vector3(0.9, 0.85, 1.3).normalize().multiplyScalar(dd)); tc.lookAt(sp.center);
+      tr.render(ts, tc); THUMBS[sku] = tr.domElement.toDataURL('image/png');
+      ts.remove(fg); disposeTree(fg); continue;
+    }
+    let p, focus = null, dir = new THREE.Vector3(1, 0.55, 1.3);
+    if (d.kind === 'design') { p = { ...base, rooms: [], ...clone(designData(sku)) }; dir = new THREE.Vector3(1, 0.85, 1.3); }
+    else if (d.kind === 'module') p = { ...base, mods: [mod(d.len)], items: [] };
+    else if (d.kind === 'opening') { p = { ...base, mods: [mod(20)], items: [{ id: 'x', sku, mod: 't', side: '+z', u: 0 }] }; focus = 'x'; dir = new THREE.Vector3(0.3, 0.12, 1); }
+    else if (d.kind === 'wall') { p = { ...base, mods: [mod(20)], items: [{ id: 'x', sku, mod: 't', side: '+z', u: 0 }] }; dir = new THREE.Vector3(0.9, 0.5, 1.2); }
+    else if (d.kind === 'roof') { p = { ...base, mods: [mod(20)], items: [{ id: 'x', sku, mod: 't' }] }; dir = new THREE.Vector3(0.8, 1.1, 1.2); }
+    else if (d.kind === 'part') { p = { ...base, mods: [mod(20)], items: [{ id: 'x', sku, mod: 't', lx: 0 }] }; dir = new THREE.Vector3(1.1, 1.6, 0.9); }
+    else { p = { ...base, mods: [], items: [{ id: 'x', sku, x: 0, z: 0, rot: 0 }] }; dir = new THREE.Vector3(1.2, 0.5, 0.8); }
+    const savedP = P; P = p;
+    const r = buildProject(p);
+    P = savedP;
+    if (d.kind === 'part') r.root.traverse(n => { if (n.userData.roofPart) n.visible = false; });
+    ts.add(r.root);
+    const b = new THREE.Box3().setFromObject(focus ? r.OBJ[focus] : r.root);
+    if (focus) b.expandByVector(new THREE.Vector3(0.5, 0.25, 0.2));
+    const sph = b.getBoundingSphere(new THREE.Sphere());
+    const dist = sph.radius / Math.sin((tc.fov * Math.PI) / 360) * 1.02;
+    tc.position.copy(sph.center).add(dir.normalize().multiplyScalar(dist)); tc.lookAt(sph.center);
+    tr.render(ts, tc);
+    THUMBS[sku] = tr.domElement.toDataURL('image/png');
+    ts.remove(r.root); disposeTree(r.root);
+  }
+  tr.dispose(); tr.forceContextLoss();
+}
+
+// ---------- UI ----------
+const STEPS = [['modules', 'Modules'], ['openings', 'Openings'], ['structure', 'Structure'], ['roof', 'Roof'], ['interior', 'Interior'], ['bom', 'BOM & export']];
+function renderCatalog() {
+  document.getElementById('steps').innerHTML = STEPS.map(([k, l], i) => `<button class="step${V.step === k ? ' on' : ''}" data-step="${k}"><i>${i + 1}</i><b>${l}</b></button>`).join('');
+  const si = STEPS.findIndex(s => s[0] === V.step), search = document.getElementById('search');
+  document.getElementById('cat-eyebrow').textContent = `Step ${si + 1} · ${STEPS[si][1]}`;
+  search.style.display = V.step === 'bom' ? 'none' : '';
+  if (V.step === 'bom') { document.getElementById('catalog').innerHTML = '<p class="note" style="padding:18px">Every quantity comes from the model: modules, joins, reinforcement, openings, roof items, partitions and extract. Review and export on the right.</p>'; return; }
+  const q = search.value.trim().toLowerCase();
+  document.getElementById('catalog').innerHTML = CATALOG.filter(g => g.step === V.step).map(g => {
+    const its = g.items.filter(it => !q || (it.name + ' ' + g.group).toLowerCase().includes(q));
+    if (!its.length) return '';
+    return `<details class="grp" open><summary>${g.group}<span style="margin-left:auto;margin-right:10px;letter-spacing:0">${its.length}</span></summary><div class="cards">${its.map(it => {
+      if (it.kind === 'room') return `<div class="card" data-sku="${it.sku}"><div class="th" style="background:${ROOMS[it.roomType][1]}"><span style="font:500 12px 'IBM Plex Sans';color:#1c1b19">${it.name}</span></div><b>${it.name}</b><i>drop on a floor</i></div>`;
+      const sub = it.kind === 'design' ? it.sub : it.kind === 'module' ? `${ftIn(LEN[it.len])} · ${LEN[it.len].toFixed(2)} m` : it.kind === 'opening' ? `${mm(it.w)} × ${mm(it.h)}` : it.kind === 'wall' ? `${it.len} × ${it.depth} m` : it.kind === 'roof' ? 'on a roof' : it.kind === 'furn' ? `${mm(it.w)} × ${mm(it.d)}` : it.kind === 'part' ? 'spans the module' : 'on the site';
+      return `<div class="card" data-sku="${it.sku}"><div class="th">${THUMBS[it.sku] ? `<img src="${THUMBS[it.sku]}" alt="">` : '<span>rendering…</span>'}</div><b>${it.name}</b><i>${sub}</i></div>`;
+    }).join('')}</div></details>`;
+  }).join('') || '<p class="note" style="padding:18px">No matches.</p>';
+}
+function renderToolbar() {
+  const levels = P.mods.length ? Math.max(...P.mods.map(m => m.lvl)) + 1 : 1;
+  const lv = [...(isInt() ? [] : [['all', 'All']]), ...Array.from({ length: levels }, (_, i) => [i, i === 0 ? 'Ground' : `Level ${i + 1}`])];
+  document.getElementById('toolbar').innerHTML = `
+    <div class="seg"><button class="${V.mode === '3d' ? 'on' : ''}" data-view="3d">3D</button><button class="${V.mode === 'plan' ? 'on' : ''}" data-view="plan">Plan</button></div>
+    <div class="seg">${lv.map(([k, l]) => `<button class="${V.level === k ? 'on' : ''}" data-level="${k}">${l}</button>`).join('')}</div>
+    ${V.level !== 'all' ? `<div class="seg">${[[1.2, 'Cut low'], [2.2, 'Cut high'], [0, 'Full walls']].map(([c, l]) => `<button class="${V.cut === c ? 'on' : ''}" data-cut="${c}">${l}</button>`).join('')}</div>` : ''}
+    <div class="seg"><button class="${V.roof ? '' : 'on'}" data-act="roof" ${V.mode === 'plan' ? 'disabled' : ''}>Roofs off</button></div>
+    <div class="seg"><button data-act="undo" ${UNDO.length ? '' : 'disabled'} title="Undo (Ctrl+Z)">Undo</button><button data-act="redo" ${REDO.length ? '' : 'disabled'} title="Redo (Ctrl+Shift+Z)">Redo</button></div>`;
+}
+const opt = (on, attrs, label, sub, dis) => `<button class="opt${on ? ' on' : ''}" ${attrs}${dis ? ' disabled' : ''}><b>${label}</b>${sub ? `<i>${sub}</i>` : ''}</button>`;
+function checksHtml(list) { return list.length ? `<div class="checks">${list.map(c => `<div class="ck ${c.level}"><span>${c.text.includes('<b>') ? c.text : esc(c.text)}</span></div>`).join('')}</div>` : `<div class="checks"><div class="ck ok">No issues found</div></div>`; }
+function furnSchedule() { const c = {}; P.items.forEach(i => { const d = CATX[i.sku]; if (d.kind === 'furn') c[d.name] = (c[d.name] || 0) + 1; }); return Object.entries(c); }
+function bomPanel() {
+  const E = EVAL, furn = furnSchedule();
+  return `<div class="ph"><div class="eyebrow">Step 6 · BOM &amp; export</div><div class="title">${$(E.total)}</div><div class="sub">${E.lines.length} priced lines · ${P.mods.length} modules · ${E.area.toFixed(1)} m² · sample prices</div></div>
+  <div class="pc">
+    <section class="btns"><button class="btn" data-act="csv">Export CSV</button><button class="btn" data-act="print">Print / save PDF</button></section>
+    <section><h2>Bill of materials</h2><table class="bom">${E.lines.map(l => `<tr><td>${l.name}${l.auto ? '<span class="auto">AUTO</span>' : ''}</td><td class="n" style="color:var(--muted)">${l.qty} ${l.unit}</td><td class="n">${$(l.total)}</td></tr>`).join('')}<tr><td><b>Total</b></td><td></td><td class="n"><b>${$(E.total)}</b></td></tr></table></section>
+    ${furn.length ? `<section><h2>Furniture schedule <span>not priced</span></h2><table class="bom">${furn.map(([n, q]) => `<tr><td>${n}</td><td class="n">× ${q}</td></tr>`).join('')}</table></section>` : ''}
+    <section><h2>Checks <span>UK Building Regs</span></h2>${checksHtml(E.issues)}</section>
+    <p class="note">IFC for architects and DXF cut sheets for the factory follow once your factory rules are entered.</p>
+  </div>`;
+}
+function exportCsv() {
+  const q = v => `"${String(v).replace(/"/g, '""')}"`, rows = [['item', 'qty', 'unit', 'line_total_base', 'auto_added']];
+  EVAL.lines.forEach(l => rows.push([l.name, l.qty, l.unit, Math.round(l.total), l.auto ? 'yes' : '']));
+  rows.push(['Total', '', '', Math.round(EVAL.total), '']);
+  const f = furnSchedule(); if (f.length) { rows.push([], ['furniture (not priced)', 'qty']); f.forEach(r => rows.push(r)); }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' })); a.download = 'container-house-BOM.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+function printBom() {
+  let img = ''; try { renderer.render(scene, camera); img = canvas.toDataURL('image/jpeg', 0.9); } catch (e) {}
+  const f = furnSchedule();
+  document.getElementById('print').innerHTML = `<h1 style="font-size:20pt;margin:0 0 4px">Container house — bill of materials</h1><p style="color:#6b6862">${new Date().toLocaleDateString('en-GB', { dateStyle: 'long' })} · ${P.mods.length} modules · ${EVAL.area.toFixed(1)} m² · sample prices</p>${img ? `<img src="${img}" alt="">` : ''}<table><tr><th>Item</th><th class="n">Qty</th><th class="n">Amount</th></tr>${EVAL.lines.map(l => `<tr><td>${esc(l.name)}</td><td class="n">${l.qty} ${l.unit}</td><td class="n">${$(l.total)}</td></tr>`).join('')}<tr><td><b>Total</b></td><td></td><td class="n"><b>${$(EVAL.total)}</b></td></tr></table>${f.length ? `<h3>Furniture schedule (not priced)</h3><table>${f.map(([n, q]) => `<tr><td>${esc(n)}</td><td class="n">${q}</td></tr>`).join('')}</table>` : ''}`;
+  setTimeout(() => window.print(), 150);
+}
+function roomPanel(z) {
+  const m = modById(z.mod), iss = EVAL.issues.filter(i => i.room === z.key), cur = z.auto ? 'auto' : z.type || 'auto';
+  return `<div class="ph"><div class="eyebrow">Room</div><div class="title">${z.type ? ROOMS[z.type][0] : 'Unassigned space'}</div><div class="sub">${label(m)} · ${m.lvl === 0 ? 'Ground' : 'Level ' + (m.lvl + 1)} · ${(z.bx1 - z.bx0).toFixed(2)} × ${(W - 2 * IN).toFixed(2)} m · ${z.area.toFixed(1)} m²${z.auto ? ' · type from furniture' : ''}</div></div>
+  <div class="pc">
+    ${iss.length ? checksHtml(iss) : ''}
+    <section><h2>Room type</h2><div class="grid">${[['auto', 'Auto'], ...Object.entries(ROOMS).map(([k, v]) => [k, v[0]])].map(([k, l]) => opt(cur === k, `data-rtype="${k}"`, k === 'auto' ? l : `<span class="dot" style="background:${ROOMS[k][1]}"></span>${l}`, k === 'auto' ? 'from furniture' : '')).join('')}</div></section>
+    <section><h2>Floor</h2><div class="grid">${Object.entries(FLOORS).map(([k, [l, c]]) => opt(z.floor === k, `data-rfloor="${k}"`, `<span class="dot" style="background:${c}"></span>${l}`)).join('')}</div></section>
+    <section><h2>Wall lining <span>whole ${label(m)}</span></h2><div class="grid">${Object.entries(LININGS).map(([k, [l, c]]) => opt((m.lining || 'plaster') === k, `data-mlining="${k}"`, `<span class="dot" style="background:${c}"></span>${l}`)).join('')}</div></section>
+    <section><h2>Furniture <span>${z.furn.length}</span></h2>${z.furn.length ? `<div class="lines">${z.furn.map(i => `<div><span>${CATX[i.sku].name}</span><button class="link" data-selitem="${i.id}">select</button></div>`).join('')}</div>` : '<p class="note">Drag furniture from the catalog into this room.</p>'}</section>
+    ${z.furn.length ? '<section class="btns"><button class="btn danger" data-act="clear-room">Clear furniture</button></section>' : ''}
+  </div>`;
+}
+function interiorItemPanel(it) {
+  const d = CATX[it.sku], m = modById(it.mod), z = CUR.info.zones.find(z => z.mod === it.mod && it.lx >= z.x0 && it.lx <= z.x1);
+  if (d.kind === 'part') return `<div class="ph"><div class="eyebrow">Partition</div><div class="title">${d.name}</div><div class="sub">${label(m)} · at ${it.lx >= 0 ? '+' : ''}${it.lx.toFixed(2)} m · ${(W - 2 * IN).toFixed(2)} m long · ${$(d.price)}</div></div>
+  <div class="pc">
+    <section><h2>Type</h2><div class="grid">${['P-WALL', 'P-DOOR'].map(k => opt(it.sku === k, `data-swap="${k}"`, CATX[k].name)).join('')}</div></section>
+    <section><h2>Spec</h2><p class="note" style="color:var(--ink)">${d.uk}</p></section>
+    <section class="btns">${d.door ? '<button class="btn" data-act="flip">Flip door side</button>' : ''}<button class="btn danger" data-act="del-sel">Delete</button></section>
+    <p class="note">Drag to slide it along the module. Rooms re-form automatically.</p></div>`;
+  const grp = CATALOG.find(g => g.group === d.group).items;
+  return `<div class="ph"><div class="eyebrow">${d.group}</div><div class="title">${d.name}</div><div class="sub">${z && z.type ? ROOMS[z.type][0] + ' · ' : ''}${label(m)}<br>${mm(d.w)} × ${mm(d.d)} × ${mm(d.h)}</div></div>
+  <div class="pc">
+    ${d.fabric ? `<section><h2>Fabric</h2><div class="swatches">${FABRICS.map(c => `<button class="sw${(it.color || d.fabric) === c ? ' on' : ''}" style="background:${c}" data-fcol="${c}" aria-label="${c}"></button>`).join('')}</div></section>` : ''}
+    <section><h2>Swap</h2><div class="grid">${grp.map(o => opt(o.sku === it.sku, `data-swap="${o.sku}"`, o.name, `${mm(o.w)} × ${mm(o.d)}`, o.sku !== it.sku && !checkFurn(m, P, o.sku, it.lx, it.lz, it.rot, it.id).valid)).join('')}</div></section>
+    <section class="btns"><button class="btn" data-act="rot-sel">Rotate 90°</button><button class="btn" data-act="dup">Duplicate</button><button class="btn danger" data-act="del-sel">Delete</button></section>
+    <p class="note">Visualisation only — furniture isn’t priced. Drag to move; wall-backed pieces turn to the nearest wall. <b>R</b> while dragging rotates.</p></div>`;
+}
+function interiorProjectPanel() {
+  const zs = CUR.info.zones.filter(z => z.lvl === V.level), iss = EVAL.issues.filter(i => i.room === true || zs.some(z => z.key === i.room));
+  const nF = P.items.filter(i => CATX[i.sku].kind === 'furn' && modById(i.mod)?.lvl === V.level).length;
+  return `<div class="ph"><div class="eyebrow">Step 5 · Interior</div><div class="title">${V.level === 0 ? 'Ground floor' : 'Level ' + (V.level + 1)}</div><div class="sub">${zs.length} spaces · ${zs.reduce((a, z) => a + z.area, 0).toFixed(1)} m² internal · ${nF} furniture pieces</div></div>
+  <div class="pc">
+    <section><h2>Rooms</h2><div class="lines">${zs.map(z => `<div><span><span class="dot" style="background:${z.type ? ROOMS[z.type][1] : '#fff'}"></span>${z.type ? ROOMS[z.type][0] : 'Unassigned'}${z.auto ? ' <span style="color:var(--muted)">· auto</span>' : ''} <span style="color:var(--muted)">${label(modById(z.mod))}</span></span><span style="display:flex;gap:10px;align-items:center">${z.area.toFixed(1)} m²<button class="link" data-selroom="${z.key}">edit</button></span></div>`).join('') || '<div><span>No modules on this level</span></div>'}</div></section>
+    <section><h2>Room checks <span>UK Building Regs</span></h2>${checksHtml(iss)}</section>
+    <p class="note">Drag partitions to split a module into rooms. Drop a room type on a floor, or let the furniture decide. Furniture is for visualisation and isn’t priced.</p>
+  </div>`;
+}
+function dupSel() {
+  const s = findSel(); if (!s || CATX[s.sku].kind !== 'furn') return;
+  const m = modById(s.mod), z = CUR.info.zones.find(z => z.mod === s.mod && s.lx >= z.x0 && s.lx <= z.x1), r = fp(s.sku, 0, 0, s.rot), zi = W / 2 - IN;
+  for (const [dx, dz] of [[r.fw + 0.1, 0], [-(r.fw + 0.1), 0], [0, r.fd + 0.1], [0, -(r.fd + 0.1)]]) {
+    const lx = s.lx + dx, lz = s.lz + dz;
+    if (lx - r.fw / 2 < z.bx0 || lx + r.fw / 2 > z.bx1 || lz - r.fd / 2 < -zi || lz + r.fd / 2 > zi) continue;
+    if (!checkFurn(m, P, s.sku, lx, lz, s.rot, null).valid) continue;
+    const id = uid('i'); SEL = { type: 'item', id };
+    return commit(p => { p.items.push({ ...clone(s), id, lx, lz }); });
+  }
+  toast('No free space next to it');
+}
+function setStep(s) { V.step = s; if (s === 'interior' && V.level === 'all') V.level = 0; SEL = null; document.getElementById('search').value = ''; renderCatalog(); rebuild(); }
+function renderProps() {
+  const el = document.getElementById('props'), s = findSel();
+  let html = '';
+  if (V.step === 'bom') html = bomPanel();
+  else if (s && SEL.type === 'room') html = roomPanel(s);
+  else if (s && SEL.type === 'item' && ['furn', 'part'].includes(CATX[s.sku].kind)) html = interiorItemPanel(s);
+  else if (!s && isInt()) html = interiorProjectPanel();
+  else if (s && SEL.type === 'mod') {
+    const m = s, i = P.mods.indexOf(m), a = CUR.A[i];
+    const above = P.mods.some(o => o.lvl === m.lvl + 1 && interArea(rectOf(o), rectOf(m)) > 0.1);
+    const joined = SIDES.filter(sd => a.sides[sd].skips.length).map(sd => { const k = (m.keep || []).includes(sd); return `${sideName(sd)} → ${a.sides[sd].with.split(',').map(id => label(modById(id))).join(', ')} · ${k ? 'wall kept' : 'opened up'}</span><button class="link" data-keep="${sd}">${k ? 'open up' : 'keep wall'}</button><span>`; });
+    const hosted = P.items.filter(it => it.mod === m.id).length;
+    html = `<div class="ph"><div class="eyebrow">Module</div><div class="title">M${i + 1} · ${m.len}′ ${P.h === 'hc' ? 'high cube' : 'standard'}</div><div class="sub">${m.lvl === 0 ? 'Ground' : 'Level ' + (m.lvl + 1)} · ${LEN[m.len].toFixed(2)} × ${W} m · ${(LEN[m.len] * W).toFixed(1)} m²</div></div>
+    <div class="pc">
+      <section><h2>Length</h2><div class="grid four">${[10, 20, 40, 45].map(l => opt(m.len === l, `data-mlen="${l}"`, l + '′')).join('')}</div></section>
+      <section><h2>Cladding</h2><div class="grid">${Object.entries(FINISH).map(([k, l]) => opt(m.finish === k, `data-mfin="${k}"`, l)).join('')}</div></section>
+      ${m.finish === 'painted' ? `<section><h2>Colour</h2><div class="swatches">${PAINTS.map(c => `<button class="sw${m.color === c ? ' on' : ''}" style="background:${c}" data-mcol="${c}" aria-label="${c}"></button>`).join('')}</div></section>` : ''}
+      <section><h2>Joins</h2>${joined.length ? `<div class="lines">${joined.map(j => `<div><span>${j}</span></div>`).join('')}</div>` : '<p class="note">Free-standing. Drag it flush against another module to join — fully shared walls open up automatically.</p>'}</section>
+      ${a.overhang > 0.05 ? `<section><h2>Cantilever <span>${a.overhang.toFixed(2)} m</span></h2><p class="note">${a.overhang > RU().factory.maxCantilever ? 'Over ' + RU().factory.maxCantilever + ' m — steel reinforcement is added to the estimate.' : 'Within the 2.5 m standard limit.'}</p></section>` : ''}
+      <section class="btns"><button class="btn" data-act="rot-sel" ${above ? 'disabled' : ''}>Rotate 90°</button><button class="btn danger" data-act="del-sel" ${above ? 'disabled title="Remove the module above first"' : ''}>Delete${hosted ? ` (+${hosted} items)` : ''}</button></section>
+      <p class="note">Drag the module to move it; drop it on another roof to stack. Press <b>R</b> while dragging to rotate.</p>
+    </div>`;
+  } else if (s) {
+    const it = s, d = CATX[it.sku], m = it.mod ? modById(it.mod) : null;
+    let spec = d.uk;
+    if (it.sku === 'S-STAIR') { const S = stairDims(); spec = `Approved Doc K private stair: ${S.n} risers of ${mm(S.rise)} (≤ 220), going 250 mm (≥ 220), pitch ${Math.round(Math.atan2(S.rise, 0.25) * 180 / Math.PI)}° (≤ 42°), 900 mm handrails.`; }
+    const swaps = d.kind === 'opening' ? CATALOG.find(g => g.group === d.group).items.map(o => { const v = validOpening(it.mod, it.side, it.u, o.sku, it.id); return opt(o.sku === it.sku, `data-swap="${o.sku}"`, o.name, `${mm(o.w)} wide`, !v.valid && o.sku !== it.sku); }).join('') : '';
+    const where = m ? (d.kind === 'roof' ? `Roof of ${label(m)}` : `${sideName(it.side)} of ${label(m)} · offset ${it.u >= 0 ? '+' : ''}${it.u.toFixed(2)} m`) : `Site · ${it.x.toFixed(2)}, ${it.z.toFixed(2)} m`;
+    const ri = CUR.info.roof[it.id];
+    const size = d.kind === 'opening' ? `${mm(d.w)} × ${mm(d.h)}${d.sill ? ` · sill ${mm(d.sill)}` : ''}` : ri ? (ri.railM ? `${ri.railM.toFixed(1)} m run` : ri.deckM2 ? `${ri.deckM2.toFixed(1)} m²` : `${ri.panels} panels · ${(ri.panels * 0.4).toFixed(1)} kW`) : d.kind === 'wall' ? `${Math.min(d.len, sideLen(m, it.side) - 0.3).toFixed(1)} × ${d.depth} m` : '';
+    html = `<div class="ph"><div class="eyebrow">${d.group}</div><div class="title">${d.name}</div><div class="sub">${where}${size ? '<br>' + size : ''}</div></div>
+    <div class="pc">
+      ${spec ? `<section><h2>Building regs</h2><p class="note" style="color:var(--ink)">${spec}</p></section>` : ''}
+      ${it.sku === 'S-ATRIUM' ? `<section><h2>Glass wall</h2><div class="grid">${[['full', 'Full height'], ['lower', 'Ground only'], ['solid', 'Solid + slider']].map(([v, l]) => opt((it.glass || 'full') === v, `data-atr="glass" data-av="${v}"`, l)).join('')}</div></section><section><h2>Mezzanine</h2><div class="grid">${[['part', '2.8 m deep'], ['full', 'Full depth'], ['none', 'None']].map(([v, l]) => opt((it.mezz || 'part') === v, `data-atr="mezz" data-av="${v}"`, l)).join('')}</div></section><section><h2>Clerestory &amp; sliding wall</h2><div class="grid">${opt(it.clere !== false, `data-atr="clere" data-av="${it.clere === false}"`, it.clere === false ? 'Add clerestory' : 'Clerestory on')}${[[0, 'Wall open'], [0.5, 'Half'], [1, 'Closed']].map(([v, l]) => opt((it.slide ?? 0.4) === v, `data-atr="slide" data-av="${v}"`, l)).join('')}</div></section>` : ''}
+      ${swaps ? `<section><h2>Swap type</h2><div class="grid">${swaps}</div></section>` : ''}
+      <section class="btns">${d.kind === 'floor' ? '<button class="btn" data-act="rot-sel">Rotate 90°</button>' : ''}<button class="btn danger" data-act="del-sel">Delete</button></section>
+      <p class="note">Drag to move${d.kind === 'opening' ? ' along the wall or onto another wall' : d.kind === 'roof' ? ' to another roof' : ''}. <b>Delete</b> key removes it.</p>
+    </div>`;
+  } else {
+    const E = EVAL;
+    html = `<div class="ph"><div class="eyebrow">Project</div><div class="title">Container House Studio</div><div class="sub">${P.mods.length} modules · ${E.levels} storey${E.levels === 1 ? '' : 's'} · ${E.area.toFixed(1)} m² / ${Math.round(E.area * FT_PER_M * FT_PER_M)} ft²</div></div>
+    <div class="pc">
+      <section><h2>Checks <span>UK Building Regs</span></h2>${checksHtml(E.issues)}</section>
+      <section><h2>Module height</h2><div class="grid">${opt(P.h === 'std', 'data-ph="std"', 'Standard', '2.59 m · 8′ 6″')}${opt(P.h === 'hc', 'data-ph="hc"', 'High cube', '2.90 m · 9′ 6″')}</div></section>
+      <section><h2>Frame &amp; trim <span>${(TRIMS.find(t => t[0] === P.trim) || [0, ''])[1]}</span></h2><div class="swatches">${TRIMS.map(([c, n]) => `<button class="sw${P.trim === c ? ' on' : ''}" style="background:${c}" data-ptrim="${c}" aria-label="${n}"></button>`).join('')}</div></section>
+      <section><h2>Shell estimate <span>${window.FirmcopBridge.currency().code}</span></h2><div class="lines">${E.lines.map(l => `<div><span>${l.name}${l.auto ? '<span class="auto">AUTO</span>' : ''} <span style="color:var(--muted)">× ${l.qty} ${l.unit}</span></span><span>${$(l.total)}</span></div>`).join('')}</div>
+        <div class="total"><span>Structure &amp; openings</span><b>${$(E.total)}</b></div>
+        <p class="note" style="margin-top:6px">Sample prices. Full BOM and export in step 6.</p></section>
+      <section class="btns"><button class="btn" data-act="example">Load example</button><button class="btn danger" data-act="clear">Clear site</button></section>
+      <section class="keys">Drag from catalog to place · click to select<br><kbd>R</kbd> rotate · <kbd>Del</kbd> delete · <kbd>Esc</kbd> cancel<br><kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo</section>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+let toastT;
+function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 2600); }
+
+function modChange(fn) {
+  const s = findSel(); if (!s) return;
+  const test = clone(P), tm = test.mods.find(m => m.id === s.id); fn(tm, test);
+  const saved = P; P = test; const a = analyze(test.mods); P = saved;
+  const before = analyze(P.mods).issues.filter(i => i.level === 'error').map(i => i.text);
+  const bad = a.issues.find(i => i.level === 'error' && !before.includes(i.text));
+  if (bad) return toast(bad.text + ' — change blocked');
+  const floorClash = tm.lvl === 0 && test.items.some(it => CATX[it.sku].kind === 'floor' && interArea(floorRect(it), rectOf(tm)) > 0.01);
+  if (floorClash) return toast('Clashes with a column or stair — change blocked');
+  let removed = 0;
+  commit(p => {
+    const m = p.mods.find(x => x.id === s.id); fn(m, p);
+    p.items = p.items.filter(it => { if (it.mod === m.id && it.lx != null) { const L = LEN[m.len], ok = CATX[it.sku].kind === 'part' ? Math.abs(it.lx) <= L / 2 - 0.9 : (() => { const r = fp(it.sku, it.lx, it.lz, it.rot); return r.x0 >= -L / 2 + IN - 1e-3 && r.x1 <= L / 2 - IN + 1e-3; })(); if (!ok) removed++; return ok; } if (it.mod !== m.id || !it.side) return true; const d = CATX[it.sku], len = sideLen(m, it.side), w = d.kind === 'opening' ? d.w : 0.5; const ok = Math.abs(it.u) + w / 2 <= len / 2 - F - 0.05 + 1e-6; if (!ok) removed++; return ok; });
+  }, true);
+  if (removed) toast(`${removed} item${removed > 1 ? 's' : ''} no longer fit and were removed`);
+}
+function rotateSel() {
+  const s = findSel(); if (!s || SEL.type === 'room') return;
+  if (SEL.type === 'item' && CATX[s.sku].kind === 'furn') {
+    const m = modById(s.mod), nr = ((s.rot || 0) + Math.PI / 2) % (2 * Math.PI), z = CUR.info.zones.find(z => z.mod === s.mod && s.lx >= z.x0 && s.lx <= z.x1), r = fp(s.sku, s.lx, s.lz, nr), zi = W / 2 - IN;
+    if (!z || r.x0 < z.bx0 - 1e-3 || r.x1 > z.bx1 + 1e-3 || r.z0 < -zi - 1e-3 || r.z1 > zi + 1e-3) return toast('No room to rotate here');
+    const c = checkFurn(m, P, s.sku, s.lx, s.lz, nr, s.id); if (!c.valid) return toast(c.reason);
+    return commit(p => { p.items.find(i => i.id === s.id).rot = nr; });
+  }
+  if (SEL.type === 'mod') return modChange(m => { m.rot = (m.rot || 0) ? 0 : Math.PI / 2; });
+  if (CATX[s.sku].kind !== 'floor') return;
+  const test = { ...s, rot: ((s.rot || 0) + Math.PI / 2) % (2 * Math.PI) };
+  if (P.mods.some(m => m.lvl === 0 && interArea(rectOf(m), floorRect(test)) > 0.005)) return toast('No room to rotate here');
+  commit(p => { p.items.find(i => i.id === s.id).rot = test.rot; });
+}
+function deleteSel() {
+  const s = findSel(); if (!s || SEL.type === 'room') return;
+  if (SEL.type === 'mod') {
+    if (P.mods.some(o => o.lvl === s.lvl + 1 && interArea(rectOf(o), rectOf(s)) > 0.1)) return toast('Remove the module above first');
+    commit(p => { p.mods = p.mods.filter(m => m.id !== s.id); p.items = p.items.filter(it => it.mod !== s.id); p.rooms = p.rooms.filter(r => r.mod !== s.id); });
+  } else commit(p => { p.items = p.items.filter(i => i.id !== s.id); });
+  SEL = null; rebuild();
+}
+function setView(mode) {
+  if (mode === V.mode) return;
+  V.mode = mode;
+  const t = controls.target, dist = camera.position.distanceTo(t);
+  if (mode === 'plan') {
+    V.saved = camera.position.clone();
+    controls.minPolarAngle = 0; controls.maxPolarAngle = 0.0001; controls.enableRotate = false;
+    camera.position.set(t.x, t.y + dist, t.z + 0.001);
+  } else {
+    controls.minPolarAngle = 0; controls.maxPolarAngle = Math.PI / 2 - 0.04; controls.enableRotate = true;
+    if (V.saved) camera.position.copy(V.saved);
+  }
+  controls.update(); rebuild();
+}
+
+document.addEventListener('pointerdown', e => {
+  const card = e.target.closest('.card');
+  if (!card || e.button !== 0) return;
+  e.preventDefault();
+  const sku = card.dataset.sku;
+  DRAG = { src: 'catalog', sku, rot: 0 };
+  chip.querySelector('img').src = THUMBS[sku] || ''; chip.querySelector('b').textContent = CATX[sku].name;
+  chip.style.left = e.clientX + 'px'; chip.style.top = e.clientY + 'px'; chip.style.display = 'block';
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t || t.disabled) return;
+  const ds = t.dataset;
+  if (ds.step) return setStep(ds.step);
+  if (ds.keep) return commit(p => { const m = p.mods.find(x => x.id === SEL.id), k = m.keep || []; m.keep = k.includes(ds.keep) ? k.filter(s => s !== ds.keep) : [...k, ds.keep]; });
+  if (ds.cut != null) { V.cut = +ds.cut; return rebuild(); }
+  if (ds.selroom) { SEL = { type: 'room', id: ds.selroom }; updateSel(); return renderProps(); }
+  if (ds.selitem) { SEL = { type: 'item', id: ds.selitem }; updateSel(); return renderProps(); }
+  if (ds.rtype) { const z = findSel(); return setRoom(z.mod, z.zi, { type: ds.rtype }); }
+  if (ds.rfloor) { const z = findSel(); return setRoom(z.mod, z.zi, { floor: ds.rfloor }); }
+  if (ds.mlining) { const id = SEL.type === 'room' ? findSel().mod : SEL.id; return commit(p => { p.mods.find(m => m.id === id).lining = ds.mlining; }); }
+  if (ds.atr) return commit(p => { const it = p.items.find(i => i.id === SEL.id); const v = ds.av; it[ds.atr] = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; });
+  if (ds.fcol) return commit(p => { p.items.find(i => i.id === SEL.id).color = ds.fcol; });
+  if (ds.view) return setView(ds.view);
+  if (ds.level) { V.level = ds.level === 'all' ? 'all' : +ds.level; return rebuild(); }
+  if (ds.mlen) return modChange(m => { m.len = +ds.mlen; });
+  if (ds.mfin) return commit(p => { p.mods.find(m => m.id === SEL.id).finish = ds.mfin; });
+  if (ds.mcol) return commit(p => { const m = p.mods.find(m => m.id === SEL.id); m.color = ds.mcol; m.finish = 'painted'; });
+  if (ds.swap) return commit(p => { p.items.find(i => i.id === SEL.id).sku = ds.swap; });
+  if (ds.ph) return commit(p => { p.h = ds.ph; });
+  if (ds.ptrim) return commit(p => { p.trim = ds.ptrim; });
+  const a = ds.act;
+  if (a === 'roof') { V.roof = !V.roof; return rebuild(); }
+  if (a === 'undo') return undo();
+  if (a === 'redo') return redo();
+  if (a === 'rot-sel') return rotateSel();
+  if (a === 'del-sel') return deleteSel();
+  if (a === 'flip') return commit(p => { const it = p.items.find(i => i.id === SEL.id); it.flip = !it.flip; });
+  if (a === 'dup') return dupSel();
+  if (a === 'clear-room') { const z = findSel(); return commit(p => { p.items = p.items.filter(i => !z.furn.some(f => f.id === i.id)); }); }
+  if (a === 'csv') return exportCsv();
+  if (a === 'print') return printBom();
+  if (a === 'example') { SEL = null; return commit(p => { Object.assign(p, example()); }, true); }
+  if (a === 'clear') { SEL = null; return commit(p => { p.mods = []; p.items = []; p.rooms = []; }); }
+});
+document.getElementById('search').addEventListener('input', renderCatalog);
+window.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); return e.shiftKey ? redo() : undo(); }
+  if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); return redo(); }
+  if (k === 'r') {
+    if (DRAG && ['module', 'floor', 'furn'].includes(CATX[DRAG.sku].kind)) { DRAG.manual = true; DRAG.rot = CATX[DRAG.sku].kind === 'module' ? (DRAG.rot ? 0 : Math.PI / 2) : (DRAG.rot + Math.PI / 2) % (2 * Math.PI); if (DRAG.last) dragMove(DRAG.last); }
+    else if (!DRAG) rotateSel();
+  }
+  if ((k === 'delete' || k === 'backspace') && !DRAG) { e.preventDefault(); deleteSel(); }
+  if (k === 'escape') {
+    if (DRAG) { if (DRAG.target) DRAG.target.visible = true; DRAG = null; ghost.visible = false; chip.style.display = 'none'; showHint(''); controls.enabled = true; }
+    else if (SEL) { SEL = null; updateSel(); renderProps(); }
+  }
+});
+
+renderCatalog();
+rebuild(true);
+window.PlatformRules.onChange(() => { rebuild(); renderProps(); });
+setTimeout(() => { makeThumbs(); renderCatalog(); }, 30);
+</script>
+</body>
+</html>

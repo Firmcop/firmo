@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Firmcop Design Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: back-office ledger — header with data source and sign-in, tab strip, one wide table per tab, detail drawer for a design's versions. Same dark look as the Studio. */
+:root{
+  --ink:#0D0C0A; --panel:#141210; --panel2:#1b1815; --raise:#221f1b; --line:rgba(242,235,223,.11); --line2:rgba(242,235,223,.2);
+  --ivory:#F2EBDF; --muted:rgba(242,235,223,.6); --faint:rgba(242,235,223,.38); --brass:#C9A46A; --brass-hi:#E3C48F;
+  --ok:#7fb48a; --warn:#e2b25c; --err:#e07a6a; --eng:#8fb3d9;
+  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--ivory);font:13px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line);background:var(--panel)}
+header .wrap{display:flex;align-items:center;gap:16px;padding-block:14px;flex-wrap:wrap}
+.mark{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:var(--ivory)}
+.mark b{font:500 19px/1 var(--serif);letter-spacing:.3em}
+.mark small{font:400 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:5px}
+.sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:4px;font:500 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:2px;border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:rgba(127,180,138,.4)} .chip.warn{color:var(--warn);border-color:rgba(226,178,92,.4)} .chip.err{color:var(--err);border-color:rgba(224,122,106,.45)} .chip.eng{color:var(--eng);border-color:rgba(143,179,217,.45)} .chip.br{color:var(--brass);border-color:rgba(201,164,106,.5)}
+.tb{height:34px;padding:0 12px;border:1px solid var(--line2);background:transparent;border-radius:2px;font-size:12px;white-space:nowrap}
+.tb:hover{border-color:var(--brass)}
+a.tb{color:var(--ivory)}
+.tb.gold{background:var(--brass);border-color:var(--brass);color:var(--ink);font-weight:600}
+.tb[disabled]{opacity:.35;pointer-events:none}
+input[type=text],input[type=password],input[type=number]{height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px;font-size:12.5px;min-width:0}
+.hero{padding-block:28px 10px}
+.eb{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
+h1{font:400 clamp(30px,4vw,44px)/1.05 var(--serif);margin:10px 0 6px;text-wrap:balance}
+.sub{color:var(--muted);max-width:70ch;margin:0}
+.banner{margin-top:14px;padding:10px 12px;border:1px solid rgba(201,164,106,.4);background:rgba(201,164,106,.07);border-radius:2px;color:var(--muted);font-size:12.5px;max-width:90ch}
+.banner b{color:var(--ivory)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}
+.kpis div{background:var(--panel);padding:14px 16px}
+.kpis small{display:block;font:400 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.kpis b{display:block;font:500 28px/1.1 var(--serif);margin-top:6px;font-variant-numeric:tabular-nums}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-top:22px;overflow-x:auto}
+.tabs button{height:42px;padding:0 14px;border:0;background:none;color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ivory);border-bottom-color:var(--brass)}
+.tw{overflow-x:auto;margin-top:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:820px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font:500 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);background:var(--panel)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--panel2)}
+tr.sel td{background:var(--raise)}
+td b{font-weight:600}
+td small{display:block;color:var(--faint);font:400 10.5px/1.4 var(--mono)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.drawer{margin-top:14px;border:1px solid var(--line2);background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:10px}
+.drawer h2{font:500 24px/1.1 var(--serif);margin:0}
+.ver{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.ver i{font:500 12px var(--mono);font-style:normal;color:var(--brass)}
+.ev{display:grid;grid-template-columns:150px 160px minmax(0,1fr);gap:10px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px}
+.ev span:first-child{color:var(--faint);font-family:var(--mono);font-size:11px}
+.empty{color:var(--faint);padding:14px 10px}
+.price{width:110px;text-align:right}
+.stock{width:80px;text-align:right}
+footer{padding-block:30px 40px;color:var(--faint);font-size:11.5px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);background:var(--ivory);color:var(--ink);padding:9px 14px;border-radius:2px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ev{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="mark" href="index.html"><b>FIRMCOP</b><small>Design Manager</small></a>
+  <span class="sp"></span>
+  <span id="src" class="chip br">Loading…</span>
+  <span id="who"></span>
+  <a class="tb" href="design-studio.html" style="display:inline-flex;align-items:center;text-decoration:none">Open Design Studio</a>
+</div></header>
+<main class="wrap">
+  <section class="hero">
+    <div class="eb">Designs as data</div>
+    <h1>Catalogue designs, versions and rules</h1>
+    <p class="sub">Designers save layouts from the Studio as new versions. An admin approves and publishes them. Publishing updates the website collection, the configurator and the search push in one step.</p>
+    <div id="banner"></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <section id="body"></section>
+</main>
+<footer class="wrap">Roles: admins approve, publish and edit the catalogue · designers save drafts and submit them for review. Prices in KSh.</footer>
+<div id="toast" role="status"></div>
+<script src="ds-config.js"></script>
+<script>
+(async function () {
+  'use strict';
+  const $ = s => document.querySelector(s), cfg = window.FC_SUPA || null;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const KSh = v => v == null ? '—' : 'KSh ' + Math.round(v).toLocaleString('en-US');
+  const when = t => t ? new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  let toastT; const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 2800); };
+  let SESSION = null; try { SESSION = JSON.parse(localStorage.getItem('fc-ds-session') || 'null'); } catch (e) {}
+  let MODE = 'snapshot', TAB = 'designs', SELD = null, PKG = null, DESIGNS = [], CATALOG = [], EVENTS = [], LOGIN = { email: '', password: '' };
+  const H = () => ({ apikey: cfg.key, 'Content-Type': 'application/json', ...(SESSION ? { Authorization: 'Bearer ' + SESSION.access_token } : {}) });
+  const api = async (path, opt = {}) => { const r = await fetch(cfg.url + path, { ...opt, headers: { ...H(), ...(opt.headers || {}) } }); const t = await r.text(); const j = t ? JSON.parse(t) : null; if (!r.ok) throw new Error((j && (j.message || j.error_description)) || r.statusText); return j; };
+  const rpc = (fn, args) => api('/rest/v1/rpc/' + fn, { method: 'POST', body: JSON.stringify(args || {}) });
+
+  async function load() {
+    if (cfg) {
+      try {
+        if (SESSION) {
+          DESIGNS = await api('/rest/v1/ds_designs?select=*,versions:ds_design_versions(id,version,status,total_kes,checks,notes,review_note,created_at,reviewed_at)&order=name');
+          CATALOG = await api('/rest/v1/ds_catalog_items?select=*&order=kind,sort');
+          try { EVENTS = await api('/rest/v1/ds_events?select=*&order=id.desc&limit=40'); } catch (e) { EVENTS = []; }
+          MODE = 'live'; return;
+        }
+        PKG = await rpc('ds_package'); MODE = 'public'; return fromPackage();
+      } catch (e) { /* sandbox or offline: fall back */ }
+    }
+    try { PKG = await (await fetch('ds-package.json')).json(); MODE = 'snapshot'; fromPackage(); } catch (e) { MODE = 'none'; }
+  }
+  function fromPackage() {
+    DESIGNS = (PKG.designs || []).map(d => ({ slug: d.slug, name: d.name, system: d.system, shell_key: d.shell, summary: d.summary, status: 'published', versions: [{ version: d.version, status: 'approved', total_kes: d.total_kes, checks: [], id: d.slug + '-v' + d.version }], published_version_id: d.slug + '-v' + d.version }));
+    CATALOG = []; Object.entries(PKG.catalog || {}).forEach(([kind, items]) => Object.entries(items).forEach(([key, v]) => CATALOG.push({ id: kind + ':' + key, kind, key, name: v.name, unit: v.unit, price_kes: v.price, stock_qty: v.stock === 999 ? null : v.stock, price_source: v.linked ? 'Linked rate' : null, active: true, sort: v.sort })));
+    CATALOG.sort((a, b) => a.kind.localeCompare(b.kind) || a.sort - b.sort);
+  }
+  const SYSN = { container: 'Container', aframe: 'A-frame', cabin: 'Cabin', steel: 'Steel' };
+  const KINDN = { opening: 'Doors and windows', floor: 'Floors', wall: 'Walls', ceil: 'Ceilings', kitchen_unit: 'Kitchen units', wardrobe_unit: 'Wardrobe units', front: 'Fronts', worktop: 'Worktops', item: 'Furniture and sanitary', service: 'Services', partition: 'Partitions' };
+  const stChip = s => `<span class="chip ${{ published: 'ok', approved: 'ok', in_review: 'br', draft: '', rejected: 'err', archived: '' }[s] || ''}">${esc(String(s).replace('_', ' '))}</span>`;
+  const latest = d => (d.versions || []).slice().sort((a, b) => b.version - a.version)[0];
+  const live = d => (d.versions || []).find(v => v.id === d.published_version_id);
+  const canEdit = () => MODE === 'live';
+
+  function render() {
+    const src = $('#src');
+    src.className = 'chip ' + (MODE === 'live' || MODE === 'public' ? 'ok' : 'br');
+    src.textContent = MODE === 'live' ? 'Live · ' + cfg.name : MODE === 'public' ? 'Live, public view · ' + cfg.name : MODE === 'snapshot' ? 'Snapshot · ' + (cfg ? cfg.name : 'database') : 'No data';
+    $('#who').innerHTML = SESSION ? `<span class="chip">${esc(SESSION.email)}</span> <button type="button" class="tb" data-a="out">Sign out</button>`
+      : cfg ? `<input type="text" id="em" placeholder="Email" autocomplete="username" data-in="email" style="width:170px"> <input type="password" id="pw" placeholder="Password" autocomplete="current-password" data-in="password" style="width:120px"> <button type="button" class="tb gold" data-a="in">Sign in</button>` : '';
+    $('#banner').innerHTML = MODE === 'snapshot' ? `<div class="banner"><b>Read-only snapshot.</b> This preview runs in a sandbox that can't reach ${esc(cfg ? cfg.name : 'the database')}, so it shows the published designs and catalogue exported from it on ${esc(new Date(PKG.generated_at).toLocaleDateString('en-GB', { dateStyle: 'long' }))}. On your own domain this page signs in and edits the database directly: review queue, approvals, publishing and catalogue prices.</div>`
+      : MODE === 'public' ? '<div class="banner"><b>Public view.</b> Sign in as Firmcop staff to see drafts, review queue and activity.</div>' : '';
+    const vs = DESIGNS.flatMap(d => d.versions || []), q = vs.filter(v => v.status === 'in_review').length;
+    $('#kpis').innerHTML = [['Published designs', DESIGNS.filter(d => d.status === 'published').length], ['Waiting for review', canEdit() ? q : '—'], ['Catalogue items', CATALOG.length], ['Linked to price items', CATALOG.filter(c => c.price_source).length]].map(([a, b]) => `<div><small>${a}</small><b>${b}</b></div>`).join('');
+    $('#tabs').innerHTML = [['designs', 'Designs'], ['review', `Review queue${canEdit() && q ? ' · ' + q : ''}`], ['catalog', 'Catalogue and prices'], ['activity', 'Activity']].map(([k, l]) => `<button type="button" class="${TAB === k ? 'on' : ''}" data-a="tab" data-v="${k}">${l}</button>`).join('');
+    const b = $('#body');
+    if (TAB === 'designs') {
+      b.innerHTML = `<div class="tw"><table><tr><th>Design</th><th>System</th><th>Status</th><th class="n">Live</th><th class="n">Latest</th><th class="n">Total</th><th>Checks</th><th></th></tr>${DESIGNS.map(d => { const L = latest(d), V = live(d), ch = (L && L.checks) || [], e = ch.filter(c => c.lvl === 'error').length, g = ch.filter(c => c.lvl === 'eng').length;
+        return `<tr class="click ${SELD === d.slug ? 'sel' : ''}" data-a="pick" data-v="${esc(d.slug)}"><td><b>${esc(d.name)}</b><small>${esc(d.slug)}</small></td><td>${SYSN[d.system] || d.system}<small>${esc(d.shell_key || '')}</small></td><td>${stChip(d.status)}</td><td class="n">${V ? 'v' + V.version : '—'}</td><td class="n">${L ? 'v' + L.version + ' ' : ''}${L && L.status !== 'approved' ? stChip(L.status) : ''}</td><td class="n">${KSh(L && L.total_kes)}</td><td>${e ? `<span class="chip err">${e} to fix</span>` : '<span class="chip ok">Clear</span>'}${g ? ` <span class="chip eng">${g} engineer</span>` : ''}</td><td><button type="button" class="tb" data-a="studio" data-v="${esc(d.slug)}">Open in Studio</button></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">No designs yet. Save one from the Design Studio in Author mode.</td></tr>'}</table></div>${drawer()}`;
+    } else if (TAB === 'review') {
+      const rows = canEdit() ? DESIGNS.flatMap(d => (d.versions || []).filter(v => v.status === 'in_review' || v.status === 'draft' || (v.status === 'approved' && v.id !== d.published_version_id)).map(v => ({ d, v }))) : [];
+      b.innerHTML = canEdit() ? `<div class="tw"><table><tr><th>Design</th><th class="n">Version</th><th>Status</th><th>Notes</th><th class="n">Total</th><th>Saved</th><th></th></tr>${rows.map(({ d, v }) => `<tr><td><b>${esc(d.name)}</b><small>${esc(d.slug)}</small></td><td class="n">v${v.version}</td><td>${stChip(v.status)}</td><td>${esc(v.notes || '')}${v.review_note ? `<small>Reviewer: ${esc(v.review_note)}</small>` : ''}</td><td class="n">${KSh(v.total_kes)}</td><td>${when(v.created_at)}</td><td><div class="acts">${actions(d, v)}</div></td></tr>`).join('') || '<tr><td colspan="7" class="empty">Nothing waiting. New versions saved from the Studio appear here.</td></tr>'}</table></div>`
+        : '<p class="empty">Sign in as Firmcop staff to see drafts and the review queue.</p>';
+    } else if (TAB === 'catalog') {
+      const kinds = [...new Set(CATALOG.map(c => c.kind))];
+      b.innerHTML = `<div class="tw"><table><tr><th>Item</th><th>Key</th><th class="n">Price</th><th>Unit</th><th class="n">Stock</th><th>Rate source</th><th></th></tr>${kinds.map(k => `<tr><td colspan="7" style="color:var(--brass);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;background:var(--panel)">${KINDN[k] || k}</td></tr>` + CATALOG.filter(c => c.kind === k).map(c => `<tr><td><b>${esc(c.name)}</b></td><td><small style="display:inline">${esc(c.key)}</small></td><td class="n">${canEdit() && k !== 'front' ? `<input type="number" class="price" id="p-${c.id}" data-in="price" data-id="${c.id}" value="${c.price_kes}" min="0" step="50">` : KSh(c.price_kes)}</td><td>${esc(c.unit)}</td><td class="n">${canEdit() && c.stock_qty != null ? `<input type="number" class="stock" id="s-${c.id}" data-in="stock" data-id="${c.id}" value="${c.stock_qty}" min="0">` : c.stock_qty == null ? '<small style="display:inline">to order</small>' : c.stock_qty}</td><td>${c.price_source ? `<span class="chip ok" title="${esc(c.price_source)}">Past quote rate</span>` : '<span class="chip">Sample</span>'}</td><td>${canEdit() ? `<button type="button" class="tb" data-a="toggle" data-id="${c.id}">${c.active ? 'Hide' : 'Show'}</button>` : ''}</td></tr>`).join('')).join('')}</table></div>`;
+    } else {
+      b.innerHTML = canEdit() ? (EVENTS.length ? `<div class="tw">${EVENTS.map(e => `<div class="ev"><span>${when(e.created_at)}</span><span>${esc(e.type)}</span><span>${esc(e.payload && (e.payload.slug || e.payload.key || e.payload.note) || e.entity_id || '')}${e.processed_at ? ' · delivered' : ' · <span style="color:var(--brass)">queued for website and search push</span>'}</span></div>`).join('')}</div>` : '<p class="empty">No activity yet, or your role cannot read the activity log (admins only).</p>') : '<p class="empty">Sign in as an admin to see the activity log.</p>';
+    }
+  }
+  function actions(d, v) {
+    const a = [];
+    if (v.status === 'draft' || v.status === 'rejected') a.push(`<button type="button" class="tb" data-a="submit" data-id="${v.id}">Submit for review</button>`);
+    if (v.status === 'in_review') a.push(`<button type="button" class="tb gold" data-a="approve" data-id="${v.id}">Approve</button><button type="button" class="tb" data-a="reject" data-id="${v.id}">Send back</button>`);
+    if (v.status === 'approved' && v.id !== d.published_version_id) a.push(`<button type="button" class="tb gold" data-a="publish" data-id="${v.id}">Publish v${v.version}</button>`);
+    return a.join('');
+  }
+  function drawer() {
+    const d = DESIGNS.find(x => x.slug === SELD); if (!d) return '';
+    const vs = (d.versions || []).slice().sort((a, b) => b.version - a.version);
+    return `<div class="drawer"><div class="eb">${SYSN[d.system] || ''} · ${esc(d.shell_key || '')}</div><h2>${esc(d.name)}</h2><p class="sub">${esc(d.summary || '')}</p>
+      ${vs.map(v => `<div class="ver"><i>v${v.version}</i><span>${stChip(v.status)} ${v.id === d.published_version_id ? '<span class="chip ok">Live</span>' : ''} ${esc(v.notes || '')}<small style="display:block;color:var(--faint)">${when(v.created_at)} · ${KSh(v.total_kes)}${(v.checks || []).length ? ' · ' + v.checks.map(c => esc(c.text)).join(' · ') : ''}</small></span><span class="acts">${canEdit() ? actions(d, v) : ''}</span></div>`).join('')}
+      ${canEdit() && d.status !== 'archived' ? `<div class="acts"><button type="button" class="tb" data-a="archive" data-id="${d.id}">Archive design</button></div>` : ''}</div>`;
+  }
+  document.addEventListener('input', e => { const t = e.target; if (t.dataset.in === 'email') LOGIN.email = t.value; if (t.dataset.in === 'password') LOGIN.password = t.value; });
+  document.addEventListener('change', async e => {
+    const t = e.target, k = t.dataset.in; if (!k || !['price', 'stock'].includes(k) || !canEdit()) return;
+    try { await api('/rest/v1/ds_catalog_items?id=eq.' + t.dataset.id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(k === 'price' ? { price_kes: +t.value } : { stock_qty: +t.value }) }); toast('Saved. The Studio picks it up on next load'); await load(); render(); }
+    catch (err) { toast(err.message); }
+  });
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, id = b.dataset.id;
+    try {
+      if (a === 'tab') { TAB = b.dataset.v; return render(); }
+      if (a === 'pick') { if (e.target.closest('button')) return; SELD = SELD === b.dataset.v ? null : b.dataset.v; return render(); }
+      if (a === 'studio') { try { localStorage.setItem('fc-ds-open', b.dataset.v); } catch (err) {} location.href = 'design-studio.html'; return; }
+      if (a === 'in') {
+        try { const r = await fetch(`${cfg.url}/auth/v1/token?grant_type=password`, { method: 'POST', headers: { apikey: cfg.key, 'Content-Type': 'application/json' }, body: JSON.stringify(LOGIN) }); const j = await r.json(); if (!r.ok) return toast(j.error_description || j.msg || 'Sign-in failed'); SESSION = { access_token: j.access_token, email: j.user && j.user.email }; try { localStorage.setItem('fc-ds-session', JSON.stringify(SESSION)); } catch (err) {} }
+        catch (err) { return toast("This preview can't reach the database. Sign in works on your own domain"); }
+        await load(); return render();
+      }
+      if (a === 'out') { SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (err) {} await load(); return render(); }
+      if (!canEdit()) return toast('Sign in as Firmcop staff first');
+      if (a === 'submit') { await rpc('ds_submit_version', { _version_id: id }); toast('Submitted for review'); }
+      if (a === 'approve') { await rpc('ds_review_version', { _version_id: id, _approve: true, _note: null }); toast('Approved. Publish it when ready'); }
+      if (a === 'reject') { await rpc('ds_review_version', { _version_id: id, _approve: false, _note: 'Sent back from the Design Manager' }); toast('Sent back to the designer'); }
+      if (a === 'publish') { await rpc('ds_publish_version', { _version_id: id }); toast('Published. The website and configurator update from the activity queue'); }
+      if (a === 'archive') { await rpc('ds_archive_design', { _design_id: id }); toast('Archived'); }
+      if (a === 'toggle') { const c = CATALOG.find(x => x.id === id); await api('/rest/v1/ds_catalog_items?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ active: !c.active }) }); }
+      await load(); render();
+    } catch (err) { toast(err.message || 'Something went wrong'); }
+  });
+  await load(); render();
+})();
+</script>
+</body>
+</html>

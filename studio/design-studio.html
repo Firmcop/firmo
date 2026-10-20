@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Firmcop Design Studio</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.184.0/examples/jsm/"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: sales-desk workstation — stage bar on top, catalogue left, viewport centre (2D plan on paper / 3D), inspector right, live quote bar along the bottom. One deliberate dark look. */
+:root{
+  --ink:#0D0C0A; --panel:#141210; --panel2:#1b1815; --raise:#221f1b; --line:rgba(242,235,223,.11); --line2:rgba(242,235,223,.2);
+  --ivory:#F2EBDF; --muted:rgba(242,235,223,.6); --faint:rgba(242,235,223,.38); --brass:#C9A46A; --brass-hi:#E3C48F; --brass-lo:#8A6A33;
+  --ok:#7fb48a; --warn:#e2b25c; --err:#e07a6a; --eng:#8fb3d9; --paper:#F4EFE6;
+  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--ivory);font:13px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.app{display:grid;grid-template-columns:268px minmax(0,1fr) 348px;grid-template-rows:56px minmax(0,1fr) 62px;height:100vh;height:100dvh;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+header.top{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.mark{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:var(--ivory)}
+.mark b{font:500 19px/1 var(--serif);letter-spacing:.3em}
+.mark small{font:400 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:5px}
+.stages{display:flex;gap:2px;flex:1;justify-content:center;min-width:0;overflow-x:auto}
+.stages button{display:flex;align-items:center;gap:8px;height:56px;padding:0 14px;border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.04em;border-bottom:2px solid transparent;white-space:nowrap}
+.stages button i{font:500 10px/1 var(--mono);font-style:normal;color:var(--faint)}
+.stages button.on{color:var(--ivory);border-bottom-color:var(--brass)}
+.stages button.on i{color:var(--brass)}
+.tright{display:flex;gap:6px;align-items:center}
+.tb{height:34px;padding:0 12px;border:1px solid var(--line2);background:transparent;color:var(--ivory);font-size:12px;border-radius:2px;white-space:nowrap}
+.tb:hover{border-color:var(--brass)}
+.tb[disabled]{opacity:.35;pointer-events:none}
+.tb.on{background:var(--brass);color:var(--ink);border-color:var(--brass);font-weight:600}
+aside{background:var(--panel);overflow-y:auto;min-height:0}
+#left{border-right:1px solid var(--line)}
+#right{border-left:1px solid var(--line)}
+.sec{padding:16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.eb{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
+.h{font:500 22px/1.15 var(--serif);margin:0}
+.sub{color:var(--muted);font-size:12px}
+.note{color:var(--muted);font-size:11.5px;line-height:1.5;margin:0}
+.seg{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden}
+.seg button{flex:1;height:32px;border:0;background:transparent;color:var(--muted);font-size:12px;padding:0 6px}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button.on{background:var(--raise);color:var(--ivory);box-shadow:inset 0 -2px 0 var(--brass)}
+.cards{display:grid;grid-template-columns:1fr;gap:6px}
+.cards.two{grid-template-columns:1fr 1fr}
+.card{display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 11px;background:var(--panel2);border:1px solid var(--line);border-radius:2px;touch-action:none;user-select:none}
+.card:hover{border-color:var(--line2)}
+.card.on{border-color:var(--brass);background:var(--raise)}
+.card b{font-weight:600;font-size:12.5px}
+.card small{color:var(--muted);font:400 10.5px/1.35 var(--mono)}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;font:500 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:2px;border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:rgba(127,180,138,.4)} .chip.warn{color:var(--warn);border-color:rgba(226,178,92,.4)} .chip.err{color:var(--err);border-color:rgba(224,122,106,.45)} .chip.eng{color:var(--eng);border-color:rgba(143,179,217,.45)} .chip.br{color:var(--brass);border-color:rgba(201,164,106,.5)}
+.sw{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.18);padding:0}
+.sw.on{outline:2px solid var(--brass);outline-offset:2px}
+.sws{display:flex;gap:8px;flex-wrap:wrap}
+.fsw{width:100%;height:30px;border-radius:2px;border:1px solid rgba(255,255,255,.1)}
+.list{display:flex;flex-direction:column}
+.list>div,.list>button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;font-size:12.5px;color:var(--ivory)}
+.list>button:hover{color:var(--brass-hi)}
+.list span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+.list .sel{color:var(--brass-hi)}
+.lbl{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted)}
+.lbl>span{display:flex;justify-content:space-between}
+.lbl b{color:var(--ivory);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--brass)}
+select,input[type=text],input[type=tel]{height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px;font-size:12.5px;width:100%;min-width:0}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{height:36px;padding:0 14px;border:1px solid var(--line2);background:transparent;border-radius:2px;font-size:12px;font-weight:600;letter-spacing:.03em}
+.btn:hover{border-color:var(--brass);color:var(--brass-hi)}
+.btn.gold{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.btn.gold:hover{background:var(--brass-hi);color:var(--ink)}
+.btn.del{color:var(--err);border-color:rgba(224,122,106,.4)}
+.btn.wide{width:100%}
+.insp{background:var(--raise)}
+.units{display:flex;flex-direction:column;gap:4px}
+.unit{display:grid;grid-template-columns:18px minmax(0,1fr) 46px auto;gap:6px;align-items:center;font-size:12px}
+.unit i{font:400 10px var(--mono);color:var(--faint);font-style:normal}
+.unit select{height:30px;font-size:12px}
+.unit small{font:400 10.5px var(--mono);color:var(--muted);text-align:right}
+.unit .ib{width:26px;height:28px;border:1px solid var(--line);background:none;border-radius:2px;color:var(--muted);padding:0}
+.unit .ib:hover{color:var(--ivory);border-color:var(--line2)}
+main#vp{position:relative;min-width:0;min-height:0;background:#11100e;overflow:hidden}
+#three{position:absolute;inset:0}
+#three canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
+#plan{position:absolute;inset:0;width:100%;height:100%;background:var(--paper);touch-action:none;user-select:none}
+.vtog{position:absolute;left:14px;top:14px;display:flex;gap:6px;z-index:3}
+.vtog .seg{background:rgba(20,18,16,.88);width:120px}
+.vhint{position:absolute;left:14px;bottom:14px;max-width:min(460px,70%);font-size:11.5px;color:var(--muted);background:rgba(20,18,16,.86);border:1px solid var(--line);padding:7px 10px;border-radius:2px;z-index:3}
+.vhint.paper{background:rgba(244,239,230,.94);color:#4b463f;border-color:#d8d0c2}
+.walkpad{position:absolute;right:14px;bottom:14px;display:grid;grid-template-columns:repeat(3,40px);gap:4px;z-index:3}
+.walkpad button{height:40px;border:1px solid var(--line2);background:rgba(20,18,16,.88);border-radius:2px;font-size:15px}
+.walkpad[hidden]{display:none}
+.walkpad .x{grid-column:1/-1;font-size:11px;font-weight:600;letter-spacing:.06em}
+footer.qbar{grid-column:1/-1;display:flex;align-items:center;gap:22px;padding:0 16px;border-top:1px solid var(--line);background:var(--panel);overflow-x:auto}
+.qbar .nm{font:500 18px/1 var(--serif);white-space:nowrap}
+.qbar .kv{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+.qbar .kv small{font:400 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.qbar .kv b{font-size:14px;font-variant-numeric:tabular-nums;font-weight:600}
+.qbar .kv b.big{font:500 22px/1 var(--serif);color:var(--brass-hi)}
+.qbar .sp{flex:1}
+#toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%) translateY(8px);background:var(--ivory);color:var(--ink);padding:9px 14px;border-radius:2px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#chip{position:fixed;pointer-events:none;z-index:70;display:none;padding:6px 10px;background:var(--brass);color:var(--ink);font-weight:700;font-size:12px;border-radius:2px;transform:translate(10px,10px)}
+.gal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gal button{padding:0;border:1px solid var(--line);background:#000;aspect-ratio:4/3;border-radius:2px;overflow:hidden;position:relative}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
+.gal span{position:absolute;left:3px;bottom:3px;font:500 8.5px/1 var(--mono);background:rgba(13,12,10,.8);padding:3px 4px;color:var(--ivory);letter-spacing:.06em}
+.job{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+.job .bar{grid-column:1/-1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.job .bar i{display:block;height:100%;background:var(--brass);transition:width .4s}
+.pipe{display:flex;flex-direction:column;gap:0}
+.pipe div{display:grid;grid-template-columns:16px minmax(0,1fr);gap:10px;align-items:start;padding:6px 0;font-size:12.5px;color:var(--faint)}
+.pipe div i{width:10px;height:10px;border-radius:50%;border:1px solid var(--line2);margin-top:4px}
+.pipe div.done{color:var(--ivory)} .pipe div.done i{background:var(--brass);border-color:var(--brass)}
+.pipe div.cur{color:var(--brass-hi)} .pipe div.cur i{border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,164,106,.2)}
+details.how summary{cursor:pointer;font-size:12px;color:var(--brass-hi)}
+details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.5px;display:flex;flex-direction:column;gap:5px}
+#modal{position:fixed;inset:0;background:rgba(5,5,4,.78);z-index:50;display:none;overflow:auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+#modal.show{display:block}
+.mbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:10px;max-width:960px;margin:0 auto 14px;z-index:2}
+.doc{max-width:960px;margin:0 auto;background:#FBF8F2;color:#1c1a17;padding:44px 52px;font:13px/1.55 var(--sans)}
+.doc h1{font:400 40px/1.05 var(--serif);margin:6px 0 4px}
+.doc h2{font:500 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#7A5C2A;margin:30px 0 10px;padding-top:14px;border-top:1px solid #e3dccf}
+.doc table{width:100%;border-collapse:collapse;font-size:12px}
+.doc td,.doc th{padding:6px 6px;border-bottom:1px solid #ebe5da;text-align:left;vertical-align:top}
+.doc th{font-weight:600;color:#6b6457}
+.doc td.n,.doc th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.doc .meta{font:400 11px/1.5 var(--mono);color:#6b6457}
+.doc .cover{width:100%;aspect-ratio:16/8;object-fit:cover;background:#ddd;display:block;margin-top:18px}
+.doc .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.doc .tot{display:flex;justify-content:space-between;font-size:15px;padding:8px 6px;border-bottom:1px solid #d9d1c2}
+.doc .tot b{font:500 24px/1 var(--serif)}
+.doc .mil{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.doc .mil div{border:1px solid #e3dccf;padding:10px}
+.doc .mil b{display:block;font:500 20px/1.1 var(--serif)}
+.doc svg{width:100%;height:auto;display:block;border:1px solid #e3dccf}
+.pano{max-width:1200px;margin:0 auto;aspect-ratio:16/9;max-height:78vh;background:#000;position:relative}
+.pano canvas{width:100%!important;height:100%!important;display:block}
+.pano p{position:absolute;left:12px;bottom:10px;margin:0;font-size:11.5px;color:#ddd;background:rgba(0,0,0,.5);padding:4px 8px}
+.still{max-width:1200px;margin:0 auto;display:block;width:100%;height:auto}
+.empty{color:var(--faint);font-size:12px;padding:6px 0}
+@media (max-width:1000px){html,body{overflow:auto;height:auto}.app{grid-template-columns:1fr;grid-template-rows:auto 62vh auto auto auto;height:auto}main#vp{grid-row:2}#left{grid-row:3;border-right:0;border-top:1px solid var(--line)}#right{grid-row:4;border-left:0}footer.qbar{grid-row:5;flex-wrap:wrap;padding-block:10px}header.top{flex-wrap:wrap;padding-block:6px}.stages{order:3;width:100%;justify-content:flex-start}.stages button{height:42px}.doc{padding:28px 20px}.doc .grid2,.doc .mil{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="mark" href="index.html"><b>FIRMCOP</b><small>Design Studio</small></a>
+    <nav class="stages" id="stages" aria-label="Stages"></nav>
+    <div class="tright" id="tright"></div>
+  </header>
+  <aside id="left" aria-label="Catalogue"></aside>
+  <main id="vp">
+    <div id="three"></div>
+    <svg id="plan" xmlns="http://www.w3.org/2000/svg" aria-label="Floor plan"></svg>
+    <div class="vtog"><div class="seg" id="vtog"></div></div>
+    <div class="vhint" id="vhint"></div>
+    <div class="walkpad" id="walkpad" hidden>
+      <span></span><button type="button" data-a="walkMove" data-v="f" aria-label="Forward">↑</button><span></span>
+      <button type="button" data-a="walkMove" data-v="l" aria-label="Left">←</button><button type="button" data-a="walkMove" data-v="b" aria-label="Back">↓</button><button type="button" data-a="walkMove" data-v="r" aria-label="Right">→</button>
+      <button type="button" class="x" data-a="walkExit">Exit walk</button>
+    </div>
+  </main>
+  <aside id="right" aria-label="Inspector"></aside>
+  <footer class="qbar" id="qbar"></footer>
+</div>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<div id="toast" role="status"></div>
+<div id="chip"></div>
+<script src="ds-config.js"></script>
+<script src="ds-core.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const DS = window.DS, { PRESETS, SYS, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, C } = DS;
+const $ = s => document.querySelector(s);
+const KSh = v => 'KSh ' + Math.round(v).toLocaleString('en-US');
+const m2 = v => (Math.round(v * 10) / 10).toFixed(1) + ' m²';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+const snap = (v, s) => Math.round(v / s) * s;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------------- state ----------------
+const KEY = 'fc-design-studio-v1';
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && PRESETS[s.preset] && Array.isArray(s.parts)) return s; } catch (e) {} return null; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+let P = load() || DS.starter('tw40', 'Twin 40 family home');
+let HIST = [], FUT = [], PENDING = false;
+let STAGE = 'shell', VIEW = '3d', SEL = null, TOOL = 'select', CLIENT = false, SHOWCHECKS = false;
+let SHELLSYS = PRESETS[P.preset].sys, ADDSIDE = 'S', FTAB = 'kitchen', NTAB = 'floor';
+let G, R, L, Q, A, DIRTY3D = true;
+const RENDERS = [], JOBS = [];
+let AUTHOR = false, SESSION = null, AF = null;
+try { SESSION = JSON.parse(localStorage.getItem('fc-ds-session') || 'null'); } catch (e) {}
+let SCENE = 'day', CUT = false, WALK = null, STATUS = 0, LINK = null;
+const CLIENTINFO = { name: 'Achieng Otieno', phone: '+254 7XX XXX XXX', site: 'Naivasha, plot 14' };
+const STAGES = [['shell', 'Shell', '3d'], ['plan', 'Plan', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finish', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
+const PIPE = ['Design in progress', 'Engineering review', 'Proposal sent to client', 'Deposit requested (M-Pesa)', 'Order placed'];
+
+function recompute() {
+  G = DS.grid(P); R = DS.roomInfo(P, G); L = DS.lining(P, G); Q = DS.quote(P, G, R, L); A = DS.analyze(P, G, R);
+  if (SEL && !findSel()) SEL = null;
+}
+function snapshot() { HIST.push(JSON.stringify(P)); if (HIST.length > 80) HIST.shift(); FUT = []; }
+function commit(fn) { snapshot(); fn(P); after(); }
+function after() { recompute(); DIRTY3D = true; save(); renderUI(); refreshView(); }
+function undo() { if (!HIST.length) return; FUT.push(JSON.stringify(P)); P = JSON.parse(HIST.pop()); SEL = null; after(); toast('Undone'); }
+function redo() { if (!FUT.length) return; HIST.push(JSON.stringify(P)); P = JSON.parse(FUT.pop()); SEL = null; after(); }
+function findSel() {
+  if (!SEL) return null;
+  if (SEL.kind === 'item') return P.items.find(x => x.id === SEL.id);
+  if (SEL.kind === 'run') return P.runs.find(x => x.id === SEL.id);
+  if (SEL.kind === 'open') return P.opens.find(x => x.id === SEL.id);
+  if (SEL.kind === 'part') return P.parts.find(x => x.id === SEL.id);
+  if (SEL.kind === 'room') return R && R.find(x => x.id === SEL.id);
+  return null;
+}
+const LOCKKEY = { item: 'items', run: 'runs', open: 'opens', part: 'parts' };
+function locked(kind) { const l = P.design && P.design.rules && P.design.rules.lock; return !AUTHOR && !!l && l.includes(LOCKKEY[kind] || kind); }
+function lockToast(kind) { toast(`${{ items: 'Furniture', runs: 'Joinery', opens: 'Doors and windows', parts: 'Partitions' }[LOCKKEY[kind] || kind]} are fixed in this design. Switch on Author to change them`); }
+function finAllowed(g, k) { const f = P.design && P.design.rules && P.design.rules.finishes; if (AUTHOR || !f || !f[g] || f[g] === 'all') return true; return f[g].includes(k); }
+let toastT; function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 2600); }
+const PRE = () => PRESETS[P.preset];
+const SYSD = () => SYS[PRE().sys];
+
+// ---------------- placement helpers ----------------
+function rectFree(r, ignore) {
+  const things = [];
+  P.items.forEach(it => { if (it.id !== ignore && !ITEMS[it.k].flat) things.push(DS.itemRect(it)); });
+  P.runs.forEach(rn => { if (rn.id !== ignore) { const q = DS.runRect(P, rn); if (q) things.push(q); } });
+  const ov = (a, b) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 0.02 && Math.min(a.z1, b.z1) - Math.max(a.z0, b.z0) > 0.02;
+  if (things.some(t => ov(t, r))) return false;
+  for (let x = r.x0 + 0.05; x < r.x1; x += C) for (let z = r.z0 + 0.05; z < r.z1; z += C) if (G.at(x, z) <= 0) return false;
+  return true;
+}
+function freeSpotFor(k, rot, near) {
+  const d = ITEMS[k], odd = rot % 2 === 1, w = odd ? d.d : d.w, dd = odd ? d.w : d.d, p = PRE();
+  let best = null, bd = 1e9;
+  for (let x = p.t + w / 2; x <= p.L - p.t - w / 2 + 1e-6; x += 0.1) for (let z = p.t + dd / 2; z <= p.W - p.t - dd / 2 + 1e-6; z += 0.1) {
+    const r = { x0: x - w / 2, x1: x + w / 2, z0: z - dd / 2, z1: z + dd / 2 };
+    if (p.sys === 'aframe' && DS.hr(P, z) < d.h + 0.2) continue;
+    if (!rectFree(r)) continue;
+    const dist = (x - near[0]) ** 2 + (z - near[1]) ** 2; if (dist < bd) { bd = dist; best = [Math.round(x * 100) / 100, Math.round(z * 100) / 100]; }
+  }
+  return best;
+}
+function wallOptions() {
+  const o = SYSD().sides.map(s => [s, DS.SIDE_NAME[s]]);
+  P.parts.forEach((q, i) => { const n = `Partition ${i + 1}`; o.push([`P:${q.id}:+`, `${n}, ${q.a === 'z' ? 'east' : 'south'} face`], [`P:${q.id}:-`, `${n}, ${q.a === 'z' ? 'west' : 'north'} face`]); });
+  return o;
+}
+function wallLen(side) {
+  if (side.startsWith('P:')) { const q = P.parts.find(x => x.id === side.split(':')[1]); return q ? q.s1 - q.s0 : 0; }
+  return DS.sideLen(P, side) - 2 * PRE().t;
+}
+function placeRun(kind) {
+  const units = kind === 'kitchen' ? ['base', 'sink', 'hob', 'drawer'] : ['double'];
+  for (const [side] of wallOptions()) {
+    const run = { id: uid('r'), kind, side, u0: 0, units, front: kind === 'kitchen' ? 'white' : 'oak', top: 'quartz', wallCab: false }, len = DS.runLen(run);
+    for (let u = 0; u + len <= wallLen(side) + 1e-6; u += 0.1) {
+      run.u0 = Math.round(u * 100) / 100; const r = DS.runRect(P, run);
+      if (!r || !rectFree(r)) continue;
+      const b = r.b; let blocked = false;
+      if (b.ext) P.opens.filter(o => o.side === b.ext).forEach(o => { const s = DS.openSpan(P, o); if (OPEN[o.k].door && s.u0 < run.u0 + PRE().t + len && s.u1 > run.u0 + PRE().t) blocked = true; });
+      if (blocked) continue;
+      if (PRE().sys === 'aframe') { const z0 = r.z0, z1 = r.z1; if (Math.min(DS.hr(P, z0), DS.hr(P, z1)) < 2.2) continue; }
+      return run;
+    }
+  }
+  return null;
+}
+function freeOpenU(side, k) {
+  const d = OPEN[k], len = DS.sideLen(P, side), t = PRE().t;
+  const taken = P.opens.filter(o => o.side === side).map(o => DS.openSpan(P, o));
+  const mid = len / 2; let best = null, bd = 1e9;
+  for (let u = t + 0.2 + d.w / 2; u <= len - t - 0.2 - d.w / 2 + 1e-6; u += 0.05) {
+    const s = { u0: u - d.w / 2, u1: u + d.w / 2 };
+    if (taken.some(q => q.u0 < s.u1 + 0.1 && s.u0 < q.u1 + 0.1)) continue;
+    if (P.parts.some(q => { const j = q.a === 'z' && (side === 'N' && q.s0 <= t + 0.05 || side === 'S' && q.s1 >= PRE().W - t - 0.05) || q.a === 'x' && (side === 'W' && q.s0 <= t + 0.05 || side === 'E' && q.s1 >= PRE().L - t - 0.05); return j && s.u0 < q.at + 0.05 && s.u1 > q.at - 0.15; })) continue;
+    if (PRE().sys === 'aframe' && Math.min(DS.hr(P, s.u0), DS.hr(P, s.u1)) < d.sill + d.h + 0.1) continue;
+    const dd = Math.abs(u - mid); if (dd < bd) { bd = dd; best = Math.round(u * 100) / 100; }
+  }
+  return best;
+}
+
+// ---------------- UI rendering ----------------
+function renderUI() { renderTop(); renderLeft(); renderRight(); renderBar(); renderViewChrome(); }
+function renderTop() {
+  $('#stages').innerHTML = STAGES.map(([k, l], i) => `<button type="button" class="${STAGE === k ? 'on' : ''}" data-a="stage" data-v="${k}" aria-current="${STAGE === k ? 'step' : 'false'}"><i>${i + 1}</i>${l}</button>`).join('');
+  const src = DS.SOURCE || { kind: 'builtin', label: 'Built-in catalogue' };
+  $('#tright').innerHTML = `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
+}
+function renderViewChrome() {
+  $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button>`;
+  $('#plan').style.display = VIEW === '2d' ? 'block' : 'none';
+  $('#three').style.visibility = VIEW === '3d' ? 'visible' : 'hidden';
+  const h = $('#vhint');
+  const hints = {
+    '2d': TOOL === 'part' ? 'Drag on the plan to draw a partition. It snaps to 100 mm. Press Esc to stop drawing.' : STAGE === 'furnish' ? 'Drag pieces from the catalogue onto the plan, or click them to drop in a free spot. Drag to move · R rotates · Delete removes.' : 'Click to select · drag to move · R rotates · Delete removes. Rooms re-form when partitions move.',
+    '3d': WALK ? 'Drag to look around · W A S D or the arrows to walk · Esc to exit.' : STAGE === 'finish' ? 'Click a floor or wall to pick its room, then choose a finish on the left.' : 'Drag to orbit · scroll to zoom · right-drag to pan · click to select.',
+  };
+  h.textContent = hints[VIEW]; h.className = 'vhint' + (VIEW === '2d' ? ' paper' : '');
+  $('#walkpad').hidden = !(WALK && VIEW === '3d');
+}
+const sideBtns = (cur, act) => `<div class="seg">${SYSD().sides.map(s => `<button type="button" class="${cur === s ? 'on' : ''}" data-a="${act}" data-v="${s}">${s}</button>`).join('')}</div>`;
+function renderLeft() {
+  const el = $('#left'); let h = '';
+  if (STAGE === 'shell') {
+    const ds = (DS.DESIGNS || []).filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
+    h = `<div class="sec"><div class="eb">Step 1 · Shell</div><h2 class="h">Choose the system</h2>
+      <div class="seg">${Object.entries(SYS).map(([k, s]) => `<button type="button" class="${SHELLSYS === k ? 'on' : ''}" data-a="shellsys" data-v="${k}">${s.name}</button>`).join('')}</div></div>
+      <div class="sec"><div class="eb">Catalogue designs</div><div class="cards">${ds.map(d => `<button type="button" class="card ${P.design && P.design.slug === d.slug ? 'on' : ''}" data-a="design" data-v="${d.slug}"><div class="row"><b>${esc(d.name)}</b><span class="chip">v${d.version}</span></div><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes && !CLIENT ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('') || '<p class="empty">No published designs for this system yet.</p>'}</div></div>
+      <div class="sec"><div class="eb">${allowS ? 'Sizes this design allows' : 'Or start from a blank size'}</div>
+      <div class="cards">${Object.entries(PRESETS).filter(([k, p]) => p.sys === SHELLSYS && (!allowS || allowS.includes(k))).map(([k, p]) => `<button type="button" class="card ${P.preset === k ? 'on' : ''}" data-a="preset" data-v="${k}"><div class="row"><b>${p.name}</b>${P.preset === k ? '<span class="chip br">Current</span>' : ''}</div><small>${p.sub} · ${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>
+      <p class="note">Choosing a size loads its starter layout, ready to change. Undo brings your previous layout back.</p></div>`;
+  } else if (STAGE === 'plan') {
+    const avail = Object.entries(OPEN).filter(([, d]) => (!d.only || d.only.includes(PRE().sys)) && (!d.not || !d.not.includes(PRE().sys)));
+    h = `<div class="sec"><div class="eb">Step 2 · Plan</div><h2 class="h">Rooms and openings</h2>
+      <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Draw partition</button></div>
+      <p class="note">Partitions split the shell into rooms. Add a door from the partition's panel on the right.</p></div>
+      <div class="sec"><div class="eb">Add a door or window</div>${sideBtns(ADDSIDE, 'addside')}
+      <div class="cards">${avail.map(([k, d]) => `<button type="button" class="card" data-a="addopen" data-v="${k}"><div class="row"><b>${d.name}</b><small>${CLIENT ? '' : KSh(d.price)}</small></div><small>${d.gable ? 'Whole gable end' : `${(d.w * 1000) | 0} × ${(d.h * 1000) | 0} mm${d.sill ? ` · sill ${(d.sill * 1000) | 0}` : ''}`}${CLIENT ? '' : ` · ${d.stock} in stock`}</small></button>`).join('')}</div>
+      ${PRE().sys === 'aframe' ? '<p class="note">On an A-frame, doors and windows go in the gable ends. The roof slopes cap their height.</p>' : ''}</div>`;
+  } else if (STAGE === 'furnish') {
+    const tabs = [['kitchen', 'Kitchens and wardrobes'], ['bath', 'Bathroom'], ['furn', 'Furniture']];
+    h = `<div class="sec"><div class="eb">Step 3 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
+    if (FTAB === 'kitchen') h += `<div class="cards"><button type="button" class="card" data-a="addrun" data-v="kitchen"><b>Modular kitchen run</b><small>Base, sink, hob and tall units on a 300/600/800 mm grid. Fronts, worktop and wall cabinets are set on the right.</small><small>${CLIENT ? '' : 'From ' + KSh(165000)}</small></button><button type="button" class="card" data-a="addrun" data-v="wardrobe"><b>Modular wardrobe run</b><small>Hanging, shelf and drawer units in 500 and 1000 mm widths.</small><small>${CLIENT ? '' : 'From ' + KSh(38000)}</small></button></div><p class="note">Runs fix to an outside wall or a partition face and add their units to the BOQ.</p>`;
+    else {
+      const ks = Object.entries(ITEMS).filter(([, d]) => FTAB === 'bath' ? d.sanitary : !d.sanitary), cats = [...new Set(ks.map(([, d]) => d.cat))];
+      h += cats.map(c => `<div class="eb" style="color:var(--muted)">${c}</div><div class="cards two">${ks.filter(([, d]) => d.cat === c).map(([k, d]) => `<button type="button" class="card" data-a="additem" data-v="${k}" data-drag="${k}"><b>${d.name}</b><small>${(d.w * 1000) | 0} × ${(d.d * 1000) | 0}</small>${CLIENT ? '' : `<small>${d.sanitary ? KSh(d.price) : 'Décor · ' + KSh(d.price)}</small>`}</button>`).join('')}</div>`).join('');
+      h += `<p class="note">${FTAB === 'bath' ? 'Sanitary ware is stocked and always priced.' : 'Furniture is décor. It is priced only when the furniture package is on.'}</p>`;
+    }
+    h += '</div>';
+  } else if (STAGE === 'finish') {
+    const tabs = [['floor', 'Floors'], ['wall', 'Walls'], ['ceil', 'Ceiling']], room = SEL && SEL.kind === 'room' ? findSel() : null;
+    h = `<div class="sec"><div class="eb">Step 4 · Finish</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
+      <p class="note">${NTAB === 'ceil' ? 'Applies to the whole ceiling.' : room ? `Applying to <b style="color:var(--ivory)">${esc(room.name)}</b>.` : 'Pick a room in the 3D view or the list on the right first.'}</p></div>
+      <div class="sec"><div class="cards">${Object.entries(FIN[NTAB]).filter(([k]) => finAllowed(NTAB, k)).map(([k, f]) => {
+        const cur = NTAB === 'ceil' ? P.ceil === k : room && room[NTAB] === k, used = Q.use[NTAB + ':' + k] || 0;
+        return `<button type="button" class="card ${cur ? 'on' : ''}" data-a="fin" data-g="${NTAB}" data-v="${k}"><span class="fsw" style="background:${f.col}"></span><div class="row"><b>${f.name}</b>${f.wet ? '<span class="chip">Wet rated</span>' : ''}</div><small>${CLIENT ? '' : KSh(f.price) + ' per m² · '}${CLIENT ? (f.stock < used ? 'Ordered in' : 'In stock') : `${f.stock === 999 ? 'Made on site' : f.stock + ' m² in stock'}${used ? ` · this design ${used.toFixed(1)} m²` : ''}`}</small></button>`;
+      }).join('')}</div></div>`;
+  } else if (STAGE === 'render') {
+    h = `<div class="sec"><div class="eb">Step 5 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
+      <div class="sec"><div class="eb">Camera</div><div class="btns"><button type="button" class="btn" data-a="cam" data-v="front">Front</button><button type="button" class="btn" data-a="cam" data-v="aerial">Aerial</button><button type="button" class="btn" data-a="cam" data-v="doll">Dollhouse</button></div>
+      <label class="row" style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Cutaway roof<input type="checkbox" data-in="cut" ${CUT ? 'checked' : ''}></label></div>
+      <div class="sec"><div class="eb">Walk inside</div><div class="list">${R.map(r => `<button type="button" data-a="walk" data-v="${r.id}"><span>${esc(r.name)}</span><span>Stand here →</span></button>`).join('')}</div></div>`;
+  } else {
+    h = `<div class="sec"><div class="eb">Step 6 · Share</div><h2 class="h">Client</h2>
+      <label class="lbl">Client name<input type="text" id="cl-name" data-in="cl" data-v="name" value="${esc(CLIENTINFO.name)}"></label>
+      <label class="lbl">Phone or WhatsApp<input type="tel" id="cl-phone" data-in="cl" data-v="phone" value="${esc(CLIENTINFO.phone)}"></label>
+      <label class="lbl">Site<input type="text" id="cl-site" data-in="cl" data-v="site" value="${esc(CLIENTINFO.site)}"></label>
+      <p class="note">Example client, for the demo.</p></div>
+      <div class="sec"><div class="eb">Deal stage</div><div class="pipe">${PIPE.map((s, i) => `<div class="${i < STATUS ? 'done' : i === STATUS ? 'cur' : ''}"><i></i><span>${s}</span></div>`).join('')}</div></div>`;
+  }
+  el.innerHTML = h;
+}
+function checksHtml(list) {
+  if (!list.length) return '<p class="note" style="color:var(--ok)">All checks pass.</p>';
+  const lab = { error: ['err', 'Fix'], warn: ['warn', 'Check'], eng: ['eng', 'Engineer'] };
+  return `<div class="list">${list.map(a => `<button type="button" data-a="ref" data-k="${a.ref ? a.ref.kind : ''}" data-id="${a.ref ? a.ref.id : ''}"><span style="white-space:normal">${esc(a.text)}</span><span class="chip ${lab[a.lvl][0]}">${lab[a.lvl][1]}</span></button>`).join('')}</div>`;
+}
+function inspector() {
+  const s = findSel(); if (!s) return '';
+  const k = SEL.kind;
+  if (k === 'item') {
+    const d = ITEMS[s.k];
+    return `<div class="sec insp"><div class="eb">${d.cat}</div><h2 class="h">${d.name}</h2><div class="sub">${(d.w * 1000) | 0} × ${(d.d * 1000) | 0} × ${(d.h * 1000) | 0} mm · ${d.sanitary ? 'Priced ' + (CLIENT ? '' : KSh(d.price)) : P.furnPkg ? 'Furniture package' + (CLIENT ? '' : ' · ' + KSh(d.price)) : 'Décor, not priced'}</div>
+      <div class="btns"><button type="button" class="btn" data-a="rot">Rotate 90°</button><button type="button" class="btn" data-a="dup">Duplicate</button><button type="button" class="btn del" data-a="del">Delete</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
+  }
+  if (k === 'run') {
+    const cat = DS.runCat(s), len = DS.runLen(s), f = FRONTS[s.front], wl = wallLen(s.side), price = Q.lines.filter(l => l.grp === 'Joinery').reduce((a, l) => a, 0);
+    const base = s.units.reduce((a, u) => a + cat[u].price, 0) * f.mult, wt = DS.runUnits(P, s).filter(u => !u.tall).reduce((a, u) => a + u.a1 - u.a0, 0);
+    const tot = base + (s.kind === 'kitchen' ? wt * TOPS[s.top].perM + (s.wallCab ? wt * 26700 * f.mult : 0) : 0);
+    return `<div class="sec insp"><div class="eb">Modular ${s.kind}</div><h2 class="h">${s.kind === 'kitchen' ? 'Kitchen run' : 'Wardrobe run'}</h2><div class="sub">${s.units.length} units · ${len.toFixed(2)} m long${CLIENT ? '' : ' · ' + KSh(tot)}</div>
+      <label class="lbl">Wall<select id="run-side" data-in="runSide">${wallOptions().map(([v, l]) => `<option value="${v}" ${s.side === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      <label class="lbl"><span>Position along the wall <b>${s.u0.toFixed(2)} m</b></span><input type="range" id="run-u" min="0" max="${Math.max(0, wl - len).toFixed(2)}" step="0.05" value="${s.u0}" data-in="runU"></label>
+      <div class="eb" style="color:var(--muted)">Units, left to right</div>
+      <div class="units">${s.units.map((u, i) => `<div class="unit"><i>${i + 1}</i><select id="unit-${i}" data-in="unitType" data-i="${i}">${Object.entries(cat).map(([kk, d]) => `<option value="${kk}" ${u === kk ? 'selected' : ''}>${d.name}</option>`).join('')}</select><small>${(cat[u].w * 1000) | 0}</small><span style="display:flex;gap:3px"><button type="button" class="ib" data-a="unitMove" data-i="${i}" data-v="-1" aria-label="Move left">‹</button><button type="button" class="ib" data-a="unitMove" data-i="${i}" data-v="1" aria-label="Move right">›</button><button type="button" class="ib" data-a="unitDel" data-i="${i}" aria-label="Remove unit">×</button></span></div>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px"><select id="unit-add" aria-label="Unit to add">${Object.entries(cat).map(([kk, d]) => `<option value="${kk}">${d.name} · ${(d.w * 1000) | 0}</option>`).join('')}</select><button type="button" class="btn" data-a="unitAdd">Add unit</button></div>
+      <div class="eb" style="color:var(--muted)">Fronts</div><div class="sws">${Object.entries(FRONTS).map(([kk, fr]) => `<button type="button" class="sw ${s.front === kk ? 'on' : ''}" style="background:${fr.col}" data-a="front" data-v="${kk}" aria-label="${fr.name}" title="${fr.name}"></button>`).join('')}<span class="sub" style="align-self:center">${f.name}</span></div>
+      ${s.kind === 'kitchen' ? `<label class="lbl">Worktop<select id="run-top" data-in="top">${Object.entries(TOPS).map(([kk, t]) => `<option value="${kk}" ${s.top === kk ? 'selected' : ''}>${t.name}${CLIENT ? '' : ' · ' + KSh(t.perM) + '/m'}</option>`).join('')}</select></label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Wall cabinets above<input type="checkbox" id="run-wc" data-in="wallCab" ${s.wallCab ? 'checked' : ''}></label>` : ''}
+      <div class="btns"><button type="button" class="btn del" data-a="del">Delete run</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
+  }
+  if (k === 'open') {
+    const d = OPEN[s.k], avail = Object.entries(OPEN).filter(([, x]) => (!x.only || x.only.includes(PRE().sys)) && (!x.not || !x.not.includes(PRE().sys))), len = DS.sideLen(P, s.side);
+    return `<div class="sec insp"><div class="eb">${d.door ? 'Door' : 'Window'}</div><h2 class="h">${d.name}</h2><div class="sub">${DS.SIDE_NAME[s.side]}${CLIENT ? '' : ' · ' + KSh(d.price) + ' · ' + d.stock + ' in stock'}</div>
+      <label class="lbl">Type<select id="open-k" data-in="openK">${avail.map(([kk, x]) => `<option value="${kk}" ${s.k === kk ? 'selected' : ''}>${x.name}</option>`).join('')}</select></label>
+      ${sideBtns(s.side, 'openSide')}
+      ${d.gable ? '' : `<label class="lbl"><span>Position <b>${s.u.toFixed(2)} m</b></span><input type="range" id="open-u" min="${(d.w / 2 + 0.2).toFixed(2)}" max="${(len - d.w / 2 - 0.2).toFixed(2)}" step="0.05" value="${s.u}" data-in="openU"></label>`}
+      <div class="btns"><button type="button" class="btn del" data-a="del">Delete</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
+  }
+  if (k === 'part') {
+    const p = PRE(), max = s.a === 'x' ? p.W : p.L, along = s.a === 'x' ? p.L : p.W, len = s.s1 - s.s0;
+    return `<div class="sec insp"><div class="eb">Partition</div><h2 class="h">Partition ${P.parts.indexOf(s) + 1}</h2><div class="sub">${s.a === 'x' ? 'Runs east–west' : 'Runs north–south'} · ${len.toFixed(1)} m${CLIENT ? '' : ' · ' + KSh(len * DS.PART_PER_M)}</div>
+      <label class="lbl"><span>Position <b>${s.at.toFixed(1)} m</b></span><input type="range" id="part-at" min="0.5" max="${(max - 0.4).toFixed(1)}" step="0.1" value="${s.at}" data-in="partAt"></label>
+      <label class="lbl"><span>Starts at <b>${s.s0.toFixed(1)} m</b></span><input type="range" id="part-s0" min="0" max="${(s.s1 - 0.6).toFixed(1)}" step="0.1" value="${s.s0}" data-in="partS0"></label>
+      <label class="lbl"><span>Ends at <b>${s.s1.toFixed(1)} m</b></span><input type="range" id="part-s1" min="${(s.s0 + 0.6).toFixed(1)}" max="${along.toFixed(2)}" step="0.1" value="${s.s1}" data-in="partS1"></label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Door in this partition<input type="checkbox" id="part-door" data-in="partDoorOn" ${s.door != null ? 'checked' : ''}></label>
+      ${s.door != null ? `<label class="lbl"><span>Door position <b>${s.door.toFixed(2)} m</b></span><input type="range" id="part-dpos" min="0.45" max="${Math.max(0.45, len - 0.45).toFixed(2)}" step="0.05" value="${s.door}" data-in="partDoor"></label>` : ''}
+      <div class="btns"><button type="button" class="btn del" data-a="del">Delete</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
+  }
+  if (k === 'room') {
+    const wa = L.filter(pc => pc.room === s.id).reduce((a, pc) => a + (pc.a1 - pc.a0) * (pc.y1 - pc.y0), 0);
+    return `<div class="sec insp"><div class="eb">Room</div><label class="lbl">Name<input type="text" id="room-name" data-in="roomName" value="${esc(s.name)}"></label>
+      <div class="sub">${m2(s.area)} floor · ${m2(wa)} wall lining</div>
+      <div class="list"><div><span>Floor</span><span>${FIN.floor[s.floor].name}</span></div><div><span>Walls</span><span>${FIN.wall[s.wall].name}</span></div></div>
+      <div class="btns"><button type="button" class="btn" data-a="allfloor">Use this floor everywhere dry</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
+  }
+  return '';
+}
+function renderRight() {
+  const el = $('#right'); let h = '';
+  if (SHOWCHECKS) h += `<div class="sec"><div class="row" style="display:flex;justify-content:space-between;align-items:center"><div class="eb">Checks</div><button type="button" class="tb" data-a="checks">Close</button></div>${checksHtml(A)}</div>`;
+  h += inspector();
+  const ins = !!findSel();
+  if (STAGE === 'shell') {
+    const p = PRE(), area = R.reduce((a, r) => a + r.area, 0);
+    h += `<div class="sec"><div class="eb">Design</div><label class="lbl">Name<input type="text" id="d-name" data-in="name" value="${esc(P.name)}"></label>
+      <div class="list"><div><span>System</span><span>${SYSD().name}</span></div><div><span>Shell</span><span>${p.name}</span></div><div><span>Internal floor</span><span>${m2(area)}</span></div><div><span>Rooms</span><span>${R.length}</span></div><div><span>Lead time</span><span>${Q.weeks} weeks</span></div></div></div>
+      <div class="sec"><div class="eb">Exterior colour</div><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
+      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="plan">Next: plan the rooms</button></div></div>`;
+  } else if (STAGE === 'plan' || STAGE === 'furnish') {
+    if (STAGE === 'furnish') h += `<div class="sec"><div class="eb">Furniture package</div><label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Include furniture in the quote<input type="checkbox" id="furnpkg" data-in="furnPkg" ${P.furnPkg ? 'checked' : ''}></label><p class="note">Off: furniture shows in renders as décor only.</p></div>`;
+    h += `<div class="sec"><div class="eb">Rooms</div><div class="list">${R.map(r => `<button type="button" data-a="sel" data-k="room" data-id="${r.id}" class="${SEL && SEL.kind === 'room' && SEL.id === r.id ? 'sel' : ''}"><span>${esc(r.name)}</span><span>${m2(r.area)}</span></button>`).join('')}</div></div>`;
+    if (STAGE === 'furnish') h += `<div class="sec"><div class="eb">Joinery</div>${P.runs.length ? `<div class="list">${P.runs.map(rn => `<button type="button" data-a="sel" data-k="run" data-id="${rn.id}"><span>${rn.kind === 'kitchen' ? 'Kitchen' : 'Wardrobe'} · ${rn.units.length} units</span><span>${DS.runLen(rn).toFixed(2)} m</span></button>`).join('')}</div>` : '<p class="empty">No runs yet.</p>'}</div>`;
+    if (!SHOWCHECKS) h += `<div class="sec"><div class="eb">Checks</div>${checksHtml(A)}</div>`;
+  } else if (STAGE === 'finish') {
+    h += `<div class="sec"><div class="eb">Room finishes</div><div class="list">${R.map(r => `<button type="button" data-a="sel" data-k="room" data-id="${r.id}" class="${SEL && SEL.kind === 'room' && SEL.id === r.id ? 'sel' : ''}" style="flex-direction:column;align-items:stretch;gap:3px"><span style="display:flex;justify-content:space-between;color:var(--ivory)"><b style="font-weight:600">${esc(r.name)}</b><span style="color:var(--muted)">${m2(r.area)}</span></span><span style="display:flex;gap:6px;align-items:center;color:var(--muted);font-size:11.5px"><i style="width:12px;height:12px;background:${FIN.floor[r.floor].col};display:inline-block"></i>${FIN.floor[r.floor].name} <i style="width:12px;height:12px;background:${FIN.wall[r.wall].col};display:inline-block;margin-left:6px"></i>${FIN.wall[r.wall].name}</span></button>`).join('')}</div><div class="list"><div><span>Ceiling</span><span>${FIN.ceil[P.ceil].name}</span></div></div></div>`;
+    if (!CLIENT) h += `<div class="sec"><div class="eb">Stock against this design</div><div class="list">${Q.lines.filter(l => l.fin).map(l => `<div><span style="white-space:normal">${esc(l.name.replace(' (incl. 8% waste)', ''))}<br><small style="color:var(--faint)">${l.qty} m² needed · ${l.stock === 999 ? 'made on site' : l.stock + ' m² in stock'}</small></span><span class="chip ${l.short ? 'warn' : 'ok'}">${l.short ? 'Order in · +2 wk' : 'In stock'}</span></div>`).join('')}</div></div>`;
+  } else if (STAGE === 'render') {
+    h += `<div class="sec"><div class="eb">Capture in the browser</div><div class="btns"><button type="button" class="btn gold" data-a="still">Still image</button><button type="button" class="btn" data-a="pano">360° panorama</button></div><p class="note">Panoramas are taken from where you stand in walk mode, or from the middle of the main room.</p>
+      ${RENDERS.length ? `<div class="gal">${RENDERS.map(r => `<button type="button" data-a="openRender" data-v="${r.id}" aria-label="Open ${r.kind}"><img src="${r.thumb}" alt=""><span>${r.kind === 'pano' ? '360°' : 'Still'}${r.cloud ? ' · cloud' : ''}</span></button>`).join('')}</div>` : '<p class="empty">No captures yet.</p>'}</div>
+      <div class="sec"><div class="eb">Cloud render</div><p class="note">Photoreal, path-traced output from a GPU render farm. The queue below is simulated in this prototype; each job returns a browser capture as a stand-in.</p>
+      <div class="cards"><button type="button" class="card" data-a="job" data-v="still4k"><div class="row"><b>4K still, path traced</b><span class="chip">1 credit</span></div><small>About 2 min · from the current camera</small></button><button type="button" class="card" data-a="job" data-v="pano8k"><div class="row"><b>8K 360° panorama</b><span class="chip">3 credits</span></div><small>About 6 min · for the client tour link</small></button><button type="button" class="card" disabled style="opacity:.5"><div class="row"><b>Walkthrough video, 30 s</b><span class="chip">Phase 2</span></div><small>Camera path through every room</small></button></div>
+      ${JOBS.length ? JOBS.map(j => `<div class="job"><span>${j.label} · ${SCENES[j.scene].label}</span><span class="chip ${j.status === 'Ready' ? 'ok' : 'br'}">${j.status}</span><div class="bar"><i style="width:${j.progress}%"></i></div>${j.status === 'Ready' ? `<button type="button" class="btn" style="grid-column:1/-1;height:30px" data-a="openRender" data-v="${j.rid}">Open result</button>` : ''}</div>`).join('') : ''}
+      <details class="how"><summary>How the cloud renderer will work</summary><ol>
+        <li>Send: the Studio exports the scene as glTF with the camera, scene preset and finish IDs.</li>
+        <li>Queue: a render job is written to the database and the client's credits are reserved.</li>
+        <li>Render: GPU workers map each finish ID to its photoreal material, then path trace with Blender Cycles in headless mode.</li>
+        <li>Deliver: images and panoramas go to storage behind a CDN. The Studio, the client link and the team portal update when the job is done.</li>
+        <li>Control: per-job credits, a quality preset per plan, and auto-retry on worker failure.</li></ol></details></div>`;
+  } else {
+    const errs = A.filter(a => a.lvl === 'error').length, eng = A.filter(a => a.lvl === 'eng').length;
+    if (AUTHOR) h += authorPanel();
+    h += `<div class="sec"><div class="eb">Proposal</div><h2 class="h">${esc(P.name)}</h2>
+      <div class="list"><div><span>Total incl. VAT</span><span style="color:var(--brass-hi)">${KSh(Q.total)}</span></div><div><span>Deposit, 30%</span><span>${KSh(Q.deposit)}</span></div><div><span>Lead time</span><span>${Q.weeks} weeks</span></div><div><span>Renders attached</span><span>${RENDERS.length}</span></div><div><span>Checks</span><span>${errs ? errs + ' to fix' : 'Clear'}${eng ? ' · ' + eng + ' for engineering' : ''}</span></div></div>
+      <div class="btns"><button type="button" class="btn gold" data-a="proposal">Open proposal</button></div></div>
+      <div class="sec"><div class="eb">Hand off</div><div class="cards">
+        <button type="button" class="card" data-a="handoff" data-v="1" ${STATUS >= 1 ? 'disabled style="opacity:.55"' : ''}><b>Send for engineering review</b><small>The design, checks and BOQ go to the engineering queue in the team portal.</small></button>
+        <button type="button" class="card" data-a="handoff" data-v="2" ${STATUS >= 2 ? 'disabled style="opacity:.55"' : ''}><b>Create the client link</b><small>Plan, renders, 360° tour and live price, view-only for the client.</small></button>
+        <button type="button" class="card" data-a="handoff" data-v="3" ${STATUS >= 3 ? 'disabled style="opacity:.55"' : ''}><b>Request the deposit</b><small>Sends an M-Pesa request for ${KSh(Q.deposit)}. On payment, procurement gets the BOQ and stock is reserved.</small></button></div>
+      ${LINK ? `<p class="note">Client link (created when the backend is live): <b style="color:var(--ivory);user-select:all">firmcop.com/p/${LINK}</b></p>` : ''}
+      ${errs && STATUS < 1 ? '<p class="note" style="color:var(--warn)">Fix the checks marked Fix before sending.</p>' : ''}</div>`;
+  }
+  el.innerHTML = h;
+}
+function renderBar() {
+  const e = A.filter(a => a.lvl === 'error').length, w = A.filter(a => a.lvl === 'warn').length, g = A.filter(a => a.lvl === 'eng').length;
+  const chip = e ? `<span class="chip err">${e} to fix</span>` : w ? `<span class="chip warn">${w} to check</span>` : '<span class="chip ok">Checks clear</span>';
+  $('#qbar').innerHTML = `<span class="nm">${esc(P.name)}</span>
+    <div class="kv"><small>Floor</small><b>${m2(R.reduce((a, r) => a + r.area, 0))}</b></div>
+    <div class="kv"><small>Lead time</small><b>${Q.weeks} wk</b></div>
+    <button type="button" class="tb" data-a="checks" style="display:flex;gap:6px;align-items:center">${chip}${g ? `<span class="chip eng">${g} engineer</span>` : ''}</button>
+    <span class="sp"></span>
+    ${CLIENT ? '' : `<div class="kv"><small>Subtotal</small><b>${KSh(Q.sub)}</b></div>`}
+    <div class="kv"><small>Deposit 30%</small><b>${KSh(Q.deposit)}</b></div>
+    <div class="kv"><small>Total incl. VAT</small><b class="big">${KSh(Q.total)}</b></div>
+    <button type="button" class="btn gold" data-a="proposal">Proposal</button>`;
+}
+
+// ---------------- 2D plan ----------------
+const svg = $('#plan');
+const PAPER = { bg: '#F4EFE6', ink: '#2a2724', mid: '#6b645a', faint: '#d8d0c2', grid: '#e7e0d3', brass: '#a37b3e', sel: '#b8873a' };
+function planSVG(stat) {
+  const p = PRE(), X = PAPER, pad = 0.9, dx0 = p.sys === 'aframe' ? 2.2 : 0, ver = p.veranda || 0;
+  const vb = [-pad - dx0, -pad, p.L + 2 * pad + dx0, p.W + 2 * pad + ver];
+  let s = `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${X.bg}"/>`;
+  for (let x = 0; x <= p.L + 1e-6; x += 0.5) s += `<line x1="${x}" y1="0" x2="${x}" y2="${p.W}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  for (let z = 0; z <= p.W + 1e-6; z += 0.5) s += `<line x1="0" y1="${z}" x2="${p.L}" y2="${z}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  if (ver) s += `<rect x="0.3" y="${p.W}" width="${p.L - 0.6}" height="${ver}" fill="#e9dfcd" stroke="${X.mid}" stroke-width="0.015" stroke-dasharray="0.08 0.06"/><text x="${p.L / 2}" y="${p.W + ver / 2 + 0.06}" font-size="0.17" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" letter-spacing="0.03">COVERED VERANDA · ${ver.toFixed(1)} m</text>`;
+  if (dx0) s += `<rect x="${-dx0 + 0.2}" y="0.6" width="${dx0 - 0.2}" height="${p.W - 1.2}" fill="#e9dfcd" stroke="${X.mid}" stroke-width="0.015" stroke-dasharray="0.08 0.06"/><text x="${-dx0 / 2 + 0.1}" y="${p.W / 2}" font-size="0.17" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" transform="rotate(-90 ${-dx0 / 2 + 0.1} ${p.W / 2})">DECK</text>`;
+  // rooms
+  const { nx, nz, g } = G;
+  R.forEach(r => {
+    const col = FIN.floor[r.floor].col, on = SEL && SEL.kind === 'room' && SEL.id === r.id;
+    let rr = '';
+    for (let j = 0; j < nz; j++) { let i = 0; while (i < nx) { if (g[j * nx + i] === r.id) { let k = i; while (k < nx && g[j * nx + k] === r.id) k++; rr += `M${i * C} ${j * C}h${(k - i) * C}v${C}h${-(k - i) * C}z`; i = k; } else i++; } }
+    s += `<path d="${rr}" fill="${col}" fill-opacity="${on ? 0.62 : 0.38}" ${stat ? '' : `data-k="room:${r.id}"`}/>`;
+  });
+  if (p.sys === 'aframe') {
+    const d = (p.W / 2) * (1 - (1.5 + p.yF) / p.ridge), z1 = p.W / 2 - d, z2 = p.W / 2 + d;
+    s += `<line x1="${p.t}" y1="${z1}" x2="${p.L - p.t}" y2="${z1}" stroke="${X.brass}" stroke-width="0.015" stroke-dasharray="0.1 0.07"/><line x1="${p.t}" y1="${z2}" x2="${p.L - p.t}" y2="${z2}" stroke="${X.brass}" stroke-width="0.015" stroke-dasharray="0.1 0.07"/><text x="${p.L - p.t - 0.08}" y="${z1 - 0.07}" font-size="0.13" text-anchor="end" fill="${X.brass}" font-family="IBM Plex Mono, monospace">1.5 m headroom</text>`;
+    s += `<rect x="0" y="0" width="${p.L}" height="${p.W}" fill="none" stroke="${X.ink}" stroke-width="0.02"/><rect x="0" y="0" width="${p.t}" height="${p.W}" fill="${X.ink}"/><rect x="${p.L - p.t}" y="0" width="${p.t}" height="${p.W}" fill="${X.ink}"/>`;
+  } else s += `<path d="M0 0H${p.L}V${p.W}H0Z M${p.t} ${p.t}V${p.W - p.t}H${p.L - p.t}V${p.t}Z" fill="${X.ink}" fill-rule="evenodd"/>`;
+  if (p.twin) s += `<line x1="${p.t}" y1="${p.W / 2}" x2="${p.L - p.t}" y2="${p.W / 2}" stroke="${X.mid}" stroke-width="0.012" stroke-dasharray="0.05 0.08"/><text x="${p.L - 0.25}" y="${p.W / 2 - 0.06}" font-size="0.11" text-anchor="end" fill="${X.mid}" font-family="IBM Plex Mono, monospace">opened party wall</text>`;
+  // openings
+  P.opens.forEach(o => {
+    const d = OPEN[o.k], sp = DS.openSpan(P, o), t = p.t, onS = SEL && SEL.kind === 'open' && SEL.id === o.id;
+    const horiz = o.side === 'N' || o.side === 'S', w0 = o.side === 'N' ? 0 : o.side === 'S' ? p.W - t : o.side === 'W' ? 0 : p.L - t;
+    const rx = horiz ? sp.u0 : w0, ry = horiz ? w0 : sp.u0, rw = horiz ? sp.u1 - sp.u0 : t, rh = horiz ? t : sp.u1 - sp.u0;
+    let g2 = `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="${X.bg}"/>`;
+    if (!d.door || d.glass) {
+      const a = t / 3; g2 += horiz ? `<line x1="${sp.u0}" y1="${w0 + a}" x2="${sp.u1}" y2="${w0 + a}" stroke="${X.ink}" stroke-width="0.012"/><line x1="${sp.u0}" y1="${w0 + 2 * a}" x2="${sp.u1}" y2="${w0 + 2 * a}" stroke="${X.ink}" stroke-width="0.012"/>` : `<line x1="${w0 + a}" y1="${sp.u0}" x2="${w0 + a}" y2="${sp.u1}" stroke="${X.ink}" stroke-width="0.012"/><line x1="${w0 + 2 * a}" y1="${sp.u0}" x2="${w0 + 2 * a}" y2="${sp.u1}" stroke="${X.ink}" stroke-width="0.012"/>`;
+    }
+    if (d.door) {
+      const inward = { N: 1, S: -1, W: 1, E: -1 }[o.side], face = o.side === 'N' ? t : o.side === 'S' ? p.W - t : o.side === 'W' ? t : p.L - t;
+      if (o.k === 'slider') g2 += horiz ? `<line x1="${sp.u0}" y1="${face + inward * 0.05}" x2="${(sp.u0 + sp.u1) / 2 + 0.1}" y2="${face + inward * 0.05}" stroke="${X.ink}" stroke-width="0.025"/><line x1="${(sp.u0 + sp.u1) / 2 - 0.1}" y1="${face + inward * 0.1}" x2="${sp.u1}" y2="${face + inward * 0.1}" stroke="${X.ink}" stroke-width="0.025"/>` : '';
+      else {
+        const leaves = d.w > 1.2 ? [[sp.u0, 1], [sp.u1, -1]] : [[sp.u0, 1]], lw = d.w > 1.2 ? d.w / 2 : d.w;
+        leaves.forEach(([h0, dir]) => {
+          const hx = horiz ? h0 : face, hy = horiz ? face : h0, ex = horiz ? h0 : face + inward * lw, ey = horiz ? face + inward * lw : h0, ax = horiz ? h0 + dir * lw : face, ay = horiz ? face : h0 + dir * lw;
+          const sweep = (horiz ? (inward * dir > 0 ? 1 : 0) : (inward * dir > 0 ? 0 : 1));
+          g2 += `<line x1="${hx}" y1="${hy}" x2="${ex}" y2="${ey}" stroke="${X.ink}" stroke-width="0.02"/><path d="M${ex} ${ey}A${lw} ${lw} 0 0 ${sweep} ${ax} ${ay}" fill="none" stroke="${X.mid}" stroke-width="0.01" stroke-dasharray="0.04 0.03"/>`;
+        });
+      }
+    }
+    if (onS && !stat) g2 += `<rect x="${rx - 0.05}" y="${ry - 0.05}" width="${rw + 0.1}" height="${rh + 0.1}" fill="none" stroke="${X.sel}" stroke-width="0.03"/>`;
+    s += `<g ${stat ? '' : `data-k="open:${o.id}" style="cursor:${d.gable ? 'pointer' : 'ew-resize'}"`}>${g2}</g>`;
+  });
+  // partitions
+  P.parts.forEach(q => {
+    const onS = SEL && SEL.kind === 'part' && SEL.id === q.id; let g2 = '';
+    const seg = (a0, a1) => (q.a === 'x' ? `<rect x="${a0}" y="${q.at - C}" width="${a1 - a0}" height="${C}" fill="${onS ? X.sel : '#3a3632'}"/>` : `<rect x="${q.at - C}" y="${a0}" width="${C}" height="${a1 - a0}" fill="${onS ? X.sel : '#3a3632'}"/>`);
+    if (q.door != null) {
+      const c = q.s0 + q.door, d0 = c - DS.DOOR_W / 2, d1 = c + DS.DOOR_W / 2;
+      g2 += seg(q.s0, d0) + seg(d1, q.s1);
+      const f = q.at, lw = DS.DOOR_W;
+      g2 += q.a === 'x' ? `<line x1="${d0}" y1="${f}" x2="${d0}" y2="${f + lw}" stroke="${X.ink}" stroke-width="0.02"/><path d="M${d0} ${f + lw}A${lw} ${lw} 0 0 0 ${d1} ${f}" fill="none" stroke="${X.mid}" stroke-width="0.01" stroke-dasharray="0.04 0.03"/>` : `<line x1="${f}" y1="${d0}" x2="${f + lw}" y2="${d0}" stroke="${X.ink}" stroke-width="0.02"/><path d="M${f + lw} ${d0}A${lw} ${lw} 0 0 1 ${f} ${d1}" fill="none" stroke="${X.mid}" stroke-width="0.01" stroke-dasharray="0.04 0.03"/>`;
+    } else g2 += seg(q.s0, q.s1);
+    const hit = q.a === 'x' ? `<rect x="${q.s0}" y="${q.at - 0.2}" width="${q.s1 - q.s0}" height="0.3" fill="transparent"/>` : `<rect x="${q.at - 0.2}" y="${q.s0}" width="0.3" height="${q.s1 - q.s0}" fill="transparent"/>`;
+    s += `<g ${stat ? '' : `data-k="part:${q.id}" style="cursor:${q.a === 'x' ? 'ns-resize' : 'ew-resize'}"`}>${g2}${stat ? '' : hit}</g>`;
+  });
+  // runs
+  P.runs.forEach(rn => {
+    const r = DS.runRect(P, rn); if (!r) return;
+    const b = r.b, f = FRONTS[rn.front], onS = SEL && SEL.kind === 'run' && SEL.id === rn.id; let g2 = '';
+    DS.runUnits(P, rn).forEach(u => {
+      const ux = b.axis === 'x' ? u.a0 : r.x0, uz = b.axis === 'x' ? r.z0 : u.a0, uw = b.axis === 'x' ? u.a1 - u.a0 : 0.6, uh = b.axis === 'x' ? 0.6 : u.a1 - u.a0;
+      g2 += `<rect x="${ux}" y="${uz}" width="${uw}" height="${uh}" fill="${u.tall ? '#cfc6b6' : '#e6dfd2'}" stroke="${X.ink}" stroke-width="0.012"/>`;
+      if (u.tall) g2 += `<path d="M${ux} ${uz}L${ux + uw} ${uz + uh}M${ux + uw} ${uz}L${ux} ${uz + uh}" stroke="${X.mid}" stroke-width="0.008"/>`;
+      const cx = ux + uw / 2, cz = uz + uh / 2;
+      if (u.k === 'sink') g2 += `<rect x="${cx - 0.22}" y="${cz - 0.17}" width="0.44" height="0.34" rx="0.05" fill="#fff" stroke="${X.ink}" stroke-width="0.01"/>`;
+      if (u.k === 'hob') for (const [ox, oz] of [[-0.13, -0.12], [0.13, -0.12], [-0.13, 0.12], [0.13, 0.12]]) g2 += `<circle cx="${cx + ox}" cy="${cz + oz}" r="0.08" fill="none" stroke="${X.ink}" stroke-width="0.01"/>`;
+    });
+    const front = b.axis === 'x' ? `<line x1="${r.x0}" y1="${b.dir > 0 ? r.z1 : r.z0}" x2="${r.x1}" y2="${b.dir > 0 ? r.z1 : r.z0}" stroke="${f.col === '#ece9e2' ? '#8b8273' : f.col}" stroke-width="0.04"/>` : `<line x1="${b.dir > 0 ? r.x1 : r.x0}" y1="${r.z0}" x2="${b.dir > 0 ? r.x1 : r.x0}" y2="${r.z1}" stroke="${f.col === '#ece9e2' ? '#8b8273' : f.col}" stroke-width="0.04"/>`;
+    if (onS && !stat) g2 += `<rect x="${r.x0 - 0.05}" y="${r.z0 - 0.05}" width="${r.x1 - r.x0 + 0.1}" height="${r.z1 - r.z0 + 0.1}" fill="none" stroke="${X.sel}" stroke-width="0.03"/>`;
+    s += `<g ${stat ? '' : `data-k="run:${rn.id}" style="cursor:move"`}>${g2}${front}</g>`;
+  });
+  // items
+  P.items.forEach(it => {
+    const d = ITEMS[it.k], w = d.w, dd = d.d, onS = SEL && SEL.kind === 'item' && SEL.id === it.id, o = -w / 2, oz = -dd / 2;
+    const line = X.ink, fill = d.sanitary ? '#ffffff' : d.flat ? '#e2d6c2' : '#f6f2ea';
+    let g2 = `<rect x="${o}" y="${oz}" width="${w}" height="${dd}" rx="${d.flat ? 0 : 0.03}" fill="${fill}" fill-opacity="${d.flat ? 0.6 : 1}" stroke="${line}" stroke-width="${d.flat ? 0.008 : 0.014}" ${d.flat ? 'stroke-dasharray="0.05 0.04"' : ''}/>`;
+    if (it.k === 'bedD' || it.k === 'bedS') { const n = it.k === 'bedD' ? 2 : 1, pw = (w - 0.2) / n; for (let i = 0; i < n; i++) g2 += `<rect x="${o + 0.1 + i * pw + 0.03}" y="${oz + 0.08}" width="${pw - 0.06}" height="0.3" rx="0.04" fill="#fff" stroke="${line}" stroke-width="0.008"/>`; g2 += `<path d="M${o} ${oz + 0.6}H${-o}" stroke="${line}" stroke-width="0.01"/>`; }
+    if (it.k === 'sofa' || it.k === 'arm') g2 += `<rect x="${o}" y="${oz}" width="${w}" height="0.2" fill="#e3dccf" stroke="${line}" stroke-width="0.008"/><rect x="${o}" y="${oz}" width="0.16" height="${dd}" fill="#e3dccf" stroke="${line}" stroke-width="0.008"/><rect x="${-o - 0.16}" y="${oz}" width="0.16" height="${dd}" fill="#e3dccf" stroke="${line}" stroke-width="0.008"/>`;
+    if (it.k === 'wc') g2 += `<rect x="${o + 0.02}" y="${oz}" width="${w - 0.04}" height="0.18" fill="#fff" stroke="${line}" stroke-width="0.008"/><ellipse cx="0" cy="${oz + 0.43}" rx="0.17" ry="0.24" fill="#fff" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'basin') g2 += `<ellipse cx="0" cy="${oz + 0.24}" rx="0.2" ry="0.14" fill="#fff" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'shower') g2 += `<path d="M${o} ${oz}L${-o} ${-oz}M${-o} ${oz}L${o} ${-oz}" stroke="${X.faint}" stroke-width="0.01"/><circle r="0.05" fill="none" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'dining') for (const [cx, cz] of [[-0.35, oz - 0.18], [0.35, oz - 0.18], [-0.35, -oz + 0.18], [0.35, -oz + 0.18]]) g2 += `<rect x="${cx - 0.2}" y="${cz - 0.18}" width="0.4" height="0.36" rx="0.04" fill="#f6f2ea" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'desk') g2 += `<circle cx="0" cy="${-oz + 0.25}" r="0.22" fill="#f6f2ea" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'tv') g2 += `<rect x="${o + 0.2}" y="${oz + 0.05}" width="${w - 0.4}" height="0.05" fill="${line}"/>`;
+    if (it.k === 'plant') g2 = `<circle r="0.22" fill="#c9d4b8" stroke="${line}" stroke-width="0.012"/>`;
+    if (it.k === 'night') g2 += `<circle r="0.1" fill="none" stroke="${line}" stroke-width="0.01"/>`;
+    if (onS && !stat) g2 += `<rect x="${o - 0.06}" y="${oz - 0.06}" width="${w + 0.12}" height="${dd + 0.12}" fill="none" stroke="${X.sel}" stroke-width="0.03"/>`;
+    s += `<g transform="translate(${it.x} ${it.z}) rotate(${(it.rot || 0) * 90})" ${stat ? '' : `data-k="item:${it.id}" style="cursor:move"`}>${g2}</g>`;
+  });
+  // labels
+  R.forEach(r => { s += `<text x="${r.ax}" y="${r.az - 0.02}" font-size="0.17" text-anchor="middle" fill="${X.ink}" font-family="Manrope, sans-serif" font-weight="600" pointer-events="none">${esc(r.name)}</text><text x="${r.ax}" y="${r.az + 0.18}" font-size="0.13" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" pointer-events="none">${r.area.toFixed(1)} m²</text>`; });
+  // dimensions
+  const dm = (x1, y1, x2, y2, t, rot) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${X.mid}" stroke-width="0.01"/><text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 0.08}" font-size="0.15" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" ${rot ? `transform="rotate(-90 ${(x1 + x2) / 2} ${(y1 + y2) / 2})"` : ''}>${t}</text>`;
+  s += dm(0, -0.45, p.L, -0.45, p.L.toFixed(2) + ' m') + `<line x1="0" y1="-0.55" x2="0" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L}" y1="-0.55" x2="${p.L}" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/>`;
+  s += dm(p.L + 0.45, 0, p.L + 0.45, p.W, p.W.toFixed(2) + ' m', true) + `<line x1="${p.L + 0.35}" y1="0" x2="${p.L + 0.55}" y2="0" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L + 0.35}" y1="${p.W}" x2="${p.L + 0.55}" y2="${p.W}" stroke="${X.mid}" stroke-width="0.01"/>`;
+  s += `<g transform="translate(${vb[0] + 0.35} ${vb[1] + 0.4})"><path d="M0 -0.2L0.09 0.12L0 0.06L-0.09 0.12Z" fill="${X.ink}"/><text y="0.32" font-size="0.14" text-anchor="middle" fill="${X.ink}" font-family="IBM Plex Mono, monospace">N</text></g>`;
+  if (!stat && DRAFT) s += `<line x1="${DRAFT.x0}" y1="${DRAFT.z0}" x2="${DRAFT.x1}" y2="${DRAFT.z1}" stroke="${X.sel}" stroke-width="0.1" stroke-opacity="0.75"/><text x="${(DRAFT.x0 + DRAFT.x1) / 2}" y="${(DRAFT.z0 + DRAFT.z1) / 2 - 0.15}" font-size="0.16" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${Math.hypot(DRAFT.x1 - DRAFT.x0, DRAFT.z1 - DRAFT.z0).toFixed(1)} m</text>`;
+  return { vb, body: s };
+}
+let DRAFT = null;
+function renderPlan() { const { vb, body } = planSVG(false); svg.setAttribute('viewBox', vb.join(' ')); svg.innerHTML = body; }
+function svgPt(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
+let DRAG = null;
+svg.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  const [x, z] = svgPt(e), hitEl = e.target.closest('[data-k]');
+  if (TOOL === 'part' && locked('part')) { TOOL = 'select'; renderUI(); return lockToast('part'); }
+  if (TOOL === 'part') { DRAFT = { x0: snap(x, 0.1), z0: snap(z, 0.1), x1: snap(x, 0.1), z1: snap(z, 0.1) }; svg.setPointerCapture(e.pointerId); renderPlan(); return; }
+  if (!hitEl) { if (SEL) { SEL = null; renderUI(); renderPlan(); } return; }
+  const [kind, id0] = hitEl.dataset.k.split(':'), id = kind === 'room' ? +id0 : id0;
+  SEL = { kind, id }; const o = findSel();
+  if (kind !== 'room' && locked(kind)) lockToast(kind);
+  else if (kind !== 'room') DRAG = { kind, id, x, z, orig: JSON.parse(JSON.stringify(o)), moved: false };
+  svg.setPointerCapture(e.pointerId); renderUI(); renderPlan();
+});
+svg.addEventListener('pointermove', e => {
+  if (DRAFT) { const [x, z] = svgPt(e), X = snap(x, 0.1), Z = snap(z, 0.1); if (Math.abs(X - DRAFT.x0) >= Math.abs(Z - DRAFT.z0)) { DRAFT.x1 = X; DRAFT.z1 = DRAFT.z0; } else { DRAFT.z1 = Z; DRAFT.x1 = DRAFT.x0; } renderPlan(); return; }
+  if (!DRAG) return;
+  const [x, z] = svgPt(e), dx = x - DRAG.x, dz = z - DRAG.z;
+  if (!DRAG.moved && Math.hypot(dx, dz) < 0.04) return;
+  if (!DRAG.moved) { snapshot(); DRAG.moved = true; }
+  const o = findSel(), g = DRAG.orig, p = PRE(); if (!o) return;
+  if (DRAG.kind === 'item') { o.x = Math.round(clamp(snap(g.x + dx, 0.05), 0, p.L) * 100) / 100; o.z = Math.round(clamp(snap(g.z + dz, 0.05), 0, p.W) * 100) / 100; }
+  else if (DRAG.kind === 'run') { const b = DS.runBase(P, o); if (b) o.u0 = Math.round(clamp(snap(g.u0 + (b.axis === 'x' ? dx : dz), 0.05), 0, Math.max(0, wallLen(o.side) - DS.runLen(o))) * 100) / 100; }
+  else if (DRAG.kind === 'open') { if (OPEN[o.k].gable) return; const d = OPEN[o.k]; o.u = Math.round(clamp(snap(g.u + (o.side === 'N' || o.side === 'S' ? dx : dz), 0.05), d.w / 2 + 0.2, DS.sideLen(P, o.side) - d.w / 2 - 0.2) * 100) / 100; }
+  else if (DRAG.kind === 'part') { const max = o.a === 'x' ? p.W : p.L; o.at = Math.round(clamp(snap(g.at + (o.a === 'x' ? dz : dx), 0.1), 0.5, max - 0.4) * 10) / 10; }
+  recompute(); renderPlan(); renderBar();
+});
+svg.addEventListener('pointerup', e => {
+  if (DRAFT) {
+    const d = DRAFT; DRAFT = null; const len = Math.hypot(d.x1 - d.x0, d.z1 - d.z0);
+    if (len >= 0.6) {
+      const a = d.z1 === d.z0 ? 'x' : 'z', p = PRE();
+      const q = a === 'x' ? { a, at: Math.round(d.z0 * 10) / 10, s0: Math.round(Math.max(0, Math.min(d.x0, d.x1)) * 10) / 10, s1: Math.round(Math.min(p.L, Math.max(d.x0, d.x1)) * 10) / 10 } : { a, at: Math.round(d.x0 * 10) / 10, s0: Math.round(Math.max(0, Math.min(d.z0, d.z1)) * 10) / 10, s1: Math.round(Math.min(p.W, Math.max(d.z0, d.z1)) * 10) / 10 };
+      if (q.s1 >= (a === 'x' ? p.L : p.W) - p.t - 0.1) q.s1 = Math.round(((a === 'x' ? p.L : p.W) - p.t + 0.04) * 100) / 100;
+      if (q.s0 <= p.t + 0.1) q.s0 = p.t;
+      const id = uid('p'); TOOL = 'select'; commit(P => P.parts.push({ id, ...q, door: null })); SEL = { kind: 'part', id }; renderUI(); renderPlan(); toast('Partition added. Add a door from the panel on the right');
+    } else renderPlan();
+    return;
+  }
+  if (DRAG) { const m = DRAG.moved; DRAG = null; if (m) after(); }
+});
+
+// ---------------- catalogue drag ----------------
+let CDRAG = null;
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest('[data-drag]'); if (!c || e.button !== 0) return;
+  CDRAG = { k: c.dataset.drag, x: e.clientX, y: e.clientY, active: false };
+});
+document.addEventListener('pointermove', e => {
+  if (!CDRAG) return;
+  if (!CDRAG.active && Math.hypot(e.clientX - CDRAG.x, e.clientY - CDRAG.y) > 6) { CDRAG.active = true; const ch = $('#chip'); ch.textContent = ITEMS[CDRAG.k].name; ch.style.display = 'block'; }
+  if (CDRAG.active) { const ch = $('#chip'); ch.style.left = e.clientX + 'px'; ch.style.top = e.clientY + 'px'; }
+});
+document.addEventListener('pointerup', e => {
+  if (!CDRAG) return; const d = CDRAG; CDRAG = null; $('#chip').style.display = 'none';
+  if (!d.active) return; // a click; handled by the click handler
+  SUPPRESS_CLICK = true; setTimeout(() => { SUPPRESS_CLICK = false; }, 0);
+  const vp = $('#vp').getBoundingClientRect(); if (e.clientX < vp.left || e.clientX > vp.right || e.clientY < vp.top || e.clientY > vp.bottom) return;
+  let pt = null;
+  if (VIEW === '2d') pt = svgPt(e); else { const h = floorHit(e); if (h) pt = [h.x, h.z]; }
+  if (!pt) return toast('Drop it on the floor');
+  addItemAt(d.k, snap(pt[0], 0.05), snap(pt[1], 0.05));
+});
+let SUPPRESS_CLICK = false;
+function addItemAt(k, x, z) {
+  const id = uid('i'); commit(P => P.items.push({ id, k, x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, rot: 0 })); SEL = { kind: 'item', id }; renderUI(); refreshView();
+  const bad = A.find(a => a.ref && a.ref.id === id && a.lvl === 'error'); if (bad) toast(bad.text);
+}
+
+// ---------------- actions ----------------
+function setStage(s) {
+  STAGE = s; const st = STAGES.find(x => x[0] === s); TOOL = 'select'; SHOWCHECKS = false;
+  if (WALK && s !== 'render') exitWalk();
+  if (s === 'finish' && !(SEL && SEL.kind === 'room')) SEL = null;
+  const wantCut = s === 'finish' || s === 'plan' || s === 'furnish';
+  if (CUT !== wantCut) { CUT = wantCut; DIRTY3D = true; }
+  setView(st[2], true); renderUI();
+  if (st[2] === '3d') camPreset(wantCut ? 'doll' : 'front');
+}
+function setView(v, quiet) {
+  const was = VIEW; VIEW = v;
+  if (v === '3d') { if (STAGE === 'plan' || STAGE === 'furnish') { if (!CUT) { CUT = true; DIRTY3D = true; } } startLoop(); } else stopLoop();
+  renderViewChrome(); refreshView(); if (v === '3d' && was === '2d' && (STAGE === 'plan' || STAGE === 'furnish')) camPreset('doll');
+  if (!quiet) renderUI();
+}
+function refreshView() { if (VIEW === '2d') renderPlan(); else { if (DIRTY3D) build3D(); else updateSelBox(); } }
+document.addEventListener('click', e => {
+  if (SUPPRESS_CLICK) return;
+  const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
+  const a = b.dataset.a, v = b.dataset.v, s = findSel();
+  switch (a) {
+    case 'stage': return setStage(v);
+    case 'view': return setView(v);
+    case 'undo': return undo();
+    case 'redo': return redo();
+    case 'client': CLIENT = !CLIENT; return renderUI();
+    case 'checks': SHOWCHECKS = !SHOWCHECKS; return renderRight();
+    case 'shellsys': SHELLSYS = v; return renderLeft();
+    case 'design': {
+      const d = (DS.DESIGNS || []).find(x => x.slug === v); if (!d) return; snapshot();
+      P = { ...DS.clone(d.layout), name: d.name, design: { slug: d.slug, version: d.version, rules: d.rules || {} } };
+      if (d.rules && d.rules.defaults) Object.assign(P, d.rules.defaults);
+      SEL = null; AF = null; FIRSTFRAME = true; after(); DIRTY3D = true; refreshView(); camPreset('front');
+      return toast(`${d.name} v${d.version} loaded from the catalogue`);
+    }
+    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 6'); return renderUI();
+    case 'afSave': return authorSave();
+    case 'signIn': return signIn();
+    case 'signOut': SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (e) {} return renderRight();
+    case 'copyPayload': { const t = $('#payload'); try { navigator.clipboard.writeText(t.value).then(() => toast('Copied'), () => { t.select(); }); } catch (e) { t.select(); } return; }
+    case 'preset': { if (v === P.preset) return; snapshot(); const nm = P.name; P = DS.starter(v); SEL = null; AF = null; after(); FIRSTFRAME = true; DIRTY3D = true; refreshView(); camPreset('front'); return toast(`${PRESETS[v].name} loaded with its starter layout`); }
+    case 'colour': return commit(P => { P.colour = v; });
+    case 'tool': TOOL = v; if (VIEW !== '2d') setView('2d'); return renderUI();
+    case 'addside': ADDSIDE = v; return renderLeft();
+    case 'addopen': { if (locked('open')) return lockToast('open');
+      const d = OPEN[v]; let side = d.gable ? (P.opens.some(o => o.k === 'gable' && o.side === 'W') ? 'E' : 'W') : ADDSIDE;
+      if (!SYSD().sides.includes(side)) side = SYSD().sides[0];
+      if (d.gable) { if (P.opens.some(o => o.k === 'gable' && o.side === side)) return toast('Both gables already have full glazing'); }
+      const u = d.gable ? PRE().W / 2 : freeOpenU(side, v); if (u == null) return toast(`No free space on the ${DS.SIDE_NAME[side].toLowerCase()} for that`);
+      const id = uid('o'); commit(P => P.opens.push({ id, k: v, side, u })); SEL = { kind: 'open', id }; renderUI(); refreshView(); return;
+    }
+    case 'ftab': FTAB = v; return renderLeft();
+    case 'ntab': NTAB = v; return renderLeft();
+    case 'addrun': { if (locked('run')) return lockToast('run'); const r = placeRun(v); if (!r) return toast('No free wall is long enough. Clear some space first'); commit(P => P.runs.push(r)); SEL = { kind: 'run', id: r.id }; renderUI(); refreshView(); return; }
+    case 'additem': { if (locked('item')) return lockToast('item');
+      const room = SEL && SEL.kind === 'room' ? findSel() : null, near = room ? [room.ax, room.az] : [PRE().L / 2, PRE().W / 2];
+      const spot = freeSpotFor(v, 0, near); if (!spot) return toast('No free floor space for that');
+      return addItemAt(v, spot[0], spot[1]);
+    }
+    case 'fin': {
+      if (b.dataset.g === 'ceil') return commit(P => { P.ceil = v; });
+      const room = SEL && SEL.kind === 'room' ? findSel() : null; if (!room) return toast('Pick a room first');
+      return commit(P => DS.setRoom(P, G, room, { [b.dataset.g]: v }));
+    }
+    case 'allfloor': { const room = findSel(); if (!room) return; return commit(P => R.filter(r => r.type !== 'bath').forEach(r => DS.setRoom(P, G, r, { floor: room.floor }))); }
+    case 'sel': SEL = { kind: b.dataset.k, id: b.dataset.k === 'room' ? +b.dataset.id : b.dataset.id }; renderUI(); return refreshView();
+    case 'ref': { const k = b.dataset.k; if (!k) return; SEL = { kind: k, id: k === 'room' ? +b.dataset.id : b.dataset.id }; if (!findSel()) SEL = null; renderUI(); return refreshView(); }
+    case 'desel': SEL = null; renderUI(); return refreshView();
+    case 'del': return deleteSel();
+    case 'rot': return rotateSel();
+    case 'dup': { if (!s || SEL.kind !== 'item') return; const r = DS.itemRect(s), spot = freeSpotFor(s.k, s.rot || 0, [s.x + (r.x1 - r.x0), s.z]); if (!spot) return toast('No free space for a copy'); const id = uid('i'); commit(P => P.items.push({ ...s, id, x: spot[0], z: spot[1] })); SEL = { kind: 'item', id }; renderUI(); return refreshView(); }
+    case 'unitMove': { const i = +b.dataset.i, j = i + +v; if (!s || j < 0 || j >= s.units.length) return; return commit(() => { const u = s.units; [u[i], u[j]] = [u[j], u[i]]; }); }
+    case 'unitDel': { if (!s) return; if (s.units.length < 2) return toast('A run needs at least one unit. Delete the run instead'); return commit(() => s.units.splice(+b.dataset.i, 1)); }
+    case 'unitAdd': { if (!s) return; const k = $('#unit-add').value; const len = DS.runLen(s) + DS.runCat(s)[k].w; if (s.u0 + len > wallLen(s.side) + 1e-6) return toast('That wall is full. Move the run or remove a unit'); return commit(() => s.units.push(k)); }
+    case 'front': return commit(() => { s.front = v; });
+    case 'scene': SCENE = v; applyScene(); return renderLeft();
+    case 'cam': if (WALK) exitWalk(); if (v === 'doll') { CUT = true; DIRTY3D = true; refreshView(); } return camPreset(v);
+    case 'walk': return enterWalk(+v);
+    case 'walkMove': return walkStep(v);
+    case 'walkExit': return exitWalk();
+    case 'still': return captureStill();
+    case 'pano': return capturePano();
+    case 'openRender': return openRender(v);
+    case 'job': return queueJob(v);
+    case 'proposal': return openProposal();
+    case 'closeModal': return closeModal();
+    case 'handoff': {
+      const n = +v, errs = A.filter(x => x.lvl === 'error').length;
+      if (n === 1 && errs) return toast('Fix the checks marked Fix first');
+      if (n > STATUS + 1) return toast('Do the steps in order');
+      STATUS = n; if (n === 2) LINK = 'FC-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+      toast(['', 'Sent to engineering. In the live system this creates a review task', 'Client link created (simulated in the prototype)', 'Deposit request sent (simulated M-Pesa STK push)'][n]); return renderUI();
+    }
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target, k = t.dataset.in; if (!k) return; const s = findSel();
+  if (k === 'name') { P.name = t.value || 'Untitled design'; save(); return renderBar(); }
+  if (k === 'roomName') { if (!PENDING) { snapshot(); PENDING = true; } DS.setRoom(P, G, s, { name: t.value }); recompute(); if (VIEW === '2d') renderPlan(); return; }
+  if (k === 'cl') { CLIENTINFO[t.dataset.v] = t.value; return; }
+  if (k === 'af') { afForm()[t.dataset.f] = t.value; return; }
+  if (k === 'login') { LOGIN[t.dataset.f] = t.value; return; }
+  const live = { runU: () => { s.u0 = +t.value; }, openU: () => { s.u = +t.value; }, partAt: () => { s.at = +t.value; }, partS0: () => { s.s0 = +t.value; }, partS1: () => { s.s1 = +t.value; }, partDoor: () => { s.door = +t.value; } }[k];
+  if (live && s && locked(SEL.kind)) { lockToast(SEL.kind); return renderRight(); }
+  if (live && s) { if (!PENDING) { snapshot(); PENDING = true; } live(); recompute(); DIRTY3D = true; if (VIEW === '2d') renderPlan(); else queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k.startsWith('part') && k !== 'partDoor' ? 1 : 2) + ' m'; }
+});
+document.addEventListener('change', e => {
+  const t = e.target, k = t.dataset.in; if (!k) return; const s = findSel();
+  if (['runU', 'openU', 'partAt', 'partS0', 'partS1', 'partDoor', 'roomName'].includes(k)) { PENDING = false; return after(); }
+  if (k === 'afSet') { const f = afForm(), [grp, key] = t.dataset.f.split(':'); if (grp === 'shells' || grp === 'lock') { const a = new Set(f[grp]); t.checked ? a.add(key) : a.delete(key); f[grp] = [...a]; } else { const all = Object.keys(FIN[grp]); let cur = f.finishes[grp] === 'all' ? all.slice() : f.finishes[grp].slice(); cur = t.checked ? [...new Set([...cur, key])] : cur.filter(x => x !== key); f.finishes[grp] = cur.length === all.length ? 'all' : cur; } return; }
+  if (k === 'cut') { CUT = t.checked; DIRTY3D = true; return refreshView(); }
+  if (k === 'furnPkg') return commit(P => { P.furnPkg = t.checked; });
+  if (!s) return;
+  if (SEL && locked(SEL.kind)) { lockToast(SEL.kind); return renderRight(); }
+  if (k === 'runSide') return commit(() => { s.side = t.value; s.u0 = 0; });
+  if (k === 'unitType') return commit(() => { s.units[+t.dataset.i] = t.value; });
+  if (k === 'top') return commit(() => { s.top = t.value; });
+  if (k === 'wallCab') return commit(() => { s.wallCab = t.checked; });
+  if (k === 'openK') return commit(() => { s.k = t.value; if (OPEN[t.value].gable) s.u = PRE().W / 2; });
+  if (k === 'partDoorOn') return commit(() => { s.door = t.checked ? Math.round(((s.s1 - s.s0) / 2) * 20) / 20 : null; });
+});
+document.addEventListener('click', e => { const b = e.target.closest('[data-a="openSide"]'); if (!b) return; const s = findSel(); if (!s) return; commit(() => { s.side = b.dataset.v; const d = OPEN[s.k]; if (d.gable) s.u = PRE().W / 2; else { const u = freeOpenU(s.side, s.k); s.u = u == null ? DS.sideLen(P, s.side) / 2 : u; } }); }, true);
+function deleteSel() {
+  const s = findSel(); if (!s || SEL.kind === 'room') return; if (locked(SEL.kind)) return lockToast(SEL.kind);
+  const k = SEL.kind, id = SEL.id; SEL = null;
+  commit(P => { if (k === 'item') P.items = P.items.filter(x => x.id !== id); if (k === 'run') P.runs = P.runs.filter(x => x.id !== id); if (k === 'open') P.opens = P.opens.filter(x => x.id !== id); if (k === 'part') { P.parts = P.parts.filter(x => x.id !== id); P.runs = P.runs.filter(r => !r.side.startsWith('P:' + id + ':')); } });
+}
+function rotateSel() { const s = findSel(); if (!s || SEL.kind !== 'item') return; if (locked('item')) return lockToast('item'); commit(() => { s.rot = ((s.rot || 0) + 1) % 4; }); }
+window.addEventListener('keydown', e => {
+  if (e.target.closest('input,select,textarea')) return;
+  if ($('#modal').classList.contains('show')) { if (e.key === 'Escape') closeModal(); return; }
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); return e.shiftKey ? redo() : undo(); }
+  if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); return redo(); }
+  if (WALK && ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) { e.preventDefault(); return walkStep({ w: 'f', arrowup: 'f', s: 'b', arrowdown: 'b', a: 'l', arrowleft: 'l', d: 'r', arrowright: 'r' }[k]); }
+  if (k === 'escape') { if (WALK) return exitWalk(); if (TOOL === 'part') { TOOL = 'select'; DRAFT = null; renderUI(); return renderPlan(); } if (SEL) { SEL = null; renderUI(); return refreshView(); } }
+  if ((k === 'delete' || k === 'backspace') && SEL) { e.preventDefault(); return deleteSel(); }
+  if (k === 'r' && SEL) return rotateSel();
+});
+
+// ---------------- 3D ----------------
+const host = $('#three');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+host.appendChild(renderer.domElement);
+const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(45, 1, 0.05, 400);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI / 2 - 0.03;
+const pmrem = new THREE.PMREMGenerator(renderer), ENV = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environment = ENV;
+const HEMI = new THREE.HemisphereLight(0xffffff, 0x777777, 0.6); scene.add(HEMI);
+const SUN = new THREE.DirectionalLight(0xffffff, 2.4); SUN.castShadow = true; SUN.shadow.mapSize.set(2048, 2048); SUN.shadow.bias = -0.0003; SUN.shadow.normalBias = 0.02; scene.add(SUN, SUN.target);
+const GROUND = new THREE.Mesh(new THREE.CircleGeometry(120, 48), new THREE.MeshStandardMaterial({ color: '#6f7f4a', roughness: 1 })); GROUND.rotation.x = -Math.PI / 2; GROUND.receiveShadow = true; scene.add(GROUND);
+const SCENES = {
+  day: { label: 'Clear day', sky: ['#7fa9d6', '#e6edf0'], ground: '#6c7c47', hemi: ['#dde8ff', '#59633f', 0.55], sun: ['#fff2dc', 2.6], el: 50, az: 150, env: 0.55, exp: 1 },
+  golden: { label: 'Golden hour', sky: ['#5d6a9a', '#f2b98a'], ground: '#5f6a3d', hemi: ['#ffd6a8', '#4a4433', 0.45], sun: ['#ffad66', 2.4], el: 11, az: 245, env: 0.4, exp: 1.05 },
+  dusk: { label: 'Dusk, lights on', sky: ['#0d1430', '#3d3550'], ground: '#2b3123', hemi: ['#3a4466', '#121212', 0.22], sun: ['#9fb0ff', 0.22], el: 22, az: 300, env: 0.16, exp: 1.2, night: true },
+  studio: { label: 'Studio', sky: ['#2a2622', '#151311'], ground: '#25221e', hemi: ['#ffffff', '#cfc8bb', 0.7], sun: ['#ffffff', 2.0], el: 55, az: 150, env: 0.7, exp: 1 },
+};
+const BG = {};
+function skyTex(a, b) { const c = document.createElement('canvas'); c.width = 4; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, 4, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+let NIGHTLIGHTS = [];
+function applyScene() {
+  const S = SCENES[SCENE], p = PRE();
+  scene.background = BG[SCENE] || (BG[SCENE] = skyTex(S.sky[0], S.sky[1]));
+  HEMI.color.set(S.hemi[0]); HEMI.groundColor.set(S.hemi[1]); HEMI.intensity = S.hemi[2];
+  SUN.color.set(S.sun[0]); SUN.intensity = S.sun[1]; scene.environmentIntensity = S.env; renderer.toneMappingExposure = S.exp;
+  GROUND.material.color.set(S.ground);
+  const el = S.el * Math.PI / 180, az = S.az * Math.PI / 180, cx = p.L / 2, cz = p.W / 2, r = Math.max(p.L, p.W) + 8;
+  SUN.position.set(cx + Math.sin(az) * Math.cos(el) * 40, Math.sin(el) * 40, cz + Math.cos(az) * Math.cos(el) * 40); SUN.target.position.set(cx, 0, cz);
+  const sc = SUN.shadow.camera; sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 1; sc.far = 120; sc.updateProjectionMatrix();
+  NIGHTLIGHTS.forEach(l => scene.remove(l)); NIGHTLIGHTS = [];
+  if (S.night && R) R.forEach(rm => { const l = new THREE.PointLight('#ffc27a', 6 + rm.area * 0.25, 9, 2); l.position.set(rm.ax, p.yF + Math.min(2.2, p.ih - 0.15), rm.az); scene.add(l); NIGHTLIGHTS.push(l); });
+  Object.values(MC).forEach(m => { if (m.userData.glass) { m.emissive.set(S.night ? '#ffbe73' : '#000000'); m.emissiveIntensity = S.night ? 0.55 : 0; } });
+}
+// procedural textures (1 m tiles, sampled with world-space UVs)
+const TEX = {};
+function tex(name) {
+  if (TEX[name]) return TEX[name];
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, N, N);
+  let rs = 7; const rnd = () => { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * 0.035})`; g.fillRect(rnd() * N, rnd() * N, 2 + rnd() * 10, 1 + rnd() * 3); }
+  g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 2;
+  if (name === 'vplank') for (let x = 0; x < N; x += N / 9) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, N); g.stroke(); }
+  if (name === 'clad') for (let y = 0; y < N; y += N / 7) { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, y, N, 3); g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(0, y + 3, N, 2); }
+  if (name === 'tile') { g.strokeStyle = 'rgba(0,0,0,.18)'; for (let x = 0; x <= N; x += N / 4) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, N); g.stroke(); g.beginPath(); g.moveTo(0, x); g.lineTo(N, x); g.stroke(); } }
+  if (name === 'deck') for (let y = 0; y < N; y += N / 7) { g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(0, y, N, 2); }
+  if (name === 'seam') for (let x = 0; x < N; x += N / 2) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x, 0, 3, N); g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(x + 3, 0, 2, N); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return (TEX[name] = t);
+}
+const MC = {};
+function mat(col, o = {}) {
+  const k = col + '|' + [o.r, o.m, o.op, o.tex, o.glass, o.ds].join(',');
+  if (MC[k]) return MC[k];
+  const m = new THREE.MeshStandardMaterial({ color: col, roughness: o.r ?? 0.75, metalness: o.m ?? 0, transparent: o.op != null, opacity: o.op ?? 1, depthWrite: o.op == null, side: o.ds ? THREE.DoubleSide : THREE.FrontSide });
+  if (o.tex) m.map = tex(o.tex);
+  if (o.glass) { m.userData.glass = true; m.envMapIntensity = 1.4; }
+  return (MC[k] = m);
+}
+function worldUV(me, s = 1) {
+  me.updateMatrixWorld(true);
+  const gm = me.geometry, p = gm.attributes.position, nr = gm.attributes.normal, m = me.matrixWorld, nm = new THREE.Matrix3().getNormalMatrix(m), v = new THREE.Vector3(), n = new THREE.Vector3(), uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m); n.fromBufferAttribute(nr, i).applyMatrix3(nm); const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z); const [a, b] = ay >= ax && ay >= az ? [v.x, v.z] : ax >= az ? [v.z, v.y] : [v.x, v.y]; uv[2 * i] = a * s; uv[2 * i + 1] = b * s; }
+  gm.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+function bx(par, w, h, d, x, y, z, m, pick) { const me = new THREE.Mesh(new THREE.BoxGeometry(Math.max(w, 0.002), Math.max(h, 0.002), Math.max(d, 0.002)), m); me.position.set(x, y, z); me.castShadow = me.receiveShadow = true; if (pick) me.userData.pick = pick; par.add(me); return me; }
+function cy(par, r, h, x, y, z, m) { const me = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 18), m); me.position.set(x, y, z); me.castShadow = true; par.add(me); return me; }
+let MODEL = null, REFS = {}, FLOORTEX = null;
+const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xC9A46A); selBox.visible = false; scene.add(selBox);
+
+// wall with rectangular openings: along u (0..len) on a side, from y0 to y1
+function wallRects(len, y0, y1, cuts) {
+  const rs = []; let cur = 0;
+  cuts.slice().sort((a, b) => a[0] - b[0]).forEach(([u0, u1, v0, v1]) => { if (u0 > cur) rs.push([cur, u0, y0, y1]); if (v0 > y0 + 0.01) rs.push([u0, u1, y0, v0]); if (v1 < y1 - 0.01) rs.push([u0, u1, v1, y1]); cur = Math.max(cur, u1); });
+  if (cur < len) rs.push([cur, len, y0, y1]); return rs;
+}
+function placeOnSide(par, side, u0, u1, y0, y1, off, depth, m, pick) {
+  const p = PRE(), cu = (u0 + u1) / 2, cv = (y0 + y1) / 2, w = u1 - u0, h = y1 - y0;
+  if (side === 'N') return bx(par, w, h, depth, cu, cv, off + depth / 2, m, pick);
+  if (side === 'S') return bx(par, w, h, depth, cu, cv, p.W - off - depth / 2, m, pick);
+  if (side === 'W') return bx(par, depth, h, w, off + depth / 2, cv, cu, m, pick);
+  return bx(par, depth, h, w, p.L - off - depth / 2, cv, cu, m, pick);
+}
+function openingMesh(par, o) {
+  const p = PRE(), d = OPEN[o.k], s = DS.openSpan(P, o), yF = p.yF, frame = mat(o.k === 'dMahog' ? '#5a3522' : '#2a2b2d', { r: 0.45, m: 0.3 }), glass = mat('#9fc0cf', { r: 0.05, m: 0.1, op: 0.28, glass: true });
+  const g = new THREE.Group(); g.userData.pick = { kind: 'open', id: o.id }; par.add(g); REFS['open:' + o.id] = g;
+  const t = p.t, fw = 0.05, y0 = yF + s.v0, y1 = yF + s.v1;
+  if (d.gable) return gableGlass(g, o.side);
+  const put = (u0, u1, a0, a1, off, dep, m) => placeOnSide(g, o.side, u0, u1, a0, a1, off, dep, m, { kind: 'open', id: o.id });
+  put(s.u0, s.u1, y1 - fw, y1, 0, t, frame); put(s.u0, s.u1, y0, y0 + fw, 0, t, frame); put(s.u0, s.u0 + fw, y0, y1, 0, t, frame); put(s.u1 - fw, s.u1, y0, y1, 0, t, frame);
+  if (d.glass) {
+    const panes = o.k === 'slider' || o.k === 'dGlass' || d.w > 1.3 ? 2 : 1, pw = (s.u1 - s.u0 - 2 * fw) / panes;
+    for (let i = 0; i < panes; i++) { put(s.u0 + fw + i * pw, s.u0 + fw + (i + 1) * pw, y0 + fw, y1 - fw, t * 0.45, 0.012, glass); if (i) put(s.u0 + fw + i * pw - 0.025, s.u0 + fw + i * pw + 0.025, y0, y1, t * 0.3, 0.06, frame); }
+  } else put(s.u0 + fw, s.u1 - fw, y0 + 0.01, y1 - fw, t * 0.35, 0.05, mat(o.k === 'dMahog' ? '#6a4026' : '#3b3d40', { r: 0.6, m: 0.2 }));
+  if (d.door && p.yF > 0.25) { // steps
+    const st = mat('#8e8a83', { r: 0.95 }), n = Math.round(p.yF / 0.17), w = s.u1 - s.u0 + 0.3;
+    for (let i = 0; i < n; i++) { const h = p.yF - i * (p.yF / n), dep = 0.3 * (i + 1); if (o.side === 'N') bx(par, w, h, 0.3, (s.u0 + s.u1) / 2, h / 2, -dep + 0.15, st); else if (o.side === 'S' && !p.veranda) bx(par, w, h, 0.3, (s.u0 + s.u1) / 2, h / 2, p.W + dep - 0.15, st); else if (o.side === 'E') bx(par, 0.3, h, w, p.L + dep - 0.15, h / 2, (s.u0 + s.u1) / 2, st); else if (o.side === 'W' && p.sys === 'container') bx(par, 0.3, h, w, -dep + 0.15, h / 2, (s.u0 + s.u1) / 2, st); }
+  }
+}
+function gableShape(p, y0) { const sh = new THREE.Shape(), z0 = (p.W / 2) * (y0 / p.ridge); sh.moveTo(z0, y0); sh.lineTo(p.W - z0, y0); sh.lineTo(p.W / 2, p.ridge); sh.closePath(); return sh; }
+function gableGlass(g, side) {
+  const p = PRE(), x = side === 'W' ? 0.05 : p.L - 0.05, glass = mat('#9fc0cf', { r: 0.05, m: 0.1, op: 0.3, glass: true }), fr = mat('#1f2022', { r: 0.4, m: 0.4 });
+  const geo = new THREE.ShapeGeometry(gableShape(p, p.yF)), me = new THREE.Mesh(geo, glass); me.rotation.y = -Math.PI / 2; me.position.set(x, 0, 0); me.userData.pick = g.userData.pick; g.add(me);
+  // mullions and transoms
+  for (let z = 0.6; z < p.W; z += 0.6) { const top = p.ridge * (1 - Math.abs(z - p.W / 2) / (p.W / 2)); if (top - p.yF > 0.1) bx(g, 0.06, top - p.yF, 0.05, x, p.yF + (top - p.yF) / 2, z, fr); }
+  for (const y of [p.yF + 2.2, p.yF + 4.2]) { const half = (p.W / 2) * (1 - y / p.ridge); if (half > 0.1) bx(g, 0.06, 0.05, half * 2, x, y, p.W / 2, fr); }
+  bx(g, 0.07, 0.07, p.W - 2 * (p.W / 2) * (p.yF / p.ridge), x, p.yF + 0.03, p.W / 2, fr);
+}
+function itemMesh(it) {
+  const d = ITEMS[it.k], g = new THREE.Group(), B = (w, h, dd, x, y, z, m) => bx(g, w, h, dd, x, y, z, m), w = d.w, dd = d.d, bk = -dd / 2;
+  const fab = mat('#6f6a63', { r: 0.95 }), fab2 = mat('#8c7a66', { r: 0.95 }), wood = mat('#8a6446', { r: 0.6 }), white = mat('#f4f2ee', { r: 0.3 }), cer = mat('#fbfbf9', { r: 0.15 }), blk = mat('#1c1c1d', { r: 0.5 }), linen = mat('#ebe7df', { r: 0.95 }), metal = mat('#b9bcbe', { r: 0.3, m: 0.6 });
+  switch (it.k) {
+    case 'bedD': case 'bedS': B(w, 0.28, dd, 0, 0.14, 0, wood); B(w - 0.06, 0.2, dd - 0.08, 0, 0.38, 0.02, linen); B(w, 0.9, 0.06, 0, 0.45, bk + 0.03, wood); B(w - 0.04, 0.06, dd * 0.6, 0, 0.5, dd * 0.18, fab2); { const n = it.k === 'bedD' ? 2 : 1, pw = (w - 0.2) / n; for (let i = 0; i < n; i++) B(pw - 0.06, 0.12, 0.32, -w / 2 + 0.1 + pw * (i + 0.5), 0.54, bk + 0.28, white); } break;
+    case 'sofa': case 'arm': B(w, 0.42, dd, 0, 0.21, 0, fab); B(w, 0.42, 0.2, 0, 0.62, bk + 0.1, fab); B(0.16, 0.22, dd, -w / 2 + 0.08, 0.53, 0, fab); B(0.16, 0.22, dd, w / 2 - 0.08, 0.53, 0, fab); B(w - 0.36, 0.1, dd - 0.25, 0, 0.47, 0.1, fab2); break;
+    case 'coffee': B(w, 0.04, dd, 0, 0.4, 0, wood); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.04, 0.38, 0.04, x * (w / 2 - 0.05), 0.19, z * (dd / 2 - 0.05), blk); break;
+    case 'tv': B(w, 0.45, dd, 0, 0.25, 0, wood); B(1.25, 0.72, 0.04, 0, 0.88, bk + 0.1, blk); break;
+    case 'rug': { const m = mat('#b7a58b', { r: 1 }); B(w, 0.012, dd, 0, 0.006, 0, m); break; }
+    case 'plant': cy(g, 0.17, 0.4, 0, 0.2, 0, mat('#3b3a37', { r: 0.8 })); { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32, 1), mat('#4f6b3a', { r: 1 })); f.position.y = 0.85; f.scale.y = 1.4; f.castShadow = true; g.add(f); } break;
+    case 'night': B(w, 0.5, dd, 0, 0.25, 0, wood); cy(g, 0.07, 0.3, 0, 0.65, 0, white); break;
+    case 'dining': B(w, 0.04, dd, 0, 0.74, 0, wood); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.05, 0.72, 0.05, x * (w / 2 - 0.08), 0.36, z * (dd / 2 - 0.08), wood); for (const [x, z, f] of [[-0.35, -dd / 2 - 0.2, 1], [0.35, -dd / 2 - 0.2, 1], [-0.35, dd / 2 + 0.2, -1], [0.35, dd / 2 + 0.2, -1]]) { B(0.42, 0.04, 0.42, x, 0.45, z, fab2); B(0.42, 0.42, 0.04, x, 0.68, z - f * 0.19, fab2); for (const lx of [-0.18, 0.18]) for (const lz of [-0.18, 0.18]) B(0.03, 0.44, 0.03, x + lx, 0.22, z + lz, blk); } break;
+    case 'desk': B(w, 0.04, dd, 0, 0.74, 0, wood); B(0.04, 0.72, dd, -w / 2 + 0.04, 0.36, 0, blk); B(0.04, 0.72, dd, w / 2 - 0.04, 0.36, 0, blk); B(0.45, 0.06, 0.45, 0, 0.47, dd / 2 + 0.2, fab); B(0.45, 0.5, 0.05, 0, 0.75, dd / 2 + 0.42, fab); break;
+    case 'wc': B(0.36, 0.38, 0.17, 0, 0.6, bk + 0.09, cer); cy(g, 0.17, 0.4, 0, 0.2, 0.08, cer); B(0.37, 0.03, 0.46, 0, 0.42, 0.08, cer); break;
+    case 'basin': B(w, 0.6, dd, 0, 0.3, 0, wood); B(w, 0.12, dd, 0, 0.72, 0, cer); cy(g, 0.015, 0.16, 0, 0.86, bk + 0.06, metal); B(0.5, 0.7, 0.02, 0, 1.45, bk + 0.01, mat('#c7d3d8', { r: 0.05, m: 0.9 })); break;
+    case 'shower': B(w, 0.05, dd, 0, 0.025, 0, cer); { const gl = mat('#bcd6dd', { r: 0.05, op: 0.25, ds: true }); B(w, 1.95, 0.01, 0, 1.0, dd / 2 - 0.01, gl); B(0.01, 1.95, dd * 0.6, w / 2 - 0.01, 1.0, dd * 0.2, gl); } cy(g, 0.012, 1.0, -w / 2 + 0.12, 1.5, bk + 0.05, metal); cy(g, 0.09, 0.02, -w / 2 + 0.25, 2.0, bk + 0.18, metal); break;
+  }
+  g.position.set(it.x, PRE().yF, it.z); g.rotation.y = -(it.rot || 0) * Math.PI / 2; g.traverse(n => { n.userData.pick = { kind: 'item', id: it.id }; });
+  return g;
+}
+function runMesh(par, rn) {
+  const r = DS.runRect(P, rn); if (!r) return; const b = r.b, p = PRE(), y = p.yF, f = FRONTS[rn.front];
+  const g = new THREE.Group(); g.userData.pick = { kind: 'run', id: rn.id }; par.add(g); REFS['run:' + rn.id] = g;
+  const front = mat(f.col, { r: rn.front === 'white' ? 0.45 : 0.55 }), carc = mat('#d9d4cb', { r: 0.6 }), plinth = mat('#2a2a2a', { r: 0.8 }), top = mat(TOPS[rn.top].col, { r: rn.top === 'quartz' ? 0.18 : 0.5 }), blk = mat('#151515', { r: 0.25 }), steel = mat('#c7c9cb', { r: 0.25, m: 0.7 }), tile = mat('#e8e6e1', { r: 0.3, tex: 'tile' });
+  const U = DS.runUnits(P, rn), along = (a0, a1, d0, d1, y0, y1, m) => { const a = (a0 + a1) / 2, dc = b.line + b.dir * ((d0 + d1) / 2); return b.axis === 'x' ? bx(g, a1 - a0, y1 - y0, d1 - d0, a, y + (y0 + y1) / 2, dc, m) : bx(g, d1 - d0, y1 - y0, a1 - a0, dc, y + (y0 + y1) / 2, a, m); };
+  const isK = rn.kind === 'kitchen';
+  U.forEach(u => {
+    const a0 = u.a0 + 0.002, a1 = u.a1 - 0.002;
+    if (isK && !u.tall) { along(a0, a1, 0.05, 0.55, 0, 0.1, plinth); along(a0, a1, 0, 0.56, 0.1, 0.87, carc); along(a0, a1, 0.56, 0.58, 0.1, 0.87, front); along((a0 + a1) / 2 - 0.12, (a0 + a1) / 2 + 0.12, 0.58, 0.6, 0.8, 0.82, steel); if (u.k === 'drawer') for (const yy of [0.35, 0.6]) along(a0, a1, 0.58, 0.585, yy - 0.004, yy + 0.004, plinth); }
+    else { const H = isK ? 2.12 : 2.2; along(a0, a1, 0.05, 0.55, 0, 0.1, plinth); along(a0, a1, 0, 0.56, 0.1, H, carc); along(a0, a1, 0.56, 0.58, 0.1, H, front); const nd = u.a1 - u.a0 > 0.7 ? 2 : 1, dw = (u.a1 - u.a0) / nd; for (let i = 1; i < nd; i++) along(u.a0 + i * dw - 0.003, u.a0 + i * dw + 0.003, 0.58, 0.585, 0.1, H, plinth); for (let i = 0; i < nd; i++) { const hx = u.a0 + (i + (nd === 2 ? (i ? 0.1 : 0.9) : 0.85)) * dw; along(hx - 0.012, hx + 0.012, 0.58, 0.6, 0.9, 1.4, steel); } if (u.k === 'oven') along(a0 + 0.04, a1 - 0.04, 0.58, 0.59, 0.95, 1.55, blk); }
+  });
+  if (isK) {
+    let seg = null; const segs = []; U.forEach(u => { if (!u.tall) { if (seg && Math.abs(seg[1] - u.a0) < 1e-6) seg[1] = u.a1; else segs.push(seg = [u.a0, u.a1]); } else seg = null; });
+    segs.forEach(([a0, a1]) => { along(a0, a1, 0, 0.62, 0.87, 0.91, top); along(a0, a1, 0, 0.012, 0.91, 1.45, tile); if (rn.wallCab) { along(a0 + 0.002, a1 - 0.002, 0, 0.34, 1.45, 2.15, carc); along(a0 + 0.002, a1 - 0.002, 0.34, 0.36, 1.45, 2.15, front); } });
+    U.forEach(u => {
+      const m = (u.a0 + u.a1) / 2;
+      if (u.k === 'sink') { along(m - 0.24, m + 0.24, 0.12, 0.5, 0.86, 0.915, steel); along(m - 0.2, m + 0.2, 0.15, 0.47, 0.84, 0.912, blk); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.3, 10), steel); const dc = b.line + b.dir * 0.07; if (b.axis === 'x') t.position.set(m, y + 1.06, dc); else t.position.set(dc, y + 1.06, m); g.add(t); }
+      if (u.k === 'hob') { along(m - 0.29, m + 0.29, 0.06, 0.56, 0.91, 0.918, blk); }
+    });
+  }
+  g.traverse(n => { n.userData.pick = { kind: 'run', id: rn.id }; });
+}
+function floorCanvas() {
+  const { nx, nz, g } = G, S = 12, c = document.createElement('canvas'); c.width = nx * S; c.height = nz * S; const x = c.getContext('2d');
+  x.fillStyle = '#5c574f'; x.fillRect(0, 0, c.width, c.height);
+  const byId = {}; R.forEach(r => { byId[r.id] = FIN.floor[r.floor]; });
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const f = byId[g[j * nx + i]]; if (!f) continue; x.fillStyle = f.col; x.fillRect(i * S, j * S, S, S); }
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const f = byId[g[j * nx + i]]; if (!f || f.pat === 'none') continue;
+    x.fillStyle = 'rgba(0,0,0,.16)';
+    if (f.pat === 'plank') { if (j % 2 === 0) x.fillRect(i * S, j * S, S, 1); if ((i + (j % 4) * 3) % 12 === 0) x.fillRect(i * S, j * S, 1, S); }
+    if (f.pat === 'tile') { if (j % 6 === 0) x.fillRect(i * S, j * S, S, 1); if (i % 6 === 0) x.fillRect(i * S, j * S, 1, S); }
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function build3D() {
+  DIRTY3D = false;
+  if (MODEL) { scene.remove(MODEL); MODEL.traverse(n => { if (n.isMesh) n.geometry.dispose(); }); }
+  if (FLOORTEX) FLOORTEX.dispose();
+  MODEL = new THREE.Group(); REFS = {}; scene.add(MODEL);
+  const p = PRE(), yF = p.yF, col = P.colour, roofHide = CUT, M = MODEL;
+  // floor
+  FLOORTEX = floorCanvas();
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(G.nx * C, G.nz * C), new THREE.MeshStandardMaterial({ map: FLOORTEX, roughness: 0.6 }));
+  fl.rotation.x = -Math.PI / 2; fl.position.set(G.nx * C / 2, yF + 0.003, G.nz * C / 2); fl.receiveShadow = true; fl.userData.pick = { kind: 'floor' }; M.add(fl);
+  // lining
+  const byRoom = {}; R.forEach(r => { byRoom[r.id] = r; });
+  L.forEach(pc => {
+    const r = byRoom[pc.room]; if (!r) return; const f = FIN.wall[r.wall], m = mat(f.col, { r: 0.8, tex: f.pat === 'vplank' ? 'vplank' : f.pat === 'tile' ? 'tile' : null });
+    const w = pc.a1 - pc.a0, h = pc.y1 - pc.y0, me = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
+    if (pc.axis === 'x') { me.position.set((pc.a0 + pc.a1) / 2, yF + (pc.y0 + pc.y1) / 2, pc.line + pc.n * 0.004); if (pc.n < 0) me.rotation.y = Math.PI; }
+    else { me.position.set(pc.line + pc.n * 0.004, yF + (pc.y0 + pc.y1) / 2, (pc.a0 + pc.a1) / 2); me.rotation.y = pc.n > 0 ? Math.PI / 2 : -Math.PI / 2; }
+    me.receiveShadow = true; me.userData.pick = { kind: 'wall', room: pc.room }; M.add(me); if (f.pat) worldUV(me, 1);
+  });
+  // partitions
+  const pm = mat('#e9e4dc', { r: 0.85 });
+  P.parts.forEach(q => {
+    const g = new THREE.Group(); g.userData.pick = { kind: 'part', id: q.id }; M.add(g); REFS['part:' + q.id] = g;
+    const top = a => (p.sys === 'aframe' ? Math.min(p.ih, DS.hr(P, q.a === 'x' ? q.at : a)) : p.ih);
+    const segs = q.door != null ? [[q.s0, q.s0 + q.door - DS.DOOR_W / 2], [q.s0 + q.door + DS.DOOR_W / 2, q.s1]] : [[q.s0, q.s1]];
+    const piece = (a0, a1, y0, y1) => { if (a1 - a0 < 0.01 || y1 - y0 < 0.01) return; if (q.a === 'x') bx(g, a1 - a0, y1 - y0, C, (a0 + a1) / 2, yF + (y0 + y1) / 2, q.at - C / 2, pm, g.userData.pick); else bx(g, C, y1 - y0, a1 - a0, q.at - C / 2, yF + (y0 + y1) / 2, (a0 + a1) / 2, pm, g.userData.pick); };
+    segs.forEach(([a0, a1]) => { if (p.sys === 'aframe' && q.a === 'z') { for (let a = a0; a < a1 - 1e-6; a += 0.3) { const b2 = Math.min(a1, a + 0.3); piece(a, b2, 0, Math.max(0.05, Math.min(top(a), top(b2)))); } } else piece(a0, a1, 0, top(a0)); });
+    if (q.door != null) {
+      const c = q.s0 + q.door, d0 = c - DS.DOOR_W / 2, d1 = c + DS.DOOR_W / 2; piece(d0, d1, DS.DOOR_H, top(c));
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(DS.DOOR_W - 0.04, DS.DOOR_H - 0.02, 0.04), mat('#cdbba0', { r: 0.6 })); leaf.castShadow = true; leaf.userData.pick = g.userData.pick;
+      const hinge = new THREE.Group(); g.add(hinge); leaf.position.set((DS.DOOR_W - 0.04) / 2, (DS.DOOR_H - 0.02) / 2, 0); hinge.add(leaf);
+      if (q.a === 'x') { hinge.position.set(d0 + 0.02, yF, q.at); hinge.rotation.y = -1.0; } else { hinge.position.set(q.at, yF, d0 + 0.02); hinge.rotation.y = -Math.PI / 2 + 1.0; }
+    }
+  });
+  // runs and items
+  P.runs.forEach(rn => runMesh(M, rn));
+  P.items.forEach(it => { const g = itemMesh(it); M.add(g); REFS['item:' + it.id] = g; });
+  // openings
+  P.opens.forEach(o => openingMesh(M, o));
+  // shell
+  if (p.sys === 'container') shellContainer(M, p, col, roofHide); else if (p.sys === 'aframe') shellAframe(M, p, col, roofHide); else shellCabin(M, p, col, roofHide);
+  // ceiling
+  if (!roofHide && p.sys !== 'aframe') { const cf = FIN.ceil[P.ceil], cm = mat(cf.col, { r: 0.85, tex: cf.pat === 'vplank' ? 'vplank' : null }); const ce = new THREE.Mesh(new THREE.PlaneGeometry(p.L - 2 * p.t, p.W - 2 * p.t), cm); ce.rotation.x = Math.PI / 2; ce.position.set(p.L / 2, yF + p.ih, p.W / 2); ce.userData.pick = { kind: 'ceil' }; M.add(ce); if (cf.pat) worldUV(ce, 1); }
+  // gravel pad
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(p.L + 4 + (p.sys === 'aframe' ? 2.4 : 0), p.W + 4 + (p.veranda || 0)), mat('#a59e91', { r: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.set(p.L / 2 - (p.sys === 'aframe' ? 1.2 : 0), 0.004, p.W / 2 + (p.veranda || 0) / 2); pad.receiveShadow = true; M.add(pad);
+  applyScene(); updateSelBox(); if (FIRSTFRAME) { FIRSTFRAME = false; camPreset(STAGE === 'finish' ? 'doll' : 'front'); }
+}
+let FIRSTFRAME = true;
+function sideCuts(side, yBase) { return P.opens.filter(o => o.side === side && !OPEN[o.k].gable).map(o => { const s = DS.openSpan(P, o); return [s.u0, s.u1, PRE().yF + s.v0, PRE().yF + s.v1]; }); }
+function shellContainer(M, p, col, hide) {
+  const steel = mat(col, { r: 0.55, m: 0.25 }), frameM = mat(shade(col, -0.25), { r: 0.5, m: 0.3 }), roof = mat(shade(col, -0.1), { r: 0.6, m: 0.25 }), conc = mat('#9c978f', { r: 0.95 });
+  const n = p.twin ? 2 : 1, cw = p.W / n, y0 = 0.2, y1 = y0 + p.H;
+  for (let c = 0; c < n; c++) {
+    const z0 = c * cw, z1 = z0 + cw;
+    for (const x of [0.08, p.L - 0.08]) for (const z of [z0 + 0.08, z1 - 0.08]) { bx(M, 0.16, p.H, 0.16, x, y0 + p.H / 2, z, frameM); bx(M, 0.3, 0.2, 0.3, x, 0.1, z, conc); }
+    for (const y of [y0 + 0.07, y1 - 0.07]) { bx(M, p.L - 0.32, 0.14, 0.14, p.L / 2, y, z0 + 0.07, frameM); bx(M, p.L - 0.32, 0.14, 0.14, p.L / 2, y, z1 - 0.07, frameM); }
+    if (!hide) bx(M, p.L - 0.04, 0.05, cw - 0.04, p.L / 2, y1 - 0.025, (z0 + z1) / 2, roof);
+  }
+  const ribs = (side, rs) => rs.forEach(([u0, u1, v0, v1]) => { placeOnSide(M, side, u0, u1, v0, v1, 0.0, 0.035, steel); for (let u = Math.ceil((u0 + 0.12) / 0.3) * 0.3; u < u1 - 0.08; u += 0.3) placeOnSide(M, side, u - 0.04, u + 0.04, v0, v1, -0.025, 0.03, steel); });
+  for (const side of ['N', 'S']) ribs(side, wallRects(p.L, y0 + 0.14, y1 - 0.14, sideCuts(side)).map(r => [Math.max(0.16, r[0]), Math.min(p.L - 0.16, r[1]), r[2], r[3]]).filter(r => r[1] - r[0] > 0.01));
+  for (const side of ['W', 'E']) {
+    const cuts = sideCuts(side);
+    if (side === 'E' && !cuts.length) { // cargo doors
+      for (let c = 0; c < n; c++) { const z0 = c * cw; for (const [a, b2] of [[z0 + 0.16, z0 + cw / 2], [z0 + cw / 2, z0 + cw - 0.16]]) { placeOnSide(M, 'E', a + 0.005, b2 - 0.005, y0 + 0.14, y1 - 0.14, 0, 0.04, steel); for (const k of [0.3, 0.7]) placeOnSide(M, 'E', a + (b2 - a) * k - 0.015, a + (b2 - a) * k + 0.015, y0 + 0.25, y1 - 0.25, -0.04, 0.03, frameM); } }
+      continue;
+    }
+    ribs(side, wallRects(p.W, y0 + 0.14, y1 - 0.14, cuts).map(r => [Math.max(0.16, r[0]), Math.min(p.W - 0.16, r[1]), r[2], r[3]]).filter(r => r[1] - r[0] > 0.01));
+  }
+  bx(M, p.L - 0.1, 0.15, p.W - 0.1, p.L / 2, y0 + 0.075, p.W / 2, mat('#4a3f35', { r: 0.9 }));
+}
+function shellAframe(M, p, col, hide) {
+  const roofM = mat(col, { r: 0.55, m: 0.2, tex: 'seam' }), timber = mat('#7b5a3e', { r: 0.8, tex: 'clad' }), deck = mat('#8b6a48', { r: 0.85, tex: 'deck' }), under = mat('#3e352d', { r: 0.9 });
+  bx(M, p.L, p.yF, p.W * 0.86, p.L / 2, p.yF / 2, p.W / 2, under);
+  const dk = bx(M, 2.2, 0.06, p.W - 1.2, -1.1, p.yF - 0.03, p.W / 2, deck); worldUV(dk, 1);
+  const th = Math.atan2(p.ridge, p.W / 2), sl = Math.hypot(p.W / 2, p.ridge) + 0.25, ov = 0.35;
+  const cf = FIN.ceil[P.ceil], lin = mat(cf.col, { r: 0.8, tex: cf.pat === 'vplank' ? 'vplank' : null, ds: false });
+  if (!hide) for (const sgn of [-1, 1]) {
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(p.L + 2 * ov, 0.12, sl), roofM);
+    const zc = sgn < 0 ? p.W / 4 : 3 * p.W / 4; pl.position.set(p.L / 2, p.ridge / 2, zc); pl.rotation.x = sgn < 0 ? -th : th;
+    const nrm = new THREE.Vector3(0, Math.cos(th), sgn < 0 ? -Math.sin(th) : Math.sin(th)); pl.position.addScaledVector(nrm, 0.07); pl.castShadow = pl.receiveShadow = true; M.add(pl); worldUV(pl, 1);
+    const li = new THREE.Mesh(new THREE.PlaneGeometry(p.L - 0.02, sl - 0.3), lin); li.position.set(p.L / 2, p.ridge / 2, zc); li.rotation.x = sgn < 0 ? -th - Math.PI / 2 : th + Math.PI / 2; li.rotation.order = 'XYZ';
+    li.position.addScaledVector(nrm, -0.01); li.receiveShadow = true; li.userData.pick = { kind: 'ceil' }; M.add(li); if (cf.pat) worldUV(li, 1);
+  }
+  // gables (timber) for sides without full glazing, with holes for openings
+  for (const side of ['W', 'E']) {
+    if (P.opens.some(o => o.side === side && OPEN[o.k].gable)) continue;
+    const sh = gableShape(p, p.yF);
+    P.opens.filter(o => o.side === side).forEach(o => { const s = DS.openSpan(P, o), h = new THREE.Path(); h.moveTo(s.u0, p.yF + s.v0); h.lineTo(s.u1, p.yF + s.v0); h.lineTo(s.u1, p.yF + s.v1); h.lineTo(s.u0, p.yF + s.v1); h.closePath(); sh.holes.push(h); });
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: p.t, bevelEnabled: false }), me = new THREE.Mesh(geo, timber);
+    me.rotation.y = -Math.PI / 2; me.position.set(side === 'W' ? p.t : p.L, 0, 0); me.castShadow = me.receiveShadow = true; M.add(me); worldUV(me, 1);
+  }
+}
+function shellCabin(M, p, col, hide) {
+  const clad = mat(col, { r: 0.85, tex: 'clad' }), trim = mat('#2b2724', { r: 0.7 }), roofM = mat('#2d2f31', { r: 0.6, m: 0.2, tex: 'seam' }), deck = mat('#8b6a48', { r: 0.85, tex: 'deck' }), under = mat('#3e352d', { r: 0.9 });
+  bx(M, p.L, p.yF, p.W, p.L / 2, p.yF / 2, p.W / 2, under);
+  const y0 = p.yF, y1 = p.yF + p.H;
+  for (const side of ['N', 'S', 'W', 'E']) { const len = DS.sideLen(P, side); wallRects(len, y0, y1, sideCuts(side)).forEach(([u0, u1, v0, v1]) => { const me = placeOnSide(M, side, u0, u1, v0, v1, 0, p.t, clad); worldUV(me, 1); }); }
+  for (const x of [0.06, p.L - 0.06]) for (const z of [0.06, p.W - 0.06]) bx(M, 0.14, p.H, 0.14, x, y0 + p.H / 2, z, trim);
+  // veranda
+  const vd = p.veranda || 0; if (vd) { const d = bx(M, p.L - 0.6, 0.08, vd, p.L / 2, p.yF - 0.04, p.W + vd / 2, deck); worldUV(d, 1); bx(M, p.L - 0.6, p.yF - 0.08, vd - 0.1, p.L / 2, (p.yF - 0.08) / 2, p.W + vd / 2, under); for (let x = 0.45; x <= p.L - 0.4; x += (p.L - 0.9) / Math.max(1, Math.round((p.L - 0.9) / 3))) bx(M, 0.14, 2.35, 0.14, x, p.yF + 1.17, p.W + vd - 0.12, trim); const n = Math.round(p.yF / 0.17); for (let i = 0; i < n; i++) bx(M, 1.6, p.yF - i * p.yF / n, 0.3, p.L / 2, (p.yF - i * p.yF / n) / 2, p.W + vd + 0.15 + 0.3 * i, mat('#8e8a83', { r: 0.95 })); }
+  if (hide) return;
+  const pitch = 25 * Math.PI / 180, ov = 0.45, half = p.W / 2 + ov, rise = Math.tan(pitch) * half, sl = half / Math.cos(pitch);
+  for (const sgn of [-1, 1]) { const pl = new THREE.Mesh(new THREE.BoxGeometry(p.L + 0.7, 0.1, sl), roofM); pl.position.set(p.L / 2, y1 + rise / 2 - Math.tan(pitch) * ov / 2 + 0.05, sgn < 0 ? p.W / 4 - ov / 2 : 3 * p.W / 4 + ov / 2); pl.rotation.x = sgn < 0 ? -pitch : pitch; pl.castShadow = pl.receiveShadow = true; M.add(pl); worldUV(pl, 1); }
+  for (const x of [0, p.L - p.t]) { const sh = new THREE.Shape(); sh.moveTo(0, y1); sh.lineTo(p.W, y1); sh.lineTo(p.W / 2, y1 + Math.tan(pitch) * p.W / 2); sh.closePath(); const me = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: p.t, bevelEnabled: false }), clad); me.rotation.y = -Math.PI / 2; me.position.set(x + p.t, 0, 0); me.castShadow = true; M.add(me); worldUV(me, 1); }
+  if (vd) { const vp = Math.atan2(y1 - (p.yF + 2.35) + 0.05, vd), vl = Math.hypot(vd + 0.3, y1 - p.yF - 2.35); const pl = new THREE.Mesh(new THREE.BoxGeometry(p.L - 0.3, 0.08, vl), roofM); pl.position.set(p.L / 2, (y1 + p.yF + 2.4) / 2 + 0.05, p.W + vd / 2 + 0.1); pl.rotation.x = vp; pl.castShadow = true; M.add(pl); worldUV(pl, 1); }
+}
+function shade(hex, k) { const c = new THREE.Color(hex); const hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, hsl.s, clamp(hsl.l + k * hsl.l, 0, 1)); return '#' + c.getHexString(); }
+function updateSelBox() {
+  if (!SEL || !MODEL) { selBox.visible = false; return; }
+  const o = REFS[SEL.kind + ':' + SEL.id];
+  if (o) { selBox.box.setFromObject(o); selBox.box.expandByScalar(0.04); selBox.visible = true; return; }
+  if (SEL.kind === 'room') { const r = findSel(); if (r) { const { nx } = G; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; r.cells.forEach(c => { const i = c % nx, j = (c / nx) | 0; x0 = Math.min(x0, i * C); x1 = Math.max(x1, (i + 1) * C); z0 = Math.min(z0, j * C); z1 = Math.max(z1, (j + 1) * C); }); selBox.box.set(new THREE.Vector3(x0, PRE().yF, z0), new THREE.Vector3(x1, PRE().yF + 0.05, z1)); selBox.visible = true; return; } }
+  selBox.visible = false;
+}
+let raf3 = 0; function queue3D() { if (raf3) return; raf3 = requestAnimationFrame(() => { raf3 = 0; if (VIEW === '3d' && DIRTY3D) build3D(); }); }
+function camPreset(k) {
+  const p = PRE(), r = Math.max(p.L, p.W * 1.6), cx = p.L / 2, cz = p.W / 2;
+  const set = (pos, tgt) => { camera.position.set(...pos); controls.target.set(...tgt); controls.update(); };
+  if (k === 'front' && p.sys === 'aframe') set([-r * 0.95, 2.6 + r * 0.25, cz + r * 0.95], [cx * 0.7, 2.4, cz]);
+  else if (k === 'front') set([cx + r * 0.45, 2.0 + r * 0.25, p.W + (p.veranda || 0) + r * 1.05], [cx, 1.4, cz]);
+  else if (k === 'aerial') set([cx + r * 0.75, r * 0.95, cz + r * 0.85], [cx, 0.6, cz]);
+  else set([cx + 0.01, r * 1.2, cz + r * 0.5], [cx, 0, cz]);
+}
+function resize() { const r = host.getBoundingClientRect(); if (!r.width || !r.height) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(host);
+let LOOP = false;
+function startLoop() { if (LOOP) return; LOOP = true; renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); }); }
+function stopLoop() { LOOP = false; renderer.setAnimationLoop(null); }
+// picking
+const ray = new THREE.Raycaster(); let pdown = null;
+renderer.domElement.addEventListener('pointerdown', e => { pdown = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!pdown || Math.hypot(e.clientX - pdown[0], e.clientY - pdown[1]) > 5 || WALK) return;
+  const hit = pick(e); if (!hit) { if (SEL) { SEL = null; renderUI(); updateSelBox(); } return; }
+  let o = hit.object, pk = null; while (o && !pk) { pk = o.userData.pick; o = o.parent; }
+  if (!pk) return;
+  if (pk.kind === 'floor') { const id = G.at(hit.point.x, hit.point.z); if (id > 0) SEL = { kind: 'room', id }; }
+  else if (pk.kind === 'wall') SEL = { kind: 'room', id: pk.room };
+  else if (pk.kind === 'ceil') { if (STAGE === 'finish') { NTAB = 'ceil'; } return renderUI(); }
+  else SEL = { kind: pk.kind, id: pk.id };
+  if (STAGE === 'finish' && SEL && SEL.kind !== 'room') { const s = findSel(); const room = SEL.kind === 'item' ? G.at(s.x, s.z) : 0; SEL = room > 0 ? { kind: 'room', id: room } : SEL; }
+  renderUI(); updateSelBox();
+});
+function pick(e) { const r = renderer.domElement.getBoundingClientRect(); ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera); return MODEL ? ray.intersectObject(MODEL, true).find(h => h.object.visible && h.object !== selBox) : null; }
+function floorHit(e) { const r = renderer.domElement.getBoundingClientRect(); ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera); const pl = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PRE().yF), v = new THREE.Vector3(); return ray.ray.intersectPlane(pl, v) ? v : null; }
+
+// ---------------- walk mode ----------------
+function enterWalk(roomId) {
+  const r = R.find(x => x.id === roomId); if (!r) return; const p = PRE();
+  if (VIEW !== '3d') setView('3d');
+  CUT = false; DIRTY3D = true; refreshView();
+  WALK = { saved: [camera.position.clone(), controls.target.clone()] };
+  // stand at the room point farthest from its walls-ish (anchor), look toward the longest open direction
+  let best = [1, 0], bl = -1;
+  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, dx = Math.cos(a), dz = Math.sin(a); let d = 0; while (d < 15 && G.at(r.ax + dx * d, r.az + dz * d) === r.id) d += 0.1; if (d > bl) { bl = d; best = [dx, dz]; } }
+  const back = Math.min(0.6, bl * 0.25);
+  camera.position.set(r.ax - best[0] * back, p.yF + 1.6, r.az - best[1] * back); controls.target.set(camera.position.x + best[0] * 0.02, p.yF + 1.55, camera.position.z + best[1] * 0.02);
+  Object.assign(controls, { enableZoom: false, enablePan: false, rotateSpeed: -0.35, minDistance: 0, maxDistance: 0.05 }); controls.maxPolarAngle = Math.PI - 0.1; controls.update();
+  camera.fov = 70; camera.updateProjectionMatrix(); renderViewChrome(); toast(`Standing in ${r.name}`);
+}
+function walkStep(d) {
+  if (!WALK) return; const p = PRE(), dir = new THREE.Vector3().subVectors(controls.target, camera.position); dir.y = 0; if (dir.lengthSq() < 1e-9) return; dir.normalize();
+  const side = new THREE.Vector3(-dir.z, 0, dir.x), step = 0.3, mv = { f: dir.clone().multiplyScalar(step), b: dir.clone().multiplyScalar(-step), l: side.clone().multiplyScalar(-step), r: side.clone().multiplyScalar(step) }[d];
+  const nx = clamp(camera.position.x + mv.x, p.t + 0.25, p.L - p.t - 0.25), nz = clamp(camera.position.z + mv.z, p.t + 0.25, p.W - p.t - 0.25);
+  if (G.at(nx, nz) <= 0 && !isDoorCell(nx, nz)) return;
+  const dx = nx - camera.position.x, dz = nz - camera.position.z; camera.position.x += dx; camera.position.z += dz; controls.target.x += dx; controls.target.z += dz; controls.update();
+}
+function isDoorCell(x, z) { return P.parts.some(q => { if (q.door == null) return false; const c = q.s0 + q.door; return q.a === 'x' ? Math.abs(z - (q.at - 0.05)) < 0.12 && Math.abs(x - c) < 0.38 : Math.abs(x - (q.at - 0.05)) < 0.12 && Math.abs(z - c) < 0.38; }); }
+function exitWalk() {
+  if (!WALK) return; camera.position.copy(WALK.saved[0]); controls.target.copy(WALK.saved[1]); WALK = null;
+  Object.assign(controls, { enableZoom: true, enablePan: true, rotateSpeed: 1, minDistance: 0, maxDistance: Infinity }); controls.maxPolarAngle = Math.PI / 2 - 0.03; camera.fov = 45; camera.updateProjectionMatrix(); controls.update(); renderViewChrome();
+}
+
+// ---------------- capture ----------------
+function ensure3D() { if (DIRTY3D || !MODEL) build3D(); }
+function grabStill(w = 1600) {
+  ensure3D(); const cv = renderer.domElement, ow = cv.clientWidth, oh = cv.clientHeight, pr = renderer.getPixelRatio(), sv = selBox.visible;
+  selBox.visible = false; const h = Math.round(w * oh / ow); renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.render(scene, camera);
+  const url = cv.toDataURL('image/jpeg', 0.9); renderer.setPixelRatio(pr); renderer.setSize(ow, oh, false); camera.aspect = ow / oh; camera.updateProjectionMatrix(); selBox.visible = sv; return url;
+}
+function thumbOf(url) { return new Promise(res => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = 240; c.height = 180; const g = c.getContext('2d'), s = Math.max(240 / im.width, 180 / im.height); g.drawImage(im, (240 - im.width * s) / 2, (180 - im.height * s) / 2, im.width * s, im.height * s); res(c.toDataURL('image/jpeg', 0.8)); }; im.src = url; }); }
+async function captureStill() { if (VIEW !== '3d') setView('3d'); const img = grabStill(1920), id = uid('s'); RENDERS.unshift({ id, kind: 'still', img, thumb: await thumbOf(img), scene: SCENE }); renderRight(); toast('Still captured'); return id; }
+function grabPano() {
+  ensure3D(); const p = PRE(); let pos;
+  if (WALK) pos = camera.position.clone(); else { const r = R.slice().sort((a, b) => b.area - a.area)[0]; pos = new THREE.Vector3(r.ax, p.yF + 1.6, r.az); }
+  const wasCut = CUT; if (CUT) { CUT = false; build3D(); }
+  const rt = new THREE.WebGLCubeRenderTarget(1024, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.05, 200, rt); cc.position.copy(pos); scene.add(cc); const sv = selBox.visible; selBox.visible = false; cc.update(renderer, scene); scene.remove(cc);
+  const qs = new THREE.Scene(), qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const qm = new THREE.ShaderMaterial({ uniforms: { tCube: { value: rt.texture } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }', fragmentShader: 'uniform samplerCube tCube; varying vec2 vUv; void main(){ float lon = (vUv.x - 0.5) * 6.28318530718; float lat = (vUv.y - 0.5) * 3.14159265359; vec3 d = vec3(cos(lat) * sin(lon), sin(lat), -cos(lat) * cos(lon)); gl_FragColor = textureCube(tCube, vec3(-d.x, d.y, d.z)); \n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}' });
+  qs.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), qm));
+  const cv = renderer.domElement, ow = cv.clientWidth, oh = cv.clientHeight, pr = renderer.getPixelRatio();
+  renderer.setPixelRatio(1); renderer.setSize(2048, 1024, false); renderer.render(qs, qc); const url = cv.toDataURL('image/jpeg', 0.9);
+  renderer.setPixelRatio(pr); renderer.setSize(ow, oh, false); camera.aspect = ow / oh; camera.updateProjectionMatrix();
+  rt.dispose(); qm.dispose(); selBox.visible = sv; if (wasCut) { CUT = true; build3D(); }
+  return url;
+}
+async function capturePano() { if (VIEW !== '3d') setView('3d'); const img = grabPano(), id = uid('v'); RENDERS.unshift({ id, kind: 'pano', img, thumb: await thumbOf(img), scene: SCENE }); renderRight(); toast('360° panorama captured'); openRender(id); }
+async function queueJob(kind) {
+  if (VIEW !== '3d') setView('3d');
+  const isP = kind === 'pano8k', img = isP ? grabPano() : grabStill(2400), rid = uid(isP ? 'v' : 's');
+  const job = { id: uid('j'), kind, label: isP ? '8K 360° panorama' : '4K still', scene: SCENE, status: 'Queued', progress: 4, rid, img, t: 0 };
+  JOBS.unshift(job); renderRight(); toast('Job queued (simulated)');
+  const tick = setInterval(async () => {
+    job.t++;
+    if (job.t === 4) job.status = 'Rendering';
+    if (job.status === 'Rendering') job.progress = Math.min(100, job.progress + (isP ? 6 : 11));
+    if (job.progress >= 100 && job.status !== 'Ready') { job.status = 'Ready'; clearInterval(tick); RENDERS.unshift({ id: rid, kind: isP ? 'pano' : 'still', img: job.img, thumb: await thumbOf(job.img), scene: job.scene, cloud: true }); toast(`${job.label} ready`); }
+    if (STAGE === 'render') renderRight();
+  }, 600);
+}
+
+// ---------------- modal: renders, panorama viewer, proposal ----------------
+let PV = null;
+function closeModal() { const m = $('#modal'); m.classList.remove('show'); m.innerHTML = ''; if (PV) { PV.r.setAnimationLoop(null); PV.r.dispose(); PV.tex.dispose(); PV = null; } }
+function openRender(id) {
+  const r = RENDERS.find(x => x.id === id); if (!r) return; const m = $('#modal');
+  m.innerHTML = `<div class="mbar"><span class="eb">${r.kind === 'pano' ? '360° panorama' : 'Still'} · ${SCENES[r.scene].label}${r.cloud ? ' · cloud job stand-in' : ''}</span><button type="button" class="tb" data-a="closeModal">Close</button></div>${r.kind === 'pano' ? '<div class="pano" id="pv"><p>Drag to look around</p></div>' : `<img class="still" src="${r.img}" alt="Render of ${esc(P.name)}">`}`;
+  m.classList.add('show');
+  if (r.kind === 'pano') {
+    const host2 = $('#pv'), rr = new THREE.WebGLRenderer({ antialias: true }); rr.outputColorSpace = THREE.SRGBColorSpace; host2.prepend(rr.domElement);
+    const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(75, 16 / 9, 0.1, 100), tx = new THREE.TextureLoader().load(r.img); tx.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Mesh(new THREE.SphereGeometry(50, 64, 32), new THREE.MeshBasicMaterial({ map: tx, side: THREE.BackSide })); sp.scale.x = -1; sc.add(sp);
+    cam.position.set(0, 0, 0.01); const oc = new OrbitControls(cam, rr.domElement); oc.enableZoom = false; oc.enablePan = false; oc.rotateSpeed = -0.3; oc.target.set(0, 0, 0); oc.update();
+    const fit = () => { const b = host2.getBoundingClientRect(); rr.setSize(b.width, b.height, false); cam.aspect = b.width / b.height; cam.updateProjectionMatrix(); }; fit();
+    rr.setAnimationLoop(() => { oc.update(); rr.render(sc, cam); }); PV = { r: rr, tex: tx };
+  }
+}
+function openProposal() {
+  const m = $('#modal'), p = PRE(), cover = RENDERS.find(r => r.kind === 'still') || null; let img = cover ? cover.img : null;
+  if (!img) { const was = VIEW; if (VIEW !== '3d') { $('#three').style.visibility = 'hidden'; } const sv = [camera.position.clone(), controls.target.clone()], cut = CUT; if (CUT) { CUT = false; DIRTY3D = true; } if (!WALK) camPreset('front'); img = grabStill(1600); if (!WALK) { camera.position.copy(sv[0]); controls.target.copy(sv[1]); controls.update(); } if (cut) { CUT = true; DIRTY3D = true; refreshView(); } }
+  const { vb, body } = planSVG(true), groups = [...new Set(Q.lines.map(l => l.grp))], dt = new Date().toLocaleDateString('en-GB', { dateStyle: 'long' }), ref = LINK || 'FC-' + (P.name.length * 7919 % 99999).toString().padStart(5, '0');
+  const boq = CLIENT ? `<table><tr><th>Section</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td>${g}</td><td class="n">${KSh(Q.lines.filter(l => l.grp === g).reduce((a, l) => a + l.total, 0))}</td></tr>`).join('')}</table>`
+    : `<table><tr><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td colspan="4" style="font-weight:600;color:#7A5C2A;padding-top:12px">${g}</td></tr>` + Q.lines.filter(l => l.grp === g).map(l => `<tr><td>${esc(l.name)}${l.short ? ' <span style="color:#9a6200">· ordered in</span>' : ''}</td><td class="n">${l.qty} ${l.unit}</td><td class="n">${KSh(l.rate)}</td><td class="n">${KSh(l.total)}</td></tr>`).join('')).join('')}</table>`;
+  const joinery = P.runs.map(rn => { const cat = DS.runCat(rn); return `<tr><td>${rn.kind === 'kitchen' ? 'Kitchen' : 'Wardrobe'}</td><td>${rn.units.map(u => cat[u].name).join(', ')}</td><td>${FRONTS[rn.front].name}${rn.kind === 'kitchen' ? ` · ${TOPS[rn.top].name} worktop${rn.wallCab ? ' · wall cabinets' : ''}` : ''}</td></tr>`; }).join('');
+  m.innerHTML = `<div class="mbar"><span class="eb">Proposal preview${CLIENT ? ' · client view' : ' · sales view with full BOQ'}</span><button type="button" class="tb" data-a="closeModal">Close</button></div>
+  <article class="doc"><div class="meta">FIRMCOP · MODULAR · Proposal ${ref} · ${dt}</div><h1>${esc(P.name)}</h1><div class="meta">Prepared for ${esc(CLIENTINFO.name)} · ${esc(CLIENTINFO.site)} · ${p.name}, ${SYSD().name.toLowerCase()} system</div>
+  <img class="cover" src="${img}" alt="Render of the design">
+  <h2>Plan</h2><svg viewBox="${vb.join(' ')}" xmlns="http://www.w3.org/2000/svg">${body}</svg>
+  <div class="grid2"><div><h2>Rooms and finishes</h2><table><tr><th>Room</th><th class="n">Area</th><th>Floor</th><th>Walls</th></tr>${R.map(r => `<tr><td>${esc(r.name)}</td><td class="n">${r.area.toFixed(1)} m²</td><td>${FIN.floor[r.floor].name}</td><td>${FIN.wall[r.wall].name}</td></tr>`).join('')}<tr><td>Ceiling</td><td></td><td colspan="2">${FIN.ceil[P.ceil].name}</td></tr></table></div>
+  <div><h2>Joinery</h2>${joinery ? `<table><tr><th>Run</th><th>Units</th><th>Finish</th></tr>${joinery}</table>` : '<p>None.</p>'}<h2>Doors and windows</h2><table>${P.opens.map(o => `<tr><td>${OPEN[o.k].name}</td><td>${DS.SIDE_NAME[o.side]}</td></tr>`).join('')}</table></div></div>
+  <h2>Bill of quantities</h2>${boq}
+  <div class="tot"><span>Subtotal</span><span>${KSh(Q.sub)}</span></div><div class="tot"><span>VAT 16%</span><span>${KSh(Q.vat)}</span></div><div class="tot"><span>Total</span><b>${KSh(Q.total)}</b></div>
+  <h2>Payment and programme</h2><div class="mil">${[['30%', 'Deposit, to start fabrication'], ['30%', 'Shell complete at the yard'], ['30%', 'Fit-out complete'], ['10%', 'Handover on site']].map(([a, b]) => `<div><b>${a}</b>${b}<br><span class="meta">${KSh(Q.total * parseFloat(a) / 100)}</span></div>`).join('')}</div>
+  <p class="meta" style="margin-top:14px">Lead time about ${Q.weeks} weeks from deposit${Q.shortfall.length ? ', including 2 weeks for finishes ordered in' : ''}. Sample price book for demonstration. The final price follows the site survey and engineering review. Valid for 30 days.</p></article>`;
+  m.classList.add('show'); m.scrollTop = 0;
+}
+
+// ---------------- author: save to the catalogue ----------------
+const LOGIN = { email: '', password: '' };
+const slugify = t => String(t).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'design';
+function afForm() {
+  if (AF) return AF; const r = (P.design && P.design.rules) || {};
+  AF = { slug: (P.design && P.design.slug) || slugify(P.name), notes: '', shells: r.shells ? r.shells.slice() : [P.preset], lock: (r.lock || []).slice(), finishes: { floor: 'all', wall: 'all', ceil: 'all', ...(r.finishes || {}) } };
+  return AF;
+}
+function authorPanel() {
+  const f = afForm(), cfg = window.FC_SUPA, sys = PRE().sys, errs = A.filter(a => a.lvl === 'error').length;
+  const box = (grp, key, label, on) => `<label style="display:flex;gap:8px;align-items:center;font-size:12.5px"><input type="checkbox" data-in="afSet" data-f="${grp}:${key}" ${on ? 'checked' : ''}>${label}</label>`;
+  const fins = g => Object.entries(FIN[g]).map(([k, x]) => box(g, k, x.name, f.finishes[g] === 'all' || f.finishes[g].includes(k))).join('');
+  return `<div class="sec insp"><div class="eb">Author · save to the catalogue</div>
+    <p class="note">${P.design ? `Saving a new version of <b style="color:var(--ivory)">${esc(P.design.slug)}</b> (now v${P.design.version}). It goes live only after review and publishing.` : 'Saves this layout as a new catalogue design, as a draft. It goes live only after review and publishing.'}</p>
+    <label class="lbl">Catalogue slug<input type="text" id="af-slug" data-in="af" data-f="slug" value="${esc(f.slug)}"></label>
+    <label class="lbl">Notes for the reviewer<input type="text" id="af-notes" data-in="af" data-f="notes" value="${esc(f.notes)}"></label>
+    <div class="eb" style="color:var(--muted)">Sizes clients may pick</div>${Object.entries(PRESETS).filter(([, p]) => p.sys === sys).map(([k, p]) => box('shells', k, p.name, f.shells.includes(k))).join('')}
+    <div class="eb" style="color:var(--muted)">Fixed in the configurator</div>${[['parts', 'Partitions'], ['opens', 'Doors and windows'], ['runs', 'Kitchen and wardrobes'], ['items', 'Furniture']].map(([k, l]) => box('lock', k, l, f.lock.includes(k))).join('')}
+    <details class="how"><summary>Finishes clients may choose</summary><div style="display:flex;flex-direction:column;gap:4px;margin-top:8px"><div class="eb" style="color:var(--muted)">Floors</div>${fins('floor')}<div class="eb" style="color:var(--muted)">Walls</div>${fins('wall')}<div class="eb" style="color:var(--muted)">Ceiling</div>${fins('ceil')}</div></details>
+    ${errs ? `<p class="note" style="color:var(--warn)">${errs} check${errs > 1 ? 's' : ''} marked Fix. You can save a draft, but it cannot go to review until they are fixed.</p>` : ''}
+    ${cfg && !SESSION ? `<div class="eb" style="color:var(--muted)">Sign in to ${esc(cfg.name)}</div><label class="lbl">Email<input type="text" id="lg-email" autocomplete="username" data-in="login" data-f="email"></label><label class="lbl">Password<input type="password" id="lg-pass" autocomplete="current-password" data-in="login" data-f="password" style="height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px"></label><div class="btns"><button type="button" class="btn" data-a="signIn">Sign in</button></div>` : ''}
+    ${SESSION ? `<p class="note">Signed in as ${esc(SESSION.email)} · <button type="button" class="tb" data-a="signOut" style="height:26px">Sign out</button></p>` : ''}
+    <div class="btns"><button type="button" class="btn gold" data-a="afSave">Save ${P.design ? 'new version' : 'to catalogue'}</button></div></div>`;
+}
+async function signIn() {
+  const cfg = window.FC_SUPA; if (!cfg) return;
+  try {
+    const r = await fetch(`${cfg.url}/auth/v1/token?grant_type=password`, { method: 'POST', headers: { apikey: cfg.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: LOGIN.email, password: LOGIN.password }) });
+    const j = await r.json(); if (!r.ok) return toast(j.error_description || j.msg || 'Sign-in failed');
+    SESSION = { access_token: j.access_token, email: j.user && j.user.email }; try { localStorage.setItem('fc-ds-session', JSON.stringify(SESSION)); } catch (e) {}
+    toast('Signed in'); renderRight();
+  } catch (e) { toast("This preview can't reach the database. Sign in works when the Studio runs on your own domain"); }
+}
+async function authorSave() {
+  const f = afForm(), cfg = window.FC_SUPA;
+  if (!/^[a-z0-9-]{3,80}$/.test(f.slug)) return toast('Use 3 to 80 lowercase letters, numbers or dashes for the slug');
+  if (!f.shells.length) return toast('Pick at least one size clients may choose');
+  const layout = DS.clone(P); delete layout.design;
+  const body = { _slug: f.slug, _name: P.name, _system: PRE().sys, _shell: P.preset, _layout: layout, _rules: { shells: f.shells, lock: f.lock, options: [], finishes: f.finishes, defaults: { furnPkg: P.furnPkg } }, _checks: A.map(a => ({ lvl: a.lvl, text: a.text })), _total: Math.round(Q.total), _notes: f.notes || null };
+  if (cfg && SESSION) {
+    try {
+      const r = await fetch(`${cfg.url}/rest/v1/rpc/ds_save_version`, { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + SESSION.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json(); if (!r.ok) return toast(j.message || 'Save failed');
+      P.design = { slug: f.slug, version: j.version, rules: body._rules }; save(); renderUI();
+      return toast(`Saved as ${f.slug} v${j.version}. Submit it for review in the Design Manager`);
+    } catch (e) { /* fall through to export */ }
+  }
+  const m = $('#modal');
+  m.innerHTML = `<div class="mbar"><span class="eb">Save to catalogue</span><button type="button" class="tb" data-a="closeModal">Close</button></div>
+    <article class="doc"><h1 style="font-size:30px">Ready to save ${esc(f.slug)}</h1>
+    <p>${cfg ? `This preview runs in a sandbox that can't reach ${esc(cfg.name)}, so nothing was sent.` : 'No database is configured.'} When the Studio runs on your own domain, this button signs in and calls <code>ds_save_version</code> directly. The new version then appears in the Design Manager for review.</p>
+    <p class="meta">Payload, ${Math.round(JSON.stringify(body).length / 1024)} KB · ${body._checks.length} checks · total ${KSh(body._total)}</p>
+    <textarea id="payload" readonly style="width:100%;height:260px;font:11px/1.4 var(--mono);border:1px solid #e3dccf;padding:10px;background:#fff;color:#1c1a17">${esc(JSON.stringify(body, null, 1))}</textarea>
+    <div class="btns" style="margin-top:10px"><button type="button" class="btn" style="color:#1c1a17;border-color:#cfc6b6" data-a="copyPayload">Copy payload</button></div></article>`;
+  m.classList.add('show');
+}
+
+// ---------------- boot ----------------
+async function loadPackage() {
+  const cfg = window.FC_SUPA;
+  if (cfg && cfg.url) {
+    try {
+      const r = await fetch(`${cfg.url}/rest/v1/rpc/ds_package`, { method: 'POST', headers: { apikey: cfg.key, 'Content-Type': 'application/json' }, body: '{}' });
+      if (r.ok) { DS.applyPackage(await r.json(), { kind: 'db', label: 'Live · ' + cfg.name }); return; }
+    } catch (e) {}
+  }
+  try { const r = await fetch('ds-package.json'); if (r.ok) { const pkg = await r.json(); DS.applyPackage(pkg, { kind: 'snapshot', label: 'Snapshot · ' + (cfg ? cfg.name : 'database') + ' · ' + new Date(pkg.generated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }); } } catch (e) {}
+}
+await loadPackage();
+try { let want = new URLSearchParams(location.search).get('design'); if (!want) want = localStorage.getItem('fc-ds-open'); if (want) { localStorage.removeItem('fc-ds-open'); const d = (DS.DESIGNS || []).find(x => x.slug === want); if (d) P = { ...DS.clone(d.layout), name: d.name, design: { slug: d.slug, version: d.version, rules: d.rules || {} } }; } } catch (e) {}
+if (!PRESETS[P.preset]) P = DS.starter(Object.keys(PRESETS)[0]);
+SHELLSYS = PRESETS[P.preset].sys;
+recompute(); renderUI(); setView('3d', true); resize(); build3D(); camPreset('front');
+</script>
+</body>
+</html>
