@@ -9,7 +9,12 @@
   "redirects": [
     {
       "source": "/collection",
-      "destination": "/Catalog.dc.html",
+      "destination": "/collection.html",
+      "permanent": false
+    },
+    {
+      "source": "/works",
+      "destination": "/Projects.dc.html",
       "permanent": false
     },
     {

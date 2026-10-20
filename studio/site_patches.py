@@ -32,8 +32,9 @@ STAFF = ('<a href="admin.html" class="fc-staff" aria-label="Staff sign in" title
 
 
 def staff_links(s):
-    """Staff entry lives only in the footer, as a lock icon; public menus lose 'Team portal'."""
+    """Staff entry lives only in the footer, as a lock icon; public menus lose 'Team portal'. Collection links go to the new Collection page."""
     s = s.replace('href="Team.dc.html"', 'href="admin.html"')
+    s = s.replace('href="Catalog.dc.html"', 'href="collection.html"')
     s = s.replace('<a href="admin.html">Team portal</a>\n</nav>', '</nav>')          # header menus
     s = s.replace(' · <a href="admin.html">Team portal</a>', ' · ' + STAFF)             # Catalog, DesignDetail footers
     s = s.replace('<a href="admin.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Team portal</a>', '')  # Main resources column
@@ -57,9 +58,13 @@ def projects(s):
     html = rep(html, '{{p.area}} m² · {{p.weeks}} weeks · {{p.client}}', '{{p.meta}}', p)
     html = rep(html, '<dd style="margin:0">{{sel.area}} m²</dd>', '<dd style="margin:0">{{sel.areaText}}</dd>', p)
     html = rep(html, '<dd style="margin:0">{{sel.weeks}} weeks, yard to handover</dd>', '<dd style="margin:0">{{sel.weeksText}}</dd>', p)
+    html = rep(html, '<blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">[Client quote about the build]</blockquote>',
+               '<sc-if value="{{sel.hasQuote}}" hint-placeholder-val="{{false}}"><blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">{{sel.quote}}</blockquote></sc-if>', p)
+    html = rep(html, '<p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>',
+               '<p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>\n<sc-if value="{{sel.hasPage}}" hint-placeholder-val="{{false}}"><p style="margin:10px 0 0"><a href="{{sel.href}}" style="font-weight:600">See the full project, photos and specs →</a></p></sc-if>', p)
     js = array_list(js, p, 'works', 'all0')
     js = rep(js, "    const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];",
-             "    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request' }));\n"
+             "    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request', hasQuote: !!p.quote, quote: p.quote || '', hasPage: !!p.slug, href: p.slug ? 'work.html?w=' + encodeURIComponent(p.slug) : '' }));\n"
              "    const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];", p)
     js = rep(js, 'const imgFor = (p) => IMG[p.name]', 'const imgFor = (p) => (p && p.img) || IMG[p.name]', p)
     js = rep(js, '    const s0 = all[this.state.sel];', '    const s0 = all[this.state.sel] || all[0];', p)

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Works · Firmcop Modular</title>
+<meta name="description" content="A Firmcop project: what we built, how long it took and what it cost to run.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&amp;family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="fc-pages.css">
+<meta name="fc-footer" content="auto">
+<style>
+.whero{position:relative;background:#0D0C0A center/cover no-repeat;min-height:min(70vh,640px);display:flex;align-items:flex-end;color:#F2EBDF}
+.whero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,12,10,.15),rgba(13,12,10,.85))}
+.whero .wrap{position:relative;z-index:1;padding-top:120px;padding-bottom:40px;width:100%}
+.whero h1{margin:8px 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(38px,5.4vw,78px);line-height:.98;max-width:980px}
+.wcols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:48px;padding:44px 0}
+@media (max-width:900px){.wcols{grid-template-columns:1fr;gap:28px}}
+.wcols section h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30px;margin:0 0 10px}
+.wcols section + section{margin-top:28px}
+.wcols p{margin:0 0 12px;font-size:17px;color:#2E2B26}
+.aside{background:#fff;border:1px solid var(--line);border-radius:6px;padding:22px;align-self:start;position:sticky;top:16px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.gal figure{margin:0}
+.gal button{display:block;width:100%;aspect-ratio:4/3;border:0;padding:0;border-radius:4px;background:#E7E1D6 center/cover no-repeat;cursor:zoom-in}
+.gal figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+blockquote{margin:0;padding:22px 26px;background:var(--night);color:#F2EBDF;border-radius:6px;font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;line-height:1.3}
+blockquote footer{font-family:'Manrope',sans-serif;font-size:14px;color:#C9BFAF;margin-top:10px}
+dialog.lb{border:0;padding:0;background:transparent;max-width:min(1200px,96vw)}
+dialog.lb::backdrop{background:rgba(13,12,10,.9)}
+dialog.lb img{max-height:86vh;width:auto;margin:0 auto;border-radius:4px}
+dialog.lb .row{display:flex;justify-content:space-between;align-items:center;color:#F2EBDF;gap:12px;margin-top:8px}
+dialog.lb button{min-height:44px;min-width:44px;background:transparent;color:#F2EBDF;border:1px solid #5C5850;border-radius:4px;font:inherit;cursor:pointer}
+.nextprev{display:flex;justify-content:space-between;gap:16px;padding:24px 0 48px;border-top:1px solid var(--line)}
+.nextprev a{text-decoration:none;color:var(--ink);max-width:45%}
+.nextprev small{display:block;color:var(--muted);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header id="fc-head" class="fc-head"></header>
+<main id="main" tabindex="-1">
+  <div class="wrap" style="padding:40px 32px"><div class="skel" style="height:380px"></div></div>
+</main>
+<dialog class="lb" id="lb" aria-label="Photo"><img id="lbimg" alt=""><div class="row"><button type="button" id="lbprev" aria-label="Previous photo">‹</button><span id="lbcap"></span><span><button type="button" id="lbnext" aria-label="Next photo">›</button> <button type="button" id="lbx" aria-label="Close">×</button></span></div></dialog>
+<script src="ds-config.js"></script>
+<script src="fc-site.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc, fmt = FC.fmt;
+  FC.header($('#fc-head'), 'Projects.dc.html');
+  const slug = new URLSearchParams(location.search).get('w') || '';
+  const FAMILY = { Container: 'containers', 'A-frame': 'aframes', Cabin: 'cabins', Steel: 'steel', Other: 'steel' };
+  const paras = (t) => (t || '').split(/\n{2,}/).map((x) => x.trim()).filter(Boolean).map((x) => `<p>${esc(x)}</p>`).join('');
+  const fail = (m) => { $('#main').innerHTML = `<div class="wrap" style="padding:60px 32px"><div class="empty">${m} <a href="Projects.dc.html">See all our works</a>.</div></div>`; };
+
+  function render(w, all, products) {
+    document.title = (w.seo_title || w.title) + ' · Firmcop Works';
+    const md = document.querySelector('meta[name=description]'); if (md) md.content = (w.seo_description || w.story || w.title).slice(0, 160);
+    const gal = (w.gallery && w.gallery.length ? w.gallery : (w.images || []).map((u) => ({ url: u }))).filter((g) => g && g.url);
+    const hero = (gal[0] && gal[0].url) || FC.FAMILY_IMG[FAMILY[w.type]] || '';
+    const studio = w.design_slug ? '3d-studio.html?design=' + encodeURIComponent(w.design_slug) : 'collection.html?c=' + (FAMILY[w.type] || 'containers');
+    const i = all.findIndex((x) => x.slug === w.slug), prev = all[(i - 1 + all.length) % all.length], next = all[(i + 1) % all.length];
+    const specs = [['Type', w.type], ['Category', w.category], ['Location', w.location], ['Client', w.client], ['Floor area', w.area_m2 ? fmt(w.area_m2) + ' m²' : ''], ['Build time', w.weeks ? w.weeks + ' weeks, yard to handover' : ''], ['Design', w.design], ['Key finishes', w.finishes]].filter((x) => x[1]);
+    $('#main').innerHTML = `
+      <section class="whero" style="background-image:url('${esc(hero)}')"><div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb" style="color:#C9BFAF"><a href="Projects.dc.html" style="color:#C9BFAF">Works</a><span aria-hidden="true">›</span><span>${esc(w.type)}</span></nav>
+        <p class="eyebrow" style="color:#E3C48F">${esc([w.type, w.location].filter(Boolean).join(' · '))}</p>
+        <h1>${esc(w.title)}</h1></div></section>
+      <div class="wrap"><div class="wcols">
+        <div>
+          ${w.brief ? `<section><h2>The brief</h2>${paras(w.brief)}</section>` : ''}
+          ${w.story ? `<section><h2>${w.brief ? 'What we built' : 'The project'}</h2>${paras(w.story)}</section>` : ''}
+          ${w.outcome ? `<section><h2>The outcome</h2>${paras(w.outcome)}</section>` : ''}
+          ${w.client_quote ? `<section><blockquote>“${esc(w.client_quote)}”${w.quote_by ? `<footer>${esc(w.quote_by)}</footer>` : ''}</blockquote></section>` : ''}
+          ${gal.length > 1 ? `<section><h2>Photos</h2><div class="gal">${gal.map((g, k) => `<figure><button type="button" data-k="${k}" aria-label="Open photo ${k + 1}${g.caption ? ': ' + esc(g.caption) : ''}" style="background-image:url('${esc(g.url)}')"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div></section>` : ''}
+          ${w.video_url ? `<section><h2>Video</h2><p><a href="${esc(w.video_url)}" target="_blank" rel="noopener">Watch the project video</a></p></section>` : ''}
+        </div>
+        <aside class="aside" aria-label="Project details">
+          <dl class="specs">${specs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+          <div class="tools" style="margin-top:20px;flex-direction:column;align-items:stretch">
+            <a class="btn" href="${studio}">Build something like this</a>
+            <button class="btn line" type="button" id="wq">Get a quote</button>
+            <button class="btn line" type="button" id="wv">Book a yard visit</button>
+          </div>
+        </aside>
+      </div>
+      ${products.length ? `<section class="sec" style="padding-top:0"><h2>Used in this project</h2><div class="grid">${products.map((p) => `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(p.cover_url || FC.FAMILY_IMG[FAMILY[w.type]] || '')}')"></div><div class="bd"><h3>${esc(p.name)}</h3><div class="meta"><span class="price">${esc(FC.priceText(p))}</span></div></div></a>`).join('')}</div></section>` : ''}
+      ${all.length > 1 ? `<nav class="nextprev" aria-label="More works"><a href="work.html?w=${encodeURIComponent(prev.slug)}"><small>Previous</small>${esc(prev.title)}</a><a href="work.html?w=${encodeURIComponent(next.slug)}" style="text-align:right"><small>Next</small>${esc(next.title)}</a></nav>` : ''}
+      </div>`;
+    $('#wq').onclick = () => FC.lead('contact', { title: 'Get a quote', eyebrow: 'Like ' + w.title, intro: 'Tell us about your plot and what you need. We reply with a quote, usually within one working day.', location: true, context: { work: w.slug, title: w.title } });
+    $('#wv').onclick = () => FC.lead('visit', { context: { work: w.slug, title: w.title } });
+    // lightbox
+    const lb = $('#lb'); let at = 0;
+    const show = (k) => { at = (k + gal.length) % gal.length; $('#lbimg').src = gal[at].url; $('#lbimg').alt = gal[at].caption || w.title; $('#lbcap').textContent = (gal[at].caption || '') + '  ' + (at + 1) + ' / ' + gal.length; };
+    $('#main').querySelectorAll('.gal button').forEach((b) => b.onclick = () => { show(+b.dataset.k); if (lb.showModal) lb.showModal(); else window.open(gal[+b.dataset.k].url, '_blank'); });
+    $('#lbprev').onclick = () => show(at - 1); $('#lbnext').onclick = () => show(at + 1); $('#lbx').onclick = () => lb.close();
+    lb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') show(at - 1); if (e.key === 'ArrowRight') show(at + 1); });
+    lb.addEventListener('click', (e) => { if (e.target === lb) lb.close(); });
+  }
+
+  if (!slug) return fail('No project chosen.');
+  Promise.all([FC.rest('works?select=*&published=eq.true&slug=eq.' + encodeURIComponent(slug)), FC.rest('works?select=slug,title&published=eq.true&order=featured.desc,sort.asc')])
+    .then(([rows, all]) => {
+      if (!rows.length) return fail('That project is not available.');
+      const w = rows[0];
+      const slugs = (w.product_slugs || []).concat(w.design_slug ? ['design-' + w.design_slug] : []);
+      const pq = slugs.length ? FC.rest('catalog_products?select=slug,name,kind,unit,price_mode,base_price,rate,cover_url&published=eq.true&slug=in.(' + slugs.map(encodeURIComponent).join(',') + ')') : Promise.resolve([]);
+      return pq.catch(() => []).then((prods) => render(w, all, prods));
+    })
+    .catch(() => fail('This page could not load just now. Please refresh.'));
+})();
+</script>
+</body>
+</html>

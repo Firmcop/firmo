@@ -279,7 +279,7 @@
   const LOADERS = {
     works: () => FC.rest('works?select=*&published=eq.true&order=featured.desc,sort.asc').then((rows) => rows.map((w) => ({
       name: w.title, type: w.type === 'Other' ? 'Steel' : w.type, place: w.location || 'Kenya', area: w.area_m2 ? Math.round(w.area_m2) : '', weeks: w.weeks || '',
-      client: w.client || w.category || '', design: w.design || w.category || '', finishes: w.finishes || 'On request', story: w.story || '', img: (w.images && w.images[0]) || TYPE_IMG[w.type], images: w.images || [], slug: w.slug
+      client: w.client || w.category || '', design: w.design || w.category || '', finishes: w.finishes || 'On request', story: w.story || '', img: (w.images && w.images[0]) || TYPE_IMG[w.type], images: w.images || [], slug: w.slug, quote: w.client_quote ? '“' + w.client_quote + '”' + (w.quote_by ? ' ' + w.quote_by : '') : ''
     }))),
     store: () => FC.rest('catalog_products?select=id,slug,sku,name,kind,unit,price_mode,base_price,rate,stock,summary,specs,shape,cover_url,model_url,category:catalog_categories!inner(name,slug,scopes),params:product_params(key,label,kind,unit,min,max,step,default_value,geometry,options,sort)'
       + '&published=eq.true&kind=in.(material,fitting,furniture)&category.scopes=cs.{atelier}&price_mode=neq.quote&order=sort.asc,name.asc').then((rows) => rows.map((x) => {
@@ -316,6 +316,86 @@
   }
   document.addEventListener('click', hook, true);
 
+
+
+  // ---------- shared header for pages outside the canvas prototype ----------
+  const NAV = [['collection.html', 'Collection'], ['Configurator.dc.html', 'Configure'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['Store.dc.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
+  FC.header = function (el, active) {
+    if (!el) return;
+    el.className = 'fc-head';
+    el.innerHTML = '<div class="bar"><a class="brand" href="Main.dc.html"><b>FIRMCOP</b><small>Modular' + (FC.settings.founded_year ? ' · Est. ' + esc(FC.settings.founded_year) : '') + '</small></a>'
+      + '<nav aria-label="Main">' + NAV.map(([h, l]) => '<a href="' + h + '"' + (h === active ? ' aria-current="page"' : '') + '>' + l + '</a>').join('') + '</nav>'
+      + '<a class="ghost" href="Main.dc.html#visit">Visit the yard</a></div>';
+  };
+
+  // ---------- catalogue reads ----------
+  const memo = {};
+  FC.cats = (scope) => memo['c' + scope] || (memo['c' + scope] = FC.rest('catalog_categories?select=id,slug,name,parent_id,image_url,description,sort&published=eq.true&scopes=cs.%7B' + scope + '%7D&order=sort.asc,name.asc'));
+  FC.subtree = (cats, id) => { const ids = [id]; let grew = true; while (grew) { grew = false; cats.forEach((c) => { if (c.parent_id && ids.includes(c.parent_id) && !ids.includes(c.id)) { ids.push(c.id); grew = true; } }); } return ids; };
+  FC.FAMILY_IMG = { containers: '/_blob/34e98516af54244cb1e1a80f0a5f434d', aframes: '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', cabins: '/_blob/934cee1933bb4f74580e99cf52bfbbdc', steel: '/_blob/ad198461426af454fde500cf62dc0e6d' };
+  FC.priceText = function (p) {
+    if (p.price_mode === 'quote') return 'Price on request';
+    const n = p.params && p.params.length ? FC.price(p, p.params).unit_price : Number(p.base_price);
+    if (!n) return 'Price on request';
+    const u = p.unit && !/^(no\.|per unit|unit)$/i.test(p.unit) ? ' ' + p.unit : '';
+    return 'From KES ' + fmt(n) + u;
+  };
+
+  // ---------- mega menu (desktop) ----------
+  const MEGA_CSS = `.fc-mega{position:fixed;left:0;right:0;z-index:9000;background:#15130F;color:#E8DFD0;border-top:1px solid #2A2621;border-bottom:1px solid #2A2621;box-shadow:0 30px 60px rgba(0,0,0,.45);font-family:'Manrope',system-ui,sans-serif}
+.fc-mega .in{max-width:1360px;margin:0 auto;padding:26px 32px 30px;display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:28px}
+.fc-mega .fam{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fc-mega .fam .img{display:block;aspect-ratio:16/9;background:#2A2621 center/cover no-repeat;border-radius:4px;margin-bottom:8px}
+.fc-mega .fam > a.t{font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;color:#F2EBDF;text-decoration:none;line-height:1.1}
+.fc-mega .fam > a.t:hover{color:#C9A46A}
+.fc-mega ul{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:1px}
+.fc-mega li a{color:#CFC6B5;text-decoration:none;font-size:14px;display:flex;justify-content:space-between;gap:8px;padding:5px 0}
+.fc-mega li a:hover,.fc-mega li a:focus-visible{color:#fff}
+.fc-mega li a small{color:#7D7568;font-size:12px}
+.fc-mega .all{margin-top:8px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#C9A46A;text-decoration:none}`;
+  /* FC.mega({ scope:'collection', match:'collection.html', page:'collection.html', kinds:'building,design' }) */
+  FC.mega = function (o) {
+    let panel = null, built = null, link = null, timer = 0;
+    const wide = () => window.matchMedia('(min-width: 900px)').matches && window.matchMedia('(hover: hover)').matches;
+    const build = () => built || (built = Promise.all([FC.cats(o.scope), FC.rest('catalog_products?select=category_id,cover_url,featured&published=eq.true&kind=in.(' + o.kinds + ')')]).then(([cats, prods]) => {
+      const count = {}; prods.forEach((p) => { count[p.category_id] = (count[p.category_id] || 0) + 1; });
+      const roots = cats.filter((c) => !c.parent_id);
+      const famCount = (id) => FC.subtree(cats, id).reduce((a, x) => a + (count[x] || 0), 0);
+      const cover = (id) => { const ids = FC.subtree(cats, id); const p = prods.find((x) => x.featured && x.cover_url && ids.includes(x.category_id)) || prods.find((x) => x.cover_url && ids.includes(x.category_id)); return p ? p.cover_url : ''; };
+      if (!document.getElementById('fc-mega-css')) { const st = document.createElement('style'); st.id = 'fc-mega-css'; st.textContent = MEGA_CSS; document.head.appendChild(st); }
+      panel = document.createElement('div'); panel.className = 'fc-mega'; panel.id = 'fc-mega-' + o.scope; panel.hidden = true;
+      panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', o.label || 'Menu');
+      panel.style.setProperty('--cols', Math.min(Math.max(roots.length, 1), 6));
+      panel.innerHTML = '<div class="in">' + roots.map((r) => {
+        const kids = cats.filter((c) => c.parent_id === r.id && (count[c.id] || 0) > 0);
+        const img = r.image_url || cover(r.id) || FC.FAMILY_IMG[r.slug] || '';
+        return '<div class="fam"><a class="img" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '" tabindex="-1" aria-hidden="true" style="background-image:url(\'' + esc(img) + '\')"></a>'
+          + '<a class="t" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">' + esc(r.name) + '</a><ul>'
+          + kids.map((k) => '<li><a href="' + o.page + '?c=' + encodeURIComponent(k.slug) + '"><span>' + esc(k.name) + '</span><small>' + count[k.id] + '</small></a></li>').join('')
+          + '</ul><a class="all" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">All ' + famCount(r.id) + ' →</a></div>';
+      }).join('') + '</div>';
+      panel.addEventListener('mouseenter', () => clearTimeout(timer));
+      panel.addEventListener('mouseleave', () => later());
+      panel.addEventListener('focusout', (e) => { if (!panel.contains(e.relatedTarget) && e.relatedTarget !== link) later(0); });
+      document.body.appendChild(panel);
+      return panel;
+    }).catch(() => null));
+    const place = () => { if (!panel || !link) return; const h = link.closest('header') || link.parentElement; panel.style.top = Math.round(h.getBoundingClientRect().bottom) + 'px'; };
+    const show = (a) => { clearTimeout(timer); link = a; a.setAttribute('aria-expanded', 'true'); build().then((pn) => { if (!pn || link !== a) return; place(); pn.hidden = false; }); };
+    const hide = () => { if (panel) panel.hidden = true; if (link) link.setAttribute('aria-expanded', 'false'); };
+    const later = (ms) => { clearTimeout(timer); timer = setTimeout(hide, ms == null ? 220 : ms); };
+    const sel = 'a[href="' + o.match + '"]';
+    document.addEventListener('mouseover', (e) => { const a = e.target.closest && e.target.closest(sel); if (a && a.closest('header,.fc-head') && wide()) show(a); });
+    document.addEventListener('mouseout', (e) => { const a = e.target.closest && e.target.closest(sel); if (a && a === link && !(panel && panel.contains(e.relatedTarget))) later(); });
+    document.addEventListener('focusin', (e) => { const a = e.target.closest && e.target.closest(sel); if (a && a.closest('header,.fc-head') && wide()) show(a); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel && !panel.hidden) { hide(); if (link) link.focus(); } if (e.key === 'ArrowDown' && document.activeElement === link && panel && !panel.hidden) { e.preventDefault(); const f = panel.querySelector('a.t'); if (f) f.focus(); } });
+    window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', () => { if (!wide()) hide(); else place(); });
+    // warm the data so the first hover is instant
+    if (wide()) setTimeout(build, 1500);
+  };
+  if (!document.documentElement.hasAttribute('data-fc-admin') && window.top === window) {
+    FC.mega({ scope: 'collection', match: 'collection.html', page: 'collection.html', kinds: 'building,design', label: 'Collection' });
+  }
 
   // ---------- staff sign-in icon in the footer ----------
   const LOCK = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"></rect><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path></svg>';

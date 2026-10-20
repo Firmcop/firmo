@@ -450,14 +450,55 @@ VIEWS.items = (m) => listView(m, {
 });
 
 const WORK_TYPES = ['Container', 'A-frame', 'Cabin', 'Steel', 'Other'];
+const WORK_FIELDS = [{ k: 'title', label: 'Title', req: true, wide: true }, { k: 'slug', label: 'Web address', hint: 'made from the title' }, { k: 'type', label: 'Filter group', type: 'select', options: WORK_TYPES },
+  { k: 'category', label: 'Category' }, { k: 'location', label: 'Location' }, { k: 'client', label: 'Client type', hint: 'e.g. Private home, Contractor' },
+  { k: 'area_m2', label: 'Floor area (m²)', type: 'number' }, { k: 'weeks', label: 'Build time (weeks)', type: 'number' }, { k: 'design', label: 'Design (shown as text)' }, { k: 'finishes', label: 'Key finishes', wide: true },
+  { k: 'brief', label: 'The brief', type: 'textarea', hint: 'what the client needed' }, { k: 'story', label: 'What we built', type: 'textarea' }, { k: 'outcome', label: 'The outcome', type: 'textarea' },
+  { k: 'client_quote', label: 'Client quote', type: 'textarea' }, { k: 'quote_by', label: 'Quote by', hint: 'e.g. Jane W., site manager' }, { k: 'video_url', label: 'Video link', type: 'url' },
+  { k: 'design_slug', label: '3D Studio design', hint: 'opens "Build something like this" in the Studio' }, { k: 'product_slugs', label: 'Products used', type: 'lines', hint: 'one product web address per line, e.g. atelier-dr-stl' },
+  { k: 'seo_title', label: 'Search title' }, { k: 'seo_description', label: 'Search description', type: 'textarea' },
+  { k: 'sort', label: 'Order', type: 'number' }, { k: 'featured', label: 'Featured', type: 'bool' }, { k: 'published', label: 'Show on the website', type: 'bool' }];
 VIEWS.works = (m) => listView(m, {
   table: 'works', title: 'Works', eyebrow: 'Portfolio', order: 'published.desc,featured.desc,sort.asc', search: ['title', 'location', 'category'], filter: { col: 'type', options: WORK_TYPES, label: 'types' },
-  cols: [{ k: 'images', label: '', fmt: (v) => v && v[0] ? `<img src="${esc(v[0])}" alt="" width="56" height="42" style="object-fit:cover;border-radius:3px;display:block">` : '' }, { k: 'title', label: 'Project' }, { k: 'type', label: 'Type' }, { k: 'location', label: 'Location' }, { k: 'weeks', label: 'Weeks', n: true }, { k: 'featured', label: 'Featured', fmt: yes }, { k: 'published', label: 'On website', fmt: yes }],
-  fields: [{ k: 'title', label: 'Title', req: true, wide: true }, { k: 'slug', label: 'Web address', hint: 'made from the title' }, { k: 'type', label: 'Filter group', type: 'select', options: WORK_TYPES }, { k: 'category', label: 'Category' }, { k: 'location', label: 'Location' }, { k: 'client', label: 'Client type', hint: 'e.g. Private home, Contractor' },
-    { k: 'area_m2', label: 'Floor area (m²)', type: 'number' }, { k: 'weeks', label: 'Build time (weeks)', type: 'number' }, { k: 'design', label: 'Design' }, { k: 'finishes', label: 'Key finishes', wide: true }, { k: 'story', label: 'Story', type: 'textarea' },
-    { k: 'images', label: 'Photo URLs', type: 'lines', hint: 'one per line; the first is the cover' }, { k: 'sort', label: 'Order', type: 'number' }, { k: 'featured', label: 'Featured', type: 'bool' }, { k: 'published', label: 'Show on the website', type: 'bool' }],
-  defaults: { type: 'Container', published: true, featured: false, images: [], sort: 100 }, newLabel: 'Add a project', canDelete: true, slugFrom: 'title'
+  cols: [{ k: 'images', label: '', fmt: (v) => v && v[0] ? `<img src="${esc(v[0])}" alt="" width="56" height="42" style="object-fit:cover;border-radius:3px;display:block">` : '' }, { k: 'title', label: 'Project' }, { k: 'type', label: 'Type' }, { k: 'location', label: 'Location' },
+    { k: 'gallery', label: 'Photos', n: true, fmt: (v, r) => String((v && v.length) || (r.images || []).length || '') }, { k: 'brief', label: 'Story', fmt: (v, r) => (r.brief || r.outcome) ? pill('yes') : '<span class="pill">short</span>' }, { k: 'featured', label: 'Featured', fmt: yes }, { k: 'published', label: 'On website', fmt: yes }],
+  fields: WORK_FIELDS, defaults: { type: 'Container', published: true, featured: false, images: [], gallery: [], product_slugs: [], sort: 100 }, newLabel: 'Add a project', canDelete: true, slugFrom: 'title',
+  detail: (r, d, reload) => workDetail(r, d, reload)
 });
+async function workDetail(r, d, reload, tab) {
+  tab = tab || 'details';
+  r = (await api('works?id=eq.' + r.id))[0];
+  d.el.innerHTML = `<div class="tools"><a class="btn sm line" href="work.html?w=${encodeURIComponent(r.slug)}" target="_blank" rel="noopener">Open the project page</a></div>
+    <div class="tabs" role="tablist">${[['details', 'Details and story'], ['photos', 'Photos']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-wt="${k}">${l}</button>`).join('')}</div><div id="wb"></div>`;
+  d.el.querySelectorAll('[data-wt]').forEach((b) => b.onclick = () => workDetail(r, d, reload, b.dataset.wt));
+  const box = $('#wb', d.el);
+  if (tab === 'details') {
+    box.innerHTML = `<form class="f" style="margin-top:12px">${formHtml(WORK_FIELDS, r)}<div class="wide tools"><button class="btn" type="submit">Save</button><button class="btn danger" type="button" data-del>Delete project</button></div></form>`;
+    $('form', box).onsubmit = async (e) => { e.preventDefault(); let v; try { v = readForm(e.target, WORK_FIELDS); } catch (ex) { return toast(ex.message, true); } v.slug = v.slug || slugify(v.title);
+      await guard(api('works?id=eq.' + r.id, { method: 'PATCH', body: v }), 'Saved'); d.setTitle(v.title); reload(); };
+    const del = $('[data-del]', box); del.onclick = async () => { if (!confirmInline(del, 'Delete for good?')) return; await guard(api('works?id=eq.' + r.id, { method: 'DELETE' }), 'Deleted'); d.close(); reload(); };
+    return;
+  }
+  const gal = (r.gallery && r.gallery.length ? r.gallery : (r.images || []).map((u) => ({ url: u }))).slice();
+  const save = async (list, msg) => { await guard(api('works?id=eq.' + r.id, { method: 'PATCH', body: { gallery: list, images: list.map((g) => g.url) } }), msg); reload(); workDetail(r, d, reload, 'photos'); };
+  box.innerHTML = `<section class="card" style="margin-top:12px"><h3>Add photos</h3><p class="small muted" style="margin-top:0">The first photo is the cover on the Works page and the project page. Add a caption to say what each one shows, for example before, during or after.</p>
+      <label class="btn line" style="cursor:pointer">Choose photos<input type="file" id="wf" multiple accept="image/*" style="position:absolute;left:-9999px"></label> <span class="small muted" id="wst"></span></section>
+    <div class="grid" style="margin-top:12px">${gal.map((g, i) => `<div class="card" data-i="${i}" style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start;padding:12px">
+      <img src="${esc(g.url)}" alt="" width="120" height="90" style="object-fit:cover;border-radius:4px;display:block">
+      <div style="display:grid;gap:8px"><label class="fl">Caption<input data-cap value="${esc(g.caption || '')}" placeholder="e.g. After: the finished offices"></label>
+      <div class="tools">${i === 0 ? '<span class="pill yes">cover</span>' : '<button class="btn sm line" type="button" data-up>Move up</button><button class="btn sm line" type="button" data-cover>Make cover</button>'}<button class="btn sm danger" type="button" data-rm>Remove</button></div></div></div>`).join('') || '<p class="muted">No photos yet.</p>'}</div>
+    ${gal.length ? '<div class="tools" style="margin-top:12px"><button class="btn" type="button" id="wcap">Save captions</button></div>' : ''}`;
+  $('#wf', box).onchange = async (e) => {
+    const files = [...e.target.files], list = gal.slice();
+    for (let i = 0; i < files.length; i++) { $('#wst', box).textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + '…'; list.push({ url: await guard(uploadFile(files[i], 'works/' + r.slug)) }); }
+    save(list, files.length + ' photo' + (files.length === 1 ? '' : 's') + ' added');
+  };
+  const caps = () => gal.map((g, i) => Object.assign({}, g, { caption: (box.querySelector(`[data-i="${i}"] [data-cap]`).value || '').trim() || undefined }));
+  const cap = $('#wcap', box); if (cap) cap.onclick = () => save(caps(), 'Captions saved');
+  box.querySelectorAll('[data-up]').forEach((b) => b.onclick = () => { const i = +b.closest('[data-i]').dataset.i, l = caps(); [l[i - 1], l[i]] = [l[i], l[i - 1]]; save(l, 'Moved'); });
+  box.querySelectorAll('[data-cover]').forEach((b) => b.onclick = () => { const i = +b.closest('[data-i]').dataset.i, l = caps(); l.unshift(l.splice(i, 1)[0]); save(l, 'Cover changed'); });
+  box.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { if (!confirmInline(b, 'Sure?')) return; const i = +b.closest('[data-i]').dataset.i, l = caps(); l.splice(i, 1); save(l, 'Removed'); });
+}
 
 VIEWS.opps = (m) => listView(m, {
   table: 'investment_opportunities', title: 'Investments', eyebrow: 'Invest', order: 'sort.asc', search: ['name', 'place', 'sector'],

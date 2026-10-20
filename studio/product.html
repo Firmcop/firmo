@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firmcop Modular</title>
+<meta name="description" content="Firmcop modular buildings and materials, Nairobi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&amp;family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="fc-pages.css">
+<meta name="fc-footer" content="auto">
+<style>
+.pd{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;padding:28px 0 20px}
+@media (max-width:900px){.pd{grid-template-columns:1fr;gap:24px}}
+.gal .main{aspect-ratio:4/3;background:#E7E1D6 center/cover no-repeat;border-radius:6px}
+.gal .thumbs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.gal .thumbs button{width:84px;height:63px;border:2px solid transparent;border-radius:4px;background:#E7E1D6 center/cover no-repeat;cursor:pointer;padding:0}
+.gal .thumbs button[aria-pressed=true]{border-color:var(--brass)}
+.info h1{margin:4px 0 8px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clamp(34px,4vw,54px);line-height:1}
+.info .price{font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;margin:12px 0 2px}
+.info .price small{font-family:'Manrope',sans-serif;font-size:14px;color:var(--muted)}
+.opts{display:grid;gap:12px;margin:18px 0;padding:16px;background:#fff;border:1px solid var(--line);border-radius:6px}
+.opts label{display:grid;gap:4px;font-size:13px;font-weight:600;color:#3B3832}
+.opts input,.opts select{min-height:44px;padding:0 12px;border:1.5px solid #BDB29C;border-radius:4px;background:#fff;font:inherit;font-size:15px}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px 0 6px;border:1.5px solid #CFC6B5;border-radius:999px;background:#fff;font:inherit;font-size:14px;cursor:pointer}
+.sw button[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.sw i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,0,0,.15);display:inline-block}
+ul.feat{margin:10px 0 0;padding-left:20px}
+</style>
+</head>
+<body>
+<header id="fc-head" class="fc-head"></header>
+<main class="wrap" id="main" tabindex="-1">
+  <div class="pd" id="pd"><div class="skel" style="aspect-ratio:4/3"></div><div><div class="skel" style="height:40px;width:60%"></div><div class="skel" style="height:120px;margin-top:16px"></div></div></div>
+  <div id="more"></div>
+</main>
+<script src="ds-config.js"></script>
+<script src="fc-site.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc, fmt = FC.fmt;
+  const slug = new URLSearchParams(location.search).get('p') || '';
+  const SKIP_SPEC = { swatch: 1, texture: 1, col: 1, pat: 1, door: 1, glass: 1, sill: 1, tag: 1, flat: 1, wet: 1, sanitary: 1, tallItem: 1, gable: 1, mult: 1, per_m2: 1, when: 1 };
+  const SPEC_LABEL = { w: 'Width (m)', h: 'Height (m)', d: 'Depth (m)', cat: 'Room', note: 'Note' };
+  let P = null, CATS = [], choice = {};
+  let FALLBACK = '';
+  const scopeFor = (k) => (k === 'building' || k === 'design') ? 'collection' : 'atelier';
+  const listPage = (k) => (k === 'building' || k === 'design') ? 'collection.html' : 'Store.dc.html';
+
+  function fail(msg) {
+    $('#pd').innerHTML = `<div class="empty" style="grid-column:1/-1">${msg} <a href="collection.html">Browse the collection</a>.</div>`;
+  }
+
+  function render() {
+    const p = P, cat = CATS.find((c) => c.id === p.category_id);
+    let fam = cat, n = 0; while (fam && fam.parent_id && n++ < 6) fam = CATS.find((x) => x.id === fam.parent_id);
+    const imgs = (p.images && p.images.length ? p.images : (p.cover_url ? [p.cover_url] : [])).filter(Boolean);
+    const fallback = (fam && (fam.image_url || FC.FAMILY_IMG[fam.slug])) || ''; FALLBACK = fallback;
+    document.title = p.name + ' · Firmcop Modular';
+    const md = document.querySelector('meta[name=description]'); if (md) md.content = (p.summary || p.name).slice(0, 160);
+    const studio = p.design_slug ? '3d-studio.html?design=' + encodeURIComponent(p.design_slug) : '3d-studio.html';
+    const isBuilding = p.kind === 'building' || p.kind === 'design';
+    const params = (p.params || []).slice().sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    params.forEach((x) => { if (choice[x.key] == null) choice[x.key] = x.kind === 'number' ? Number(x.default_value || x.min || 0) : (x.default_value || ((x.options || [])[0] || {}).value); });
+    const specs = Object.entries(p.specs || {}).filter(([k, v]) => !SKIP_SPEC[k] && v !== '' && v != null && typeof v !== 'object');
+    $('#pd').innerHTML = `<div class="gal"><div class="main" id="gmain" role="img" aria-label="${esc(p.name)}" style="background-image:url('${esc(imgs[0] || fallback)}')"></div>
+        ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((u, i) => `<button type="button" aria-label="Photo ${i + 1}" aria-pressed="${i === 0}" data-i="${i}" style="background-image:url('${esc(u)}')"></button>`).join('')}</div>` : ''}</div>
+      <div class="info">
+        <nav class="crumbs" aria-label="Breadcrumb"><a href="${listPage(p.kind)}">${isBuilding ? 'Collection' : 'Atelier'}</a>${fam && fam !== cat ? `<span aria-hidden="true">›</span><a href="${listPage(p.kind)}${isBuilding ? '?c=' + encodeURIComponent(fam.slug) : ''}">${esc(fam.name)}</a>` : ''}${cat ? `<span aria-hidden="true">›</span><a href="${listPage(p.kind)}${isBuilding ? '?c=' + encodeURIComponent(cat.slug) : ''}">${esc(cat.name)}</a>` : ''}</nav>
+        <h1>${esc(p.name)}</h1>
+        ${p.summary ? `<p style="margin:0;color:#3D3A34;font-size:17px">${esc(p.summary)}</p>` : ''}
+        <p class="price" id="price"></p>
+        <p class="muted" style="margin:0;font-size:14px" id="pnote"></p>
+        ${params.length ? `<div class="opts" id="opts">${params.map((x) => x.kind === 'number'
+          ? `<label>${esc(x.label)}${x.unit ? ' (' + esc(x.unit) + ')' : ''}<input type="number" data-k="${esc(x.key)}" value="${esc(choice[x.key])}" ${x.min != null ? `min="${x.min}"` : ''} ${x.max != null ? `max="${x.max}"` : ''} ${x.step ? `step="${x.step}"` : ''} inputmode="numeric"><span class="muted" style="font-weight:400;font-size:12px">${x.min != null && x.max != null ? 'From ' + fmt(x.min) + ' to ' + fmt(x.max) : ''}</span></label>`
+          : x.kind === 'color' ? `<div><span style="font-size:13px;font-weight:600;color:#3B3832">${esc(x.label)}</span><div class="sw" role="group" aria-label="${esc(x.label)}" style="margin-top:6px">${(x.options || []).map((o) => `<button type="button" data-k="${esc(x.key)}" data-v="${esc(o.value)}" aria-pressed="${o.value === choice[x.key]}"><i style="background:${esc(o.swatch || '#ccc')}"></i>${esc(o.label || o.value)}${o.price_add ? ' <span class="muted">+' + fmt(o.price_add) + '</span>' : ''}</button>`).join('')}</div></div>`
+          : `<label>${esc(x.label)}<select data-k="${esc(x.key)}">${(x.options || []).map((o) => `<option value="${esc(o.value)}" ${o.value === choice[x.key] ? 'selected' : ''}>${esc(o.label || o.value)}${o.price_add ? ' (+KES ' + fmt(o.price_add) + ')' : ''}</option>`).join('')}</select></label>`).join('')}</div>` : ''}
+        <div class="tools" style="margin-top:18px">
+          ${isBuilding ? `<a class="btn" href="${studio}">Design it in 3D</a>` : `<a class="btn" href="Store.dc.html">Order in the Atelier</a>`}
+          <button class="btn line" type="button" id="quote">Get a quote</button>
+          <button class="btn line" type="button" id="visit">Book a yard visit</button>
+        </div>
+        <p style="margin:14px 0 0"><a href="#" data-fc-wa>WhatsApp us about this</a></p>
+        ${p.features && p.features.length ? `<h2 class="serif" style="font-size:26px;margin:28px 0 0">What's included</h2><ul class="feat">${p.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+        ${specs.length || p.lead_time_weeks || p.unit ? `<h2 class="serif" style="font-size:26px;margin:28px 0 10px">Details</h2><dl class="specs">
+          ${cat ? `<dt>Category</dt><dd>${esc(cat.name)}</dd>` : ''}${p.lead_time_weeks ? `<dt>Lead time</dt><dd>About ${p.lead_time_weeks} weeks</dd>` : ''}${p.sku ? `<dt>Code</dt><dd class="mono">${esc(p.sku)}</dd>` : ''}
+          ${specs.map(([k, v]) => `<dt>${esc(SPEC_LABEL[k] || k.replace(/_/g, ' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : ''}
+      </div>`;
+    if (p.description) $('#more').insertAdjacentHTML('afterbegin', `<section class="sec" style="padding-top:8px;max-width:820px"><h2>About it</h2>${p.description.split(/\n{2,}/).map((t) => `<p>${esc(t)}</p>`).join('')}</section>`);
+    $('#pd').querySelectorAll('.thumbs button').forEach((b) => b.onclick = () => { $('#gmain').style.backgroundImage = `url('${imgs[+b.dataset.i]}')`; $('#pd').querySelectorAll('.thumbs button').forEach((x) => x.setAttribute('aria-pressed', x === b)); });
+    const opts = $('#opts');
+    if (opts) {
+      opts.querySelectorAll('input[data-k]').forEach((el) => el.addEventListener('input', () => { choice[el.dataset.k] = Number(el.value); price(); }));
+      opts.querySelectorAll('select[data-k]').forEach((el) => el.addEventListener('change', () => { choice[el.dataset.k] = el.value; price(); }));
+      opts.querySelectorAll('button[data-k]').forEach((el) => el.addEventListener('click', () => { choice[el.dataset.k] = el.dataset.v; opts.querySelectorAll(`button[data-k="${el.dataset.k}"]`).forEach((b) => b.setAttribute('aria-pressed', b === el)); price(); }));
+    }
+    const summary = () => (params.length ? params.map((x) => x.label + ': ' + (x.kind === 'number' ? fmt(choice[x.key]) + (x.unit ? ' ' + x.unit : '') : (((x.options || []).find((o) => o.value === choice[x.key]) || {}).label || choice[x.key]))).join(', ') : '');
+    $('#quote').onclick = () => FC.lead('contact', { title: 'Get a quote', eyebrow: p.name, intro: 'Tell us where it is going and anything you want changed. We reply with a quote, usually within one working day.', summary: `<b>${esc(p.name)}</b>${summary() ? '<br>' + esc(summary()) : ''}<br>${esc($('#price').textContent)}`, location: true, context: { product: p.slug, name: p.name, choices: choice, price: $('#price').textContent } });
+    $('#visit').onclick = () => FC.lead('visit', { context: { product: p.slug, name: p.name } });
+    price();
+    // structured data for search engines
+    const ld = { '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.summary || '', image: imgs.slice(0, 4), brand: { '@type': 'Brand', name: 'Firmcop' }, sku: p.sku || p.slug };
+    const pr = FC.price(p, params, choice); if (p.price_mode !== 'quote' && pr.unit_price) ld.offers = { '@type': 'Offer', priceCurrency: 'KES', price: pr.unit_price, availability: 'https://schema.org/InStock' };
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
+  }
+  function price() {
+    const p = P, r = FC.price(p, p.params || [], choice);
+    if (p.price_mode === 'quote' || !r.unit_price) { $('#price').textContent = 'Price on request'; $('#pnote').textContent = 'We price this after a short call about your site and needs.'; return; }
+    const u = p.unit && !/^(no\.|per unit|unit)$/i.test(p.unit) ? ' <small>' + esc(p.unit) + '</small>' : '';
+    $('#price').innerHTML = (p.params && p.params.length ? 'KES ' : 'From KES ') + fmt(r.unit_price) + u;
+    $('#pnote').textContent = (r.area_m2 ? r.area_m2 + ' m² · ' : '') + (p.kind === 'building' || p.kind === 'design' ? 'Before delivery and site works. The final price follows a site survey.' : 'Before delivery. Prices include VAT where stated on the quote.');
+  }
+  function related() {
+    const p = P, isB = p.kind === 'building' || p.kind === 'design';
+    Promise.all([
+      FC.rest('catalog_products?select=slug,name,kind,category_id,summary,unit,price_mode,base_price,rate,lead_time_weeks,cover_url&published=eq.true&category_id=eq.' + p.category_id + '&slug=neq.' + encodeURIComponent(p.slug) + '&limit=4&order=featured.desc,sort.asc'),
+      p.design_slug ? FC.rest('works?select=slug,title,location,images,type&published=eq.true&or=(design_slug.eq.' + encodeURIComponent(p.design_slug) + ',product_slugs.cs.%7B' + encodeURIComponent(p.slug) + '%7D)&limit=3') : FC.rest('works?select=slug,title,location,images,type&published=eq.true&product_slugs=cs.%7B' + encodeURIComponent(p.slug) + '%7D&limit=3')
+    ]).then(([rel, works]) => {
+      let h = '';
+      if (works.length) h += `<section class="sec"><h2>Built for clients</h2><div class="grid">${works.map((w) => `<a class="card" href="work.html?w=${encodeURIComponent(w.slug)}"><div class="ph" style="background-image:url('${esc((w.images || [])[0] || '')}')"></div><div class="bd"><span class="eyebrow" style="font-size:10px">${esc(w.type)} · ${esc(w.location || '')}</span><h3>${esc(w.title)}</h3></div></a>`).join('')}</div></section>`;
+      if (rel.length) h += `<section class="sec"><h2>${isB ? 'More like this' : 'Related items'}</h2><div class="grid">${rel.map((r) => `<a class="card" href="product.html?p=${encodeURIComponent(r.slug)}"><div class="ph" style="background-image:url('${esc(r.cover_url || FALLBACK)}')"></div><div class="bd"><h3>${esc(r.name)}</h3>${r.summary ? `<p class="sum">${esc(r.summary)}</p>` : ''}<div class="meta"><span class="price">${esc(FC.priceText(r))}</span></div></div></a>`).join('')}</div></section>`;
+      $('#more').insertAdjacentHTML('beforeend', h);
+    }).catch(() => {});
+  }
+
+  if (!slug) { FC.header($('#fc-head'), 'collection.html'); return fail('No product chosen.'); }
+  FC.rest('catalog_products?select=*,params:product_params(key,label,kind,unit,min,max,step,default_value,geometry,options,sort)&published=eq.true&slug=eq.' + encodeURIComponent(slug))
+    .then((rows) => {
+      if (!rows.length) { FC.header($('#fc-head'), 'collection.html'); return fail('That product is not available any more.'); }
+      P = rows[0];
+      const scope = scopeFor(P.kind);
+      FC.header($('#fc-head'), scope === 'collection' ? 'collection.html' : 'Store.dc.html');
+      return FC.cats(scope).then((c) => { CATS = c; render(); related(); });
+    })
+    .catch(() => { FC.header($('#fc-head'), 'collection.html'); fail('This page could not load just now. Please refresh.'); });
+})();
+</script>
+</body>
+</html>

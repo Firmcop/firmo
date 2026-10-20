@@ -1,119 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Firmcop Collection</title>
-<meta name="description" content="Container homes, A-frames and timber cabins designed and built by Firmcop in Kenya. Live prices in KSh, configurable with a Firmcop designer.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collection · Firmcop Modular</title>
+<meta name="description" content="Container homes and offices, A-frames, cabins and steel structures from Firmcop, Nairobi. Prices in KES, lead times and 3D design.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-/* Layout: editorial catalogue — serif hero, system filter strip, 3-up cards with render, facts row and two actions. Same dark luxury look as the Firmcop site. */
-:root{
-  --ink:#0D0C0A; --panel:#141210; --panel2:#1b1815; --line:rgba(242,235,223,.12); --line2:rgba(242,235,223,.22);
-  --ivory:#F2EBDF; --muted:rgba(242,235,223,.64); --faint:rgba(242,235,223,.4); --brass:#C9A46A; --brass-hi:#E3C48F;
-  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  color-scheme:dark;
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--ink);color:var(--ivory);font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
-.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header{border-bottom:1px solid var(--line)}
-header .wrap{display:flex;align-items:center;gap:18px;padding-block:18px;flex-wrap:wrap}
-.mark{display:flex;flex-direction:column;line-height:1;text-decoration:none}
-.mark b{font:500 22px/1 var(--serif);letter-spacing:.32em}
-.mark small{font:400 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:6px}
-nav.top{display:flex;gap:22px;margin-left:auto;font-size:13px;flex-wrap:wrap}
-nav.top a{text-decoration:none;color:var(--muted)} nav.top a:hover,nav.top a[aria-current]{color:var(--ivory)}
-.eb{font:500 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--brass)}
-.hero{padding-block:64px 28px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px;align-items:end}
-.hero h1{font:400 clamp(44px,7vw,88px)/.98 var(--serif);margin:16px 0 0;text-wrap:balance}
-.hero h1 em{color:var(--brass-hi)}
-.hero p{color:var(--muted);margin:0;max-width:52ch}
-.live{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font:400 11px/1 var(--mono);letter-spacing:.08em;color:var(--faint)}
-.live i{width:7px;height:7px;border-radius:50%;background:var(--brass)}
-.live.on i{background:#7fb48a;box-shadow:0 0 0 3px rgba(127,180,138,.2)}
-.filters{display:flex;gap:28px;border-bottom:1px solid var(--line);margin-top:10px;overflow-x:auto}
-.filters button{appearance:none;border:0;background:none;color:var(--muted);font:500 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;padding:18px 0;border-bottom:1px solid transparent;cursor:pointer;white-space:nowrap}
-.filters button[aria-pressed=true]{color:var(--brass);border-bottom-color:var(--brass)}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;padding-block:36px 90px}
-.card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);min-width:0}
-.ph{aspect-ratio:4/3;max-width:100%;background:#000 center/cover no-repeat;position:relative}
-.ph span{position:absolute;left:14px;top:14px;font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
-.ph small{position:absolute;right:10px;bottom:10px;font:400 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#c9bfaf;background:rgba(13,12,10,.62);padding:4px 7px}
-.bd{padding:24px 24px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
-.bd h2{font:400 32px/1.02 var(--serif);margin:0}
-.bd p{margin:0;color:var(--muted);font-size:14px}
-.facts{display:flex;flex-wrap:wrap;gap:6px 16px;font:400 10.5px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#c9bfaf}
-.foot{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end}
-.price small{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
-.price b{font:400 28px/1 var(--serif)}
-.acts{display:flex;gap:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;font:600 11px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;border:1px solid var(--line2);color:var(--ivory)}
-.btn:hover{border-color:var(--brass);color:var(--brass-hi)}
-.btn.gold{background:var(--brass);border-color:var(--brass);color:var(--ink)}
-.btn.gold:hover{background:var(--brass-hi);color:var(--ink)}
-.empty{grid-column:1/-1;padding:60px 20px;text-align:center;color:var(--muted);border:1px solid var(--line);font:400 26px/1.3 var(--serif)}
-.note{border-top:1px solid var(--line);padding-block:28px 50px;color:var(--faint);font-size:12.5px;display:flex;flex-wrap:wrap;gap:10px 30px;justify-content:space-between}
-@media (max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1fr}}
-@media (max-width:640px){.grid{grid-template-columns:1fr}nav.top{margin-left:0}}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&amp;family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="fc-pages.css">
+<meta name="fc-footer" content="auto">
 </head>
 <body>
-<header><div class="wrap">
-  <a class="mark" href="index.html"><b>FIRMCOP</b><small>Modular · Kenya</small></a>
-  <nav class="top" aria-label="Main"><a href="Catalog.dc.html" aria-current="page">Collection</a><a href="3d-studio.html">Design Studio</a><a href="design-manager.html">Team</a></nav>
-</div></header>
-<main class="wrap">
-  <section class="hero">
-    <div><div class="eb">The collection</div><h1>Homes that arrive <em>finished.</em></h1></div>
-    <div><p>Container residences, A-frame retreats and timber cabins, built in our yard and set on your plot. Every design can be tailored with a Firmcop designer: rooms, kitchen, finishes and fit-out, priced live.</p>
-      <div class="live" id="live"><i></i><span>Loading the catalogue…</span></div></div>
-  </section>
-  <div class="filters" id="filters" role="group" aria-label="Filter by system"></div>
-  <section class="grid" id="grid" aria-label="Designs"></section>
-  <div class="note"><span>Prices include VAT, the shell, fit-out in the finishes shown, delivery and setting. Site works and foundations are quoted after a survey.</span><span>WhatsApp <b style="color:var(--ivory);user-select:all">+254 714 521 170</b> · <b style="color:var(--ivory);user-select:all">info@firmcop.com</b></span></div>
+<header id="fc-head" class="fc-head"></header>
+<section class="hero"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb" id="crumbs"><a href="Main.dc.html">Home</a><span aria-hidden="true">›</span><span>Collection</span></nav>
+  <p class="eyebrow" id="eyebrow">The Firmcop collection</p>
+  <h1 id="title">Built in our yard, <em style="color:#E3C48F">delivered to your plot.</em></h1>
+  <p class="lead" id="lead">Container products, A-frames, cabins and steel structures. Every price is in KES and every design can be changed in the 3D Studio.</p>
+</div></section>
+<main class="wrap" id="main" tabindex="-1">
+  <div class="sec" id="body"><div class="grid">
+    <div class="skel" style="height:320px"></div><div class="skel" style="height:320px"></div><div class="skel" style="height:320px"></div>
+  </div></div>
 </main>
 <script src="ds-config.js"></script>
-<script src="ds-core.js"></script>
+<script src="fc-site.js"></script>
 <script>
-(async function () {
+(function () {
   'use strict';
-  const DS = window.DS, cfg = window.FC_SUPA, $ = s => document.querySelector(s);
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const KSh = v => 'KSh ' + Math.round(v).toLocaleString('en-US');
-  const IMG = { container: 'img/twin-container.jpg', aframe: 'img/aframe.jpg', cabin: 'img/cabin.jpg' };
-  let live = false, FILTER = 'all';
-  try {
-    const r = await fetch(`${cfg.url}/rest/v1/rpc/ds_package`, { method: 'POST', headers: { apikey: cfg.key, 'Content-Type': 'application/json' }, body: '{}' });
-    if (!r.ok) throw new Error(r.status); DS.applyPackage(await r.json(), { kind: 'db', label: 'Live' }); live = true;
-  } catch (e) { try { DS.applyPackage(await (await fetch('ds-package.json')).json(), { kind: 'snapshot', label: 'Snapshot' }); } catch (e2) {} }
-  const L = $('#live'); L.classList.toggle('on', live); L.querySelector('span').textContent = live ? 'Live prices from the Firmcop catalogue' : 'Showing the latest published catalogue';
-  const rows = (DS.DESIGNS || []).map(d => {
-    const P = d.layout, G = DS.grid(P), R = DS.roomInfo(P, G), Lg = DS.lining(P, G), Q = DS.quote(P, G, R, Lg), p = DS.PRESETS[d.shell] || {};
-    return { ...d, area: R.reduce((a, r) => a + r.area, 0), beds: R.filter(r => r.type === 'bed').length, baths: R.filter(r => r.type === 'bath').length, total: Q.total, weeks: Q.weeks, size: p.name || '' };
-  });
-  // structured data for search engines and AI answers
-  const ld = document.createElement('script'); ld.type = 'application/ld+json';
-  ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: 'Firmcop collection', itemListElement: rows.map((d, i) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': 'Product', name: d.name, description: d.summary, brand: { '@type': 'Brand', name: 'Firmcop' }, category: { container: 'Container home', aframe: 'A-frame house', cabin: 'Timber cabin' }[d.system], offers: { '@type': 'Offer', priceCurrency: 'KES', price: Math.round(d.total), availability: 'https://schema.org/MadeToOrder', areaServed: 'KE' } } })) });
-  document.head.appendChild(ld);
-  const SYS = [['all', 'All'], ['container', 'Container residences'], ['aframe', 'A-frame retreats'], ['cabin', 'Timber cabins']];
-  function render() {
-    $('#filters').innerHTML = SYS.map(([k, l]) => `<button type="button" aria-pressed="${FILTER === k}" data-f="${k}">${l}</button>`).join('');
-    const list = rows.filter(d => FILTER === 'all' || d.system === FILTER).sort((a, b) => a.total - b.total);
-    $('#grid').innerHTML = list.map(d => {
-      const wa = 'https://wa.me/254714521170?text=' + encodeURIComponent(`Hi Firmcop, I'm interested in the ${d.name} (from ${KSh(d.total)}). Can a designer call me?`);
-      return `<article class="card"><div class="ph" style="background-image:url(${IMG[d.system] || IMG.container})"><span>${esc({ container: 'Container', aframe: 'A-frame', cabin: 'Cabin' }[d.system] || '')}</span><small>Illustrative render</small></div>
-        <div class="bd"><h2>${esc(d.name)}</h2><p>${esc(d.summary || '')}</p>
-        <div class="facts"><span>${d.area.toFixed(0)} m²</span><span>${d.beds ? d.beds + ' bed' : 'Studio'}</span><span>${d.baths} bath</span><span>${esc(d.size)}</span><span>${d.weeks} weeks</span></div>
-        <div class="foot"><div class="price"><small>From, incl. VAT</small><b>${KSh(d.total)}</b></div>
-        <div class="acts"><a class="btn gold" href="3d-studio.html?design=${encodeURIComponent(d.slug)}">Configure</a><a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a></div></div></div></article>`;
-    }).join('') || '<p class="empty">No designs in this range yet.</p>';
+  const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc;
+  FC.header($('#fc-head'), 'collection.html');
+  const q = new URLSearchParams(location.search);
+  const want = q.get('c') || '';
+  const st = { q: q.get('q') || '', sort: q.get('sort') || 'featured', band: q.get('band') || '' };
+  const BANDS = [['', 'Any price'], ['0-1000000', 'Under KES 1M'], ['1000000-3000000', 'KES 1M to 3M'], ['3000000-6000000', 'KES 3M to 6M'], ['6000000-', 'Over KES 6M']];
+  let CATS = [], PRODS = [];
+
+  const card = (p) => {
+    const cat = CATS.find((c) => c.id === p.category_id), fam = famOf(cat);
+    const img = p.cover_url || (fam && (fam.image_url || FC.FAMILY_IMG[fam.slug])) || '';
+    return `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(img)}')">${p.kind === 'design' ? '<span class="tag">Design it in 3D</span>' : ''}</div>
+      <div class="bd"><span class="eyebrow" style="font-size:10px">${esc(cat ? cat.name : '')}</span><h3>${esc(p.name)}</h3>${p.summary ? `<p class="sum">${esc(p.summary)}</p>` : ''}
+      <div class="meta"><span class="price">${esc(FC.priceText(p))}</span>${p.lead_time_weeks ? `<small class="muted">${p.lead_time_weeks} weeks</small>` : ''}</div></div></a>`;
+  };
+  function famOf(c) { let n = 0; while (c && c.parent_id && n++ < 6) c = CATS.find((x) => x.id === c.parent_id); return c; }
+  const priceOf = (p) => p.price_mode === 'quote' ? null : Number(p.base_price) || null;
+
+  function filtered(ids) {
+    let list = PRODS.filter((p) => !ids || ids.includes(p.category_id));
+    if (st.q) { const t = st.q.toLowerCase(); list = list.filter((p) => (p.name + ' ' + (p.summary || '')).toLowerCase().includes(t)); }
+    if (st.band) { const [lo, hi] = st.band.split('-').map((x) => (x === '' ? null : Number(x))); list = list.filter((p) => { const v = priceOf(p); return v != null && (lo == null || v >= lo) && (hi == null || v < hi); }); }
+    const by = { featured: (a, b) => (b.featured - a.featured) || (a.sort - b.sort) || a.name.localeCompare(b.name), low: (a, b) => (priceOf(a) ?? 1e12) - (priceOf(b) ?? 1e12), high: (a, b) => (priceOf(b) ?? -1) - (priceOf(a) ?? -1), name: (a, b) => a.name.localeCompare(b.name) };
+    return list.sort(by[st.sort] || by.featured);
   }
-  document.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { FILTER = b.dataset.f; render(); } });
-  render();
+  function syncUrl() {
+    const u = new URLSearchParams(); if (want) u.set('c', want); if (st.q) u.set('q', st.q); if (st.sort !== 'featured') u.set('sort', st.sort); if (st.band) u.set('band', st.band);
+    history.replaceState(null, '', location.pathname + (u.toString() ? '?' + u : ''));
+  }
+  const toolbar = () => `<div class="tools" style="margin-bottom:18px">
+      <label class="muted" style="font-size:14px">Search <input type="search" id="fq" value="${esc(st.q)}" placeholder="e.g. office, 2 bedroom"></label>
+      <label class="muted" style="font-size:14px">Price <select id="fb">${BANDS.map(([v, l]) => `<option value="${v}" ${v === st.band ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="muted" style="font-size:14px">Sort <select id="fs">${[['featured', 'Featured'], ['low', 'Price, low to high'], ['high', 'Price, high to low'], ['name', 'Name']].map(([v, l]) => `<option value="${v}" ${v === st.sort ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <span class="muted" id="fn" style="font-size:14px;margin-left:auto" aria-live="polite"></span></div>`;
+  function wireTools(ids) {
+    const run = () => { syncUrl(); const list = filtered(ids); $('#fn').textContent = list.length + ' product' + (list.length === 1 ? '' : 's'); $('#list').innerHTML = list.length ? list.map(card).join('') : '<div class="empty" style="grid-column:1/-1">Nothing matches. Try another price or clear the search.</div>'; };
+    let t; $('#fq').oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); run(); }, 200); };
+    $('#fb').onchange = (e) => { st.band = e.target.value; run(); };
+    $('#fs').onchange = (e) => { st.sort = e.target.value; run(); };
+    run();
+  }
+
+  function renderAll() {
+    const roots = CATS.filter((c) => !c.parent_id);
+    $('#body').innerHTML = roots.map((r) => {
+      const ids = FC.subtree(CATS, r.id), list = filtered(ids).slice(0, 3), total = PRODS.filter((p) => ids.includes(p.category_id)).length;
+      const kids = CATS.filter((c) => c.parent_id === r.id && PRODS.some((p) => FC.subtree(CATS, c.id).includes(p.category_id)));
+      if (!total) return '';
+      return `<section style="margin-bottom:48px" aria-labelledby="f-${esc(r.slug)}"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px">
+        <h2 class="serif" id="f-${esc(r.slug)}" style="font-size:38px;margin:0">${esc(r.name)}</h2><a class="btn line" href="collection.html?c=${encodeURIComponent(r.slug)}">All ${total} ${esc(r.name.toLowerCase())}</a></div>
+        <div class="chips" style="margin-bottom:16px">${kids.map((k) => `<a class="chip" href="collection.html?c=${encodeURIComponent(k.slug)}">${esc(k.name)}</a>`).join('')}</div>
+        <div class="grid">${list.map(card).join('')}</div></section>`;
+    }).join('') || '<div class="empty">The collection is being updated. Please check back soon.</div>';
+  }
+
+  function renderCat(c) {
+    const fam = famOf(c), isFam = fam === c, ids = FC.subtree(CATS, c.id);
+    document.title = c.name + ' · Firmcop Modular';
+    $('#crumbs').innerHTML = `<a href="Main.dc.html">Home</a><span aria-hidden="true">›</span><a href="collection.html">Collection</a>${isFam ? '' : `<span aria-hidden="true">›</span><a href="collection.html?c=${encodeURIComponent(fam.slug)}">${esc(fam.name)}</a>`}<span aria-hidden="true">›</span><span aria-current="page">${esc(c.name)}</span>`;
+    $('#eyebrow').textContent = isFam ? 'Collection' : fam.name;
+    $('#title').textContent = c.name;
+    $('#lead').textContent = c.description || (isFam ? 'Choose a category, or browse everything below.' : 'Prices in KES. Each one can be changed to suit your plot and budget.');
+    const sibs = CATS.filter((x) => x.parent_id === fam.id && PRODS.some((p) => FC.subtree(CATS, x.id).includes(p.category_id)));
+    $('#body').innerHTML = `<nav class="chips" aria-label="${esc(fam.name)} categories" style="margin-bottom:22px"><a class="chip" href="collection.html?c=${encodeURIComponent(fam.slug)}" ${isFam ? 'aria-current="page"' : ''}>All ${esc(fam.name.toLowerCase())}</a>
+      ${sibs.map((k) => `<a class="chip" href="collection.html?c=${encodeURIComponent(k.slug)}" ${k.id === c.id ? 'aria-current="page"' : ''}>${esc(k.name)} <small>${PRODS.filter((p) => FC.subtree(CATS, k.id).includes(p.category_id)).length}</small></a>`).join('')}</nav>
+      ${toolbar()}<div class="grid" id="list"></div>
+      <section class="sec" style="padding-bottom:0"><div style="background:var(--night);color:#F2EBDF;border-radius:6px;padding:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div><p class="eyebrow">Not quite right?</p><h2 class="serif" style="margin:6px 0 0;font-size:30px;color:#F2EBDF">Design your own in the 3D Studio</h2></div>
+        <div class="tools"><a class="btn" href="3d-studio.html">Open the 3D Studio</a><button class="btn line" style="color:#F2EBDF;border-color:#F2EBDF" type="button" data-fc-lead="callback">Ask us to call you</button></div></div></section>`;
+    wireTools(ids);
+  }
+
+  Promise.all([FC.cats('collection'), FC.rest('catalog_products?select=id,slug,name,kind,category_id,summary,unit,price_mode,base_price,rate,lead_time_weeks,cover_url,design_slug,featured,sort&published=eq.true&kind=in.(building,design)&order=sort.asc')])
+    .then(([cats, prods]) => {
+      CATS = cats; PRODS = prods.map((p) => Object.assign(p, { featured: p.featured ? 1 : 0 }));
+      const c = want && CATS.find((x) => x.slug === want);
+      if (want && !c) { $('#body').innerHTML = '<div class="empty">That category is not available. <a href="collection.html">See the whole collection</a>.</div>'; return; }
+      c ? renderCat(c) : renderAll();
+    })
+    .catch(() => { $('#body').innerHTML = '<div class="empty">The collection could not load just now. Please refresh, or <a href="#" data-fc-wa>WhatsApp us</a>.</div>'; });
 })();
 </script>
 </body>

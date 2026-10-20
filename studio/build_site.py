@@ -82,7 +82,7 @@ for bid, fn in BLOBS.items():
 for fn in os.listdir(os.path.join(f3d, 'img')):
     shutil.copy(os.path.join(f3d, 'img', fn), os.path.join(out, 'img', fn))
 # 3D tools and data
-for fn in ['fc-site.js', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
+for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
 # the Studio as a page of the site: site header on top, Studio framed beneath
 shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))
@@ -98,15 +98,14 @@ tools = open(os.path.join(f3d, 'index.html')).read()
 open(os.path.join(out, 'tools.html'), 'w').write(tools)
 x = open(os.path.join(out, '2x4.html')).read().replace('<a href="index.html" style="font-size:12px">← Back to Firmcop 3D</a>', '<a href="tools.html" style="font-size:12px">← Back to Firmcop 3D</a>')
 open(os.path.join(out, '2x4.html'), 'w').write(x)
-# the live collection is now the Catalog page; keep collection.html reachable but point people there
-c = open(os.path.join(out, 'collection.html')).read().replace('<a href="collection.html" aria-current="page">Collection</a>', '<a href="Catalog.dc.html" aria-current="page">Collection</a>')
-open(os.path.join(out, 'collection.html'), 'w').write(c)
+# collection.html is the Collection page (families, categories, filters); product.html and work.html are detail pages
 
 vercel = {
   "cleanUrls": False,
   "rewrites": [{"source": "/", "destination": "/Main.dc.html"}],
   "redirects": [
-    {"source": "/collection", "destination": "/Catalog.dc.html", "permanent": False},
+    {"source": "/collection", "destination": "/collection.html", "permanent": False},
+    {"source": "/works", "destination": "/Projects.dc.html", "permanent": False},
     {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/3d-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/admin", "destination": "/admin.html", "permanent": False},

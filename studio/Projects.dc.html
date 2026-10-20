@@ -30,7 +30,7 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#C9A46A;margin-top:4px">Modular · Est. [Year]</span>
 </a>
 <nav class="nav" aria-label="Main" style="display:flex;flex-wrap:wrap;gap:0 24px;flex:1 1 auto;font-size:15px">
-<a href="Catalog.dc.html">Collection</a>
+<a href="collection.html">Collection</a>
 <a href="Configurator.dc.html">Configure</a>
 <a href="Store.dc.html">Atelier</a>
 <a href="Projects.dc.html" aria-current="page" style="color:#FFFFFF;box-shadow:inset 0 -2px 0 #C9A46A">Works</a>
@@ -80,13 +80,14 @@ a{color:#6B4F22}a:hover{color:#4A3616}
 <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C5850;text-transform:uppercase">{{sel.type}} · {{sel.place}}</span>
 <h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px;text-transform:uppercase;line-height:1">{{sel.name}}</h2>
 <p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>
+<sc-if value="{{sel.hasPage}}" hint-placeholder-val="{{false}}"><p style="margin:10px 0 0"><a href="{{sel.href}}" style="font-weight:600">See the full project, photos and specs →</a></p></sc-if>
 <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px">
 <dt style="color:#5C5850">Design</dt><dd style="margin:0">{{sel.design}}</dd>
 <dt style="color:#5C5850">Floor area</dt><dd style="margin:0">{{sel.areaText}}</dd>
 <dt style="color:#5C5850">Build time</dt><dd style="margin:0">{{sel.weeksText}}</dd>
 <dt style="color:#5C5850">Key finishes</dt><dd style="margin:0">{{sel.finishes}}</dd>
 </dl>
-<blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">[Client quote about the build]</blockquote>
+<sc-if value="{{sel.hasQuote}}" hint-placeholder-val="{{false}}"><blockquote style="margin:0;padding:14px 16px;background:#F4F1EB;border-radius:4px;font-size:15px;line-height:1.5;font-style:italic;color:#3D3A34">{{sel.quote}}</blockquote></sc-if>
 <a class="btn" href="Configurator.dc.html">Build something like this</a>
 </div>
 </aside>
@@ -111,7 +112,7 @@ class Component extends DCLogic {
       { name: '[Riverside eco-resort]', type: 'Container', place: '[Location]', area: 356, weeks: 14, client: 'Resort developer', design: 'Pod resort cluster, 24 cabins', finishes: 'Cypress shiplap, uPVC glazing, WPC decks', story: 'Twenty-four 20 ft cabins spaced for privacy around a lounge and pool deck. Cabins were offered to investors unit by unit, with an operator managing bookings.' },
       { name: '[Roadside kiosk]', type: 'Container', place: '[Location]', area: 15, weeks: 5, client: 'Retail', design: 'Container studio 20', finishes: 'Corrugated steel in oxide red, aluminium windows', story: 'A 20 ft retail kiosk with a fold-up serving hatch, delivered complete and connected on arrival.' }
     ]);
-    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request' }));
+    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request', hasQuote: !!p.quote, quote: p.quote || '', hasPage: !!p.slug, href: p.slug ? 'work.html?w=' + encodeURIComponent(p.slug) : '' }));
     const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];
     const filters = labels.map((l) => { const on = this.state.type === l; return { label: l === 'All' ? 'All projects' : (l === 'Steel' ? 'Steel structures' : l + 's'), pressed: on ? 'true' : 'false', pick: () => { const first = all.findIndex((p) => l === 'All' || p.type === l); this.setState({ type: l, sel: first < 0 ? 0 : first }); }, style: 'min-height:44px;padding:0 18px;border-radius:999px;font:inherit;font-size:15px;cursor:pointer;' + (on ? 'background:#1B1A17;color:#F4F1EB;border:1px solid #1B1A17' : 'background:#FFFFFF;color:#1B1A17;border:1px solid #BDB29C') }; });
     const projects = all.map((p, i) => Object.assign({}, p, { i: i })).filter((p) => this.state.type === 'All' || p.type === this.state.type).map((p) => {
