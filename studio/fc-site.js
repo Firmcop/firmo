@@ -290,6 +290,24 @@
   }
   document.addEventListener('click', hook, true);
 
+
+  // ---------- staff sign-in icon in the footer ----------
+  const LOCK = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"></rect><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path></svg>';
+  FC.staffLink = (color) => '<a href="admin.html" class="fc-staff" aria-label="Staff sign in" title="Staff sign in" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid currentColor;border-radius:50%;color:' + (color || '#A89E8E') + ';text-decoration:none;opacity:.8">' + LOCK + '</a>';
+  // pages without a footer of their own get a slim one carrying the icon
+  function slimFooter() {
+    const m = document.querySelector('meta[name="fc-footer"]');
+    if ((m && m.content !== 'auto') || window.top !== window || document.documentElement.hasAttribute('data-fc-admin') || document.getElementById('fc-foot')) return;
+    const f = document.createElement('footer'); f.id = 'fc-foot';
+    f.setAttribute('style', 'background:#0D0C0A;color:#A89E8E;font:13px/1.5 Manrope,system-ui,sans-serif;border-top:1px solid #1E1B17');
+    f.innerHTML = '<div style="max-width:1360px;margin:0 auto;padding:18px 24px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between">'
+      + '<span><span style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:20px;letter-spacing:.18em;color:#F2EBDF;margin-right:14px">FIRMCOP</span><span data-fc="addr"></span></span>'
+      + '<span style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><a href="Main.dc.html" style="color:#D8CFC0">Home</a><a href="#" data-fc-wa style="color:#D8CFC0">WhatsApp us</a>' + FC.staffLink() + '</span></div>';
+    document.body.appendChild(f);
+    FC.ready.then((st) => { const a = f.querySelector('[data-fc="addr"]'); if (a) a.textContent = [st.contact_address, st.contact_phone].filter(Boolean).join(' · '); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', slimFooter); else slimFooter();
+
   // replace the prototype placeholders that come from settings
   function fillPlaceholders() {
     const s = FC.settings, map = { '[Yard address]': s.contact_address, '[Year]': s.founded_year, '[No.]': s.nca_number };

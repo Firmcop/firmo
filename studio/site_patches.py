@@ -25,8 +25,21 @@ def scripts(s, page, with_core=False):
     return rep(s, tag, extra + tag, page)
 
 
+LOCK = ('<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+        'stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"></rect><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path></svg>')
+STAFF = ('<a href="admin.html" class="fc-staff" aria-label="Staff sign in" title="Staff sign in" style="display:inline-flex;align-items:center;justify-content:center;'
+         'width:40px;height:40px;border:1px solid currentColor;border-radius:50%;color:#A89E8E;text-decoration:none;opacity:.8;vertical-align:middle">' + LOCK + '</a>')
+
+
 def staff_links(s):
-    return s.replace('href="Team.dc.html"', 'href="admin.html"')
+    """Staff entry lives only in the footer, as a lock icon; public menus lose 'Team portal'."""
+    s = s.replace('href="Team.dc.html"', 'href="admin.html"')
+    s = s.replace('<a href="admin.html">Team portal</a>\n</nav>', '</nav>')          # header menus
+    s = s.replace(' · <a href="admin.html">Team portal</a>', ' · ' + STAFF)             # Catalog, DesignDetail footers
+    s = s.replace('<a href="admin.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Team portal</a>', '')  # Main resources column
+    s = s.replace('<span>© [Year] Firmcop Modular</span>', '<span style="display:inline-flex;gap:14px;align-items:center">© [Year] Firmcop Modular ' + STAFF + '</span>')  # Main bottom bar
+    has_footer = 'fc-staff' in s
+    return s.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="fc-footer" content="' + ('own' if has_footer else 'auto') + '">', 1)
 
 
 def array_list(js, page, key, dst='all'):
