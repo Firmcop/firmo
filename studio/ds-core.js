@@ -121,6 +121,9 @@
     doorEnclosed: { name: 'Door-end extension, enclosed (cargo doors as side walls, glazed front)', price: 165000, depth: 1.2 },
     doorDeck: { name: 'Door-end extension, covered deck (cargo doors open)', price: 78000, depth: 1.2 },
   };
+  // the furniture library: category tree and items from the catalogue (filled from the package)
+  const LIB = { cats: [], items: {} };
+  const CAT_TAG = { beds: 'bed', sofas: 'living', 'dining-tables': 'dining', desks: 'study', 'bath-sanitary': 'bath', 'bath-showers': 'bath' };
   let PART_PER_M = 9500, PART_DOOR = 18500;
   const DOOR_W = 0.8, DOOR_H = 2.05, WIDE_FRAME = 38000, DESIGN_FEE = 45000, VAT = 0.16;
   const SERVICES = {
@@ -143,6 +146,7 @@
     if (!Array.isArray(e.widen)) e.widen = []; if (!Array.isArray(e.lights)) e.lights = [];
     if (e.doorEnd === undefined) e.doorEnd = null; if (e.clad === undefined) e.clad = null; if (e.porch === undefined) e.porch = null;
     if (PR(P).sys !== 'container') { e.widen = []; e.doorEnd = null; }
+    if (Array.isArray(P.items)) P.items = P.items.filter(it => ITEMS[it.k]);
     return e;
   }
   const r1 = v => Math.round(v * 100) / 100;
@@ -189,8 +193,39 @@
   function wallHeight(P) { const p = PR(P); return p.sys === 'aframe' ? 2.4 : (p.H || 2.6); }
 
   // ---------- geometry helpers ----------
+  // an item's chosen options: it.opt = { key: value }; sizes come from params with a geometry, finishes from colour params
+  const libOf = k => (ITEMS[k] && ITEMS[k].lib) || null;
+  function optVal(it, q) { const v = it.opt && it.opt[q.key] != null ? it.opt[q.key] : q.default; return v == null ? '' : String(v); }
+  function itemDims(it) {
+    const d = ITEMS[it.k], lb = libOf(it.k); let w = d.w, dd = d.d, h = d.h;
+    if (lb) (lb.params || []).forEach(q => {
+      if (!q.geometry) return; const v = optVal(it, q);
+      if (q.kind === 'number') { let n = Number(v) || Number(q.default) || 0; if (q.min != null) n = Math.max(+q.min, n); if (q.max != null) n = Math.min(+q.max, n); n /= 1000; if (q.geometry === 'w' || q.geometry === 'len') w = n; else if (q.geometry === 'd') dd = n; else if (q.geometry === 'h') h = n; return; }
+      const m = v.match(/^(\d+(?:\.\d+)?)(?:x(\d+(?:\.\d+)?))?$/); if (!m) return;
+      const a = +m[1] / 1000, b = m[2] ? +m[2] / 1000 : null;
+      if (q.geometry === 'w' || q.geometry === 'len') { w = a; if (b) dd = b; } else if (q.geometry === 'd') dd = a; else if (q.geometry === 'h') h = a;
+    });
+    return { w, d: dd, h };
+  }
+  // same rules as public.catalog_price: option add-ons and multipliers, per m or per m² on the sizes
+  function itemPrice(it) {
+    const d = ITEMS[it.k], lb = libOf(it.k); if (!lb) return d.price;
+    let adds = 0, mult = 1; (lb.params || []).forEach(q => { if (q.kind === 'number') return; const o = (q.options || []).find(x => String(x.value) === optVal(it, q)) || (q.options || [])[0]; if (!o) return; adds += Number(o.price_add) || 0; if (o.price_mult != null) mult *= Number(o.price_mult); });
+    const dm = itemDims(it), base = Number(lb.price != null ? lb.price : d.price) || 0, rate = Number(lb.rate) || 0;
+    const p = lb.price_mode === 'per_m2' ? base + rate * dm.w * dm.d : lb.price_mode === 'per_m' ? base + rate * dm.w : base;
+    return Math.round(p * mult + adds);
+  }
+  function itemOptText(it) {
+    const lb = libOf(it.k); if (!lb) return '';
+    return (lb.params || []).map(q => { const v = optVal(it, q); if (q.kind === 'number') return (q.label || q.key) + ' ' + v + (q.unit ? ' ' + q.unit : ''); const o = (q.options || []).find(x => String(x.value) === v); return o ? o.label : ''; }).filter(Boolean).join(', ');
+  }
+  function itemColour(it) {
+    const lb = libOf(it.k); if (!lb) return null;
+    for (const q of lb.params || []) if (q.kind === 'color') { const o = (q.options || []).find(x => String(x.value) === optVal(it, q)); if (o && o.swatch) return o.swatch; }
+    return (lb.specs && lb.specs.swatch) || null;
+  }
   function itemRect(it) {
-    const d = ITEMS[it.k], odd = (it.rot || 0) % 2 === 1, w = odd ? d.d : d.w, dd = odd ? d.w : d.d;
+    const d = itemDims(it), odd = (it.rot || 0) % 2 === 1, w = odd ? d.d : d.w, dd = odd ? d.w : d.d;
     return { x0: it.x - w / 2, x1: it.x + w / 2, z0: it.z - dd / 2, z1: it.z + dd / 2 };
   }
   const runCat = r => (r.kind === 'kitchen' ? KU : WU);
@@ -430,9 +465,11 @@
     });
     // sanitary (always priced) and furniture package (optional)
     const sc = {}, fc = {};
-    P.items.forEach(it => { const d = ITEMS[it.k]; (d.sanitary ? sc : fc)[it.k] = ((d.sanitary ? sc : fc)[it.k] || 0) + 1; });
-    for (const k in sc) add('Sanitary ware', ITEMS[k].name, sc[k], 'ea', ITEMS[k].price, { stock: ITEMS[k].stock, short: sc[k] > ITEMS[k].stock });
-    if (P.furnPkg) for (const k in fc) add('Furniture package', ITEMS[k].name, fc[k], 'ea', ITEMS[k].price, { stock: ITEMS[k].stock, short: fc[k] > ITEMS[k].stock });
+    const byK = {};
+    P.items.forEach(it => { const d = ITEMS[it.k], ot = itemOptText(it), key = it.k + '|' + ot, g = d.sanitary ? sc : fc; byK[it.k] = (byK[it.k] || 0) + 1; (g[key] = g[key] || { k: it.k, ot, n: 0, price: itemPrice(it) }).n++; });
+    const itemLine = (grp, x) => add(grp, ITEMS[x.k].name + (x.ot ? ` (${x.ot})` : ''), x.n, 'ea', x.price, { stock: ITEMS[x.k].stock, short: ITEMS[x.k].stock != null && byK[x.k] > ITEMS[x.k].stock });
+    Object.values(sc).forEach(x => itemLine('Sanitary ware', x));
+    if (P.furnPkg) Object.values(fc).forEach(x => itemLine('Furniture package', x));
     const floorA = R.reduce((a, r) => a + r.area, 0), hasWet = P.items.some(it => ITEMS[it.k] && ITEMS[it.k].wet) || P.runs.some(r => r.units.includes('sink'));
     if (SERVICES.electrical) add('Services', SERVICES.electrical.name, Math.max(1, Math.ceil(floorA / (SERVICES.electrical.per_m2 || 30))), 'set', SERVICES.electrical.price);
     if (SERVICES.plumbing && hasWet) add('Services', SERVICES.plumbing.name, 1, 'set', SERVICES.plumbing.price);
@@ -516,7 +553,7 @@
     });
     if (p.sys === 'aframe') P.items.forEach(it => {
       const d = ITEMS[it.k], r = itemRect(it), h = d.tallItem ? Math.min(hr(P, r.z0), hr(P, r.z1)) : hr(P, it.z);
-      if (h < d.h + (d.tallItem ? 0 : 0.2)) E(d.tallItem ? 'error' : 'warn', `${d.name}: low headroom under the roof`, { kind: 'item', id: it.id });
+      if (h < itemDims(it).h + (d.tallItem ? 0 : 0.2)) E(d.tallItem ? 'error' : 'warn', `${d.name}: low headroom under the roof`, { kind: 'item', id: it.id });
     });
     P.parts.forEach(q => {
       if (q.door == null) return; const c = q.s0 + q.door;
@@ -613,11 +650,20 @@
     if (c.porch) fill(PORCH, c.porch, v => ({ ...v, ground: v.ground || (!v.roof && /patio/i.test(v.name || '')) }));
     if (c.shade) fill(SHADE, c.shade);
     if (c.extension) Object.entries(c.extension).forEach(([k, v]) => { EXT[k] = { ...(EXT[k] || {}), ...v }; });
+    if (pkg.library && pkg.library.items) {
+      LIB.cats = pkg.library.cats || []; LIB.items = pkg.library.items;
+      const famOf = slug => { let c = LIB.cats.find(x => x.slug === slug), n = 0; while (c && c.parent && n++ < 6) c = LIB.cats.find(x => x.slug === c.parent); return c; };
+      Object.entries(LIB.items).forEach(([k, e]) => {
+        const sp = e.specs || {}, fam = famOf(e.cat), bath = /^bath-(sanitary|showers)$/.test(e.cat);
+        const base = ITEMS[k] || { name: e.name, w: +sp.w || 0.6, d: +sp.d || 0.6, h: +sp.h || 0.8, cat: fam ? fam.name : 'Other', price: +e.price || 0, stock: e.stock, tag: sp.tag || CAT_TAG[e.cat], sanitary: !!sp.sanitary || bath, wet: !!sp.wet || bath, flat: !!sp.flat, tallItem: !!sp.tallItem };
+        ITEMS[k] = { ...base, name: e.name || base.name, price: e.price != null ? +e.price : base.price, stock: e.stock != null ? e.stock : base.stock, lib: e };
+      });
+    }
     if (c.partition) { if (c.partition.stud) PART_PER_M = c.partition.stud.price; if (c.partition.door) PART_DOOR = c.partition.door.price; root.DS.PART_PER_M = PART_PER_M; root.DS.PART_DOOR = PART_DOOR; }
     DESIGNS = pkg.designs || []; root.DS.DESIGNS = DESIGNS;
     SOURCE = { ...(source || { kind: 'db', label: 'Live database' }), generated_at: pkg.generated_at }; root.DS.SOURCE = SOURCE;
     return pkg;
   }
 
-  root.DS = { partSpan, CLAD, LIGHT, PORCH, SHADE, EXT, normExt, annexes, removedSpans, bbox, wallHeight, applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
+  root.DS = { LIB, itemDims, itemPrice, itemOptText, itemColour, partSpan, CLAD, LIGHT, PORCH, SHADE, EXT, normExt, annexes, removedSpans, bbox, wallHeight, applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
 })(typeof window !== 'undefined' ? window : globalThis);

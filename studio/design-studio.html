@@ -104,8 +104,17 @@ main#vp{position:relative;min-width:0;min-height:0;background:#11100e;overflow:h
 #three{position:absolute;inset:0}
 #three canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
 #plan{position:absolute;inset:0;width:100%;height:100%;background:var(--paper);touch-action:none;user-select:none}
+main#vp.split #plan{width:50%;right:auto;border-right:2px solid #2a2622}
+main#vp.split #three{left:50%}
+main#vp.split .vhint{max-width:calc(50% - 40px)}
+.fams{display:flex;flex-wrap:wrap;gap:6px}
+.fams button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line,#3a352e);background:transparent;color:inherit;font:inherit;font-size:12.5px;cursor:pointer}
+.fams button.on{background:var(--brass,#a37b3e);border-color:var(--brass,#a37b3e);color:#fff}
+.card .th{display:block;width:100%;aspect-ratio:16/10;border-radius:3px;background:#f4efe6 center/cover no-repeat;margin-bottom:4px;overflow:hidden}
+.card .th svg{width:100%;height:100%;display:block}
+.optsw{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
 .vtog{position:absolute;left:14px;top:14px;display:flex;gap:6px;z-index:3}
-.vtog .seg{background:rgba(20,18,16,.88);width:120px}
+.vtog .seg{background:rgba(20,18,16,.88);width:180px}
 .vhint{position:absolute;left:14px;bottom:14px;max-width:min(460px,70%);font-size:11.5px;color:var(--muted);background:rgba(20,18,16,.86);border:1px solid var(--line);padding:7px 10px;border-radius:2px;z-index:3}
 .vhint.paper{background:rgba(244,239,230,.94);color:#4b463f;border-color:#d8d0c2}
 .walkpad{position:absolute;right:14px;bottom:14px;display:grid;grid-template-columns:repeat(3,40px);gap:4px;z-index:3}
@@ -198,6 +207,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const DS = window.DS, { PRESETS, SYS, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, C, CLAD, LIGHT, PORCH, SHADE, EXT } = DS;
 const $ = s => document.querySelector(s);
@@ -215,7 +225,9 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e
 let P = load() || DS.starter('tw40', 'Twin 40 family home');
 let HIST = [], FUT = [], PENDING = false;
 let STAGE = 'shell', VIEW = '3d', SEL = null, TOOL = 'select', CLIENT = false, SHOWCHECKS = false;
-let SHELLSYS = PRESETS[P.preset].sys, ADDSIDE = 'S', FTAB = 'kitchen', NTAB = 'floor', WSIDE = 'S', DSIDE = 'E', LIGHTK = Object.keys(LIGHT)[0];
+let SHELLSYS = PRESETS[P.preset].sys, ADDSIDE = 'S', FTAB = 'kitchen', NTAB = 'floor', WSIDE = 'S', DSIDE = 'E', LIGHTK = Object.keys(LIGHT)[0], LFAM = 'living', LQ = '';
+const WIDE = () => window.innerWidth >= 1200;
+const SHOW2D = () => VIEW !== '3d', SHOW3D = () => VIEW !== '2d';
 let G, R, L, Q, A, DIRTY3D = true;
 const RENDERS = [], JOBS = [];
 let AUTHOR = false, SESSION = null, AF = null;
@@ -320,16 +332,17 @@ function renderTop() {
   $('#tright').innerHTML = `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
 }
 function renderViewChrome() {
-  $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button>`;
-  $('#plan').style.display = VIEW === '2d' ? 'block' : 'none';
-  $('#three').style.visibility = VIEW === '3d' ? 'visible' : 'hidden';
+  $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === 'split' ? 'on' : ''}" data-a="view" data-v="split" title="Plan and 3D side by side">Split</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button>`;
+  $('#vp').classList.toggle('split', VIEW === 'split');
+  $('#plan').style.display = SHOW2D() ? 'block' : 'none';
+  $('#three').style.visibility = SHOW3D() ? 'visible' : 'hidden';
   const h = $('#vhint');
   const hints = {
-    '2d': TOOL === 'part' ? 'Drag on the plan to draw a partition. It snaps to 100 mm. Press Esc to stop drawing.' : STAGE === 'furnish' ? 'Drag pieces from the catalogue onto the plan, or click them to drop in a free spot. Drag to move · R rotates · Delete removes.' : 'Click to select · drag to move · R rotates · Delete removes. Rooms re-form when partitions move.',
+    '2d': TOOL === 'room' ? 'Drag a rectangle to draw a room. Walls go where there is none yet, with a door in the longest one. Esc stops.' : TOOL === 'part' ? 'Drag on the plan to draw a partition. It snaps to 100 mm. Press Esc to stop drawing.' : STAGE === 'furnish' ? 'Drag pieces from the catalogue onto the plan, or click them to drop in a free spot. Drag to move · R rotates · Delete removes.' : 'Click to select · drag to move · R rotates · Delete removes. Rooms re-form when partitions move.',
     '3d': WALK ? 'Drag to look around · W A S D or the arrows to walk · Esc to exit.' : STAGE === 'finish' ? 'Click a floor or wall to pick its room, then choose a finish on the left.' : STAGE === 'open' ? 'Drag to orbit · click a door or window to edit it · switch to 2D to drag it along the wall.' : 'Drag to orbit · scroll to zoom · right-drag to pan · click to select.',
   };
-  h.textContent = hints[VIEW]; h.className = 'vhint' + (VIEW === '2d' ? ' paper' : '');
-  $('#walkpad').hidden = !(WALK && VIEW === '3d');
+  h.textContent = hints[VIEW === 'split' ? '2d' : VIEW]; h.className = 'vhint' + (SHOW2D() ? ' paper' : '');
+  $('#walkpad').hidden = !(WALK && SHOW3D());
 }
 const sideBtns = (cur, act) => `<div class="seg">${SYSD().sides.map(s => `<button type="button" class="${cur === s ? 'on' : ''}" data-a="${act}" data-v="${s}">${s}</button>`).join('')}</div>`;
 function renderLeft() {
@@ -344,13 +357,15 @@ function renderLeft() {
       <p class="note">Choosing a size loads it in 3D with a starter layout. Next come the doors, windows and extensions, then the outside finishes, then the rooms inside.</p></div>`;
   } else if (STAGE === 'plan') {
     h = `<div class="sec"><div class="eb">Step 4 · Interior plan</div><h2 class="h">Rooms</h2>
-      <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Draw partition</button></div>
-      <p class="note">Partitions split the floor into rooms, including any bump-out or door-end extension. Add a door from the partition's panel on the right.</p>
+      <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Partition</button><button type="button" class="${TOOL === 'room' ? 'on' : ''}" data-a="tool" data-v="room">Draw room</button></div>
+      <p class="note">Draw room: drag a rectangle and its walls and door are added. Partitions split the floor into rooms, including any bump-out or door-end extension. Add a door from the partition's panel on the right.</p>
       <p class="note">Doors and windows on the outside walls are set in <button type="button" class="lnk" data-a="stage" data-v="open">step 2</button>.</p></div>`;
   } else if (STAGE === 'open') {
     h = openingsPanel();
   } else if (STAGE === 'ext') {
     h = exteriorPanel();
+  } else if (STAGE === 'furnish' && DS.LIB.cats.length) {
+    h = libraryPanel();
   } else if (STAGE === 'furnish') {
     const tabs = [['kitchen', 'Kitchens and wardrobes'], ['bath', 'Bathroom'], ['furn', 'Furniture']];
     h = `<div class="sec"><div class="eb">Step 5 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
@@ -447,6 +462,52 @@ function spreadLights(side, n) {
   }
 }
 function mainDoor() { return P.opens.find(o => OPEN[o.k].door && !OPEN[o.k].gable && !DS.removedSpans(P, o.side).some(([a, b]) => o.u > a && o.u < b)) || null; }
+// ---------------- furniture library (from the catalogue) ----------------
+const libRoots = () => DS.LIB.cats.filter(c => !c.parent && c.slug !== 'construction' && c.slug !== 'finishes').sort((a, b) => (a.sort || 0) - (b.sort || 0));
+const libKids = slug => DS.LIB.cats.filter(c => c.parent === slug).sort((a, b) => (a.sort || 0) - (b.sort || 0));
+const libItems = slug => Object.entries(ITEMS).filter(([, d]) => d.lib && d.lib.cat === slug);
+const mm = v => ((v * 1000) | 0);
+function libThumb(k) {
+  const d = ITEMS[k], lb = d.lib || {}, sp = lb.specs || {};
+  if (lb.cover) return `<span class="th" style="background-image:url('${esc(lb.cover)}')"></span>`;
+  const dm = DS.itemDims({ k }), col = DS.itemColour({ k }) || sp.swatch || (d.sanitary ? '#f4f2ee' : '#a38a6a'), W = 80, H = 50, s0 = Math.min(64 / Math.max(dm.w, 0.3), 38 / Math.max(dm.h, 0.3)), w = dm.w * s0, h = dm.h * s0, x = (W - w) / 2, y = H - 4 - h;
+  const form = sp.form || ({ dining: 'table', coffee: 'table', desk: 'table', arm: 'chair', night: 'cabinet', tv: 'cabinet' })[k] || 'box';
+  let g = '';
+  if (form === 'table' || form === 'stool') g = `<rect x="${x}" y="${y}" width="${w}" height="${Math.max(2, h * 0.08)}" fill="${col}"/><rect x="${x + 2}" y="${y}" width="2" height="${h}" fill="${col}"/><rect x="${x + w - 4}" y="${y}" width="2" height="${h}" fill="${col}"/>`;
+  else if (form === 'shelf') { g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="2"/>`; for (let i = 1; i < 5; i++) g += `<line x1="${x}" y1="${y + h * i / 5}" x2="${x + w}" y2="${y + h * i / 5}" stroke="${col}" stroke-width="1.5"/>`; }
+  else g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${col}"/>`;
+  return `<span class="th"><svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#f4efe6"/><line x1="4" y1="${H - 4}" x2="${W - 4}" y2="${H - 4}" stroke="#d8d0c2"/>${g}</svg></span>`;
+}
+const itemCard = ([k, d]) => { const dm = DS.itemDims({ k }); return `<button type="button" class="card" data-a="additem" data-v="${esc(k)}" data-drag="${esc(k)}">${libThumb(k)}<b>${esc(d.name)}</b><small>${mm(dm.w)} × ${mm(dm.d)} × ${mm(dm.h)}</small>${CLIENT ? '' : `<small>${d.sanitary ? '' : 'Décor · '}${KSh(DS.itemPrice({ k }))}${d.lib && d.lib.params && d.lib.params.length ? ' · options' : ''}</small>`}</button>`; };
+const runCards = kind => `${kind !== 'wardrobe' ? `<button type="button" class="card" data-a="addrun" data-v="kitchen"><b>Modular kitchen run</b><small>Base, sink, hob and tall units on a 300/600/800 mm grid. Fronts, worktop and wall cabinets are set on the right.</small><small>${CLIENT ? '' : 'From ' + KSh(165000)}</small></button>` : ''}${kind !== 'kitchen' ? `<button type="button" class="card" data-a="addrun" data-v="wardrobe"><b>Modular wardrobe run</b><small>Hanging, shelf and drawer units in 500 and 1000 mm widths.</small><small>${CLIENT ? '' : 'From ' + KSh(38000)}</small></button>` : ''}`;
+function libList() {
+  if (LQ.trim()) {
+    const q = LQ.trim().toLowerCase(), hits = Object.entries(ITEMS).filter(([, d]) => d.lib && (d.name + ' ' + (d.cat || '')).toLowerCase().includes(q));
+    return hits.length ? `<div class="eb" style="color:var(--muted)">${hits.length} found</div><div class="cards two">${hits.map(itemCard).join('')}</div>` : '<p class="empty">Nothing found. Try another word.</p>';
+  }
+  let h = '';
+  if (LFAM === 'kitchen') h += `<div class="cards">${runCards('kitchen')}</div>`;
+  if (LFAM === 'bedroom') h += `<div class="cards">${runCards('wardrobe')}</div>`;
+  libKids(LFAM).forEach(c => { const its = libItems(c.slug); if (its.length) h += `<div class="eb" style="color:var(--muted);margin-top:10px">${esc(c.name)}</div><div class="cards two">${its.map(itemCard).join('')}</div>`; });
+  return (h || '<p class="empty">Nothing in this part of the library yet.</p>') + `<p class="note">Drag onto the plan or the 3D floor, or click to drop it in a free spot. Furniture is décor until the furniture package is on; sanitary ware is always priced.</p>`;
+}
+function libraryPanel() {
+  const roots = libRoots(); if (!roots.some(r => r.slug === LFAM)) LFAM = roots.length ? roots[0].slug : '';
+  return `<div class="sec"><div class="eb">Step 5 · Furnish</div><h2 class="h">Library</h2>
+    <label class="lbl">Search<input type="search" id="lib-q" data-in="libq" value="${esc(LQ)}" placeholder="Sofa, bed, shower…" autocomplete="off"></label>
+    <div class="fams" role="group" aria-label="Rooms">${roots.map(r => `<button type="button" class="${LFAM === r.slug && !LQ ? 'on' : ''}" data-a="lfam" data-v="${esc(r.slug)}">${esc(r.name)}</button>`).join('')}</div>
+    <p class="note">Doors and windows are in <button type="button" class="lnk" data-a="stage" data-v="open">step 2</button>, walls and rooms in <button type="button" class="lnk" data-a="stage" data-v="plan">step 4</button>, floor and wall finishes in <button type="button" class="lnk" data-a="stage" data-v="finish">step 6</button>.</p></div>
+    <div class="sec" id="lib-list">${libList()}</div>`;
+}
+function optControls(s) {
+  const lb = ITEMS[s.k].lib; if (!lb || !lb.params) return '';
+  return lb.params.map(q => {
+    const v = s.opt && s.opt[q.key] != null ? String(s.opt[q.key]) : String(q.default == null ? '' : q.default);
+    if (q.kind === 'color') return `<div class="eb" style="color:var(--muted)">${esc(q.label)}</div><div class="optsw">${(q.options || []).map(o => `<button type="button" class="sw ${String(o.value) === v ? 'on' : ''}" style="background:${esc(o.swatch || '#999')}" data-a="itemOpt" data-key="${esc(q.key)}" data-v="${esc(o.value)}" aria-label="${esc(o.label)}" title="${esc(o.label)}${o.price_add && !CLIENT ? ' · +' + KSh(o.price_add) : ''}"></button>`).join('')}</div>`;
+    if (q.kind === 'number') return `<label class="lbl"><span>${esc(q.label)} <b>${esc(v)} ${esc(q.unit || '')}</b></span><input type="range" data-in="itemNum" data-key="${esc(q.key)}" min="${q.min ?? 0}" max="${q.max ?? 3000}" step="${q.step || 10}" value="${esc(v)}"></label>`;
+    return `<label class="lbl">${esc(q.label)}<select data-in="itemOpt" data-key="${esc(q.key)}">${(q.options || []).map(o => `<option value="${esc(o.value)}" ${String(o.value) === v ? 'selected' : ''}>${esc(o.label)}${o.price_add && !CLIENT ? ` (${o.price_add > 0 ? '+' : ''}${KSh(o.price_add)})` : ''}</option>`).join('')}</select></label>`;
+  }).join('');
+}
 function checksHtml(list) {
   if (!list.length) return '<p class="note" style="color:var(--ok)">All checks pass.</p>';
   const lab = { error: ['err', 'Fix'], warn: ['warn', 'Check'], eng: ['eng', 'Engineer'] };
@@ -456,8 +517,11 @@ function inspector() {
   const s = findSel(); if (!s) return '';
   const k = SEL.kind;
   if (k === 'item') {
-    const d = ITEMS[s.k];
-    return `<div class="sec insp"><div class="eb">${d.cat}</div><h2 class="h">${d.name}</h2><div class="sub">${(d.w * 1000) | 0} × ${(d.d * 1000) | 0} × ${(d.h * 1000) | 0} mm · ${d.sanitary ? 'Priced ' + (CLIENT ? '' : KSh(d.price)) : P.furnPkg ? 'Furniture package' + (CLIENT ? '' : ' · ' + KSh(d.price)) : 'Décor, not priced'}</div>
+    const d = ITEMS[s.k], dm = DS.itemDims(s), pr = DS.itemPrice(s), cat = d.lib && DS.LIB.cats.find(c => c.slug === d.lib.cat);
+    const vars = d.lib ? Object.entries(ITEMS).filter(([, x]) => x.lib && x.lib.cat === d.lib.cat) : [];
+    return `<div class="sec insp"><div class="eb">${esc(cat ? cat.name : d.cat)}</div><h2 class="h">${esc(d.name)}</h2><div class="sub">${mm(dm.w)} × ${mm(dm.d)} × ${mm(dm.h)} mm · ${d.sanitary ? 'Priced ' + (CLIENT ? '' : KSh(pr)) : P.furnPkg ? 'Furniture package' + (CLIENT ? '' : ' · ' + KSh(pr)) : 'Décor, not priced'}</div>
+      ${optControls(s)}
+      ${vars.length > 1 ? `<label class="lbl">Swap for<select id="item-swap" data-in="itemSwap">${vars.map(([kk, x]) => `<option value="${esc(kk)}" ${kk === s.k ? 'selected' : ''}>${esc(x.name)}${CLIENT ? '' : ' · ' + KSh(DS.itemPrice({ k: kk }))}</option>`).join('')}</select></label>` : ''}
       <div class="btns"><button type="button" class="btn" data-a="rot">Rotate 90°</button><button type="button" class="btn" data-a="dup">Duplicate</button><button type="button" class="btn del" data-a="del">Delete</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
   }
   if (k === 'run') {
@@ -650,7 +714,7 @@ function planSVG(stat) {
   });
   // items
   P.items.forEach(it => {
-    const d = ITEMS[it.k], w = d.w, dd = d.d, onS = SEL && SEL.kind === 'item' && SEL.id === it.id, o = -w / 2, oz = -dd / 2;
+    const d = ITEMS[it.k], dm = DS.itemDims(it), w = dm.w, dd = dm.d, onS = SEL && SEL.kind === 'item' && SEL.id === it.id, o = -w / 2, oz = -dd / 2, sp = (d.lib && d.lib.specs) || {};
     const line = X.ink, fill = d.sanitary ? '#ffffff' : d.flat ? '#e2d6c2' : '#f6f2ea';
     let g2 = `<rect x="${o}" y="${oz}" width="${w}" height="${dd}" rx="${d.flat ? 0 : 0.03}" fill="${fill}" fill-opacity="${d.flat ? 0.6 : 1}" stroke="${line}" stroke-width="${d.flat ? 0.008 : 0.014}" ${d.flat ? 'stroke-dasharray="0.05 0.04"' : ''}/>`;
     if (it.k === 'bedD' || it.k === 'bedS') { const n = it.k === 'bedD' ? 2 : 1, pw = (w - 0.2) / n; for (let i = 0; i < n; i++) g2 += `<rect x="${o + 0.1 + i * pw + 0.03}" y="${oz + 0.08}" width="${pw - 0.06}" height="0.3" rx="0.04" fill="#fff" stroke="${line}" stroke-width="0.008"/>`; g2 += `<path d="M${o} ${oz + 0.6}H${-o}" stroke="${line}" stroke-width="0.01"/>`; }
@@ -658,7 +722,9 @@ function planSVG(stat) {
     if (it.k === 'wc') g2 += `<rect x="${o + 0.02}" y="${oz}" width="${w - 0.04}" height="0.18" fill="#fff" stroke="${line}" stroke-width="0.008"/><ellipse cx="0" cy="${oz + 0.43}" rx="0.17" ry="0.24" fill="#fff" stroke="${line}" stroke-width="0.01"/>`;
     if (it.k === 'basin') g2 += `<ellipse cx="0" cy="${oz + 0.24}" rx="0.2" ry="0.14" fill="#fff" stroke="${line}" stroke-width="0.01"/>`;
     if (it.k === 'shower') g2 += `<path d="M${o} ${oz}L${-o} ${-oz}M${-o} ${oz}L${o} ${-oz}" stroke="${X.faint}" stroke-width="0.01"/><circle r="0.05" fill="none" stroke="${line}" stroke-width="0.01"/>`;
-    if (it.k === 'dining') for (const [cx, cz] of [[-0.35, oz - 0.18], [0.35, oz - 0.18], [-0.35, -oz + 0.18], [0.35, -oz + 0.18]]) g2 += `<rect x="${cx - 0.2}" y="${cz - 0.18}" width="0.4" height="0.36" rx="0.04" fill="#f6f2ea" stroke="${line}" stroke-width="0.01"/>`;
+    if (sp.form === 'chair' || sp.form === 'stool') g2 += `<rect x="${o + 0.04}" y="${oz}" width="${w - 0.08}" height="0.08" fill="#e3dccf" stroke="${line}" stroke-width="0.008"/>`;
+    if (sp.form === 'shelf' || sp.form === 'cabinet') g2 += `<line x1="${o}" y1="${-oz - 0.04}" x2="${-o}" y2="${-oz - 0.04}" stroke="${line}" stroke-width="0.01"/>`;
+    if (it.k === 'dining') for (const [cx, cz] of chairXs(w).flatMap(x => [[x, oz - 0.18], [x, -oz + 0.18]])) g2 += `<rect x="${cx - 0.2}" y="${cz - 0.18}" width="0.4" height="0.36" rx="0.04" fill="#f6f2ea" stroke="${line}" stroke-width="0.01"/>`;
     if (it.k === 'desk') g2 += `<circle cx="0" cy="${-oz + 0.25}" r="0.22" fill="#f6f2ea" stroke="${line}" stroke-width="0.01"/>`;
     if (it.k === 'tv') g2 += `<rect x="${o + 0.2}" y="${oz + 0.05}" width="${w - 0.4}" height="0.05" fill="${line}"/>`;
     if (it.k === 'plant') g2 = `<circle r="0.22" fill="#c9d4b8" stroke="${line}" stroke-width="0.012"/>`;
@@ -673,7 +739,8 @@ function planSVG(stat) {
   s += dm(0, -0.45, p.L, -0.45, p.L.toFixed(2) + ' m') + `<line x1="0" y1="-0.55" x2="0" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L}" y1="-0.55" x2="${p.L}" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/>`;
   s += dm(p.L + 0.45, 0, p.L + 0.45, p.W, p.W.toFixed(2) + ' m', true) + `<line x1="${p.L + 0.35}" y1="0" x2="${p.L + 0.55}" y2="0" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L + 0.35}" y1="${p.W}" x2="${p.L + 0.55}" y2="${p.W}" stroke="${X.mid}" stroke-width="0.01"/>`;
   s += `<g transform="translate(${vb[0] + 0.35} ${vb[1] + 0.4})"><path d="M0 -0.2L0.09 0.12L0 0.06L-0.09 0.12Z" fill="${X.ink}"/><text y="0.32" font-size="0.14" text-anchor="middle" fill="${X.ink}" font-family="IBM Plex Mono, monospace">N</text></g>`;
-  if (!stat && DRAFT) s += `<line x1="${DRAFT.x0}" y1="${DRAFT.z0}" x2="${DRAFT.x1}" y2="${DRAFT.z1}" stroke="${X.sel}" stroke-width="0.1" stroke-opacity="0.75"/><text x="${(DRAFT.x0 + DRAFT.x1) / 2}" y="${(DRAFT.z0 + DRAFT.z1) / 2 - 0.15}" font-size="0.16" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${Math.hypot(DRAFT.x1 - DRAFT.x0, DRAFT.z1 - DRAFT.z0).toFixed(1)} m</text>`;
+  if (!stat && DRAFT && DRAFT.room) { const x0 = Math.min(DRAFT.x0, DRAFT.x1), z0 = Math.min(DRAFT.z0, DRAFT.z1), w = Math.abs(DRAFT.x1 - DRAFT.x0), h = Math.abs(DRAFT.z1 - DRAFT.z0); s += `<rect x="${x0}" y="${z0}" width="${w}" height="${h}" fill="${X.sel}" fill-opacity="0.12" stroke="${X.sel}" stroke-width="0.04" stroke-dasharray="0.12 0.08"/><text x="${x0 + w / 2}" y="${z0 + h / 2}" font-size="0.18" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${w.toFixed(1)} × ${h.toFixed(1)} m · ${(w * h).toFixed(1)} m²</text>`; }
+  else if (!stat && DRAFT) s += `<line x1="${DRAFT.x0}" y1="${DRAFT.z0}" x2="${DRAFT.x1}" y2="${DRAFT.z1}" stroke="${X.sel}" stroke-width="0.1" stroke-opacity="0.75"/><text x="${(DRAFT.x0 + DRAFT.x1) / 2}" y="${(DRAFT.z0 + DRAFT.z1) / 2 - 0.15}" font-size="0.16" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${Math.hypot(DRAFT.x1 - DRAFT.x0, DRAFT.z1 - DRAFT.z0).toFixed(1)} m</text>`;
   return { vb, body: s };
 }
 function planWalls() {
@@ -714,6 +781,31 @@ function planExterior() {
   e.lights.forEach(l => { if (!LIGHT[l.k]) return; const [x, z] = pt(l.side, l.u, 0.12); o += `<circle cx="${x}" cy="${z}" r="0.07" fill="#f3c766" stroke="${X.ink}" stroke-width="0.012"/>`; });
   return o;
 }
+// a rectangle becomes a room: walls where there are none yet, and a door in the longest new wall
+function makeRoom(d) {
+  const p = PRE(), t = p.t; let x0 = Math.min(d.x0, d.x1), x1 = Math.max(d.x0, d.x1), z0 = Math.min(d.z0, d.z1), z1 = Math.max(d.z0, d.z1);
+  if (x1 - x0 < 1.2 || z1 - z0 < 1.2) { renderPlan(); return toast('Draw a room at least 1.2 m each way'); }
+  // snap edges onto walls and partitions that are close
+  const xs = [t, p.L - t], zs = [t, p.W - t];
+  DS.annexes(P).filter(a => a.enclosed).forEach(a => { xs.push(a.x0 + t, a.x1 - t); zs.push(a.z0 + t, a.z1 - t); });
+  P.parts.forEach(q => { if (q.a === 'z') xs.push(q.at, q.at - C); else zs.push(q.at, q.at - C); });
+  const sn = (v, list) => { let best = v, bd = 0.36; list.forEach(c => { const dd = Math.abs(c - v); if (dd < bd) { bd = dd; best = c; } }); return Math.round(best * 100) / 100; };
+  x0 = sn(x0, xs); x1 = sn(x1, xs); z0 = sn(z0, zs); z1 = sn(z1, zs);
+  const free = pts => pts.some(([x, z]) => G.at(x, z) > 0);
+  const along = (a0, a1) => [a0 + 0.25, (a0 + a1) / 2, a1 - 0.25];
+  const edges = [
+    { a: 'x', at: z0, s0: x0 - C, s1: x1 + C, open: free(along(x0, x1).map(x => [x, z0 - 0.05])) },
+    { a: 'x', at: z1 + C, s0: x0 - C, s1: x1 + C, open: free(along(x0, x1).map(x => [x, z1 + 0.05])) },
+    { a: 'z', at: x0, s0: z0 - C, s1: z1 + C, open: free(along(z0, z1).map(z => [x0 - 0.05, z])) },
+    { a: 'z', at: x1 + C, s0: z0 - C, s1: z1 + C, open: free(along(z0, z1).map(z => [x1 + 0.05, z])) },
+  ].filter(e => e.open);
+  if (!edges.length) { renderPlan(); return toast('That area already has walls all round'); }
+  const longest = edges.reduce((a, b) => (b.s1 - b.s0 > a.s1 - a.s0 ? b : a));
+  const ids = [];
+  commit(P => edges.forEach(e => { const id = uid('p'); ids.push(id); P.parts.push({ id, a: e.a, at: Math.round(e.at * 100) / 100, s0: Math.round(e.s0 * 100) / 100, s1: Math.round(e.s1 * 100) / 100, door: e === longest ? Math.round(((e.s1 - e.s0) / 2) * 20) / 20 : null }); }));
+  TOOL = 'select'; const rid = G.at((x0 + x1) / 2, (z0 + z1) / 2); SEL = rid > 0 ? { kind: 'room', id: rid } : null; renderUI(); refreshView();
+  toast(`Room drawn: ${edges.length} wall${edges.length === 1 ? '' : 's'} and a door added. Name it on the right`);
+}
 let DRAFT = null;
 function renderPlan() { const { vb, body } = planSVG(false); svg.setAttribute('viewBox', vb.join(' ')); svg.innerHTML = body; }
 function svgPt(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
@@ -721,7 +813,8 @@ let DRAG = null;
 svg.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
   const [x, z] = svgPt(e), hitEl = e.target.closest('[data-k]');
-  if (TOOL === 'part' && locked('part')) { TOOL = 'select'; renderUI(); return lockToast('part'); }
+  if ((TOOL === 'part' || TOOL === 'room') && locked('part')) { TOOL = 'select'; renderUI(); return lockToast('part'); }
+  if (TOOL === 'room') { DRAFT = { room: true, x0: snap(x, 0.1), z0: snap(z, 0.1), x1: snap(x, 0.1), z1: snap(z, 0.1) }; svg.setPointerCapture(e.pointerId); renderPlan(); return; }
   if (TOOL === 'part') { DRAFT = { x0: snap(x, 0.1), z0: snap(z, 0.1), x1: snap(x, 0.1), z1: snap(z, 0.1) }; svg.setPointerCapture(e.pointerId); renderPlan(); return; }
   if (!hitEl) { if (SEL) { SEL = null; renderUI(); renderPlan(); } return; }
   const [kind, id0] = hitEl.dataset.k.split(':'), id = kind === 'room' ? +id0 : id0;
@@ -731,6 +824,7 @@ svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); renderUI(); renderPlan();
 });
 svg.addEventListener('pointermove', e => {
+  if (DRAFT && DRAFT.room) { const [x, z] = svgPt(e); DRAFT.x1 = snap(x, 0.1); DRAFT.z1 = snap(z, 0.1); renderPlan(); return; }
   if (DRAFT) { const [x, z] = svgPt(e), X = snap(x, 0.1), Z = snap(z, 0.1); if (Math.abs(X - DRAFT.x0) >= Math.abs(Z - DRAFT.z0)) { DRAFT.x1 = X; DRAFT.z1 = DRAFT.z0; } else { DRAFT.z1 = Z; DRAFT.x1 = DRAFT.x0; } renderPlan(); return; }
   if (!DRAG) return;
   const [x, z] = svgPt(e), dx = x - DRAG.x, dz = z - DRAG.z;
@@ -742,9 +836,10 @@ svg.addEventListener('pointermove', e => {
   else if (DRAG.kind === 'run') { const b = DS.runBase(P, o); if (b) o.u0 = Math.round(clamp(snap(g.u0 + (b.axis === 'x' ? dx : dz), 0.05), 0, Math.max(0, wallLen(o.side) - DS.runLen(o))) * 100) / 100; }
   else if (DRAG.kind === 'open') { if (OPEN[o.k].gable) return; const d = OPEN[o.k]; o.u = Math.round(clamp(snap(g.u + (o.side === 'N' || o.side === 'S' ? dx : dz), 0.05), d.w / 2 + 0.2, DS.sideLen(P, o.side) - d.w / 2 - 0.2) * 100) / 100; }
   else if (DRAG.kind === 'part') { const lo = o.a === 'x' ? bb.z0 : bb.x0, hi = o.a === 'x' ? bb.z1 : bb.x1; o.at = Math.round(clamp(snap(g.at + (o.a === 'x' ? dz : dx), 0.1), lo + 0.5, hi - 0.4) * 10) / 10; }
-  recompute(); renderPlan(); renderBar();
+  recompute(); renderPlan(); renderBar(); if (VIEW === 'split') { DIRTY3D = true; queue3D(); }
 });
 svg.addEventListener('pointerup', e => {
+  if (DRAFT && DRAFT.room) { const d = DRAFT; DRAFT = null; makeRoom(d); return; }
   if (DRAFT) {
     const d = DRAFT; DRAFT = null; const len = Math.hypot(d.x1 - d.x0, d.z1 - d.z0);
     if (len >= 0.6) {
@@ -776,7 +871,8 @@ document.addEventListener('pointerup', e => {
   SUPPRESS_CLICK = true; setTimeout(() => { SUPPRESS_CLICK = false; }, 0);
   const vp = $('#vp').getBoundingClientRect(); if (e.clientX < vp.left || e.clientX > vp.right || e.clientY < vp.top || e.clientY > vp.bottom) return;
   let pt = null;
-  if (VIEW === '2d') pt = svgPt(e); else { const h = floorHit(e); if (h) pt = [h.x, h.z]; }
+  const onPlan = VIEW === '2d' || (VIEW === 'split' && e.clientX < svg.getBoundingClientRect().right);
+  if (onPlan) pt = svgPt(e); else { const h = floorHit(e); if (h) pt = [h.x, h.z]; }
   if (!pt) return toast('Drop it on the floor');
   addItemAt(d.k, snap(pt[0], 0.05), snap(pt[1], 0.05));
 });
@@ -793,16 +889,16 @@ function setStage(s) {
   if (s === 'finish' && !(SEL && SEL.kind === 'room')) SEL = null;
   const wantCut = s === 'finish' || s === 'plan' || s === 'furnish';
   if (CUT !== wantCut) { CUT = wantCut; DIRTY3D = true; }
-  setView(st[2], true); renderUI();
-  if (st[2] === '3d') camPreset(wantCut ? 'doll' : 'front');
+  const v = st[2] === '2d' && WIDE() ? 'split' : st[2]; setView(v, true); renderUI();
+  if (v !== '2d') requestAnimationFrame(() => camPreset(wantCut ? 'doll' : 'front'));
 }
 function setView(v, quiet) {
   const was = VIEW; VIEW = v;
-  if (v === '3d') { if (STAGE === 'plan' || STAGE === 'furnish') { if (!CUT) { CUT = true; DIRTY3D = true; } } startLoop(); } else stopLoop();
-  renderViewChrome(); refreshView(); if (v === '3d' && was === '2d' && (STAGE === 'plan' || STAGE === 'furnish')) camPreset('doll');
+  if (v !== '2d') { if (STAGE === 'plan' || STAGE === 'furnish') { if (!CUT) { CUT = true; DIRTY3D = true; } } startLoop(); } else stopLoop();
+  renderViewChrome(); refreshView(); if (v !== '2d' && was === '2d' && (STAGE === 'plan' || STAGE === 'furnish')) camPreset('doll');
   if (!quiet) renderUI();
 }
-function refreshView() { if (VIEW === '2d') renderPlan(); else { if (DIRTY3D) build3D(); else updateSelBox(); } }
+function refreshView() { if (SHOW2D()) renderPlan(); if (SHOW3D()) { if (DIRTY3D) build3D(); else updateSelBox(); } }
 document.addEventListener('click', e => {
   if (SUPPRESS_CLICK) return;
   const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
@@ -829,7 +925,7 @@ document.addEventListener('click', e => {
     case 'copyPayload': { const t = $('#payload'); try { navigator.clipboard.writeText(t.value).then(() => toast('Copied'), () => { t.select(); }); } catch (e) { t.select(); } return; }
     case 'preset': { if (v === P.preset) return; snapshot(); const nm = P.name; P = DS.starter(v); SEL = null; AF = null; after(); FIRSTFRAME = true; DIRTY3D = true; refreshView(); camPreset('front'); return toast(`${PRESETS[v].name} loaded with its starter layout`); }
     case 'colour': return commit(P => { P.colour = v; });
-    case 'tool': TOOL = v; if (VIEW !== '2d') setView('2d'); return renderUI();
+    case 'tool': TOOL = v; if (VIEW === '3d') setView(WIDE() ? 'split' : '2d'); return renderUI();
     case 'addside': ADDSIDE = v; return renderLeft();
     case 'addopen': { if (locked('open')) return lockToast('open');
       const d = OPEN[v]; let side = d.gable ? (P.opens.some(o => o.k === 'gable' && o.side === 'W') ? 'E' : 'W') : ADDSIDE;
@@ -858,6 +954,8 @@ document.addEventListener('click', e => {
     case 'porch': return commit(P => { if (!v) { P.ext.porch = null; return; } if (P.ext.porch) { P.ext.porch.k = v; return; } const d = mainDoor(), side = d ? d.side : SYSD().sides.includes('S') ? 'S' : SYSD().sides[0], len = DS.sideLen(P, side); P.ext.porch = { k: v, side, u: d ? d.u : Math.round(len / 2 * 100) / 100, w: Math.min(len, Math.max(2.4, d ? OPEN[d.k].w + 1.6 : 2.4)), d: 2.0 }; });
     case 'porchSide': return commit(P => { const pc = P.ext.porch; if (!pc) return; pc.side = v; const len = DS.sideLen(P, v); pc.w = Math.min(pc.w, len + 1); pc.u = Math.round(len / 2 * 100) / 100; const d = P.opens.find(o => o.side === v && OPEN[o.k].door); if (d) pc.u = d.u; });
     case 'porchDoor': { const d = mainDoor(); if (!d) return toast('Add a door first'); return commit(P => { const pc = P.ext.porch; pc.side = d.side; pc.u = d.gable ? DS.sideLen(P, d.side) / 2 : d.u; }); }
+    case 'lfam': LFAM = v; LQ = ''; return renderLeft();
+    case 'itemOpt': { if (!s || SEL.kind !== 'item') return; if (locked('item')) return lockToast('item'); const key = b.dataset.key; return commit(() => { s.opt = { ...(s.opt || {}), [key]: v }; }); }
     case 'ftab': FTAB = v; return renderLeft();
     case 'ntab': NTAB = v; return renderLeft();
     case 'addrun': { if (locked('run')) return lockToast('run'); const r = placeRun(v); if (!r) return toast('No free wall is long enough. Clear some space first'); commit(P => P.runs.push(r)); SEL = { kind: 'run', id: r.id }; renderUI(); refreshView(); return; }
@@ -906,26 +1004,28 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => {
   const t = e.target, k = t.dataset.in; if (!k) return; const s = findSel();
   if (k === 'name') { P.name = t.value || 'Untitled design'; save(); return renderBar(); }
-  if (k === 'roomName') { if (!PENDING) { snapshot(); PENDING = true; } DS.setRoom(P, G, s, { name: t.value }); recompute(); if (VIEW === '2d') renderPlan(); return; }
+  if (k === 'roomName') { if (!PENDING) { snapshot(); PENDING = true; } DS.setRoom(P, G, s, { name: t.value }); recompute(); if (SHOW2D()) renderPlan(); return; }
   if (k === 'cl') { CLIENTINFO[t.dataset.v] = t.value; return; }
+  if (k === 'libq') { LQ = t.value; const l = $('#lib-list'); if (l) l.innerHTML = libList(); $('#left').querySelectorAll('.fams button').forEach(x => x.classList.toggle('on', !LQ && x.dataset.v === LFAM)); return; }
+  if (k === 'itemNum' && s && SEL.kind === 'item') { if (locked('item')) return; if (!PENDING) { snapshot(); PENDING = true; } s.opt = { ...(s.opt || {}), [t.dataset.key]: +t.value }; recompute(); DIRTY3D = true; if (SHOW2D()) renderPlan(); if (SHOW3D()) queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = t.value + ' mm'; return; }
   if (k === 'af') { afForm()[t.dataset.f] = t.value; return; }
   if (k === 'login') { LOGIN[t.dataset.f] = t.value; return; }
   const extLive = { wU0: () => { const w = curW(); if (w) w.u0 = Math.min(+t.value, w.u1 - 0.6); }, wU1: () => { const w = curW(); if (w) w.u1 = Math.max(+t.value, w.u0 + 0.6); }, wD: () => { const w = curW(); if (w) w.d = +t.value; },
     pW: () => { if (P.ext.porch) P.ext.porch.w = +t.value; }, pD: () => { if (P.ext.porch) P.ext.porch.d = +t.value; }, pU: () => { if (P.ext.porch) P.ext.porch.u = +t.value; } }[k];
   if (extLive) {
     if (['wU0', 'wU1', 'wD'].includes(k) && locked('open')) { lockToast('open'); return renderLeft(); }
-    if (!PENDING) { snapshot(); PENDING = true; } extLive(); recompute(); DIRTY3D = true; if (VIEW === '2d') renderPlan(); else queue3D(); renderBar(); renderRight();
+    if (!PENDING) { snapshot(); PENDING = true; } extLive(); recompute(); DIRTY3D = true; if (SHOW2D()) renderPlan(); if (SHOW3D()) queue3D(); renderBar(); renderRight();
     const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k === 'pU' ? 2 : 1) + ' m';
     const w = curW(), sm = $('#w-sum'); if (sm && w) sm.textContent = `${(w.u1 - w.u0).toFixed(1)} m opened · ${((w.u1 - w.u0) * w.d).toFixed(1)} m² added${CLIENT ? '' : ' · ' + KSh((w.u1 - w.u0) * EXT.cut.price + (w.u1 - w.u0) * w.d * EXT.bump.price)}`;
     return;
   }
   const live = { runU: () => { s.u0 = +t.value; }, openU: () => { s.u = +t.value; }, partAt: () => { s.at = +t.value; }, partS0: () => { s.s0 = +t.value; }, partS1: () => { s.s1 = +t.value; }, partDoor: () => { s.door = +t.value; } }[k];
   if (live && s && locked(SEL.kind)) { lockToast(SEL.kind); return renderRight(); }
-  if (live && s) { if (!PENDING) { snapshot(); PENDING = true; } live(); recompute(); DIRTY3D = true; if (VIEW === '2d') renderPlan(); else queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k.startsWith('part') && k !== 'partDoor' ? 1 : 2) + ' m'; }
+  if (live && s) { if (!PENDING) { snapshot(); PENDING = true; } live(); recompute(); DIRTY3D = true; if (SHOW2D()) renderPlan(); if (SHOW3D()) queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k.startsWith('part') && k !== 'partDoor' ? 1 : 2) + ' m'; }
 });
 document.addEventListener('change', e => {
   const t = e.target, k = t.dataset.in; if (!k) return; const s = findSel();
-  if (['runU', 'openU', 'partAt', 'partS0', 'partS1', 'partDoor', 'roomName', 'wU0', 'wU1', 'wD', 'pW', 'pD', 'pU'].includes(k)) { PENDING = false; return after(); }
+  if (['itemNum', 'runU', 'openU', 'partAt', 'partS0', 'partS1', 'partDoor', 'roomName', 'wU0', 'wU1', 'wD', 'pW', 'pD', 'pU'].includes(k)) { PENDING = false; return after(); }
   if (k === 'wWhole') return commit(P => { const w = curW(); if (!w) return; if (t.checked) { w.u0 = 0; w.u1 = PRE().L; } else { w.u0 = Math.round(PRE().L * 0.3 * 10) / 10; w.u1 = Math.round(PRE().L * 0.7 * 10) / 10; } });
   if (k === 'lightK') { LIGHTK = t.value; if (P.ext.lights.length) return commit(P => P.ext.lights.forEach(l => { l.k = t.value; })); return; }
   if (k === 'afSet') { const f = afForm(), [grp, key] = t.dataset.f.split(':'); if (grp === 'shells' || grp === 'lock') { const a = new Set(f[grp]); t.checked ? a.add(key) : a.delete(key); f[grp] = [...a]; } else { const all = Object.keys(FIN[grp]); let cur = f.finishes[grp] === 'all' ? all.slice() : f.finishes[grp].slice(); cur = t.checked ? [...new Set([...cur, key])] : cur.filter(x => x !== key); f.finishes[grp] = cur.length === all.length ? 'all' : cur; } return; }
@@ -938,6 +1038,8 @@ document.addEventListener('change', e => {
   if (k === 'top') return commit(() => { s.top = t.value; });
   if (k === 'wallCab') return commit(() => { s.wallCab = t.checked; });
   if (k === 'openK') return commit(() => { s.k = t.value; if (OPEN[t.value].gable) s.u = PRE().W / 2; });
+  if (k === 'itemOpt') return commit(() => { s.opt = { ...(s.opt || {}), [t.dataset.key]: t.value }; });
+  if (k === 'itemSwap') return commit(() => { s.k = t.value; s.opt = {}; });
   if (k === 'openShade') return commit(() => { if (t.value) s.shade = t.value; else delete s.shade; });
   if (k === 'partDoorOn') return commit(() => { s.door = t.checked ? Math.round(((s.s1 - s.s0) / 2) * 20) / 20 : null; });
 });
@@ -1072,9 +1174,13 @@ function gableGlass(g, side) {
   for (const y of [p.yF + 2.2, p.yF + 4.2]) { const half = (p.W / 2) * (1 - y / p.ridge); if (half > 0.1) bx(g, 0.06, 0.05, half * 2, x, y, p.W / 2, fr); }
   bx(g, 0.07, 0.07, p.W - 2 * (p.W / 2) * (p.yF / p.ridge), x, p.yF + 0.03, p.W / 2, fr);
 }
+const chairXs = w => { const n = w >= 1.7 ? 3 : 2, sp2 = (w - 0.2) / n; return Array.from({ length: n }, (_, i) => -w / 2 + 0.1 + sp2 * (i + 0.5)); };
+const GLTF = new GLTFLoader(), MODELS = {};
+const loadModel = url => MODELS[url] || (MODELS[url] = new Promise((res, rej) => GLTF.load(url, g => res(g.scene), undefined, rej)));
 function itemMesh(it) {
-  const d = ITEMS[it.k], g = new THREE.Group(), B = (w, h, dd, x, y, z, m) => bx(g, w, h, dd, x, y, z, m), w = d.w, dd = d.d, bk = -dd / 2;
-  const fab = mat('#6f6a63', { r: 0.95 }), fab2 = mat('#8c7a66', { r: 0.95 }), wood = mat('#8a6446', { r: 0.6 }), white = mat('#f4f2ee', { r: 0.3 }), cer = mat('#fbfbf9', { r: 0.15 }), blk = mat('#1c1c1d', { r: 0.5 }), linen = mat('#ebe7df', { r: 0.95 }), metal = mat('#b9bcbe', { r: 0.3, m: 0.6 });
+  const d = ITEMS[it.k], dm = DS.itemDims(it), col = DS.itemColour(it), lb = d.lib || null, sp = (lb && lb.specs) || {}, g = new THREE.Group(), B = (w, h, dd, x, y, z, m) => bx(g, w, h, dd, x, y, z, m), w = dm.w, dd = dm.d, hh = dm.h, bk = -dd / 2;
+  const soft = ['sofa', 'arm'].includes(it.k) || sp.form === 'chair';
+  const fab = mat(soft && col ? col : '#6f6a63', { r: 0.95 }), fab2 = mat(soft && col ? shade(col, 0.15) : '#8c7a66', { r: 0.95 }), wood = mat(!soft && col ? col : '#8a6446', { r: 0.6 }), white = mat('#f4f2ee', { r: 0.3 }), cer = mat('#fbfbf9', { r: 0.15 }), blk = mat('#1c1c1d', { r: 0.5 }), linen = mat('#ebe7df', { r: 0.95 }), metal = mat('#b9bcbe', { r: 0.3, m: 0.6 });
   switch (it.k) {
     case 'bedD': case 'bedS': B(w, 0.28, dd, 0, 0.14, 0, wood); B(w - 0.06, 0.2, dd - 0.08, 0, 0.38, 0.02, linen); B(w, 0.9, 0.06, 0, 0.45, bk + 0.03, wood); B(w - 0.04, 0.06, dd * 0.6, 0, 0.5, dd * 0.18, fab2); { const n = it.k === 'bedD' ? 2 : 1, pw = (w - 0.2) / n; for (let i = 0; i < n; i++) B(pw - 0.06, 0.12, 0.32, -w / 2 + 0.1 + pw * (i + 0.5), 0.54, bk + 0.28, white); } break;
     case 'sofa': case 'arm': B(w, 0.42, dd, 0, 0.21, 0, fab); B(w, 0.42, 0.2, 0, 0.62, bk + 0.1, fab); B(0.16, 0.22, dd, -w / 2 + 0.08, 0.53, 0, fab); B(0.16, 0.22, dd, w / 2 - 0.08, 0.53, 0, fab); B(w - 0.36, 0.1, dd - 0.25, 0, 0.47, 0.1, fab2); break;
@@ -1083,10 +1189,19 @@ function itemMesh(it) {
     case 'rug': { const m = mat('#b7a58b', { r: 1 }); B(w, 0.012, dd, 0, 0.006, 0, m); break; }
     case 'plant': cy(g, 0.17, 0.4, 0, 0.2, 0, mat('#3b3a37', { r: 0.8 })); { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32, 1), mat('#4f6b3a', { r: 1 })); f.position.y = 0.85; f.scale.y = 1.4; f.castShadow = true; g.add(f); } break;
     case 'night': B(w, 0.5, dd, 0, 0.25, 0, wood); cy(g, 0.07, 0.3, 0, 0.65, 0, white); break;
-    case 'dining': B(w, 0.04, dd, 0, 0.74, 0, wood); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.05, 0.72, 0.05, x * (w / 2 - 0.08), 0.36, z * (dd / 2 - 0.08), wood); for (const [x, z, f] of [[-0.35, -dd / 2 - 0.2, 1], [0.35, -dd / 2 - 0.2, 1], [-0.35, dd / 2 + 0.2, -1], [0.35, dd / 2 + 0.2, -1]]) { B(0.42, 0.04, 0.42, x, 0.45, z, fab2); B(0.42, 0.42, 0.04, x, 0.68, z - f * 0.19, fab2); for (const lx of [-0.18, 0.18]) for (const lz of [-0.18, 0.18]) B(0.03, 0.44, 0.03, x + lx, 0.22, z + lz, blk); } break;
+    case 'dining': B(w, 0.04, dd, 0, 0.74, 0, wood); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.05, 0.72, 0.05, x * (w / 2 - 0.08), 0.36, z * (dd / 2 - 0.08), wood); for (const [x, z, f] of chairXs(w).flatMap(cx => [[cx, -dd / 2 - 0.2, 1], [cx, dd / 2 + 0.2, -1]])) { B(0.42, 0.04, 0.42, x, 0.45, z, fab2); B(0.42, 0.42, 0.04, x, 0.68, z - f * 0.19, fab2); for (const lx of [-0.18, 0.18]) for (const lz of [-0.18, 0.18]) B(0.03, 0.44, 0.03, x + lx, 0.22, z + lz, blk); } break;
     case 'desk': B(w, 0.04, dd, 0, 0.74, 0, wood); B(0.04, 0.72, dd, -w / 2 + 0.04, 0.36, 0, blk); B(0.04, 0.72, dd, w / 2 - 0.04, 0.36, 0, blk); B(0.45, 0.06, 0.45, 0, 0.47, dd / 2 + 0.2, fab); B(0.45, 0.5, 0.05, 0, 0.75, dd / 2 + 0.42, fab); break;
     case 'wc': B(0.36, 0.38, 0.17, 0, 0.6, bk + 0.09, cer); cy(g, 0.17, 0.4, 0, 0.2, 0.08, cer); B(0.37, 0.03, 0.46, 0, 0.42, 0.08, cer); break;
     case 'basin': B(w, 0.6, dd, 0, 0.3, 0, wood); B(w, 0.12, dd, 0, 0.72, 0, cer); cy(g, 0.015, 0.16, 0, 0.86, bk + 0.06, metal); B(0.5, 0.7, 0.02, 0, 1.45, bk + 0.01, mat('#c7d3d8', { r: 0.05, m: 0.9 })); break;
+    default: {
+      const c = mat(col || sp.swatch || '#a38a6a', { r: 0.6 }), dark = mat(shade(col || sp.swatch || '#a38a6a', -0.35), { r: 0.6 }), form = sp.form || 'box';
+      if (form === 'table' || form === 'stool') { B(w, 0.04, dd, 0, hh - 0.02, 0, c); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.04, hh - 0.04, 0.04, x * (w / 2 - 0.04), (hh - 0.04) / 2, z * (dd / 2 - 0.04), form === 'stool' ? dark : c); if (form === 'table' && /mirror/i.test(d.name)) B(w * 0.6, 0.6, 0.02, 0, hh + 0.4, bk + 0.02, mat('#c7d3d8', { r: 0.05, m: 0.9 })); }
+      else if (form === 'chair') { B(w, 0.06, dd, 0, 0.45, 0, fab); B(w, 0.45, 0.05, 0, 0.7, bk + 0.03, fab); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B(0.03, 0.44, 0.03, x * (w / 2 - 0.03), 0.22, z * (dd / 2 - 0.03), dark); }
+      else if (form === 'shelf') { for (const x of [-1, 1]) B(0.03, hh, dd, x * (w / 2 - 0.015), hh / 2, 0, c); B(w, hh, 0.01, 0, hh / 2, bk + 0.005, dark); for (let i = 0; i <= 5; i++) B(w - 0.06, 0.025, dd, 0, 0.02 + i * (hh - 0.04) / 5, 0, c); }
+      else { const y0 = sp.wall ? 1.2 : 0; B(w, hh, dd, 0, y0 + hh / 2, 0, c); if (form === 'cabinet') { const n = Math.max(1, Math.round(w / 0.45)); for (let i = 1; i < n; i++) B(0.006, hh - 0.06, 0.01, -w / 2 + (w * i) / n, y0 + hh / 2, dd / 2 + 0.004, dark); } }
+      if (lb && lb.model) loadModel(lb.model).then(sc => { if (!g.parent) return; const m = sc.clone(true), bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()); if (!(sz.x > 0 && sz.y > 0 && sz.z > 0)) return; m.scale.set(w / sz.x, hh / sz.y, dd / sz.z); const b2 = new THREE.Box3().setFromObject(m), c2 = b2.getCenter(new THREE.Vector3()); m.position.set(-c2.x, -b2.min.y + (sp.wall ? 1.2 : 0), -c2.z); while (g.children.length) g.remove(g.children[0]); m.traverse(n => { if (n.isMesh) { n.castShadow = n.receiveShadow = true; } n.userData.pick = { kind: 'item', id: it.id }; }); g.add(m); }).catch(() => {});
+      break;
+    }
     case 'shower': B(w, 0.05, dd, 0, 0.025, 0, cer); { const gl = mat('#bcd6dd', { r: 0.05, op: 0.25, ds: true }); B(w, 1.95, 0.01, 0, 1.0, dd / 2 - 0.01, gl); B(0.01, 1.95, dd * 0.6, w / 2 - 0.01, 1.0, dd * 0.2, gl); } cy(g, 0.012, 1.0, -w / 2 + 0.12, 1.5, bk + 0.05, metal); cy(g, 0.09, 0.02, -w / 2 + 0.25, 2.0, bk + 0.18, metal); break;
   }
   g.position.set(it.x, PRE().yF, it.z); g.rotation.y = -(it.rot || 0) * Math.PI / 2; g.traverse(n => { n.userData.pick = { kind: 'item', id: it.id }; });
@@ -1345,9 +1460,9 @@ function updateSelBox() {
   if (SEL.kind === 'room') { const r = findSel(); if (r) { const { nx } = G; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; const ox = G.ox || 0, oz = G.oz || 0; r.cells.forEach(c => { const i = c % nx, j = (c / nx) | 0; x0 = Math.min(x0, ox + i * C); x1 = Math.max(x1, ox + (i + 1) * C); z0 = Math.min(z0, oz + j * C); z1 = Math.max(z1, oz + (j + 1) * C); }); selBox.box.set(new THREE.Vector3(x0, PRE().yF, z0), new THREE.Vector3(x1, PRE().yF + 0.05, z1)); selBox.visible = true; return; } }
   selBox.visible = false;
 }
-let raf3 = 0; function queue3D() { if (raf3) return; raf3 = requestAnimationFrame(() => { raf3 = 0; if (VIEW === '3d' && DIRTY3D) build3D(); }); }
+let raf3 = 0; function queue3D() { if (raf3) return; raf3 = requestAnimationFrame(() => { raf3 = 0; if (SHOW3D() && DIRTY3D) build3D(); }); }
 function camPreset(k) {
-  const p = PRE(), bb = DS.bbox(P), L0 = bb.x1 - bb.x0, W0 = bb.z1 - bb.z0, r = Math.max(L0, W0 * 1.6), cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2;
+  resize(); const p = PRE(), bb = DS.bbox(P), L0 = bb.x1 - bb.x0, W0 = bb.z1 - bb.z0, narrow = Math.max(1, 1.2 / Math.max(0.3, camera.aspect || 1.5)), r = Math.max(L0, W0 * 1.6) * narrow, cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2;
   const set = (pos, tgt) => { camera.position.set(...pos); controls.target.set(...tgt); controls.update(); };
   if (k === 'front' && p.sys === 'aframe') set([-r * 0.95, 2.6 + r * 0.25, cz + r * 0.95], [cx * 0.7, 2.4, cz]);
   else if (k === 'front') set([cx + r * 0.45, 2.0 + r * 0.25, bb.z1 + (p.veranda || 0) + r * 1.05], [cx, 1.4, cz]);
