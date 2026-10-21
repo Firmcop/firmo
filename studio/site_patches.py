@@ -36,6 +36,11 @@ def staff_links(s):
     s = s.replace('href="Team.dc.html"', 'href="admin.html"')
     s = s.replace('href="Catalog.dc.html"', 'href="collection.html"')
     s = s.replace('href="Store.dc.html"', 'href="atelier.html"')
+    # Configure is now part of the 3D Studio: the menu item goes, every other link opens the Studio
+    s = s.replace('<a href="Configurator.dc.html">Configure</a>\n', '').replace('<a href="Configurator.dc.html">Configure</a>', '')
+    s = s.replace('<a href="Configurator.dc.html" aria-current="page" style="color:#C9A46A;box-shadow:inset 0 -1px 0 #C9A46A">Configure</a>\n', '')
+    s = s.replace('>Configurator</a>', '>3D Studio</a>').replace('>Configure this design</a>', '>Design it in 3D</a>').replace('>Configure a unit</a>', '>Design a unit in 3D</a>').replace('>Begin configuring</a>', '>Open the 3D Studio</a>')
+    s = s.replace('href="Configurator.dc.html"', 'href="3d-studio.html"')
     s = s.replace('<a href="admin.html">Team portal</a>\n</nav>', '</nav>')          # header menus
     s = s.replace(' · <a href="admin.html">Team portal</a>', ' · ' + STAFF)             # Catalog, DesignDetail footers
     s = s.replace('<a href="admin.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Team portal</a>', '')  # Main resources column

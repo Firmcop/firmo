@@ -91,6 +91,36 @@
     shower: { name: 'Shower 900', w: 0.9, d: 0.9, h: 2.0, cat: 'Bathroom', sanitary: true, wet: true, tallItem: true, price: 46000, stock: 4, tag: 'bath' },
   };
 
+  // exterior: cladding (per m², colours [hex, name, add per m²]), lights (each), porches (per m²), shades (per m of opening), extensions
+  const CLAD = {
+    crg: { name: 'Corrugated steel profile, painted', price: 1450, col: '#B5462A', pat: 'ribs', colours: [['#B5462A', 'Oxide red', 0], ['#3B3D40', 'Charcoal', 0], ['#2F5741', 'Forest green', 0], ['#E6E2D8', 'Off-white', 0]], systems: ['container', 'cabin'] },
+    fcb9: { name: 'Fibre cement board 9 mm', price: 2300, col: '#8F8A80', pat: 'panels', colours: [['#8F8A80', 'Primed, paint on site', 0], ['#3B3D40', 'Factory painted charcoal', 350], ['#C9B79C', 'Factory painted sand', 350]], systems: ['container', 'cabin'] },
+    tmb: { name: 'Cypress shiplap, treated', price: 2900, col: '#A9744A', pat: 'boards', colours: [['#A9744A', 'Natural', 0], ['#5C3B24', 'Dark stain', 300], ['#1F1B18', 'Charred (shou sugi ban)', 900]], systems: ['container', 'cabin'] },
+    wpc: { name: 'Composite WPC cladding', price: 3600, col: '#6B5644', pat: 'boards', colours: [['#6B5644', 'Walnut', 0], ['#9A6E45', 'Teak', 0], ['#7D7A74', 'Stone grey', 0]], systems: ['container', 'cabin'] },
+  };
+  const LIGHT = {
+    updown: { name: 'Up-and-down wall light', price: 6500, stock: 40, col: '#2b2b2b', w: 0.1, h: 0.25 },
+    bulkhead: { name: 'Bulkhead light, outdoor rated', price: 3800, stock: 60, col: '#e9e4da', w: 0.25, h: 0.12 },
+    sensor: { name: 'Sensor floodlight', price: 7800, stock: 25, col: '#3b3d40', w: 0.2, h: 0.15 },
+  };
+  const PORCH = {
+    deck: { name: 'Timber deck, treated cypress', price: 6500, col: '#9a6b3f' },
+    patio: { name: 'Concrete patio, broom finish', price: 3200, col: '#a7a29a', ground: true },
+    pergola: { name: 'Steel pergola with timber slats, on deck', price: 9500, col: '#9a6b3f', roof: 'slats', posts: true, frame: '#2b2b2b' },
+    canopy: { name: 'Polycarbonate canopy on steel posts, on deck', price: 8200, col: '#9a6b3f', roof: 'solid', posts: true, frame: '#3b3d40', glass: '#cfe0e8' },
+  };
+  const SHADE = {
+    awning: { name: 'Fabric awning', price: 9000, col: '#8a6a33', style: 'awning' },
+    hood: { name: 'Steel window hood', price: 6500, col: '#2b2b2b', style: 'hood' },
+    louvre: { name: 'Aluminium louvre shade', price: 12500, col: '#9da3a6', style: 'louvre' },
+    shutter: { name: 'Timber shutters, pair', price: 14000, col: '#5c3b24', style: 'shutter' },
+  };
+  const EXT = {
+    cut: { name: 'Side wall cut-out with welded steel frame', price: 26000 },
+    bump: { name: 'Side bump-out: floor, walls, insulated roof', price: 42000, minDepth: 0.6, maxDepth: 2.4 },
+    doorEnclosed: { name: 'Door-end extension, enclosed (cargo doors as side walls, glazed front)', price: 165000, depth: 1.2 },
+    doorDeck: { name: 'Door-end extension, covered deck (cargo doors open)', price: 78000, depth: 1.2 },
+  };
   let PART_PER_M = 9500, PART_DOOR = 18500;
   const DOOR_W = 0.8, DOOR_H = 2.05, WIDE_FRAME = 38000, DESIGN_FEE = 45000, VAT = 0.16;
   const SERVICES = {
@@ -103,6 +133,60 @@
   const PR = P => PRESETS[P.preset];
   const hr = (P, z) => { const p = PR(P); if (p.sys !== 'aframe') return p.ih; return p.ridge * (1 - Math.abs(z - p.W / 2) / (p.W / 2)) - p.yF; };
   const sideLen = (P, s) => { const p = PR(P); return s === 'N' || s === 'S' ? p.L : p.W; };
+
+  // ---------- exterior and extensions ----------
+  /* P.ext = { widen: [{ id, side:'N'|'S', u0, u1, d }], doorEnd: { side:'E'|'W', k:'doorEnclosed'|'doorDeck' } | null,
+               clad: { k, col, sides:['N','S','W','E'] } | null, lights: [{ id, k, side, u }], porch: { k, side, u, w, d } | null }
+     openings may carry o.shade = SHADE key */
+  function normExt(P) {
+    const e = P.ext && typeof P.ext === 'object' ? P.ext : (P.ext = {});
+    if (!Array.isArray(e.widen)) e.widen = []; if (!Array.isArray(e.lights)) e.lights = [];
+    if (e.doorEnd === undefined) e.doorEnd = null; if (e.clad === undefined) e.clad = null; if (e.porch === undefined) e.porch = null;
+    if (PR(P).sys !== 'container') { e.widen = []; e.doorEnd = null; }
+    return e;
+  }
+  const r1 = v => Math.round(v * 100) / 100;
+  // the extra boxes added to the main shell; floor counts as inside only when the box is enclosed
+  function annexes(P) {
+    const p = PR(P), e = normExt(P), out = [];
+    e.widen.forEach(w => {
+      const u0 = Math.max(0, Math.min(w.u0, w.u1)), u1 = Math.min(p.L, Math.max(w.u0, w.u1)), d = Math.max(0.3, w.d || 1.2);
+      if (u1 - u0 < 0.6) return;
+      out.push({ kind: 'widen', id: w.id, side: w.side, u0, u1, d, enclosed: true, x0: u0, x1: u1, z0: w.side === 'N' ? -d : p.W, z1: w.side === 'N' ? 0 : p.W + d });
+    });
+    if (e.doorEnd && EXT[e.doorEnd.k]) {
+      const dd = EXT[e.doorEnd.k].depth || 1.2, side = e.doorEnd.side === 'W' ? 'W' : 'E';
+      out.push({ kind: 'doorEnd', k: e.doorEnd.k, side, d: dd, enclosed: e.doorEnd.k === 'doorEnclosed', x0: side === 'W' ? -dd : p.L, x1: side === 'W' ? 0 : p.L + dd, z0: 0, z1: p.W });
+    }
+    return out;
+  }
+  // wall stretch removed from the main shell on a side: [[u0,u1], ...]
+  function removedSpans(P, side) {
+    const p = PR(P);
+    return annexes(P).filter(a => a.side === side).map(a => a.kind === 'widen' ? [a.u0, a.u1] : [0, p.W]);
+  }
+  // a partition that meets an opened wall carries on to the extension's outer wall
+  function partSpan(P, q) {
+    const p = PR(P), t = p.t; let s0 = q.s0, s1 = q.s1;
+    annexes(P).filter(a => a.enclosed).forEach(a => {
+      if (a.kind === 'widen' && q.a === 'z' && q.at > a.u0 + t && q.at < a.u1 - t + C) {
+        if (a.side === 'N' && q.s0 <= t + 0.05) s0 = Math.min(s0, a.z0 + t);
+        if (a.side === 'S' && q.s1 >= p.W - t - 0.05) s1 = Math.max(s1, a.z1 - t);
+      }
+      if (a.kind === 'doorEnd' && q.a === 'x') {
+        if (a.side === 'E' && q.s1 >= p.L - t - 0.05) s1 = Math.max(s1, a.x1 - t);
+        if (a.side === 'W' && q.s0 <= t + 0.05) s0 = Math.min(s0, a.x0 + t);
+      }
+    });
+    return [s0, s1];
+  }
+  function bbox(P) {
+    const p = PR(P); let x0 = 0, x1 = p.L, z0 = 0, z1 = p.W;
+    annexes(P).forEach(a => { x0 = Math.min(x0, a.x0); x1 = Math.max(x1, a.x1); z0 = Math.min(z0, a.z0); z1 = Math.max(z1, a.z1); });
+    return { x0, x1, z0, z1 };
+  }
+  // outside face of each side at a point along it, including annexes (for shades, lights and porches)
+  function wallHeight(P) { const p = PR(P); return p.sys === 'aframe' ? 2.4 : (p.H || 2.6); }
 
   // ---------- geometry helpers ----------
   function itemRect(it) {
@@ -144,16 +228,22 @@
 
   // ---------- rooms (raster flood fill; partition doors count as wall for room detection) ----------
   function grid(P) {
-    const p = PR(P), nx = Math.round(p.L / C), nz = Math.round(p.W / C), N = nx * nz;
-    const g = new Int16Array(N), pg = new Int16Array(N);
+    const p = PR(P), bb = bbox(P), ox = Math.floor(bb.x0 / C + 1e-6) * C, oz = Math.floor(bb.z0 / C + 1e-6) * C;
+    const nx = Math.round((bb.x1 - ox) / C), nz = Math.round((bb.z1 - oz) / C), N = nx * nz;
+    const g = new Int16Array(N), pg = new Int16Array(N), t = p.t;
+    // inside = main box inside its walls, or an enclosed annex inside its own walls (its joining wall is open)
+    const inner = annexes(P).filter(a => a.enclosed).map(a => a.kind === 'widen'
+      ? { x0: a.x0 + t, x1: a.x1 - t, z0: a.side === 'N' ? a.z0 + t : p.W - t, z1: a.side === 'N' ? t : a.z1 - t }
+      : { x0: a.side === 'W' ? a.x0 + t : p.L - t, x1: a.side === 'W' ? t : a.x1 - t, z0: t, z1: p.W - t });
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
-      const cx = (i + 0.5) * C, cz = (j + 0.5) * C;
-      if (cx < p.t || cx > p.L - p.t || cz < p.t || cz > p.W - p.t) g[j * nx + i] = -1;
+      const cx = ox + (i + 0.5) * C, cz = oz + (j + 0.5) * C;
+      const inMain = cx > t && cx < p.L - t && cz > t && cz < p.W - t;
+      if (!inMain && !inner.some(r => cx > r.x0 && cx < r.x1 && cz > r.z0 && cz < r.z1)) g[j * nx + i] = -1;
     }
     P.parts.forEach((q, qi) => {
-      const k = Math.round(q.at / C) - 1;
-      if (q.a === 'x') { if (k < 0 || k >= nz) return; for (let i = 0; i < nx; i++) { const cx = (i + 0.5) * C; if (cx > q.s0 && cx < q.s1 && g[k * nx + i] === 0) { g[k * nx + i] = -1; pg[k * nx + i] = qi + 1; } } }
-      else { if (k < 0 || k >= nx) return; for (let j = 0; j < nz; j++) { const cz = (j + 0.5) * C; if (cz > q.s0 && cz < q.s1 && g[j * nx + k] === 0) { g[j * nx + k] = -1; pg[j * nx + k] = qi + 1; } } }
+      const [ps0, ps1] = partSpan(P, q);
+      if (q.a === 'x') { const k = Math.round((q.at - oz) / C) - 1; if (k < 0 || k >= nz) return; for (let i = 0; i < nx; i++) { const cx = ox + (i + 0.5) * C; if (cx > ps0 && cx < ps1 && g[k * nx + i] === 0) { g[k * nx + i] = -1; pg[k * nx + i] = qi + 1; } } }
+      else { const k = Math.round((q.at - ox) / C) - 1; if (k < 0 || k >= nx) return; for (let j = 0; j < nz; j++) { const cz = oz + (j + 0.5) * C; if (cz > ps0 && cz < ps1 && g[j * nx + k] === 0) { g[j * nx + k] = -1; pg[j * nx + k] = qi + 1; } } }
     });
     const rooms = []; let id = 0;
     for (let s = 0; s < N; s++) {
@@ -166,10 +256,10 @@
       let sx = 0, sz = 0; cells.forEach(c => { sx += (c % nx + 0.5) * C; sz += (((c / nx) | 0) + 0.5) * C; });
       const cx = sx / cells.length, cz = sz / cells.length;
       let best = cells[0], bd = 1e9; cells.forEach(c => { const d = ((c % nx + 0.5) * C - cx) ** 2 + ((((c / nx) | 0) + 0.5) * C - cz) ** 2; if (d < bd) { bd = d; best = c; } });
-      rooms.push({ id, cells, area: cells.length * C * C, ax: (best % nx + 0.5) * C, az: (((best / nx) | 0) + 0.5) * C });
+      rooms.push({ id, cells, area: cells.length * C * C, ax: ox + (best % nx + 0.5) * C, az: oz + (((best / nx) | 0) + 0.5) * C });
     }
-    const at = (x, z) => { const i = Math.floor(x / C), j = Math.floor(z / C); if (i < 0 || j < 0 || i >= nx || j >= nz) return -1; return g[j * nx + i]; };
-    return { nx, nz, g, pg, rooms: rooms.filter(r => r.area >= 0.6), at };
+    const at = (x, z) => { const i = Math.floor((x - ox) / C + 1e-9), j = Math.floor((z - oz) / C + 1e-9); if (i < 0 || j < 0 || i >= nx || j >= nz) return -1; return g[j * nx + i]; };
+    return { nx, nz, g, pg, ox, oz, x1: ox + nx * C, z1: oz + nz * C, rooms: rooms.filter(r => r.area >= 0.6), at };
   }
 
   const TYPE_NAMES = { bath: 'Bathroom', kitchen: 'Kitchen', bed: 'Bedroom', living: 'Living', dining: 'Dining', study: 'Study', closet: 'Dressing', room: 'Room' };
@@ -201,24 +291,25 @@
 
   // ---------- wall lining pieces (drives the 3D linings and the wall-finish m²) ----------
   function lining(P, G) {
-    const p = PR(P), { nx, nz, g, pg } = G, ids = new Set(G.rooms.map(r => r.id)), pieces = [];
+    const p = PR(P), { nx, nz, g, pg } = G, ox = G.ox || 0, oz = G.oz || 0, ids = new Set(G.rooms.map(r => r.id)), pieces = [];
     const isA = p.sys === 'aframe';
-    const snapExt = (v, n, len) => (n > 0 ? p.t : len - p.t);
-    const snapEnd = (v, len) => (v <= p.t + C + 1e-6 ? p.t : v >= len - p.t - C - 1e-6 ? len - p.t : v);
+    const near = (a, b) => Math.abs(a - b) <= C + 1e-6;
+    const snapExt = (v, n, len) => (n > 0 && near(v, p.t) ? p.t : n < 0 && near(v, len - p.t) ? len - p.t : v);
+    const snapEnd = (v, len) => (near(v, p.t) ? p.t : near(v, len - p.t) ? len - p.t : v);
     const runs = {}; // key → [a0,a1]
     const push = (key, a0, a1) => { const r = runs[key]; if (r && Math.abs(r[r.length - 1][1] - a0) < 1e-6) r[r.length - 1][1] = a1; else (runs[key] = r || []).push([a0, a1]); };
     // horizontal lines z = j*C (strips run along x)
     for (let j = 0; j <= nz; j++) for (let i = 0; i < nx; i++) {
       const a = j > 0 ? g[(j - 1) * nx + i] : -1, b = j < nz ? g[j * nx + i] : -1;
       if (a === b) continue;
-      if (b > 0 && ids.has(b)) { const nb = j > 0 ? pg[(j - 1) * nx + i] : 0; push(`x|${j}|1|${b}|${nb}`, i * C, (i + 1) * C); }
-      if (a > 0 && ids.has(a)) { const nb = j < nz ? pg[j * nx + i] : 0; push(`x|${j}|-1|${a}|${nb}`, i * C, (i + 1) * C); }
+      if (b > 0 && ids.has(b)) { const nb = j > 0 ? pg[(j - 1) * nx + i] : 0; push(`x|${j}|1|${b}|${nb}`, ox + i * C, ox + (i + 1) * C); }
+      if (a > 0 && ids.has(a)) { const nb = j < nz ? pg[j * nx + i] : 0; push(`x|${j}|-1|${a}|${nb}`, ox + i * C, ox + (i + 1) * C); }
     }
     for (let i = 0; i <= nx; i++) for (let j = 0; j < nz; j++) {
       const a = i > 0 ? g[j * nx + i - 1] : -1, b = i < nx ? g[j * nx + i] : -1;
       if (a === b) continue;
-      if (b > 0 && ids.has(b)) { const nb = i > 0 ? pg[j * nx + i - 1] : 0; push(`z|${i}|1|${b}|${nb}`, j * C, (j + 1) * C); }
-      if (a > 0 && ids.has(a)) { const nb = i < nx ? pg[j * nx + i] : 0; push(`z|${i}|-1|${a}|${nb}`, j * C, (j + 1) * C); }
+      if (b > 0 && ids.has(b)) { const nb = i > 0 ? pg[j * nx + i - 1] : 0; push(`z|${i}|1|${b}|${nb}`, oz + j * C, oz + (j + 1) * C); }
+      if (a > 0 && ids.has(a)) { const nb = i < nx ? pg[j * nx + i] : 0; push(`z|${i}|-1|${a}|${nb}`, oz + j * C, oz + (j + 1) * C); }
     }
     const top = (axis, line, a) => (isA ? Math.min(p.ih, hr(P, axis === 'x' ? line : a)) : p.ih);
     const add = (o, a0, a1, y0, y1) => {
@@ -229,7 +320,7 @@
     };
     for (const key in runs) {
       const [axis, li, ns, rs, nbs] = key.split('|'), n = +ns, room = +rs, pid = +nbs, len = axis === 'x' ? p.L : p.W, wid = axis === 'x' ? p.W : p.L;
-      let line = +li * C; const ext = pid === 0;
+      let line = (axis === 'x' ? oz : ox) + +li * C; const ext = pid === 0;
       if (ext) line = snapExt(line, n, wid);
       if (ext && isA && axis === 'x') continue; // A-frame long sides are the roof (ceiling finish)
       const side = ext ? (axis === 'x' ? (n > 0 ? 'N' : 'S') : (n > 0 ? 'W' : 'E')) : null;
@@ -237,7 +328,8 @@
         a0 = snapEnd(a0, len); a1 = snapEnd(a1, len);
         const o = { axis, line, n, room, ext, side, pid: ext ? null : P.parts[pid - 1].id };
         const cuts = [];
-        if (ext) P.opens.filter(q => q.side === side).forEach(q => { const s = openSpan(P, q); cuts.push([s.u0, s.u1, s.v0, s.v1]); });
+        const mainFace = { N: p.t, S: p.W - p.t, W: p.t, E: p.L - p.t }[side];
+        if (ext) { if (near(line, mainFace)) P.opens.filter(q => q.side === side).forEach(q => { const s = openSpan(P, q); cuts.push([s.u0, s.u1, s.v0, s.v1]); }); }
         else { const q = P.parts[pid - 1]; if (q.door != null) { const c = q.s0 + q.door; cuts.push([c - DOOR_W / 2, c + DOOR_W / 2, 0, DOOR_H]); } }
         cuts.sort((x, y) => x[0] - y[0]);
         let cur = a0;
@@ -266,6 +358,7 @@
       const pt = { N: [m, p.t + e], S: [m, p.W - p.t - e], W: [p.t + e, m], E: [p.L - p.t - e, m] }[o.side];
       const r = G.at(pt[0], pt[1]); if (r > 0) outside.add(r);
     });
+    annexes(P).filter(a => a.kind === 'doorEnd' && a.enclosed).forEach(a => { const r = G.at((a.x0 + a.x1) / 2, p.W / 2); if (r > 0) outside.add(r); });
     const seen = new Set(outside), st = [...outside];
     while (st.length) { const r = st.pop(); links.forEach(([a, b]) => { const o = a === r ? b : b === r ? a : 0; if (o && !seen.has(o)) { seen.add(o); st.push(o); } }); }
     return { seen, hasEntrance: outside.size > 0 };
@@ -284,6 +377,36 @@
     const pm = P.parts.reduce((a, q) => a + (q.s1 - q.s0), 0), pd = P.parts.filter(q => q.door != null).length;
     add('Partitions', 'Stud partition, boarded both sides', Math.round(pm * 10) / 10, 'm', PART_PER_M);
     add('Partitions', 'Internal door set', pd, 'ea', PART_DOOR);
+    // extensions
+    const AX = annexes(P), H = wallHeight(P);
+    AX.filter(a => a.kind === 'widen').forEach(a => {
+      const len = r1(a.u1 - a.u0), sd = a.side === 'N' ? 'north' : 'south';
+      add('Extensions', `${EXT.cut.name}, ${sd} wall`, len, 'm', EXT.cut.price, { eng: true });
+      add('Extensions', `${EXT.bump.name}, ${len.toFixed(1)} × ${a.d.toFixed(1)} m`, r1(len * a.d), 'm²', EXT.bump.price);
+    });
+    AX.filter(a => a.kind === 'doorEnd').forEach(a => add('Extensions', `${EXT[a.k].name}, ${a.side === 'W' ? 'west' : 'east'} end`, 1, 'lot', EXT[a.k].price));
+    // exterior: cladding on the chosen walls (less openings and removed wall), lights, porch, shades
+    const e = normExt(P);
+    if (e.clad && CLAD[e.clad.k]) {
+      const cd = CLAD[e.clad.k], add1 = ((cd.colours || []).find(c => c[0] === e.clad.col) || [0, 0, 0])[2] || 0, sides = e.clad.sides && e.clad.sides.length ? e.clad.sides : ['N', 'S', 'W', 'E'];
+      let a2 = 0;
+      sides.forEach(sd => {
+        if (p.sys === 'aframe' && (sd === 'N' || sd === 'S')) return;
+        const len = sideLen(P, sd), gone = removedSpans(P, sd).reduce((a, [u0, u1]) => a + (u1 - u0), 0);
+        const holes = P.opens.filter(o => o.side === sd && !OPEN[o.k].gable).reduce((a, o) => { const sp = openSpan(P, o); return a + (sp.u1 - sp.u0) * (sp.v1 - sp.v0); }, 0);
+        a2 += Math.max(0, (len - gone) * H - holes);
+        AX.filter(x => x.kind === 'widen' && x.side === sd).forEach(x => { a2 += (x.u1 - x.u0) * H; });
+        AX.filter(x => x.kind === 'widen' && (sd === 'W' || sd === 'E')).forEach(x => { a2 += x.d * H; });
+      });
+      const q = Math.ceil(a2 * 1.1 * 10) / 10, cname = ((cd.colours || []).find(c => c[0] === e.clad.col) || [0, ''])[1];
+      use['clad:' + e.clad.k] = q;
+      add('Exterior', `${cd.name}${cname ? ', ' + cname.toLowerCase() : ''} (incl. 10% waste)`, q, 'm²', cd.price + add1, { fin: true });
+    }
+    const lc = {}; e.lights.forEach(l => { if (LIGHT[l.k]) lc[l.k] = (lc[l.k] || 0) + 1; });
+    for (const k in lc) add('Exterior', LIGHT[k].name, lc[k], 'ea', LIGHT[k].price, { stock: LIGHT[k].stock, short: LIGHT[k].stock != null && lc[k] > LIGHT[k].stock });
+    if (e.porch && PORCH[e.porch.k]) add('Exterior', `${PORCH[e.porch.k].name}, ${r1(e.porch.w).toFixed(1)} × ${r1(e.porch.d).toFixed(1)} m`, r1(e.porch.w * e.porch.d), 'm²', PORCH[e.porch.k].price);
+    const sh = {}; P.opens.forEach(o => { if (o.shade && SHADE[o.shade] && !OPEN[o.k].gable) sh[o.shade] = (sh[o.shade] || 0) + OPEN[o.k].w; });
+    for (const k in sh) add('Exterior', SHADE[k].name, r1(sh[k]), 'm', SHADE[k].price);
     // floors and walls by finish
     const fl = {}, wl = {};
     R.forEach(r => { fl[r.floor] = (fl[r.floor] || 0) + r.area; });
@@ -317,7 +440,7 @@
     add('Site and delivery', 'Design and engineering review', 1, 'lot', DESIGN_FEE);
     const sub = lines.reduce((a, l) => a + l.total, 0), vat = sub * VAT, total = sub + vat;
     const shortfall = lines.filter(l => l.short);
-    const weeks = p.weeks + (shortfall.length ? 2 : 0) + (P.runs.some(r => r.front !== 'white') ? 1 : 0);
+    const weeks = p.weeks + (shortfall.length ? 2 : 0) + (P.runs.some(r => r.front !== 'white') ? 1 : 0) + (AX.length ? 1 : 0) + (e.porch && PORCH[e.porch.k] && PORCH[e.porch.k].roof ? 1 : 0);
     return { lines, sub, vat, total, deposit: total * 0.3, weeks, shortfall, use };
   }
 
@@ -333,7 +456,7 @@
     }
     things.forEach(o => {
       const { x0, x1, z0, z1 } = o.r;
-      if (x0 < -1e-6 || z0 < -1e-6 || x1 > p.L + 1e-6 || z1 > p.W + 1e-6) return E('error', `${o.name} sits outside the floor`, o.ref);
+      const bb = bbox(P); if (x0 < bb.x0 - 1e-6 || z0 < bb.z0 - 1e-6 || x1 > bb.x1 + 1e-6 || z1 > bb.z1 + 1e-6) return E('error', `${o.name} sits outside the floor`, o.ref);
       let hit = false;
       for (let x = Math.floor(x0 / C) * C + C / 2; x < x1 && !hit; x += C) for (let z = Math.floor(z0 / C) * C + C / 2; z < z1 && !hit; z += C) if (x > x0 && z > z0 && G.at(x, z) === -1) hit = true;
       if (hit) E('error', `${o.name} runs into a wall`, o.ref);
@@ -359,6 +482,24 @@
         things.forEach(t => { if (!t.flat && area(t.r, R0) > 0.05) E('warn', `Keep the space inside the ${d.name.toLowerCase()} clear (${t.name})`, t.ref); });
       }
     });
+    // extensions and exterior
+    const AX = annexes(P), e = normExt(P);
+    P.opens.forEach(o => { const d = OPEN[o.k]; if (d.gable) return; const sp = openSpan(P, o);
+      removedSpans(P, o.side).forEach(([u0, u1]) => { if (sp.u0 < u1 - 0.01 && sp.u1 > u0 + 0.01) E('error', AX.some(a => a.kind === 'doorEnd' && a.side === o.side) ? `${d.name} is in the end opened for the door-end extension. Move it to another wall` : `${d.name} is in the wall section opened for the extension. Move it or shorten the opening`, { kind: 'open', id: o.id }); }); });
+    AX.filter(a => a.kind === 'widen').forEach(a => {
+      const len = a.u1 - a.u0;
+      E('eng', `${a.side === 'N' ? 'North' : 'South'} wall opened for ${len.toFixed(1)} m: the welded frame and the bump-out roof need an engineer's sign-off (in the quote)`, null);
+      if (len > p.L - 0.2 && !p.twin) E('eng', 'The whole side wall is removed. Add a mid-span post or confirm the frame size with the engineer', null);
+      if (a.d > (EXT.bump.maxDepth || 2.4) + 1e-6) E('error', `The bump-out is deeper than ${(EXT.bump.maxDepth || 2.4).toFixed(1)} m. Use a second unit instead`, null);
+    });
+    const ws = {}; e.widen.forEach(w => { ws[w.side] = (ws[w.side] || 0) + 1; }); for (const k in ws) if (ws[k] > 1) E('error', `Only one widening per side. Merge the ${k === 'N' ? 'north' : 'south'} wall openings`, null);
+    if (e.porch && PORCH[e.porch.k]) {
+      const pc = e.porch, len = sideLen(P, pc.side);
+      if (pc.u - pc.w / 2 < -0.01 || pc.u + pc.w / 2 > len + 0.01) E('warn', 'The porch runs past the corner of the building', null);
+      if (AX.some(a => a.side === pc.side)) E('warn', 'The porch is on the same side as an extension. Check where they meet', null);
+      if (!P.opens.some(o => o.side === pc.side && OPEN[o.k].door)) E('warn', 'There is no door onto the porch', null);
+    }
+    e.lights.forEach(l => { if (LIGHT[l.k] && AX.some(a => a.kind === 'doorEnd' && a.side === l.side)) E('warn', `${LIGHT[l.k].name} is on the opened door end. Move it to a side wall`, null); });
     for (const sd in sides) { const L = sides[sd]; for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (L[i][0].u0 < L[j][0].u1 && L[j][0].u0 < L[i][0].u1) E('error', `${OPEN[L[i][1].k].name} overlaps ${OPEN[L[j][1].k].name}`, { kind: 'open', id: L[i][1].id }); }
     // runs vs windows, headroom
     P.runs.forEach(rn => {
@@ -450,7 +591,7 @@
   };
   function starter(key, name) {
     const s = STARTERS[key](), p = PRESETS[key];
-    return { v: 1, name: name || `${p.name} · ${p.sub}`, preset: key, colour: SYS[p.sys].colours[0][0], ceil: p.sys === 'aframe' ? 'pine' : 'gyp', furnPkg: true, roomCfg: [], ...s };
+    return { v: 1, name: name || `${p.name} · ${p.sub}`, preset: key, colour: SYS[p.sys].colours[0][0], ceil: p.sys === 'aframe' ? 'pine' : 'gyp', furnPkg: true, roomCfg: [], ext: { widen: [], doorEnd: null, clad: null, lights: [], porch: null }, ...s };
   }
 
   // ---------- load a design package from the database (ds_package) ----------
@@ -467,11 +608,16 @@
     if (c.worktop) fill(TOPS, c.worktop, v => ({ ...v, perM: v.price }));
     if (c.item) fill(ITEMS, c.item);
     if (c.service) fill(SERVICES, c.service);
+    if (c.cladding) fill(CLAD, c.cladding, v => ({ ...v, colours: v.colours || [[v.col, 'Standard', 0]] }));
+    if (c.light) fill(LIGHT, c.light);
+    if (c.porch) fill(PORCH, c.porch, v => ({ ...v, ground: v.ground || (!v.roof && /patio/i.test(v.name || '')) }));
+    if (c.shade) fill(SHADE, c.shade);
+    if (c.extension) Object.entries(c.extension).forEach(([k, v]) => { EXT[k] = { ...(EXT[k] || {}), ...v }; });
     if (c.partition) { if (c.partition.stud) PART_PER_M = c.partition.stud.price; if (c.partition.door) PART_DOOR = c.partition.door.price; root.DS.PART_PER_M = PART_PER_M; root.DS.PART_DOOR = PART_DOOR; }
     DESIGNS = pkg.designs || []; root.DS.DESIGNS = DESIGNS;
     SOURCE = { ...(source || { kind: 'db', label: 'Live database' }), generated_at: pkg.generated_at }; root.DS.SOURCE = SOURCE;
     return pkg;
   }
 
-  root.DS = { applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
+  root.DS = { partSpan, CLAD, LIGHT, PORCH, SHADE, EXT, normExt, annexes, removedSpans, bbox, wallHeight, applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
 })(typeof window !== 'undefined' ? window : globalThis);

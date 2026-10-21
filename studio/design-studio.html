@@ -55,6 +55,7 @@ aside{background:var(--panel);overflow-y:auto;min-height:0}
 .eb{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
 .h{font:500 22px/1.15 var(--serif);margin:0}
 .sub{color:var(--muted);font-size:12px}
+.lnk{background:none;border:0;padding:0;color:var(--brass-hi);text-decoration:underline;font:inherit;cursor:pointer}
 .note{color:var(--muted);font-size:11.5px;line-height:1.5;margin:0}
 .seg{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden}
 .seg button{flex:1;height:32px;border:0;background:transparent;color:var(--muted);font-size:12px;padding:0 6px}
@@ -198,7 +199,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-const DS = window.DS, { PRESETS, SYS, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, C } = DS;
+const DS = window.DS, { PRESETS, SYS, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, C, CLAD, LIGHT, PORCH, SHADE, EXT } = DS;
 const $ = s => document.querySelector(s);
 const KSh = v => 'KSh ' + Math.round(v).toLocaleString('en-US');
 const m2 = v => (Math.round(v * 10) / 10).toFixed(1) + ' m²';
@@ -214,18 +215,18 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e
 let P = load() || DS.starter('tw40', 'Twin 40 family home');
 let HIST = [], FUT = [], PENDING = false;
 let STAGE = 'shell', VIEW = '3d', SEL = null, TOOL = 'select', CLIENT = false, SHOWCHECKS = false;
-let SHELLSYS = PRESETS[P.preset].sys, ADDSIDE = 'S', FTAB = 'kitchen', NTAB = 'floor';
+let SHELLSYS = PRESETS[P.preset].sys, ADDSIDE = 'S', FTAB = 'kitchen', NTAB = 'floor', WSIDE = 'S', DSIDE = 'E', LIGHTK = Object.keys(LIGHT)[0];
 let G, R, L, Q, A, DIRTY3D = true;
 const RENDERS = [], JOBS = [];
 let AUTHOR = false, SESSION = null, AF = null;
 try { SESSION = JSON.parse(localStorage.getItem('fc-ds-session') || 'null'); } catch (e) {}
 let SCENE = 'day', CUT = false, WALK = null, STATUS = 0, LINK = null;
 const CLIENTINFO = { name: 'Achieng Otieno', phone: '+254 7XX XXX XXX', site: 'Naivasha, plot 14' };
-const STAGES = [['shell', 'Shell', '3d'], ['plan', 'Plan', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finish', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
+const STAGES = [['shell', 'Size', '3d'], ['open', 'Openings', '3d'], ['ext', 'Exterior', '3d'], ['plan', 'Interior', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finishes', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
 const PIPE = ['Design in progress', 'Engineering review', 'Proposal sent to client', 'Deposit requested (M-Pesa)', 'Order placed'];
 
 function recompute() {
-  G = DS.grid(P); R = DS.roomInfo(P, G); L = DS.lining(P, G); Q = DS.quote(P, G, R, L); A = DS.analyze(P, G, R);
+  DS.normExt(P); G = DS.grid(P); R = DS.roomInfo(P, G); L = DS.lining(P, G); Q = DS.quote(P, G, R, L); A = DS.analyze(P, G, R);
   if (SEL && !findSel()) SEL = null;
 }
 function snapshot() { HIST.push(JSON.stringify(P)); if (HIST.length > 80) HIST.shift(); FUT = []; }
@@ -263,7 +264,8 @@ function rectFree(r, ignore) {
 function freeSpotFor(k, rot, near) {
   const d = ITEMS[k], odd = rot % 2 === 1, w = odd ? d.d : d.w, dd = odd ? d.w : d.d, p = PRE();
   let best = null, bd = 1e9;
-  for (let x = p.t + w / 2; x <= p.L - p.t - w / 2 + 1e-6; x += 0.1) for (let z = p.t + dd / 2; z <= p.W - p.t - dd / 2 + 1e-6; z += 0.1) {
+  const bb = DS.bbox(P);
+  for (let x = bb.x0 + p.t + w / 2; x <= bb.x1 - p.t - w / 2 + 1e-6; x += 0.1) for (let z = bb.z0 + p.t + dd / 2; z <= bb.z1 - p.t - dd / 2 + 1e-6; z += 0.1) {
     const r = { x0: x - w / 2, x1: x + w / 2, z0: z - dd / 2, z1: z + dd / 2 };
     if (p.sys === 'aframe' && DS.hr(P, z) < d.h + 0.2) continue;
     if (!rectFree(r)) continue;
@@ -324,7 +326,7 @@ function renderViewChrome() {
   const h = $('#vhint');
   const hints = {
     '2d': TOOL === 'part' ? 'Drag on the plan to draw a partition. It snaps to 100 mm. Press Esc to stop drawing.' : STAGE === 'furnish' ? 'Drag pieces from the catalogue onto the plan, or click them to drop in a free spot. Drag to move · R rotates · Delete removes.' : 'Click to select · drag to move · R rotates · Delete removes. Rooms re-form when partitions move.',
-    '3d': WALK ? 'Drag to look around · W A S D or the arrows to walk · Esc to exit.' : STAGE === 'finish' ? 'Click a floor or wall to pick its room, then choose a finish on the left.' : 'Drag to orbit · scroll to zoom · right-drag to pan · click to select.',
+    '3d': WALK ? 'Drag to look around · W A S D or the arrows to walk · Esc to exit.' : STAGE === 'finish' ? 'Click a floor or wall to pick its room, then choose a finish on the left.' : STAGE === 'open' ? 'Drag to orbit · click a door or window to edit it · switch to 2D to drag it along the wall.' : 'Drag to orbit · scroll to zoom · right-drag to pan · click to select.',
   };
   h.textContent = hints[VIEW]; h.className = 'vhint' + (VIEW === '2d' ? ' paper' : '');
   $('#walkpad').hidden = !(WALK && VIEW === '3d');
@@ -334,23 +336,24 @@ function renderLeft() {
   const el = $('#left'); let h = '';
   if (STAGE === 'shell') {
     const ds = (DS.DESIGNS || []).filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
-    h = `<div class="sec"><div class="eb">Step 1 · Shell</div><h2 class="h">Choose the system</h2>
+    h = `<div class="sec"><div class="eb">Step 1 · Size</div><h2 class="h">Choose the system and size</h2>
       <div class="seg">${Object.entries(SYS).map(([k, s]) => `<button type="button" class="${SHELLSYS === k ? 'on' : ''}" data-a="shellsys" data-v="${k}">${s.name}</button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Catalogue designs</div><div class="cards">${ds.map(d => `<button type="button" class="card ${P.design && P.design.slug === d.slug ? 'on' : ''}" data-a="design" data-v="${d.slug}"><div class="row"><b>${esc(d.name)}</b><span class="chip">v${d.version}</span></div><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes && !CLIENT ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('') || '<p class="empty">No published designs for this system yet.</p>'}</div></div>
       <div class="sec"><div class="eb">${allowS ? 'Sizes this design allows' : 'Or start from a blank size'}</div>
       <div class="cards">${Object.entries(PRESETS).filter(([k, p]) => p.sys === SHELLSYS && (!allowS || allowS.includes(k))).map(([k, p]) => `<button type="button" class="card ${P.preset === k ? 'on' : ''}" data-a="preset" data-v="${k}"><div class="row"><b>${p.name}</b>${P.preset === k ? '<span class="chip br">Current</span>' : ''}</div><small>${p.sub} · ${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>
-      <p class="note">Choosing a size loads its starter layout, ready to change. Undo brings your previous layout back.</p></div>`;
+      <p class="note">Choosing a size loads it in 3D with a starter layout. Next come the doors, windows and extensions, then the outside finishes, then the rooms inside.</p></div>`;
   } else if (STAGE === 'plan') {
-    const avail = Object.entries(OPEN).filter(([, d]) => (!d.only || d.only.includes(PRE().sys)) && (!d.not || !d.not.includes(PRE().sys)));
-    h = `<div class="sec"><div class="eb">Step 2 · Plan</div><h2 class="h">Rooms and openings</h2>
+    h = `<div class="sec"><div class="eb">Step 4 · Interior plan</div><h2 class="h">Rooms</h2>
       <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Draw partition</button></div>
-      <p class="note">Partitions split the shell into rooms. Add a door from the partition's panel on the right.</p></div>
-      <div class="sec"><div class="eb">Add a door or window</div>${sideBtns(ADDSIDE, 'addside')}
-      <div class="cards">${avail.map(([k, d]) => `<button type="button" class="card" data-a="addopen" data-v="${k}"><div class="row"><b>${d.name}</b><small>${CLIENT ? '' : KSh(d.price)}</small></div><small>${d.gable ? 'Whole gable end' : `${(d.w * 1000) | 0} × ${(d.h * 1000) | 0} mm${d.sill ? ` · sill ${(d.sill * 1000) | 0}` : ''}`}${CLIENT ? '' : ` · ${d.stock} in stock`}</small></button>`).join('')}</div>
-      ${PRE().sys === 'aframe' ? '<p class="note">On an A-frame, doors and windows go in the gable ends. The roof slopes cap their height.</p>' : ''}</div>`;
+      <p class="note">Partitions split the floor into rooms, including any bump-out or door-end extension. Add a door from the partition's panel on the right.</p>
+      <p class="note">Doors and windows on the outside walls are set in <button type="button" class="lnk" data-a="stage" data-v="open">step 2</button>.</p></div>`;
+  } else if (STAGE === 'open') {
+    h = openingsPanel();
+  } else if (STAGE === 'ext') {
+    h = exteriorPanel();
   } else if (STAGE === 'furnish') {
     const tabs = [['kitchen', 'Kitchens and wardrobes'], ['bath', 'Bathroom'], ['furn', 'Furniture']];
-    h = `<div class="sec"><div class="eb">Step 3 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
+    h = `<div class="sec"><div class="eb">Step 5 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
     if (FTAB === 'kitchen') h += `<div class="cards"><button type="button" class="card" data-a="addrun" data-v="kitchen"><b>Modular kitchen run</b><small>Base, sink, hob and tall units on a 300/600/800 mm grid. Fronts, worktop and wall cabinets are set on the right.</small><small>${CLIENT ? '' : 'From ' + KSh(165000)}</small></button><button type="button" class="card" data-a="addrun" data-v="wardrobe"><b>Modular wardrobe run</b><small>Hanging, shelf and drawer units in 500 and 1000 mm widths.</small><small>${CLIENT ? '' : 'From ' + KSh(38000)}</small></button></div><p class="note">Runs fix to an outside wall or a partition face and add their units to the BOQ.</p>`;
     else {
       const ks = Object.entries(ITEMS).filter(([, d]) => FTAB === 'bath' ? d.sanitary : !d.sanitary), cats = [...new Set(ks.map(([, d]) => d.cat))];
@@ -360,19 +363,19 @@ function renderLeft() {
     h += '</div>';
   } else if (STAGE === 'finish') {
     const tabs = [['floor', 'Floors'], ['wall', 'Walls'], ['ceil', 'Ceiling']], room = SEL && SEL.kind === 'room' ? findSel() : null;
-    h = `<div class="sec"><div class="eb">Step 4 · Finish</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
+    h = `<div class="sec"><div class="eb">Step 6 · Finishes</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
       <p class="note">${NTAB === 'ceil' ? 'Applies to the whole ceiling.' : room ? `Applying to <b style="color:var(--ivory)">${esc(room.name)}</b>.` : 'Pick a room in the 3D view or the list on the right first.'}</p></div>
       <div class="sec"><div class="cards">${Object.entries(FIN[NTAB]).filter(([k]) => finAllowed(NTAB, k)).map(([k, f]) => {
         const cur = NTAB === 'ceil' ? P.ceil === k : room && room[NTAB] === k, used = Q.use[NTAB + ':' + k] || 0;
         return `<button type="button" class="card ${cur ? 'on' : ''}" data-a="fin" data-g="${NTAB}" data-v="${k}"><span class="fsw" style="background:${f.col}"></span><div class="row"><b>${f.name}</b>${f.wet ? '<span class="chip">Wet rated</span>' : ''}</div><small>${CLIENT ? '' : KSh(f.price) + ' per m² · '}${CLIENT ? (f.stock < used ? 'Ordered in' : 'In stock') : `${f.stock === 999 ? 'Made on site' : f.stock + ' m² in stock'}${used ? ` · this design ${used.toFixed(1)} m²` : ''}`}</small></button>`;
       }).join('')}</div></div>`;
   } else if (STAGE === 'render') {
-    h = `<div class="sec"><div class="eb">Step 5 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
+    h = `<div class="sec"><div class="eb">Step 7 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Camera</div><div class="btns"><button type="button" class="btn" data-a="cam" data-v="front">Front</button><button type="button" class="btn" data-a="cam" data-v="aerial">Aerial</button><button type="button" class="btn" data-a="cam" data-v="doll">Dollhouse</button></div>
       <label class="row" style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Cutaway roof<input type="checkbox" data-in="cut" ${CUT ? 'checked' : ''}></label></div>
       <div class="sec"><div class="eb">Walk inside</div><div class="list">${R.map(r => `<button type="button" data-a="walk" data-v="${r.id}"><span>${esc(r.name)}</span><span>Stand here →</span></button>`).join('')}</div></div>`;
   } else {
-    h = `<div class="sec"><div class="eb">Step 6 · Share</div><h2 class="h">Client</h2>
+    h = `<div class="sec"><div class="eb">Step 8 · Share</div><h2 class="h">Client</h2>
       <label class="lbl">Client name<input type="text" id="cl-name" data-in="cl" data-v="name" value="${esc(CLIENTINFO.name)}"></label>
       <label class="lbl">Phone or WhatsApp<input type="tel" id="cl-phone" data-in="cl" data-v="phone" value="${esc(CLIENTINFO.phone)}"></label>
       <label class="lbl">Site<input type="text" id="cl-site" data-in="cl" data-v="site" value="${esc(CLIENTINFO.site)}"></label>
@@ -381,6 +384,69 @@ function renderLeft() {
   }
   el.innerHTML = h;
 }
+const availOpen = () => Object.entries(OPEN).filter(([, d]) => (!d.only || d.only.includes(PRE().sys)) && (!d.not || !d.not.includes(PRE().sys)));
+const rng = (id, key, label, val, min, max, step, unit = 'm', dp = 1) => `<label class="lbl"><span>${label} <b>${(+val).toFixed(dp)} ${unit}</b></span><input type="range" id="${id}" data-in="${key}" min="${min}" max="${max}" step="${step}" value="${val}"></label>`;
+const curW = () => P.ext.widen.find(w => w.side === WSIDE);
+function openingsPanel() {
+  const p = PRE(), isC = p.sys === 'container', e = P.ext;
+  let h = `<div class="sec"><div class="eb">Step 2 · Openings</div><h2 class="h">Doors and windows</h2><p class="note">Pick a wall, then a door or window. Drag it along the wall in 2D, or set its position on the right.</p>${sideBtns(ADDSIDE, 'addside')}
+    <div class="cards">${availOpen().map(([k, d]) => `<button type="button" class="card" data-a="addopen" data-v="${k}"><div class="row"><b>${d.name}</b><small>${CLIENT ? '' : KSh(d.price)}</small></div><small>${d.gable ? 'Whole gable end' : `${(d.w * 1000) | 0} × ${(d.h * 1000) | 0} mm${d.sill ? ` · sill ${(d.sill * 1000) | 0}` : ''}`}${CLIENT ? '' : ` · ${d.stock} in stock`}</small></button>`).join('')}</div>
+    ${p.sys === 'aframe' ? '<p class="note">On an A-frame, doors and windows go in the gable ends. The roof slopes cap their height.</p>' : ''}</div>`;
+  if (!isC) return h;
+  const w = curW(), whole = w && w.u0 <= 0.001 && w.u1 >= p.L - 0.001;
+  h += `<div class="sec"><div class="eb">Widen the container</div><p class="note">Open up a side wall, all of it or a section, and add a bump-out. A welded steel frame carries the roof over the opening.</p>
+    <div class="seg"><button type="button" class="${WSIDE === 'N' ? 'on' : ''}" data-a="wside" data-v="N">North wall${e.widen.some(x => x.side === 'N') ? ' ●' : ''}</button><button type="button" class="${WSIDE === 'S' ? 'on' : ''}" data-a="wside" data-v="S">South wall${e.widen.some(x => x.side === 'S') ? ' ●' : ''}</button></div>`;
+  if (w) {
+    const len = w.u1 - w.u0, cost = len * EXT.cut.price + len * w.d * EXT.bump.price;
+    h += `<label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">The whole wall<input type="checkbox" id="w-whole" data-in="wWhole" ${whole ? 'checked' : ''}></label>
+      ${whole ? '' : rng('w-u0', 'wU0', 'From', w.u0, 0, (p.L - 0.6).toFixed(1), 0.1) + rng('w-u1', 'wU1', 'To', w.u1, 0.6, p.L.toFixed(2), 0.1)}
+      ${rng('w-d', 'wD', 'Bump-out depth', w.d, EXT.bump.minDepth || 0.6, EXT.bump.maxDepth || 2.4, 0.1)}
+      <div class="sub" id="w-sum">${len.toFixed(1)} m opened · ${(len * w.d).toFixed(1)} m² added${CLIENT ? '' : ' · ' + KSh(cost)}</div>
+      <div class="btns"><button type="button" class="btn del" data-a="wDel">Close this wall again</button></div>`;
+  } else h += `<div class="btns"><button type="button" class="btn" data-a="wAdd">Open up the ${WSIDE === 'N' ? 'north' : 'south'} wall</button></div>`;
+  h += `</div>`;
+  const de = e.doorEnd, ds = de ? de.side : DSIDE;
+  h += `<div class="sec"><div class="eb">Door-end extension</div><p class="note">Swing the cargo doors fully open so they become the side walls of a ${(EXT.doorEnclosed.depth || 1.2).toFixed(1)} m (4 ft) extension at that end.</p>
+    <div class="seg"><button type="button" class="${ds === 'W' ? 'on' : ''}" data-a="dside" data-v="W">West end</button><button type="button" class="${ds === 'E' ? 'on' : ''}" data-a="dside" data-v="E">East end</button></div>
+    <div class="cards"><button type="button" class="card ${!de ? 'on' : ''}" data-a="dEnd" data-v=""><b>No extension</b><small>The doors stay closed, or are replaced by a wall</small></button>
+    ${['doorEnclosed', 'doorDeck'].filter(k => EXT[k]).map(k => `<button type="button" class="card ${de && de.k === k ? 'on' : ''}" data-a="dEnd" data-v="${k}"><div class="row"><b>${k === 'doorEnclosed' ? 'Enclosed room' : 'Covered deck'}</b><small>${CLIENT ? '' : KSh(EXT[k].price)}</small></div><small>${k === 'doorEnclosed' ? 'Roof, floor and a glazed front with a door. Adds floor inside.' : 'Roof and deck between the open doors. Outdoor space.'}</small></button>`).join('')}</div></div>`;
+  return h;
+}
+function exteriorPanel() {
+  const p = PRE(), e = P.ext, sys = p.sys, cl = e.clad, sides = SYSD().sides;
+  let h = `<div class="sec"><div class="eb">Step 3 · Exterior</div><h2 class="h">Body colour</h2><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
+    <p class="note">${sys === 'aframe' ? 'The roof colour of the A-frame.' : 'The paint on the shell. Cladding, if you add it, goes over it.'}</p></div>`;
+  if (sys !== 'aframe') {
+    const full = cl && sides.every(sd => cl.sides.includes(sd)), q = Q.lines.find(l => l.grp === 'Exterior' && cl && Q.use['clad:' + cl.k] === l.qty);
+    h += `<div class="sec"><div class="eb">Cladding</div><div class="cards"><button type="button" class="card ${!cl ? 'on' : ''}" data-a="clad" data-v=""><b>No cladding</b><small>Painted ${sys === 'container' ? 'steel' : 'boards'} only</small></button>
+      ${Object.entries(CLAD).filter(([, c]) => !c.systems || c.systems.includes(sys)).map(([k, c]) => `<button type="button" class="card ${cl && cl.k === k ? 'on' : ''}" data-a="clad" data-v="${k}"><span class="fsw" style="background:${c.col}"></span><div class="row"><b>${esc(c.name)}</b></div><small>${CLIENT ? 'Stocked' : KSh(c.price) + ' per m²'}</small></button>`).join('')}</div>
+      ${cl && CLAD[cl.k] ? `<div class="eb" style="color:var(--muted)">Colour</div><div class="sws">${(CLAD[cl.k].colours || []).map(([c, n, a]) => `<button type="button" class="sw ${cl.col === c ? 'on' : ''}" style="background:${c}" data-a="cladCol" data-v="${c}" aria-label="${esc(n)}" title="${esc(n)}${a && !CLIENT ? ' · +' + a + ' per m²' : ''}"></button>`).join('')}<span class="sub" style="align-self:center">${esc(((CLAD[cl.k].colours || []).find(x => x[0] === cl.col) || ['', ''])[1])}</span></div>
+        <div class="eb" style="color:var(--muted)">Where</div><div class="seg"><button type="button" class="${full ? 'on' : ''}" data-a="cladAll">Full body</button><button type="button" class="${!full ? 'on' : ''}" data-a="cladPart">Chosen walls</button></div>
+        ${!full ? `<div class="seg">${sides.map(sd => `<button type="button" class="${cl.sides.includes(sd) ? 'on' : ''}" data-a="cladSide" data-v="${sd}" aria-pressed="${cl.sides.includes(sd)}" title="${DS.SIDE_NAME[sd]}">${sd}</button>`).join('')}</div>` : ''}
+        <p class="note">${q ? q.qty.toFixed(1) + ' m² including waste' + (CLIENT ? '' : ' · ' + KSh(q.total)) : 'Pick at least one wall.'}</p>` : ''}</div>`;
+  }
+  h += `<div class="sec"><div class="eb">Window and door shades</div><div class="cards two">${Object.entries(SHADE).map(([k, d]) => `<button type="button" class="card" data-a="shadeAll" data-v="${k}"><b>${esc(d.name)}</b><small>${CLIENT ? '' : KSh(d.price) + ' per m'}</small></button>`).join('')}</div>
+    <div class="btns"><button type="button" class="btn" data-a="shadeAll" data-v="">Remove all shades</button></div><p class="note">Adds the shade to every window. Pick a door or window to give it its own.</p></div>`;
+  h += `<div class="sec"><div class="eb">Exterior lights · optional</div><label class="lbl">Type<select id="light-k" data-in="lightK">${Object.entries(LIGHT).map(([k, d]) => `<option value="${k}" ${LIGHTK === k ? 'selected' : ''}>${esc(d.name)}${CLIENT ? '' : ' · ' + KSh(d.price)}</option>`).join('')}</select></label>
+    <div class="list">${sides.map(sd => { const n = e.lights.filter(l => l.side === sd).length; return `<div><span>${DS.SIDE_NAME[sd]}</span><span style="display:flex;gap:6px;align-items:center"><button type="button" class="ib" data-a="light" data-v="${sd}" data-d="-1" aria-label="One light fewer on the ${DS.SIDE_NAME[sd].toLowerCase()}">−</button><b>${n}</b><button type="button" class="ib" data-a="light" data-v="${sd}" data-d="1" aria-label="One more light on the ${DS.SIDE_NAME[sd].toLowerCase()}">+</button></span></div>`; }).join('')}</div>
+    <div class="btns"><button type="button" class="btn" data-a="lightDoors">One by each door</button>${e.lights.length ? '<button type="button" class="btn del" data-a="lightNone">No lights</button>' : ''}</div></div>`;
+  const pc = e.porch;
+  h += `<div class="sec"><div class="eb">Entry porch</div><div class="cards two"><button type="button" class="card ${!pc ? 'on' : ''}" data-a="porch" data-v=""><b>No porch</b></button>${Object.entries(PORCH).map(([k, d]) => `<button type="button" class="card ${pc && pc.k === k ? 'on' : ''}" data-a="porch" data-v="${k}"><b>${esc(d.name)}</b><small>${CLIENT ? '' : KSh(d.price) + ' per m²'}</small></button>`).join('')}</div>`;
+  if (pc) { const len = DS.sideLen(P, pc.side); h += `${sideBtns(pc.side, 'porchSide')}${rng('p-w', 'pW', 'Width', pc.w, 1.2, Math.max(1.2, len + 1).toFixed(1), 0.1)}${rng('p-d', 'pD', 'Depth', pc.d, 1.0, 3.6, 0.1)}${rng('p-u', 'pU', 'Centre along the wall', pc.u, 0, len.toFixed(2), 0.05, 'm', 2)}
+    <div class="btns"><button type="button" class="btn" data-a="porchDoor">Line it up with the main door</button></div>`; }
+  return h + '</div>';
+}
+// lights spread along a wall, kept clear of doors and windows
+function spreadLights(side, n) {
+  const len = DS.sideLen(P, side), spans = P.opens.filter(o => o.side === side).map(o => DS.openSpan(P, o));
+  P.ext.lights = P.ext.lights.filter(l => l.side !== side);
+  for (let i = 0; i < n; i++) {
+    let u = len * (i + 1) / (n + 1);
+    const hit = spans.find(s => u > s.u0 - 0.15 && u < s.u1 + 0.15); if (hit) u = u - hit.u0 < hit.u1 - u ? hit.u0 - 0.2 : hit.u1 + 0.2;
+    P.ext.lights.push({ id: uid('l'), k: LIGHTK, side, u: Math.round(clamp(u, 0.2, len - 0.2) * 100) / 100 });
+  }
+}
+function mainDoor() { return P.opens.find(o => OPEN[o.k].door && !OPEN[o.k].gable && !DS.removedSpans(P, o.side).some(([a, b]) => o.u > a && o.u < b)) || null; }
 function checksHtml(list) {
   if (!list.length) return '<p class="note" style="color:var(--ok)">All checks pass.</p>';
   const lab = { error: ['err', 'Fix'], warn: ['warn', 'Check'], eng: ['eng', 'Engineer'] };
@@ -414,14 +480,15 @@ function inspector() {
     return `<div class="sec insp"><div class="eb">${d.door ? 'Door' : 'Window'}</div><h2 class="h">${d.name}</h2><div class="sub">${DS.SIDE_NAME[s.side]}${CLIENT ? '' : ' · ' + KSh(d.price) + ' · ' + d.stock + ' in stock'}</div>
       <label class="lbl">Type<select id="open-k" data-in="openK">${avail.map(([kk, x]) => `<option value="${kk}" ${s.k === kk ? 'selected' : ''}>${x.name}</option>`).join('')}</select></label>
       ${sideBtns(s.side, 'openSide')}
-      ${d.gable ? '' : `<label class="lbl"><span>Position <b>${s.u.toFixed(2)} m</b></span><input type="range" id="open-u" min="${(d.w / 2 + 0.2).toFixed(2)}" max="${(len - d.w / 2 - 0.2).toFixed(2)}" step="0.05" value="${s.u}" data-in="openU"></label>`}
+      ${d.gable ? '' : `<label class="lbl"><span>Position <b>${s.u.toFixed(2)} m</b></span><input type="range" id="open-u" min="${(d.w / 2 + 0.2).toFixed(2)}" max="${(len - d.w / 2 - 0.2).toFixed(2)}" step="0.05" value="${s.u}" data-in="openU"></label>
+      <label class="lbl">Shade outside<select id="open-shade" data-in="openShade"><option value="">None</option>${Object.entries(SHADE).map(([kk, x]) => `<option value="${kk}" ${s.shade === kk ? 'selected' : ''}>${esc(x.name)}${CLIENT ? '' : ' · ' + KSh(x.price * d.w)}</option>`).join('')}</select></label>`}
       <div class="btns"><button type="button" class="btn del" data-a="del">Delete</button><button type="button" class="btn" data-a="desel">Done</button></div></div>`;
   }
   if (k === 'part') {
-    const p = PRE(), max = s.a === 'x' ? p.W : p.L, along = s.a === 'x' ? p.L : p.W, len = s.s1 - s.s0;
+    const p = PRE(), bb = DS.bbox(P), min = (s.a === 'x' ? bb.z0 : bb.x0) + 0.5, max = s.a === 'x' ? bb.z1 : bb.x1, along = s.a === 'x' ? bb.x1 : bb.z1, from = s.a === 'x' ? bb.x0 : bb.z0, len = s.s1 - s.s0;
     return `<div class="sec insp"><div class="eb">Partition</div><h2 class="h">Partition ${P.parts.indexOf(s) + 1}</h2><div class="sub">${s.a === 'x' ? 'Runs east–west' : 'Runs north–south'} · ${len.toFixed(1)} m${CLIENT ? '' : ' · ' + KSh(len * DS.PART_PER_M)}</div>
-      <label class="lbl"><span>Position <b>${s.at.toFixed(1)} m</b></span><input type="range" id="part-at" min="0.5" max="${(max - 0.4).toFixed(1)}" step="0.1" value="${s.at}" data-in="partAt"></label>
-      <label class="lbl"><span>Starts at <b>${s.s0.toFixed(1)} m</b></span><input type="range" id="part-s0" min="0" max="${(s.s1 - 0.6).toFixed(1)}" step="0.1" value="${s.s0}" data-in="partS0"></label>
+      <label class="lbl"><span>Position <b>${s.at.toFixed(1)} m</b></span><input type="range" id="part-at" min="${min.toFixed(1)}" max="${(max - 0.4).toFixed(1)}" step="0.1" value="${s.at}" data-in="partAt"></label>
+      <label class="lbl"><span>Starts at <b>${s.s0.toFixed(1)} m</b></span><input type="range" id="part-s0" min="${from.toFixed(1)}" max="${(s.s1 - 0.6).toFixed(1)}" step="0.1" value="${s.s0}" data-in="partS0"></label>
       <label class="lbl"><span>Ends at <b>${s.s1.toFixed(1)} m</b></span><input type="range" id="part-s1" min="${(s.s0 + 0.6).toFixed(1)}" max="${along.toFixed(2)}" step="0.1" value="${s.s1}" data-in="partS1"></label>
       <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Door in this partition<input type="checkbox" id="part-door" data-in="partDoorOn" ${s.door != null ? 'checked' : ''}></label>
       ${s.door != null ? `<label class="lbl"><span>Door position <b>${s.door.toFixed(2)} m</b></span><input type="range" id="part-dpos" min="0.45" max="${Math.max(0.45, len - 0.45).toFixed(2)}" step="0.05" value="${s.door}" data-in="partDoor"></label>` : ''}
@@ -445,8 +512,12 @@ function renderRight() {
     const p = PRE(), area = R.reduce((a, r) => a + r.area, 0);
     h += `<div class="sec"><div class="eb">Design</div><label class="lbl">Name<input type="text" id="d-name" data-in="name" value="${esc(P.name)}"></label>
       <div class="list"><div><span>System</span><span>${SYSD().name}</span></div><div><span>Shell</span><span>${p.name}</span></div><div><span>Internal floor</span><span>${m2(area)}</span></div><div><span>Rooms</span><span>${R.length}</span></div><div><span>Lead time</span><span>${Q.weeks} weeks</span></div></div></div>
-      <div class="sec"><div class="eb">Exterior colour</div><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
-      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="plan">Next: plan the rooms</button></div></div>`;
+      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="open">Next: doors, windows and extensions</button></div></div>`;
+  } else if (STAGE === 'open' || STAGE === 'ext') {
+    const grp = STAGE === 'open' ? ['Doors and windows', 'Extensions'] : ['Exterior'], ls = Q.lines.filter(l => grp.includes(l.grp)), sum = ls.reduce((a, l) => a + l.total, 0);
+    h += `<div class="sec"><div class="eb">${STAGE === 'open' ? 'Openings and extensions' : 'Exterior'} in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}<br><small style="color:var(--faint)">${l.qty} ${l.unit}</small></span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}${CLIENT ? '' : `<div><span><b>Subtotal</b></span><span style="color:var(--brass-hi)">${KSh(sum)}</span></div>`}</div>` : '<p class="empty">Nothing added yet.</p>'}
+      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="${STAGE === 'open' ? 'ext' : 'plan'}">${STAGE === 'open' ? 'Next: the exterior' : 'Next: plan the rooms inside'}</button></div></div>`;
+    if (!SHOWCHECKS) h += `<div class="sec"><div class="eb">Checks</div>${checksHtml(A)}</div>`;
   } else if (STAGE === 'plan' || STAGE === 'furnish') {
     if (STAGE === 'furnish') h += `<div class="sec"><div class="eb">Furniture package</div><label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Include furniture in the quote<input type="checkbox" id="furnpkg" data-in="furnPkg" ${P.furnPkg ? 'checked' : ''}></label><p class="note">Off: furniture shows in renders as décor only.</p></div>`;
     h += `<div class="sec"><div class="eb">Rooms</div><div class="list">${R.map(r => `<button type="button" data-a="sel" data-k="room" data-id="${r.id}" class="${SEL && SEL.kind === 'room' && SEL.id === r.id ? 'sel' : ''}"><span>${esc(r.name)}</span><span>${m2(r.area)}</span></button>`).join('')}</div></div>`;
@@ -500,8 +571,9 @@ function renderBar() {
 const svg = $('#plan');
 const PAPER = { bg: '#F4EFE6', ink: '#2a2724', mid: '#6b645a', faint: '#d8d0c2', grid: '#e7e0d3', brass: '#a37b3e', sel: '#b8873a' };
 function planSVG(stat) {
-  const p = PRE(), X = PAPER, pad = 0.9, dx0 = p.sys === 'aframe' ? 2.2 : 0, ver = p.veranda || 0;
-  const vb = [-pad - dx0, -pad, p.L + 2 * pad + dx0, p.W + 2 * pad + ver];
+  const p = PRE(), X = PAPER, pad = 0.9, dx0 = p.sys === 'aframe' ? 2.2 : 0, ver = p.veranda || 0, bb = DS.bbox(P), pr = porchRect();
+  const X0 = Math.min(bb.x0, -dx0, pr ? pr.x0 - 0.6 : 0), X1 = Math.max(bb.x1, pr ? pr.x1 + 0.6 : 0), Z0 = Math.min(bb.z0, pr ? pr.z0 - 0.6 : 0), Z1 = Math.max(bb.z1, p.W + ver, pr ? pr.z1 + 0.6 : 0);
+  const vb = [X0 - pad, Z0 - pad, X1 - X0 + 2 * pad, Z1 - Z0 + 2 * pad];
   let s = `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${X.bg}"/>`;
   for (let x = 0; x <= p.L + 1e-6; x += 0.5) s += `<line x1="${x}" y1="0" x2="${x}" y2="${p.W}" stroke="${X.grid}" stroke-width="0.01"/>`;
   for (let z = 0; z <= p.W + 1e-6; z += 0.5) s += `<line x1="0" y1="${z}" x2="${p.L}" y2="${z}" stroke="${X.grid}" stroke-width="0.01"/>`;
@@ -512,14 +584,15 @@ function planSVG(stat) {
   R.forEach(r => {
     const col = FIN.floor[r.floor].col, on = SEL && SEL.kind === 'room' && SEL.id === r.id;
     let rr = '';
-    for (let j = 0; j < nz; j++) { let i = 0; while (i < nx) { if (g[j * nx + i] === r.id) { let k = i; while (k < nx && g[j * nx + k] === r.id) k++; rr += `M${i * C} ${j * C}h${(k - i) * C}v${C}h${-(k - i) * C}z`; i = k; } else i++; } }
+    for (let j = 0; j < nz; j++) { let i = 0; while (i < nx) { if (g[j * nx + i] === r.id) { let k = i; while (k < nx && g[j * nx + k] === r.id) k++; rr += `M${(G.ox || 0) + i * C} ${(G.oz || 0) + j * C}h${(k - i) * C}v${C}h${-(k - i) * C}z`; i = k; } else i++; } }
     s += `<path d="${rr}" fill="${col}" fill-opacity="${on ? 0.62 : 0.38}" ${stat ? '' : `data-k="room:${r.id}"`}/>`;
   });
   if (p.sys === 'aframe') {
     const d = (p.W / 2) * (1 - (1.5 + p.yF) / p.ridge), z1 = p.W / 2 - d, z2 = p.W / 2 + d;
     s += `<line x1="${p.t}" y1="${z1}" x2="${p.L - p.t}" y2="${z1}" stroke="${X.brass}" stroke-width="0.015" stroke-dasharray="0.1 0.07"/><line x1="${p.t}" y1="${z2}" x2="${p.L - p.t}" y2="${z2}" stroke="${X.brass}" stroke-width="0.015" stroke-dasharray="0.1 0.07"/><text x="${p.L - p.t - 0.08}" y="${z1 - 0.07}" font-size="0.13" text-anchor="end" fill="${X.brass}" font-family="IBM Plex Mono, monospace">1.5 m headroom</text>`;
     s += `<rect x="0" y="0" width="${p.L}" height="${p.W}" fill="none" stroke="${X.ink}" stroke-width="0.02"/><rect x="0" y="0" width="${p.t}" height="${p.W}" fill="${X.ink}"/><rect x="${p.L - p.t}" y="0" width="${p.t}" height="${p.W}" fill="${X.ink}"/>`;
-  } else s += `<path d="M0 0H${p.L}V${p.W}H0Z M${p.t} ${p.t}V${p.W - p.t}H${p.L - p.t}V${p.t}Z" fill="${X.ink}" fill-rule="evenodd"/>`;
+  } else s += planWalls();
+  s += planExterior();
   if (p.twin) s += `<line x1="${p.t}" y1="${p.W / 2}" x2="${p.L - p.t}" y2="${p.W / 2}" stroke="${X.mid}" stroke-width="0.012" stroke-dasharray="0.05 0.08"/><text x="${p.L - 0.25}" y="${p.W / 2 - 0.06}" font-size="0.11" text-anchor="end" fill="${X.mid}" font-family="IBM Plex Mono, monospace">opened party wall</text>`;
   // openings
   P.opens.forEach(o => {
@@ -549,12 +622,13 @@ function planSVG(stat) {
   P.parts.forEach(q => {
     const onS = SEL && SEL.kind === 'part' && SEL.id === q.id; let g2 = '';
     const seg = (a0, a1) => (q.a === 'x' ? `<rect x="${a0}" y="${q.at - C}" width="${a1 - a0}" height="${C}" fill="${onS ? X.sel : '#3a3632'}"/>` : `<rect x="${q.at - C}" y="${a0}" width="${C}" height="${a1 - a0}" fill="${onS ? X.sel : '#3a3632'}"/>`);
+    const [e0, e1] = DS.partSpan(P, q);
     if (q.door != null) {
       const c = q.s0 + q.door, d0 = c - DS.DOOR_W / 2, d1 = c + DS.DOOR_W / 2;
-      g2 += seg(q.s0, d0) + seg(d1, q.s1);
+      g2 += seg(e0, d0) + seg(d1, e1);
       const f = q.at, lw = DS.DOOR_W;
       g2 += q.a === 'x' ? `<line x1="${d0}" y1="${f}" x2="${d0}" y2="${f + lw}" stroke="${X.ink}" stroke-width="0.02"/><path d="M${d0} ${f + lw}A${lw} ${lw} 0 0 0 ${d1} ${f}" fill="none" stroke="${X.mid}" stroke-width="0.01" stroke-dasharray="0.04 0.03"/>` : `<line x1="${f}" y1="${d0}" x2="${f + lw}" y2="${d0}" stroke="${X.ink}" stroke-width="0.02"/><path d="M${f + lw} ${d0}A${lw} ${lw} 0 0 1 ${f} ${d1}" fill="none" stroke="${X.mid}" stroke-width="0.01" stroke-dasharray="0.04 0.03"/>`;
-    } else g2 += seg(q.s0, q.s1);
+    } else g2 += seg(e0, e1);
     const hit = q.a === 'x' ? `<rect x="${q.s0}" y="${q.at - 0.2}" width="${q.s1 - q.s0}" height="0.3" fill="transparent"/>` : `<rect x="${q.at - 0.2}" y="${q.s0}" width="0.3" height="${q.s1 - q.s0}" fill="transparent"/>`;
     s += `<g ${stat ? '' : `data-k="part:${q.id}" style="cursor:${q.a === 'x' ? 'ns-resize' : 'ew-resize'}"`}>${g2}${stat ? '' : hit}</g>`;
   });
@@ -602,6 +676,44 @@ function planSVG(stat) {
   if (!stat && DRAFT) s += `<line x1="${DRAFT.x0}" y1="${DRAFT.z0}" x2="${DRAFT.x1}" y2="${DRAFT.z1}" stroke="${X.sel}" stroke-width="0.1" stroke-opacity="0.75"/><text x="${(DRAFT.x0 + DRAFT.x1) / 2}" y="${(DRAFT.z0 + DRAFT.z1) / 2 - 0.15}" font-size="0.16" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${Math.hypot(DRAFT.x1 - DRAFT.x0, DRAFT.z1 - DRAFT.z0).toFixed(1)} m</text>`;
   return { vb, body: s };
 }
+function planWalls() {
+  const p = PRE(), t = p.t, X = PAPER, r = (x, z, w, h, f) => (w > 0.001 && h > 0.001 ? `<rect x="${x}" y="${z}" width="${w}" height="${h}" fill="${f || X.ink}"/>` : '');
+  const segs = (len, side) => { let out = [[0, len]]; DS.removedSpans(P, side).forEach(([a, b]) => { out = out.flatMap(([u0, u1]) => (b <= u0 || a >= u1 ? [[u0, u1]] : [[u0, Math.max(u0, a)], [Math.min(u1, b), u1]].filter(x => x[1] - x[0] > 0.001))); }); return out; };
+  let o = '';
+  segs(p.L, 'N').forEach(([a, b]) => { o += r(a, 0, b - a, t); }); segs(p.L, 'S').forEach(([a, b]) => { o += r(a, p.W - t, b - a, t); });
+  segs(p.W, 'W').forEach(([a, b]) => { o += r(0, a, t, b - a); }); segs(p.W, 'E').forEach(([a, b]) => { o += r(p.L - t, a, t, b - a); });
+  const mono = 'font-family="IBM Plex Mono, monospace"';
+  DS.annexes(P).forEach(a => {
+    if (a.kind === 'widen') {
+      const zo = a.side === 'N' ? a.z0 : a.z1 - t; o += r(a.x0, zo, a.x1 - a.x0, t) + r(a.x0, a.z0, t, a.z1 - a.z0) + r(a.x1 - t, a.z0, t, a.z1 - a.z0);
+      for (const x of [a.u0, a.u1 - 0.16]) if (x > 0.05 && x < p.L - 0.2) o += r(x, a.side === 'N' ? 0 : p.W - 0.16, 0.16, 0.16, X.brass);
+      const ty = a.side === 'N' ? a.z0 - 0.12 : a.z1 + 0.22; o += `<text x="${(a.x0 + a.x1) / 2}" y="${ty}" font-size="0.15" text-anchor="middle" fill="${X.brass}" ${mono}>BUMP-OUT ${(a.x1 - a.x0).toFixed(1)} × ${a.d.toFixed(1)} m</text>`;
+    } else {
+      o += r(a.x0, 0, a.x1 - a.x0, 0.05, X.mid) + r(a.x0, p.W - 0.05, a.x1 - a.x0, 0.05, X.mid);
+      const xf = a.side === 'E' ? a.x1 - t : a.x0, tx = (a.x0 + a.x1) / 2;
+      if (a.enclosed) o += `<rect x="${xf}" y="0" width="${t}" height="${p.W}" fill="${X.bg}" stroke="${X.ink}" stroke-width="0.012"/><line x1="${xf + t / 2}" y1="0.05" x2="${xf + t / 2}" y2="${p.W - 0.05}" stroke="${X.ink}" stroke-width="0.012"/>`;
+      else o += `<rect x="${a.x0}" y="0.05" width="${a.x1 - a.x0}" height="${p.W - 0.1}" fill="#e9dfcd" stroke="${X.mid}" stroke-width="0.015" stroke-dasharray="0.08 0.06"/><text x="${tx}" y="${p.W / 2}" font-size="0.15" text-anchor="middle" fill="${X.mid}" ${mono} transform="rotate(-90 ${tx} ${p.W / 2})">COVERED DECK</text>`;
+      o += `<text x="${tx}" y="-0.12" font-size="0.13" text-anchor="middle" fill="${X.brass}" ${mono}>DOORS OPEN · ${a.d.toFixed(1)} m</text>`;
+    }
+  });
+  return o;
+}
+function planExterior() {
+  const p = PRE(), X = PAPER, e = P.ext, mono = 'font-family="IBM Plex Mono, monospace"'; let o = '';
+  const pt = (side, u, off) => { const q = off + outPush(side, u); return side === 'N' ? [u, -q] : side === 'S' ? [u, p.W + q] : side === 'W' ? [-q, u] : [p.L + q, u]; };
+  const pc = e.porch, pd = pc && PORCH[pc.k];
+  if (pd) {
+    const q = porchRect(), lab = { deck: 'DECK', patio: 'PATIO', pergola: 'PERGOLA', canopy: 'CANOPY' }[pc.k] || 'PORCH';
+    o += `<rect x="${q.x0}" y="${q.z0}" width="${q.x1 - q.x0}" height="${q.z1 - q.z0}" fill="${pd.ground ? '#ddd7cc' : '#e7d5b6'}" stroke="${X.mid}" stroke-width="0.015" ${pd.roof ? '' : 'stroke-dasharray="0.08 0.06"'}/>`;
+    if (pd.roof === 'slats') { const horiz = pc.side === 'N' || pc.side === 'S'; for (let a = 0.2; a < pc.d; a += 0.22) o += horiz ? `<line x1="${q.x0}" y1="${pc.side === 'N' ? -a : p.W + a}" x2="${q.x1}" y2="${pc.side === 'N' ? -a : p.W + a}" stroke="${X.faint}" stroke-width="0.012"/>` : `<line x1="${pc.side === 'W' ? -a : p.L + a}" y1="${q.z0}" x2="${pc.side === 'W' ? -a : p.L + a}" y2="${q.z1}" stroke="${X.faint}" stroke-width="0.012"/>`; }
+    if (pd.posts) for (const [x, z] of [[q.x0, q.z0], [q.x1, q.z0], [q.x0, q.z1], [q.x1, q.z1]]) { const onWall = pc.side === 'N' ? z === 0 : pc.side === 'S' ? z === p.W : pc.side === 'W' ? x === 0 : x === p.L; if (!onWall) o += `<rect x="${x - 0.06}" y="${z - 0.06}" width="0.12" height="0.12" fill="${X.ink}"/>`; }
+    o += `<text x="${(q.x0 + q.x1) / 2}" y="${(q.z0 + q.z1) / 2 + 0.05}" font-size="0.15" text-anchor="middle" fill="${X.mid}" ${mono}>${lab} ${pc.w.toFixed(1)} × ${pc.d.toFixed(1)}</text>`;
+  }
+  if (e.clad && CLAD[e.clad.k] && p.sys !== 'aframe') { const col = e.clad.col || CLAD[e.clad.k].col; e.clad.sides.forEach(sd => { const len = DS.sideLen(P, sd); const [a0, b0] = pt(sd, 0, 0.04), [a1, b1] = pt(sd, len, 0.04); if (!DS.annexes(P).some(a => a.kind === 'doorEnd' && a.side === sd)) o += `<line x1="${a0}" y1="${b0}" x2="${a1}" y2="${b1}" stroke="${col}" stroke-width="0.06"/>`; }); }
+  P.opens.forEach(op => { const sd = op.shade && SHADE[op.shade]; if (!sd || OPEN[op.k].gable) return; const sp = DS.openSpan(P, op), [a0, b0] = pt(op.side, sp.u0, 0.14), [a1, b1] = pt(op.side, sp.u1, 0.14); o += `<line x1="${a0}" y1="${b0}" x2="${a1}" y2="${b1}" stroke="${sd.col}" stroke-width="0.05" stroke-linecap="round"/>`; });
+  e.lights.forEach(l => { if (!LIGHT[l.k]) return; const [x, z] = pt(l.side, l.u, 0.12); o += `<circle cx="${x}" cy="${z}" r="0.07" fill="#f3c766" stroke="${X.ink}" stroke-width="0.012"/>`; });
+  return o;
+}
 let DRAFT = null;
 function renderPlan() { const { vb, body } = planSVG(false); svg.setAttribute('viewBox', vb.join(' ')); svg.innerHTML = body; }
 function svgPt(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
@@ -625,20 +737,21 @@ svg.addEventListener('pointermove', e => {
   if (!DRAG.moved && Math.hypot(dx, dz) < 0.04) return;
   if (!DRAG.moved) { snapshot(); DRAG.moved = true; }
   const o = findSel(), g = DRAG.orig, p = PRE(); if (!o) return;
-  if (DRAG.kind === 'item') { o.x = Math.round(clamp(snap(g.x + dx, 0.05), 0, p.L) * 100) / 100; o.z = Math.round(clamp(snap(g.z + dz, 0.05), 0, p.W) * 100) / 100; }
+  const bb = DS.bbox(P);
+  if (DRAG.kind === 'item') { o.x = Math.round(clamp(snap(g.x + dx, 0.05), bb.x0, bb.x1) * 100) / 100; o.z = Math.round(clamp(snap(g.z + dz, 0.05), bb.z0, bb.z1) * 100) / 100; }
   else if (DRAG.kind === 'run') { const b = DS.runBase(P, o); if (b) o.u0 = Math.round(clamp(snap(g.u0 + (b.axis === 'x' ? dx : dz), 0.05), 0, Math.max(0, wallLen(o.side) - DS.runLen(o))) * 100) / 100; }
   else if (DRAG.kind === 'open') { if (OPEN[o.k].gable) return; const d = OPEN[o.k]; o.u = Math.round(clamp(snap(g.u + (o.side === 'N' || o.side === 'S' ? dx : dz), 0.05), d.w / 2 + 0.2, DS.sideLen(P, o.side) - d.w / 2 - 0.2) * 100) / 100; }
-  else if (DRAG.kind === 'part') { const max = o.a === 'x' ? p.W : p.L; o.at = Math.round(clamp(snap(g.at + (o.a === 'x' ? dz : dx), 0.1), 0.5, max - 0.4) * 10) / 10; }
+  else if (DRAG.kind === 'part') { const lo = o.a === 'x' ? bb.z0 : bb.x0, hi = o.a === 'x' ? bb.z1 : bb.x1; o.at = Math.round(clamp(snap(g.at + (o.a === 'x' ? dz : dx), 0.1), lo + 0.5, hi - 0.4) * 10) / 10; }
   recompute(); renderPlan(); renderBar();
 });
 svg.addEventListener('pointerup', e => {
   if (DRAFT) {
     const d = DRAFT; DRAFT = null; const len = Math.hypot(d.x1 - d.x0, d.z1 - d.z0);
     if (len >= 0.6) {
-      const a = d.z1 === d.z0 ? 'x' : 'z', p = PRE();
-      const q = a === 'x' ? { a, at: Math.round(d.z0 * 10) / 10, s0: Math.round(Math.max(0, Math.min(d.x0, d.x1)) * 10) / 10, s1: Math.round(Math.min(p.L, Math.max(d.x0, d.x1)) * 10) / 10 } : { a, at: Math.round(d.x0 * 10) / 10, s0: Math.round(Math.max(0, Math.min(d.z0, d.z1)) * 10) / 10, s1: Math.round(Math.min(p.W, Math.max(d.z0, d.z1)) * 10) / 10 };
-      if (q.s1 >= (a === 'x' ? p.L : p.W) - p.t - 0.1) q.s1 = Math.round(((a === 'x' ? p.L : p.W) - p.t + 0.04) * 100) / 100;
-      if (q.s0 <= p.t + 0.1) q.s0 = p.t;
+      const a = d.z1 === d.z0 ? 'x' : 'z', p = PRE(), bb = DS.bbox(P), lo = a === 'x' ? bb.x0 : bb.z0, hi = a === 'x' ? bb.x1 : bb.z1;
+      const q = a === 'x' ? { a, at: Math.round(d.z0 * 10) / 10, s0: Math.round(Math.max(lo, Math.min(d.x0, d.x1)) * 10) / 10, s1: Math.round(Math.min(hi, Math.max(d.x0, d.x1)) * 10) / 10 } : { a, at: Math.round(d.x0 * 10) / 10, s0: Math.round(Math.max(lo, Math.min(d.z0, d.z1)) * 10) / 10, s1: Math.round(Math.min(hi, Math.max(d.z0, d.z1)) * 10) / 10 };
+      if (q.s1 >= hi - p.t - 0.1) q.s1 = Math.round((hi - p.t + 0.04) * 100) / 100;
+      if (q.s0 <= lo + p.t + 0.1) q.s0 = Math.round((lo + p.t) * 100) / 100;
       const id = uid('p'); TOOL = 'select'; commit(P => P.parts.push({ id, ...q, door: null })); SEL = { kind: 'part', id }; renderUI(); renderPlan(); toast('Partition added. Add a door from the panel on the right');
     } else renderPlan();
     return;
@@ -709,7 +822,7 @@ document.addEventListener('click', e => {
       SEL = null; AF = null; FIRSTFRAME = true; after(); DIRTY3D = true; refreshView(); camPreset('front');
       return toast(`${d.name} v${d.version} loaded from the catalogue`);
     }
-    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 6'); return renderUI();
+    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 8'); return renderUI();
     case 'afSave': return authorSave();
     case 'signIn': return signIn();
     case 'signOut': SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (e) {} return renderRight();
@@ -725,6 +838,26 @@ document.addEventListener('click', e => {
       const u = d.gable ? PRE().W / 2 : freeOpenU(side, v); if (u == null) return toast(`No free space on the ${DS.SIDE_NAME[side].toLowerCase()} for that`);
       const id = uid('o'); commit(P => P.opens.push({ id, k: v, side, u })); SEL = { kind: 'open', id }; renderUI(); refreshView(); return;
     }
+    case 'wside': WSIDE = v; return renderLeft();
+    case 'wAdd': { if (locked('open')) return lockToast('open'); const L0 = PRE().L, u0 = Math.round(L0 * 0.3 * 10) / 10, u1 = Math.round(L0 * 0.7 * 10) / 10;
+      commit(P => P.ext.widen.push({ id: uid('w'), side: WSIDE, u0, u1, d: 1.2 }));
+      const bad = A.find(a => a.lvl === 'error' && /wall section opened/.test(a.text)); return toast(bad ? 'Wall opened. ' + bad.text : `The ${WSIDE === 'N' ? 'north' : 'south'} wall is open with a 1.2 m bump-out. Set its length and depth on the left`); }
+    case 'wDel': return commit(P => { P.ext.widen = P.ext.widen.filter(w => w.side !== WSIDE); });
+    case 'dside': DSIDE = v; if (P.ext.doorEnd) return commit(P => { P.ext.doorEnd.side = v; }); return renderLeft();
+    case 'dEnd': { if (!v) return commit(P => { P.ext.doorEnd = null; }); commit(P => { P.ext.doorEnd = { side: DSIDE, k: v }; });
+      const bad = A.find(a => a.lvl === 'error' && /door-end extension/.test(a.text)); return toast(bad ? bad.text : v === 'doorEnclosed' ? 'Cargo doors open as side walls, with a glazed front and door' : 'Cargo doors open with a covered deck between them'); }
+    case 'clad': return commit(P => { if (!v) { P.ext.clad = null; return; } const c = CLAD[v], prev = P.ext.clad; P.ext.clad = { k: v, col: (c.colours && c.colours[0] ? c.colours[0][0] : c.col), sides: prev ? prev.sides : SYSD().sides.slice() }; });
+    case 'cladCol': return commit(P => { if (P.ext.clad) P.ext.clad.col = v; });
+    case 'cladAll': return commit(P => { if (P.ext.clad) P.ext.clad.sides = SYSD().sides.slice(); });
+    case 'cladPart': return commit(P => { if (P.ext.clad) P.ext.clad.sides = [PRE().sys === 'container' ? 'S' : 'S']; });
+    case 'cladSide': return commit(P => { const c = P.ext.clad; if (!c) return; c.sides = c.sides.includes(v) ? c.sides.filter(x => x !== v) : [...c.sides, v]; });
+    case 'shadeAll': { if (locked('open')) return lockToast('open'); return commit(P => P.opens.forEach(o => { if (OPEN[o.k].gable) return; if (!v) delete o.shade; else if (!OPEN[o.k].door) o.shade = v; })); }
+    case 'light': { const n = P.ext.lights.filter(l => l.side === v).length + +b.dataset.d; if (n < 0 || n > 8) return; return commit(() => spreadLights(v, n)); }
+    case 'lightDoors': { const ds = P.opens.filter(o => OPEN[o.k].door && !OPEN[o.k].gable); if (!ds.length) return toast('Add a door first'); return commit(P => { ds.forEach(o => { const sp = DS.openSpan(P, o), len = DS.sideLen(P, o.side), u = sp.u1 + 0.25 <= len - 0.2 ? sp.u1 + 0.25 : sp.u0 - 0.25; if (!P.ext.lights.some(l => l.side === o.side && Math.abs(l.u - u) < 0.3)) P.ext.lights.push({ id: uid('l'), k: LIGHTK, side: o.side, u: Math.round(u * 100) / 100 }); }); }); }
+    case 'lightNone': return commit(P => { P.ext.lights = []; });
+    case 'porch': return commit(P => { if (!v) { P.ext.porch = null; return; } if (P.ext.porch) { P.ext.porch.k = v; return; } const d = mainDoor(), side = d ? d.side : SYSD().sides.includes('S') ? 'S' : SYSD().sides[0], len = DS.sideLen(P, side); P.ext.porch = { k: v, side, u: d ? d.u : Math.round(len / 2 * 100) / 100, w: Math.min(len, Math.max(2.4, d ? OPEN[d.k].w + 1.6 : 2.4)), d: 2.0 }; });
+    case 'porchSide': return commit(P => { const pc = P.ext.porch; if (!pc) return; pc.side = v; const len = DS.sideLen(P, v); pc.w = Math.min(pc.w, len + 1); pc.u = Math.round(len / 2 * 100) / 100; const d = P.opens.find(o => o.side === v && OPEN[o.k].door); if (d) pc.u = d.u; });
+    case 'porchDoor': { const d = mainDoor(); if (!d) return toast('Add a door first'); return commit(P => { const pc = P.ext.porch; pc.side = d.side; pc.u = d.gable ? DS.sideLen(P, d.side) / 2 : d.u; }); }
     case 'ftab': FTAB = v; return renderLeft();
     case 'ntab': NTAB = v; return renderLeft();
     case 'addrun': { if (locked('run')) return lockToast('run'); const r = placeRun(v); if (!r) return toast('No free wall is long enough. Clear some space first'); commit(P => P.runs.push(r)); SEL = { kind: 'run', id: r.id }; renderUI(); refreshView(); return; }
@@ -777,13 +910,24 @@ document.addEventListener('input', e => {
   if (k === 'cl') { CLIENTINFO[t.dataset.v] = t.value; return; }
   if (k === 'af') { afForm()[t.dataset.f] = t.value; return; }
   if (k === 'login') { LOGIN[t.dataset.f] = t.value; return; }
+  const extLive = { wU0: () => { const w = curW(); if (w) w.u0 = Math.min(+t.value, w.u1 - 0.6); }, wU1: () => { const w = curW(); if (w) w.u1 = Math.max(+t.value, w.u0 + 0.6); }, wD: () => { const w = curW(); if (w) w.d = +t.value; },
+    pW: () => { if (P.ext.porch) P.ext.porch.w = +t.value; }, pD: () => { if (P.ext.porch) P.ext.porch.d = +t.value; }, pU: () => { if (P.ext.porch) P.ext.porch.u = +t.value; } }[k];
+  if (extLive) {
+    if (['wU0', 'wU1', 'wD'].includes(k) && locked('open')) { lockToast('open'); return renderLeft(); }
+    if (!PENDING) { snapshot(); PENDING = true; } extLive(); recompute(); DIRTY3D = true; if (VIEW === '2d') renderPlan(); else queue3D(); renderBar(); renderRight();
+    const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k === 'pU' ? 2 : 1) + ' m';
+    const w = curW(), sm = $('#w-sum'); if (sm && w) sm.textContent = `${(w.u1 - w.u0).toFixed(1)} m opened · ${((w.u1 - w.u0) * w.d).toFixed(1)} m² added${CLIENT ? '' : ' · ' + KSh((w.u1 - w.u0) * EXT.cut.price + (w.u1 - w.u0) * w.d * EXT.bump.price)}`;
+    return;
+  }
   const live = { runU: () => { s.u0 = +t.value; }, openU: () => { s.u = +t.value; }, partAt: () => { s.at = +t.value; }, partS0: () => { s.s0 = +t.value; }, partS1: () => { s.s1 = +t.value; }, partDoor: () => { s.door = +t.value; } }[k];
   if (live && s && locked(SEL.kind)) { lockToast(SEL.kind); return renderRight(); }
   if (live && s) { if (!PENDING) { snapshot(); PENDING = true; } live(); recompute(); DIRTY3D = true; if (VIEW === '2d') renderPlan(); else queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = (+t.value).toFixed(k.startsWith('part') && k !== 'partDoor' ? 1 : 2) + ' m'; }
 });
 document.addEventListener('change', e => {
   const t = e.target, k = t.dataset.in; if (!k) return; const s = findSel();
-  if (['runU', 'openU', 'partAt', 'partS0', 'partS1', 'partDoor', 'roomName'].includes(k)) { PENDING = false; return after(); }
+  if (['runU', 'openU', 'partAt', 'partS0', 'partS1', 'partDoor', 'roomName', 'wU0', 'wU1', 'wD', 'pW', 'pD', 'pU'].includes(k)) { PENDING = false; return after(); }
+  if (k === 'wWhole') return commit(P => { const w = curW(); if (!w) return; if (t.checked) { w.u0 = 0; w.u1 = PRE().L; } else { w.u0 = Math.round(PRE().L * 0.3 * 10) / 10; w.u1 = Math.round(PRE().L * 0.7 * 10) / 10; } });
+  if (k === 'lightK') { LIGHTK = t.value; if (P.ext.lights.length) return commit(P => P.ext.lights.forEach(l => { l.k = t.value; })); return; }
   if (k === 'afSet') { const f = afForm(), [grp, key] = t.dataset.f.split(':'); if (grp === 'shells' || grp === 'lock') { const a = new Set(f[grp]); t.checked ? a.add(key) : a.delete(key); f[grp] = [...a]; } else { const all = Object.keys(FIN[grp]); let cur = f.finishes[grp] === 'all' ? all.slice() : f.finishes[grp].slice(); cur = t.checked ? [...new Set([...cur, key])] : cur.filter(x => x !== key); f.finishes[grp] = cur.length === all.length ? 'all' : cur; } return; }
   if (k === 'cut') { CUT = t.checked; DIRTY3D = true; return refreshView(); }
   if (k === 'furnPkg') return commit(P => { P.furnPkg = t.checked; });
@@ -794,6 +938,7 @@ document.addEventListener('change', e => {
   if (k === 'top') return commit(() => { s.top = t.value; });
   if (k === 'wallCab') return commit(() => { s.wallCab = t.checked; });
   if (k === 'openK') return commit(() => { s.k = t.value; if (OPEN[t.value].gable) s.u = PRE().W / 2; });
+  if (k === 'openShade') return commit(() => { if (t.value) s.shade = t.value; else delete s.shade; });
   if (k === 'partDoorOn') return commit(() => { s.door = t.checked ? Math.round(((s.s1 - s.s0) / 2) * 20) / 20 : null; });
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-a="openSide"]'); if (!b) return; const s = findSel(); if (!s) return; commit(() => { s.side = b.dataset.v; const d = OPEN[s.k]; if (d.gable) s.u = PRE().W / 2; else { const u = freeOpenU(s.side, s.k); s.u = u == null ? DS.sideLen(P, s.side) / 2 : u; } }); }, true);
@@ -836,7 +981,7 @@ const SCENES = {
 };
 const BG = {};
 function skyTex(a, b) { const c = document.createElement('canvas'); c.width = 4; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, 4, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
-let NIGHTLIGHTS = [];
+let NIGHTLIGHTS = [], EXTL = [];
 function applyScene() {
   const S = SCENES[SCENE], p = PRE();
   scene.background = BG[SCENE] || (BG[SCENE] = skyTex(S.sky[0], S.sky[1]));
@@ -848,6 +993,7 @@ function applyScene() {
   const sc = SUN.shadow.camera; sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 1; sc.far = 120; sc.updateProjectionMatrix();
   NIGHTLIGHTS.forEach(l => scene.remove(l)); NIGHTLIGHTS = [];
   if (S.night && R) R.forEach(rm => { const l = new THREE.PointLight('#ffc27a', 6 + rm.area * 0.25, 9, 2); l.position.set(rm.ax, p.yF + Math.min(2.2, p.ih - 0.15), rm.az); scene.add(l); NIGHTLIGHTS.push(l); });
+  if (S.night) EXTL.forEach(v => { const l = new THREE.PointLight('#ffcf8a', 3.5, 6, 2); l.position.copy(v); scene.add(l); NIGHTLIGHTS.push(l); });
   Object.values(MC).forEach(m => { if (m.userData.glass) { m.emissive.set(S.night ? '#ffbe73' : '#000000'); m.emissiveIntensity = S.night ? 0.55 : 0; } });
 }
 // procedural textures (1 m tiles, sampled with world-space UVs)
@@ -901,6 +1047,7 @@ function placeOnSide(par, side, u0, u1, y0, y1, off, depth, m, pick) {
 }
 function openingMesh(par, o) {
   const p = PRE(), d = OPEN[o.k], s = DS.openSpan(P, o), yF = p.yF, frame = mat(o.k === 'dMahog' ? '#5a3522' : '#2a2b2d', { r: 0.45, m: 0.3 }), glass = mat('#9fc0cf', { r: 0.05, m: 0.1, op: 0.28, glass: true });
+  if (!d.gable && DS.removedSpans(P, o.side).some(([a, b]) => s.u0 < b - 0.01 && s.u1 > a + 0.01)) return;
   const g = new THREE.Group(); g.userData.pick = { kind: 'open', id: o.id }; par.add(g); REFS['open:' + o.id] = g;
   const t = p.t, fw = 0.05, y0 = yF + s.v0, y1 = yF + s.v1;
   if (d.gable) return gableGlass(g, o.side);
@@ -910,7 +1057,8 @@ function openingMesh(par, o) {
     const panes = o.k === 'slider' || o.k === 'dGlass' || d.w > 1.3 ? 2 : 1, pw = (s.u1 - s.u0 - 2 * fw) / panes;
     for (let i = 0; i < panes; i++) { put(s.u0 + fw + i * pw, s.u0 + fw + (i + 1) * pw, y0 + fw, y1 - fw, t * 0.45, 0.012, glass); if (i) put(s.u0 + fw + i * pw - 0.025, s.u0 + fw + i * pw + 0.025, y0, y1, t * 0.3, 0.06, frame); }
   } else put(s.u0 + fw, s.u1 - fw, y0 + 0.01, y1 - fw, t * 0.35, 0.05, mat(o.k === 'dMahog' ? '#6a4026' : '#3b3d40', { r: 0.6, m: 0.2 }));
-  if (d.door && p.yF > 0.25) { // steps
+  const pc = P.ext.porch, onPorch = pc && PORCH[pc.k] && pc.side === o.side && Math.abs(pc.u - o.u) < pc.w / 2;
+  if (d.door && p.yF > 0.25 && !onPorch) { // steps
     const st = mat('#8e8a83', { r: 0.95 }), n = Math.round(p.yF / 0.17), w = s.u1 - s.u0 + 0.3;
     for (let i = 0; i < n; i++) { const h = p.yF - i * (p.yF / n), dep = 0.3 * (i + 1); if (o.side === 'N') bx(par, w, h, 0.3, (s.u0 + s.u1) / 2, h / 2, -dep + 0.15, st); else if (o.side === 'S' && !p.veranda) bx(par, w, h, 0.3, (s.u0 + s.u1) / 2, h / 2, p.W + dep - 0.15, st); else if (o.side === 'E') bx(par, 0.3, h, w, p.L + dep - 0.15, h / 2, (s.u0 + s.u1) / 2, st); else if (o.side === 'W' && p.sys === 'container') bx(par, 0.3, h, w, -dep + 0.15, h / 2, (s.u0 + s.u1) / 2, st); }
   }
@@ -988,7 +1136,7 @@ function build3D() {
   // floor
   FLOORTEX = floorCanvas();
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(G.nx * C, G.nz * C), new THREE.MeshStandardMaterial({ map: FLOORTEX, roughness: 0.6 }));
-  fl.rotation.x = -Math.PI / 2; fl.position.set(G.nx * C / 2, yF + 0.003, G.nz * C / 2); fl.receiveShadow = true; fl.userData.pick = { kind: 'floor' }; M.add(fl);
+  fl.rotation.x = -Math.PI / 2; fl.position.set((G.ox || 0) + G.nx * C / 2, yF + 0.003, (G.oz || 0) + G.nz * C / 2); fl.receiveShadow = true; fl.userData.pick = { kind: 'floor' }; M.add(fl);
   // lining
   const byRoom = {}; R.forEach(r => { byRoom[r.id] = r; });
   L.forEach(pc => {
@@ -1003,7 +1151,7 @@ function build3D() {
   P.parts.forEach(q => {
     const g = new THREE.Group(); g.userData.pick = { kind: 'part', id: q.id }; M.add(g); REFS['part:' + q.id] = g;
     const top = a => (p.sys === 'aframe' ? Math.min(p.ih, DS.hr(P, q.a === 'x' ? q.at : a)) : p.ih);
-    const segs = q.door != null ? [[q.s0, q.s0 + q.door - DS.DOOR_W / 2], [q.s0 + q.door + DS.DOOR_W / 2, q.s1]] : [[q.s0, q.s1]];
+    const [e0, e1] = DS.partSpan(P, q), segs = q.door != null ? [[e0, q.s0 + q.door - DS.DOOR_W / 2], [q.s0 + q.door + DS.DOOR_W / 2, e1]] : [[e0, e1]];
     const piece = (a0, a1, y0, y1) => { if (a1 - a0 < 0.01 || y1 - y0 < 0.01) return; if (q.a === 'x') bx(g, a1 - a0, y1 - y0, C, (a0 + a1) / 2, yF + (y0 + y1) / 2, q.at - C / 2, pm, g.userData.pick); else bx(g, C, y1 - y0, a1 - a0, q.at - C / 2, yF + (y0 + y1) / 2, (a0 + a1) / 2, pm, g.userData.pick); };
     segs.forEach(([a0, a1]) => { if (p.sys === 'aframe' && q.a === 'z') { for (let a = a0; a < a1 - 1e-6; a += 0.3) { const b2 = Math.min(a1, a + 0.3); piece(a, b2, 0, Math.max(0.05, Math.min(top(a), top(b2)))); } } else piece(a0, a1, 0, top(a0)); });
     if (q.door != null) {
@@ -1020,10 +1168,14 @@ function build3D() {
   P.opens.forEach(o => openingMesh(M, o));
   // shell
   if (p.sys === 'container') shellContainer(M, p, col, roofHide); else if (p.sys === 'aframe') shellAframe(M, p, col, roofHide); else shellCabin(M, p, col, roofHide);
+  exterior3D(M, p, roofHide);
   // ceiling
-  if (!roofHide && p.sys !== 'aframe') { const cf = FIN.ceil[P.ceil], cm = mat(cf.col, { r: 0.85, tex: cf.pat === 'vplank' ? 'vplank' : null }); const ce = new THREE.Mesh(new THREE.PlaneGeometry(p.L - 2 * p.t, p.W - 2 * p.t), cm); ce.rotation.x = Math.PI / 2; ce.position.set(p.L / 2, yF + p.ih, p.W / 2); ce.userData.pick = { kind: 'ceil' }; M.add(ce); if (cf.pat) worldUV(ce, 1); }
+  if (!roofHide && p.sys !== 'aframe') { const cf = FIN.ceil[P.ceil], cm = mat(cf.col, { r: 0.85, tex: cf.pat === 'vplank' ? 'vplank' : null }); const ce = new THREE.Mesh(new THREE.PlaneGeometry(p.L - 2 * p.t, p.W - 2 * p.t), cm); ce.rotation.x = Math.PI / 2; ce.position.set(p.L / 2, yF + p.ih, p.W / 2); ce.userData.pick = { kind: 'ceil' }; M.add(ce); if (cf.pat) worldUV(ce, 1);
+    DS.annexes(P).filter(a => a.enclosed).forEach(a => { const x0 = Math.max(a.x0, a.kind === 'doorEnd' && a.side === 'W' ? a.x0 + p.t : a.x0 + (a.kind === 'widen' ? p.t : 0)), x1 = a.kind === 'doorEnd' && a.side === 'E' ? a.x1 - p.t : a.kind === 'widen' ? a.x1 - p.t : a.x1, z0 = a.kind === 'widen' ? (a.side === 'N' ? a.z0 + p.t : p.W - p.t) : p.t, z1 = a.kind === 'widen' ? (a.side === 'N' ? p.t : a.z1 - p.t) : p.W - p.t;
+      const ac = new THREE.Mesh(new THREE.PlaneGeometry(Math.max(0.05, x1 - x0), Math.max(0.05, z1 - z0)), cm); ac.rotation.x = Math.PI / 2; ac.position.set((x0 + x1) / 2, yF + p.ih, (z0 + z1) / 2); ac.userData.pick = { kind: 'ceil' }; M.add(ac); }); }
   // gravel pad
-  const pad = new THREE.Mesh(new THREE.PlaneGeometry(p.L + 4 + (p.sys === 'aframe' ? 2.4 : 0), p.W + 4 + (p.veranda || 0)), mat('#a59e91', { r: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.set(p.L / 2 - (p.sys === 'aframe' ? 1.2 : 0), 0.004, p.W / 2 + (p.veranda || 0) / 2); pad.receiveShadow = true; M.add(pad);
+  const pb = DS.bbox(P), pr = P.ext.porch ? porchRect() : null, gx0 = Math.min(pb.x0, pr ? pr.x0 : 0) - (p.sys === 'aframe' ? 2.4 : 0), gx1 = Math.max(pb.x1, pr ? pr.x1 : 0), gz0 = Math.min(pb.z0, pr ? pr.z0 : 0), gz1 = Math.max(pb.z1 + (p.veranda || 0), pr ? pr.z1 : 0);
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(gx1 - gx0 + 4, gz1 - gz0 + 4), mat('#a59e91', { r: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.set((gx0 + gx1) / 2, 0.004, (gz0 + gz1) / 2); pad.receiveShadow = true; M.add(pad);
   applyScene(); updateSelBox(); if (FIRSTFRAME) { FIRSTFRAME = false; camPreset(STAGE === 'finish' ? 'doll' : 'front'); }
 }
 let FIRSTFRAME = true;
@@ -1038,8 +1190,11 @@ function shellContainer(M, p, col, hide) {
     if (!hide) bx(M, p.L - 0.04, 0.05, cw - 0.04, p.L / 2, y1 - 0.025, (z0 + z1) / 2, roof);
   }
   const ribs = (side, rs) => rs.forEach(([u0, u1, v0, v1]) => { placeOnSide(M, side, u0, u1, v0, v1, 0.0, 0.035, steel); for (let u = Math.ceil((u0 + 0.12) / 0.3) * 0.3; u < u1 - 0.08; u += 0.3) placeOnSide(M, side, u - 0.04, u + 0.04, v0, v1, -0.025, 0.03, steel); });
-  for (const side of ['N', 'S']) ribs(side, wallRects(p.L, y0 + 0.14, y1 - 0.14, sideCuts(side)).map(r => [Math.max(0.16, r[0]), Math.min(p.L - 0.16, r[1]), r[2], r[3]]).filter(r => r[1] - r[0] > 0.01));
+  const gone = side => DS.removedSpans(P, side).map(([a, b]) => [a, b, -9, 99]);
+  for (const side of ['N', 'S']) ribs(side, wallRects(p.L, y0 + 0.14, y1 - 0.14, sideCuts(side).concat(gone(side))).map(r => [Math.max(0.16, r[0]), Math.min(p.L - 0.16, r[1]), r[2], r[3]]).filter(r => r[1] - r[0] > 0.01));
+  annex3D(M, p, steel, frameM, roof, hide, y0, y1);
   for (const side of ['W', 'E']) {
+    if (DS.annexes(P).some(a => a.kind === 'doorEnd' && a.side === side)) continue;
     const cuts = sideCuts(side);
     if (side === 'E' && !cuts.length) { // cargo doors
       for (let c = 0; c < n; c++) { const z0 = c * cw; for (const [a, b2] of [[z0 + 0.16, z0 + cw / 2], [z0 + cw / 2, z0 + cw - 0.16]]) { placeOnSide(M, 'E', a + 0.005, b2 - 0.005, y0 + 0.14, y1 - 0.14, 0, 0.04, steel); for (const k of [0.3, 0.7]) placeOnSide(M, 'E', a + (b2 - a) * k - 0.015, a + (b2 - a) * k + 0.015, y0 + 0.25, y1 - 0.25, -0.04, 0.03, frameM); } }
@@ -1048,6 +1203,103 @@ function shellContainer(M, p, col, hide) {
     ribs(side, wallRects(p.W, y0 + 0.14, y1 - 0.14, cuts).map(r => [Math.max(0.16, r[0]), Math.min(p.W - 0.16, r[1]), r[2], r[3]]).filter(r => r[1] - r[0] > 0.01));
   }
   bx(M, p.L - 0.1, 0.15, p.W - 0.1, p.L / 2, y0 + 0.075, p.W / 2, mat('#4a3f35', { r: 0.9 }));
+}
+function annex3D(M, p, steel, frameM, roof, hide, y0, y1) {
+  const base = mat('#4a3f35', { r: 0.9 }), H = y1 - y0;
+  DS.annexes(P).forEach(a => {
+    if (a.kind === 'widen') {
+      const N = a.side === 'N', zOut = N ? -a.d : p.W + a.d, zIn = N ? 0 : p.W, zc = (zOut + zIn) / 2, len = a.u1 - a.u0, xc = (a.u0 + a.u1) / 2, out = N ? -1 : 1;
+      bx(M, len, p.yF - 0.02, a.d, xc, (p.yF - 0.02) / 2, zc, base);
+      bx(M, len, H, 0.04, xc, y0 + H / 2, zOut - out * 0.02, steel);
+      for (let u = Math.ceil((a.u0 + 0.1) / 0.3) * 0.3; u < a.u1 - 0.1; u += 0.3) bx(M, 0.08, H - 0.1, 0.03, u, y0 + H / 2, zOut + out * 0.015, steel);
+      for (const x of [a.u0 + 0.02, a.u1 - 0.02]) bx(M, 0.04, H, a.d, x, y0 + H / 2, zc, steel);
+      for (const x of [a.u0 + 0.08, a.u1 - 0.08]) if (x > 0.2 && x < p.L - 0.2) bx(M, 0.16, H, 0.16, x, y0 + H / 2, zIn - out * 0.08, frameM);
+      if (!hide) bx(M, len + 0.08, 0.06, a.d + 0.06, xc, y1 - 0.02, zc + out * 0.03, roof);
+    } else {
+      const sgn = a.side === 'E' ? 1 : -1, xIn = a.side === 'E' ? p.L : 0, xOut = xIn + sgn * a.d, xc = (xIn + xOut) / 2;
+      // the cargo doors, swung fully open, are the side walls
+      for (const z of [0.03, p.W - 0.03]) { bx(M, a.d, H - 0.28, 0.04, xc, y0 + H / 2, z, steel); for (const k of [0.3, 0.7]) bx(M, 0.03, H - 0.5, 0.03, xIn + sgn * a.d * k, y0 + H / 2, z + (z < 1 ? -0.035 : 0.035), frameM); }
+      bx(M, a.d, p.yF - 0.02, p.W - 0.1, xc, (p.yF - 0.02) / 2, p.W / 2, base);
+      if (a.enclosed) {
+        const glass = mat('#9fc0cf', { r: 0.05, m: 0.1, op: 0.28, glass: true }), fr = mat('#2a2b2d', { r: 0.45, m: 0.3 }), x = xOut - sgn * 0.04, top = y1 - 0.06;
+        bx(M, 0.012, top - p.yF, p.W - 0.12, x, p.yF + (top - p.yF) / 2, p.W / 2, glass);
+        for (const yy of [p.yF + 0.03, top - 0.03, p.yF + 2.1]) bx(M, 0.06, 0.06, p.W - 0.1, x, yy, p.W / 2, fr);
+        const n = Math.max(2, Math.round(p.W / 0.8)); for (let i = 0; i <= n; i++) { const z = 0.05 + (p.W - 0.1) * i / n; bx(M, 0.06, top - p.yF, 0.05, x, p.yF + (top - p.yF) / 2, z, fr); }
+        bx(M, 0.07, 2.08, 0.035, x + sgn * 0.02, p.yF + 1.05, p.W / 2 + 0.38, fr); // door leaf edge
+        const st = mat('#8e8a83', { r: 0.95 }), ns = Math.round(p.yF / 0.17); for (let i = 0; i < ns; i++) { const h = p.yF - i * (p.yF / ns); bx(M, 0.3, h, 1.2, xOut + sgn * (0.15 + 0.3 * i), h / 2, p.W / 2, st); }
+      } else { const dk = bx(M, a.d, 0.06, p.W - 0.1, xc, p.yF - 0.03, p.W / 2, mat('#8b6a48', { r: 0.85, tex: 'deck' })); worldUV(dk, 1); }
+      if (!hide) bx(M, a.d + 0.15, 0.06, p.W + 0.1, xc + sgn * 0.075, y1 + 0.01, p.W / 2, roof);
+    }
+  });
+}
+// how far a wall's outside face sits beyond the main shell at u (a bump-out or door-end box in front)
+function outPush(side, u) { let push = 0; DS.annexes(P).forEach(a => { if (a.side !== side) return; if (a.kind === 'widen' && u > a.u0 && u < a.u1) push = a.d; if (a.kind === 'doorEnd') push = a.d; }); return push; }
+const cladOn = side => { const c = P.ext.clad; return !!(c && CLAD[c.k] && PRE().sys !== 'aframe' && c.sides.includes(side)); };
+const faceOff = side => (cladOn(side) ? (PRE().sys === 'container' ? 0.105 : 0.065) : (PRE().sys === 'container' ? 0.03 : 0.005));
+// a group on the outside of a wall: local x runs along the wall, local +z points out
+function onWall(par, side, u, y, off) {
+  const p = PRE(), o = off + outPush(side, u), g = new THREE.Group();
+  if (side === 'N') { g.position.set(u, y, -o); g.rotation.y = Math.PI; } else if (side === 'S') g.position.set(u, y, p.W + o); else if (side === 'W') { g.position.set(-o, y, u); g.rotation.y = -Math.PI / 2; } else { g.position.set(p.L + o, y, u); g.rotation.y = Math.PI / 2; }
+  par.add(g); return g;
+}
+function porchRect() {
+  const p = PRE(), pc = P.ext.porch; if (!pc) return null; const h = pc.w / 2;
+  if (pc.side === 'N') return { x0: pc.u - h, x1: pc.u + h, z0: -pc.d, z1: 0 }; if (pc.side === 'S') return { x0: pc.u - h, x1: pc.u + h, z0: p.W, z1: p.W + pc.d };
+  if (pc.side === 'W') return { x0: -pc.d, x1: 0, z0: pc.u - h, z1: pc.u + h }; return { x0: p.L, x1: p.L + pc.d, z0: pc.u - h, z1: pc.u + h };
+}
+function exterior3D(M, p, hide) {
+  const e = P.ext, isC = p.sys === 'container', y0 = isC ? 0.2 : p.yF, y1 = y0 + (p.H || 2.6);
+  EXTL = [];
+  // cladding over the chosen walls, and over the bump-outs on those sides
+  if (e.clad && CLAD[e.clad.k] && p.sys !== 'aframe') {
+    const cd = CLAD[e.clad.k], cm = mat(e.clad.col || cd.col, { r: cd.pat === 'ribs' ? 0.5 : 0.85, m: cd.pat === 'ribs' ? 0.3 : 0, tex: cd.pat === 'ribs' ? 'vplank' : cd.pat === 'boards' ? 'clad' : 'tile' });
+    const off = isC ? -0.1 : -0.035, dep = 0.03;
+    e.clad.sides.forEach(side => {
+      if (DS.annexes(P).some(a => a.kind === 'doorEnd' && a.side === side)) return;
+      const len = DS.sideLen(P, side), cuts = sideCuts(side).concat(DS.removedSpans(P, side).map(([a, b]) => [a, b, -9, 99]));
+      wallRects(len, y0, y1, cuts).forEach(([u0, u1, v0, v1]) => { if (u1 - u0 < 0.02 || v1 - v0 < 0.02) return; const me = placeOnSide(M, side, u0, u1, v0, v1, off, dep, cm); worldUV(me, 1); });
+    });
+    DS.annexes(P).filter(a => a.kind === 'widen').forEach(a => {
+      const N = a.side === 'N', zOut = N ? -a.d : p.W + a.d, len = a.u1 - a.u0, H = y1 - y0;
+      if (e.clad.sides.includes(a.side)) { const me = bx(M, len + 0.06, H, dep, (a.u0 + a.u1) / 2, y0 + H / 2, zOut + (N ? -0.05 : 0.05), cm); worldUV(me, 1); }
+      if (e.clad.sides.includes('W')) { const me = bx(M, dep, H, a.d, a.u0 - 0.03, y0 + H / 2, N ? -a.d / 2 : p.W + a.d / 2, cm); worldUV(me, 1); }
+      if (e.clad.sides.includes('E')) { const me = bx(M, dep, H, a.d, a.u1 + 0.03, y0 + H / 2, N ? -a.d / 2 : p.W + a.d / 2, cm); worldUV(me, 1); }
+    });
+  }
+  // shades over windows and doors
+  P.opens.forEach(o => {
+    const d = OPEN[o.k], sd = o.shade && SHADE[o.shade]; if (!sd || d.gable) return;
+    const sp = DS.openSpan(P, o); if (DS.removedSpans(P, o.side).some(([a, b]) => sp.u0 < b && sp.u1 > a)) return;
+    const w = sp.u1 - sp.u0, top = p.yF + sp.v1, bot = p.yF + sp.v0, g = onWall(M, o.side, (sp.u0 + sp.u1) / 2, 0, faceOff(o.side)), m = mat(sd.col, { r: 0.75, m: sd.style === 'hood' || sd.style === 'louvre' ? 0.4 : 0, ds: true });
+    const B = (bw, bh, bd, x, y, z, rx) => { const me = bx(g, bw, bh, bd, x, y, z, m); if (rx) me.rotation.x = rx; return me; };
+    if (sd.style === 'awning') { const dep = 0.75, ang = 0.5; B(w + 0.2, 0.02, dep, 0, top + 0.18 - Math.sin(ang) * dep / 2, Math.cos(ang) * dep / 2, ang); B(w + 0.2, 0.16, 0.01, 0, top + 0.18 - Math.sin(ang) * dep - 0.08, Math.cos(ang) * dep, 0); }
+    else if (sd.style === 'hood') { B(w + 0.16, 0.03, 0.35, 0, top + 0.09, 0.175); for (const x of [-1, 1]) B(0.03, 0.3, 0.35, x * (w / 2 + 0.065), top - 0.06, 0.175); }
+    else if (sd.style === 'louvre') { for (let y = bot + 0.08; y < top; y += 0.12) B(w, 0.012, 0.13, 0, y, 0.09, -0.6); for (const x of [-1, 1]) B(0.03, top - bot, 0.14, x * (w / 2 + 0.015), (top + bot) / 2, 0.07); }
+    else { for (const x of [-1, 1]) { B(w / 2, top - bot, 0.03, x * (w * 0.75 + 0.03), (top + bot) / 2, 0.015); for (let y = bot + 0.15; y < top - 0.1; y += 0.25) bx(g, w / 2 - 0.06, 0.02, 0.012, x * (w * 0.75 + 0.03), y, 0.035, mat(shade(sd.col, -0.35), { r: 0.8 })); } }
+    g.traverse(n => { n.userData.pick = { kind: 'open', id: o.id }; });
+  });
+  // exterior lights
+  e.lights.forEach(l => {
+    const L = LIGHT[l.k]; if (!L) return; const lw = L.w || 0.12, lh = L.h || 0.2, g = onWall(M, l.side, l.u, Math.min(y1 - 0.35, p.yF + 2.25), faceOff(l.side));
+    bx(g, lw, lh, 0.08, 0, 0, 0.04, mat(L.col || '#2b2b2b', { r: 0.4, m: 0.5 })); bx(g, lw * 0.7, 0.025, 0.06, 0, -lh / 2 - 0.012, 0.05, mat('#fff1cf', { r: 0.2, glass: true }));
+    g.updateMatrixWorld(true); EXTL.push(g.localToWorld(new THREE.Vector3(0, -0.25, 0.45)));
+  });
+  // entry porch: deck or patio, with posts and a pergola or canopy roof
+  const pc = e.porch, pd = pc && PORCH[pc.k];
+  if (pd) {
+    const g = onWall(M, pc.side, pc.u, 0, faceOff(pc.side) - 0.005), w = pc.w, dd = pc.d;
+    const deckM = mat(pd.col || '#9a6b3f', { r: 0.85, tex: pd.ground ? null : 'deck' }), under = mat('#3e352d', { r: 0.9 }), frame = mat(pd.frame || '#2b2b2b', { r: 0.5, m: 0.4 });
+    const top = pd.ground ? 0.1 : p.yF;
+    const dk = bx(g, w, pd.ground ? 0.1 : 0.08, dd, 0, top - (pd.ground ? 0.05 : 0.04), dd / 2, deckM); worldUV(dk, 1);
+    if (!pd.ground) { bx(g, w - 0.1, p.yF - 0.08, dd - 0.1, 0, (p.yF - 0.08) / 2, dd / 2, under); const ns = Math.round(p.yF / 0.17); for (let i = 0; i < ns; i++) { const h = p.yF - i * (p.yF / ns); bx(g, Math.min(1.4, w), h, 0.3, 0, h / 2, dd + 0.15 + 0.3 * i, mat('#8e8a83', { r: 0.95 })); } }
+    if (pd.posts && !hide) {
+      const ry = Math.min(y1 - 0.08, p.yF + 2.45);
+      for (const x of [-(w / 2 - 0.06), w / 2 - 0.06]) bx(g, 0.1, ry - top, 0.1, x, top + (ry - top) / 2, dd - 0.06, frame);
+      bx(g, w, 0.14, 0.1, 0, ry, dd - 0.06, frame); bx(g, w, 0.14, 0.08, 0, ry, 0.04, frame);
+      if (pd.roof === 'slats') { for (let x = -w / 2 + 0.1; x <= w / 2 - 0.05; x += 0.4) bx(g, 0.05, 0.14, dd, x, ry + 0.14, dd / 2, frame); for (let z = 0.25; z < dd; z += 0.22) bx(g, w + 0.1, 0.04, 0.06, 0, ry + 0.23, z, deckM); }
+      else { for (let x = -w / 2 + 0.1; x <= w / 2 - 0.05; x += 0.6) bx(g, 0.05, 0.1, dd, x, ry + 0.12, dd / 2, frame); const sh = bx(g, w + 0.2, 0.02, dd + 0.15, 0, ry + 0.19, dd / 2 + 0.05, mat(pd.glass || '#cfe0e8', { r: 0.1, op: 0.45, ds: true })); sh.rotation.x = 0.05; }
+    }
+  }
 }
 function shellAframe(M, p, col, hide) {
   const roofM = mat(col, { r: 0.55, m: 0.2, tex: 'seam' }), timber = mat('#7b5a3e', { r: 0.8, tex: 'clad' }), deck = mat('#8b6a48', { r: 0.85, tex: 'deck' }), under = mat('#3e352d', { r: 0.9 });
@@ -1090,15 +1342,15 @@ function updateSelBox() {
   if (!SEL || !MODEL) { selBox.visible = false; return; }
   const o = REFS[SEL.kind + ':' + SEL.id];
   if (o) { selBox.box.setFromObject(o); selBox.box.expandByScalar(0.04); selBox.visible = true; return; }
-  if (SEL.kind === 'room') { const r = findSel(); if (r) { const { nx } = G; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; r.cells.forEach(c => { const i = c % nx, j = (c / nx) | 0; x0 = Math.min(x0, i * C); x1 = Math.max(x1, (i + 1) * C); z0 = Math.min(z0, j * C); z1 = Math.max(z1, (j + 1) * C); }); selBox.box.set(new THREE.Vector3(x0, PRE().yF, z0), new THREE.Vector3(x1, PRE().yF + 0.05, z1)); selBox.visible = true; return; } }
+  if (SEL.kind === 'room') { const r = findSel(); if (r) { const { nx } = G; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; const ox = G.ox || 0, oz = G.oz || 0; r.cells.forEach(c => { const i = c % nx, j = (c / nx) | 0; x0 = Math.min(x0, ox + i * C); x1 = Math.max(x1, ox + (i + 1) * C); z0 = Math.min(z0, oz + j * C); z1 = Math.max(z1, oz + (j + 1) * C); }); selBox.box.set(new THREE.Vector3(x0, PRE().yF, z0), new THREE.Vector3(x1, PRE().yF + 0.05, z1)); selBox.visible = true; return; } }
   selBox.visible = false;
 }
 let raf3 = 0; function queue3D() { if (raf3) return; raf3 = requestAnimationFrame(() => { raf3 = 0; if (VIEW === '3d' && DIRTY3D) build3D(); }); }
 function camPreset(k) {
-  const p = PRE(), r = Math.max(p.L, p.W * 1.6), cx = p.L / 2, cz = p.W / 2;
+  const p = PRE(), bb = DS.bbox(P), L0 = bb.x1 - bb.x0, W0 = bb.z1 - bb.z0, r = Math.max(L0, W0 * 1.6), cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2;
   const set = (pos, tgt) => { camera.position.set(...pos); controls.target.set(...tgt); controls.update(); };
   if (k === 'front' && p.sys === 'aframe') set([-r * 0.95, 2.6 + r * 0.25, cz + r * 0.95], [cx * 0.7, 2.4, cz]);
-  else if (k === 'front') set([cx + r * 0.45, 2.0 + r * 0.25, p.W + (p.veranda || 0) + r * 1.05], [cx, 1.4, cz]);
+  else if (k === 'front') set([cx + r * 0.45, 2.0 + r * 0.25, bb.z1 + (p.veranda || 0) + r * 1.05], [cx, 1.4, cz]);
   else if (k === 'aerial') set([cx + r * 0.75, r * 0.95, cz + r * 0.85], [cx, 0.6, cz]);
   else set([cx + 0.01, r * 1.2, cz + r * 0.5], [cx, 0, cz]);
 }

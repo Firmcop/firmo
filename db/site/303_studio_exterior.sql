@@ -1,0 +1,6 @@
+-- Applied 21 Oct 2026 as migrations ds_exterior_kinds and ds_exterior_seed.
+-- ds_catalog_items gains the kinds cladding, light, porch, shade and extension (3D Studio exterior step).
+-- Cladding uses the Atelier cladding products' prices (catalog_products.ds_ref = 'cladding:<key>');
+-- lights, porches and shades are new Atelier items (category Exterior lights / Porches and pergolas / Shades and shutters)
+-- linked the same way, so a price changed in the admin Catalogue changes in the Studio too.
+-- Extension prices (cut 26,000/m, bump-out 42,000/m², door-end 165,000 or 78,000) are sample figures to confirm.

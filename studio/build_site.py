@@ -106,6 +106,8 @@ vercel = {
   "redirects": [
     {"source": "/collection", "destination": "/collection.html", "permanent": False},
     {"source": "/atelier", "destination": "/atelier.html", "permanent": False},
+    {"source": "/configure", "destination": "/3d-studio.html", "permanent": False},
+    {"source": "/Configurator.dc.html", "destination": "/3d-studio.html", "permanent": True},
     {"source": "/store", "destination": "/atelier.html", "permanent": False},
     {"source": "/works", "destination": "/Projects.dc.html", "permanent": False},
     {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},

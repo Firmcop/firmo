@@ -18,6 +18,16 @@
       "permanent": false
     },
     {
+      "source": "/configure",
+      "destination": "/3d-studio.html",
+      "permanent": false
+    },
+    {
+      "source": "/Configurator.dc.html",
+      "destination": "/3d-studio.html",
+      "permanent": true
+    },
+    {
       "source": "/store",
       "destination": "/atelier.html",
       "permanent": false
