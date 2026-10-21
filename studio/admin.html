@@ -200,7 +200,7 @@ where email = '${esc(ME.email)}';</pre>
 // ---------- shell ----------
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
-  ['builds', 'Client builds', 'variations_pending'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
+  ['builds', 'Client builds', 'variations_pending'], ['collection', 'Collection'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
   ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
@@ -941,14 +941,92 @@ async function productsView(box) {
   await load();
 }
 
-async function editProduct(p, reload, tab) {
+// ---------- Collection: buildings, each with its 3D design ----------
+const START_UNITS = [['c20', '20 ft container'], ['c40', '40 ft container'], ['tw40', 'Twin 40 ft containers'], ['afm:AF-20-STUDIO', 'A-frame studio'], ['afm:AF-24-LOFT', 'A-frame loft studio'], ['afm:AF-32-2BR', 'A-frame 32 ft, 2 bed'], ['afm:AF-40-2BR', 'A-frame 40 ft, 2 bed'], ['cb9', 'Cabin 9 × 6'], ['cb12', 'Cabin 12 × 6']];
+function guessUnit(p) {
+  const c = (catPath(p.category_id) + ' ' + p.name).toLowerCase();
+  if (/a-frame|aframe/.test(c)) return /studio|25/.test(c) ? 'afm:AF-20-STUDIO' : /loft/.test(c) ? 'afm:AF-24-LOFT' : 'afm:AF-40-2BR';
+  if (/cabin|lodge|bunk|pod/.test(c)) return /3-bed|three|12/.test(c) ? 'cb12' : 'cb9';
+  if (/20\s?ft|20′|kiosk|ablution|studio/.test(c)) return 'c20';
+  if (/twin|double|2-bed|two/.test(c)) return 'tw40';
+  return 'c40';
+}
+const isSteel = (p) => /steel|warehouse|tank|truss|canopy|stair|mezzanine/.test((catPath(p.category_id) + ' ' + p.name).toLowerCase());
+const studioUrl = (q) => '3d-studio.html?' + new URLSearchParams(q).toString();
+const DSTATUS = { draft: 'Draft', submitted: 'In review', approved: 'Approved', rejected: 'Changes asked', published: 'Live' };
+VIEWS.collection = async (m) => {
+  await loadCats();
+  const colCats = CATS.filter((c) => (c.scopes || []).includes('collection')).map((c) => c.id);
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Collection</h1></div><div class="tools"><input class="q" type="search" placeholder="Search buildings" aria-label="Search buildings">
+    <select class="f" id="cd" aria-label="Design"><option value="">All</option><option value="none">No 3D design yet</option><option value="has">Has a 3D design</option></select><button class="btn" type="button" id="newb">Add a building</button></div></div>
+    <p class="muted" style="margin-top:0">Every building on the Collection pages. Open one to edit its details, price, photos and options, and to upload or develop its 3D design.</p>
+    <div class="tablewrap"><table><thead><tr><th></th><th>Building</th><th>Category</th><th class="n">Price from</th><th>3D design</th><th>Status</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div><p class="small muted" id="bcount"></p>`;
+  const tb = $('tbody', m), st = { q: '', d: '' }; let rows = [], designs = [];
+  async function load() {
+    const q = ['select=id,slug,name,kind,category_id,base_price,price_mode,cover_url,shape,design_slug,published,needs_review,is_placeholder', 'category_id=in.(' + colCats.join(',') + ')', 'order=sort.asc,name.asc', 'limit=1000'];
+    if (st.q) q.push('name=ilike.*' + encodeURIComponent(st.q.replace(/[(),*]/g, ' ')) + '*');
+    if (st.d === 'none') q.push('design_slug=is.null'); if (st.d === 'has') q.push('design_slug=not.is.null');
+    [rows, designs] = await Promise.all([colCats.length ? api('catalog_products?' + q.join('&')) : [], api('ds_designs?select=slug,name,status').catch(() => [])]);
+    $('#bcount', m).textContent = rows.length + ' building' + (rows.length === 1 ? '' : 's') + ' · ' + rows.filter((r) => !r.design_slug).length + ' without a 3D design';
+    tb.innerHTML = rows.length ? rows.map((p, i) => { const dz = designs.find((x) => x.slug === p.design_slug);
+      const sw = p.cover_url ? `<img src="${esc(p.cover_url)}" alt="" width="48" height="36" style="object-fit:cover;border-radius:3px;display:block">` : '<span aria-hidden="true" style="display:block;width:48px;height:36px;border-radius:3px;background:#D9D4CA"></span>';
+      return `<tr class="row" tabindex="0" data-i="${i}"><td>${sw}</td><td><b style="font-weight:600">${esc(p.name)}</b><br><span class="small muted mono">${esc(p.slug)}</span></td><td class="small">${esc(catPath(p.category_id))}</td><td class="n">${p.price_mode === 'quote' ? 'On request' : kes(p.base_price)}</td>
+        <td>${p.design_slug ? `<span class="pill ${dz && dz.status === 'published' ? 'yes' : 'due'}">${esc(dz ? DSTATUS[dz.status] || dz.status : 'linked')}</span> <span class="small muted mono">${esc(p.design_slug)}</span>` : '<span class="small muted">None yet</span>'}</td>
+        <td>${[!p.published ? pill('hidden') : '', p.needs_review ? '<span class="pill due">check price</span>' : '', p.is_placeholder ? '<span class="pill">placeholder</span>' : ''].join(' ')}</td></tr>`; }).join('') : '<tr><td colspan="6" class="empty">Nothing matches.</td></tr>';
+    tb.querySelectorAll('tr.row').forEach((tr) => { const o = () => editProduct(rows[+tr.dataset.i], load, 'design'); tr.onclick = o; tr.onkeydown = (e) => { if (e.key === 'Enter') o(); }; });
+  }
+  let t; $('.q', m).oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 250); };
+  $('#cd', m).onchange = (e) => { st.d = e.target.value; load(); };
+  $('#newb', m).onclick = () => editProduct(null, load, null, { kind: 'building', category_id: colCats[0] });
+  await load();
+};
+async function designTab(box, p, reload, rerender) {
+  const [designs, media] = await Promise.all([api('ds_designs?select=id,slug,name,system,status,published_version_id,updated_at&order=updated_at.desc').catch(() => []), api('product_media?product_id=eq.' + p.id + '&kind=eq.drawing&order=sort.asc,created_at.asc').catch(() => [])]);
+  const cur = designs.find((x) => x.slug === p.design_slug);
+  const vers = cur ? await api('ds_design_versions?select=id,version,status,total_kes,notes,created_at&design_id=eq.' + cur.id + '&order=version.desc').catch(() => []) : [];
+  const unit = guessUnit(p), steel = isSteel(p);
+  box.innerHTML = `<section class="card" style="margin-top:12px"><h3>3D design</h3>
+    ${cur ? `<dl class="kv"><dt>Design</dt><dd>${esc(cur.name)} <span class="mono small muted">${esc(cur.slug)}</span></dd><dt>Status</dt><dd>${pill((DSTATUS[cur.status] || cur.status).toLowerCase().replace(/ /g, '_'))}${cur.status !== 'published' ? ' <span class="small muted">Customers see it after it is reviewed and published in Designs.</span>' : ''}</dd></dl>
+      <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Version</th><th>Status</th><th class="n">Total</th><th>Saved</th><th></th></tr></thead><tbody>${vers.map((v) => `<tr><td class="mono">v${v.version}${cur.published_version_id === v.id ? ' · live' : ''}</td><td>${pill(v.status)}</td><td class="n">${kes(v.total_kes)}</td><td class="small">${when(v.created_at)}</td><td><a class="btn sm line" target="_blank" rel="noopener" href="${esc(studioUrl({ author: 1, product: p.slug, version: v.id }))}">Open in the Studio</a></td></tr>`).join('') || '<tr><td colspan="5" class="empty">No versions saved.</td></tr>'}</tbody></table></div>
+      <div class="tools" style="margin-top:10px">${vers[0] ? `<a class="btn" target="_blank" rel="noopener" href="${esc(studioUrl({ author: 1, product: p.slug, version: vers[0].id }))}">Continue designing</a>` : ''}<button class="btn line" type="button" id="dgo">Review and publish in Designs</button><button class="btn line danger" type="button" id="dun">Unlink</button></div>`
+    : `<p class="muted" style="margin:0">No 3D design yet. Develop one in the 3D Studio, link one that exists, or upload a design file.</p>`}</section>
+    <section class="card"><h3>${cur ? 'Start a new design' : 'Develop a design in the 3D Studio'}</h3>
+      ${steel ? '<p class="small" style="margin-top:0">Steel structures are not in the 3D Studio yet. Upload drawings below instead; a Studio design is optional.</p>' : ''}
+      <form class="f" id="dnew"><label class="fl">Start from<select name="start">${START_UNITS.map(([k, l]) => `<option value="${k}" ${k === unit ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      <div class="wide tools"><button class="btn" type="submit">Open the 3D Studio</button></div></form>
+      <p class="small muted">The Studio opens in Author mode for this building. Design it, then press <b>Save design</b> at the top: it is saved as a draft and linked to this product automatically. It goes live after review and publishing in Designs.</p></section>
+    <section class="card"><h3>Link an existing design</h3><form class="f" id="dlink"><label class="fl wide">Design<select name="slug"><option value="">Choose…</option>${designs.map((x) => `<option value="${esc(x.slug)}" ${x.slug === p.design_slug ? 'selected' : ''}>${esc(x.name)} · ${esc(x.slug)} · ${esc(DSTATUS[x.status] || x.status)}</option>`).join('')}</select></label><div class="wide tools"><button class="btn line" type="submit">Link</button></div></form></section>
+    <section class="card"><h3>Upload</h3>
+      <div class="tools"><label class="btn line" style="cursor:pointer">Upload a design file (.json)<input type="file" id="dfile" accept=".json,application/json" style="position:absolute;left:-9999px"></label><span class="small muted">Downloaded from the 3D Studio with "Download design file".</span></div>
+      <div class="tools" style="margin-top:10px"><label class="btn line" style="cursor:pointer">Upload drawings or plans<input type="file" id="dwg" multiple accept=".pdf,.dwg,.dxf,image/*" style="position:absolute;left:-9999px"></label><span class="small muted" id="dwgst">PDF, DWG, DXF or images. Shown with the product's photos and kept for the team.</span></div>
+      ${media.length ? `<div class="tablewrap" style="margin-top:10px"><table><tbody>${media.map((x) => `<tr><td><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.caption || x.url.split('/').pop())}</a></td><td class="small">${when(x.created_at)}</td></tr>`).join('')}</tbody></table></div>` : ''}</section>`;
+  const setDesign = async (slug, msg) => { const r = await guard(api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body: { design_slug: slug }, headers: { Prefer: 'return=representation' } }), msg); Object.assign(p, r[0]); reload(); rerender('design'); };
+  $('#dnew', box).onsubmit = (e) => { e.preventDefault(); window.open(studioUrl({ author: 1, product: p.slug, name: p.name, start: e.target.start.value }), '_blank', 'noopener'); toast('The 3D Studio opened in a new tab. Come back here after saving to see the design'); };
+  $('#dlink', box).onsubmit = (e) => { e.preventDefault(); const s = e.target.slug.value; if (!s) return toast('Choose a design', true); setDesign(s, 'Design linked'); };
+  if ($('#dun', box)) $('#dun', box).onclick = (e) => { if (!confirmInline(e.target, 'Unlink it?')) return; setDesign(null, 'Unlinked'); };
+  if ($('#dgo', box)) $('#dgo', box).onclick = () => { document.querySelector('.dback .x').click(); go('designs'); };
+  $('#dfile', box).onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return; let j;
+    try { j = JSON.parse(await file.text()); } catch (ex) { return toast('That file is not a design file', true); }
+    const lay = j.layout || j; if (!lay || !lay.preset || !Array.isArray(lay.parts)) return toast('That file has no Studio layout in it', true);
+    const slug = p.design_slug || p.slug;
+    const r = await guard(rpc('ds_save_version', { _slug: slug, _name: j.name || lay.name || p.name, _system: j.system || null, _shell: j.shell || lay.preset, _layout: lay, _rules: j.rules || { shells: [lay.preset] }, _checks: j.checks || [], _total: j.total || null, _notes: 'Uploaded from ' + file.name }), 'Design uploaded as a draft');
+    if (r) setDesign(slug, 'Linked to this building');
+  };
+  $('#dwg', box).onchange = async (e) => {
+    const files = [...e.target.files], stt = $('#dwgst', box);
+    for (let i = 0; i < files.length; i++) { stt.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + '…'; const url = await guard(uploadFile(files[i], 'catalog/' + p.slug + '/drawings')); await api('product_media', { method: 'POST', body: { product_id: p.id, url, kind: 'drawing', caption: files[i].name, sort: 100 + i } }); }
+    toast(files.length + ' drawing' + (files.length === 1 ? '' : 's') + ' uploaded'); rerender('design');
+  };
+}
+async function editProduct(p, reload, tab, defaults) {
   const isNew = !p;
   if (p) p = (await api('catalog_products?id=eq.' + p.id))[0];
-  else p = { kind: 'material', price_mode: 'fixed', unit: 'no.', base_price: 0, rate: 0, published: false, sort: 100, shape: {}, specs: {}, features: [], images: [], category_id: (CATS.find((c) => c.slug === 'doors') || CATS[0] || {}).id };
+  else p = { ...{ kind: 'material', price_mode: 'fixed', unit: 'no.', base_price: 0, rate: 0, published: false, sort: 100, shape: {}, specs: {}, features: [], images: [], category_id: (CATS.find((c) => c.slug === 'doors') || CATS[0] || {}).id }, ...(defaults || {}) };
   const d = drawer(isNew ? 'New product' : p.name, 'Catalogue · product', '');
   const render = async (tab) => {
-    tab = tab || 'details';
-    const tabs = [['details', 'Details'], ['options', 'Options'], ['media', 'Photos and 3D'], ['price', 'Price check']];
+    tab = tab || 'details'; if (isNew) tab = 'details';
+    const tabs = [['details', 'Details']].concat(['building', 'design'].includes(p.kind) ? [['design', '3D design']] : [], [['options', 'Options'], ['media', 'Photos and 3D'], ['price', 'Price check']]);
     d.el.innerHTML = (isNew ? '' : `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-pt="${k}">${l}</button>`).join('')}</div>`) + '<div id="pb"></div>';
     d.el.querySelectorAll('[data-pt]').forEach((b) => b.onclick = () => render(b.dataset.pt));
     const box = $('#pb', d.el);
@@ -962,12 +1040,13 @@ async function editProduct(p, reload, tab) {
         try { v = readForm(f, F); } catch (ex) { return toast(ex.message, true); }
         v.slug = v.slug || slugify(v.name); v.base_price = v.base_price || 0; v.rate = v.rate || 0;
         if (!v.name) return toast('Give the product a name', true);
-        if (isNew) { const r = await guard(api('catalog_products', { method: 'POST', body: v, headers: { Prefer: 'return=representation' } }), 'Product created'); p = r[0]; d.close(); reload(); editProduct(p, reload, 'options'); return; }
+        if (isNew) { const r = await guard(api('catalog_products', { method: 'POST', body: v, headers: { Prefer: 'return=representation' } }), 'Product created'); p = r[0]; d.close(); reload(); editProduct(p, reload, ['building', 'design'].includes(p.kind) ? 'design' : 'options'); return; }
         const r = await guard(api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body: v, headers: { Prefer: 'return=representation' } }), 'Saved');
         p = r[0]; d.setTitle(p.name); reload(); refreshCounts();
       };
       return;
     }
+    if (tab === 'design') return designTab(box, p, reload, render);
     if (tab === 'options') {
       const params = await api('product_params?product_id=eq.' + p.id + '&order=sort.asc,key.asc');
       const card = (x, i) => `<section class="card" data-pid="${x.id || ''}" style="margin-top:12px"><div class="f" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">

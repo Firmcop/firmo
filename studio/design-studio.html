@@ -295,6 +295,7 @@ const ICON = {
 const RAIL = [['build', 'Build', ['assembly', 'shell', 'open', 'ext', 'plan']], ['library', 'Library', ['furnish']], ['finishes', 'Finishes', ['finish']], ['render', 'Render', ['render']], ['send', 'Send', ['share']]];
 const BUILD_TABS = [['assembly', 'Units'], ['shell', 'Size'], ['open', 'Doors and windows'], ['ext', 'Exterior'], ['plan', 'Rooms']];
 const GUIDE_STEPS = [['assembly', 'Place the units', 'One unit, or several joined or set apart'], ['shell', 'Set the size', 'The system and size of each unit'], ['open', 'Doors and windows', 'And wall openings or extensions'], ['ext', 'Exterior', 'Cladding, colour, shades, lights, porch'], ['plan', 'Rooms', 'Walls and doors inside'], ['furnish', 'Furnish', 'Drag pieces in from the library'], ['finish', 'Finishes', 'Floors, walls and ceilings'], ['render', 'Render', 'Stills and a 360° view'], ['share', 'Send', 'Proposal, quote and deposit']];
+const QP = new URLSearchParams(location.search), LINKPRODUCT = QP.get('product') || null;
 let GUIDE = false, FLMENU = false, LASTBUILD = 'assembly', PROJ_FRESH = false, STAB = 'new';
 const VISITED = new Set();
 const railOf = st => (RAIL.find(r => r[2].includes(st)) || RAIL[0])[0];
@@ -654,7 +655,7 @@ function renderTop() {
   const cur = GUIDE ? 'guide' : railOf(STAGE);
   $('#rail').innerHTML = [['guide', 'Guide']].concat(RAIL.map(r => [r[0], r[1]])).map(([k, l], i) => `${i === 1 ? '' : ''}<button type="button" class="${cur === k ? 'on' : ''}" data-a="rail" data-v="${k}" aria-current="${cur === k ? 'page' : 'false'}" title="${l}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('');
   const src = DS.SOURCE || { kind: 'builtin', label: 'Built-in catalogue' };
-  $('#tright').innerHTML = (PROJ ? `<button type="button" class="tb" data-a="project" title="New project or open a saved one">Projects</button><button type="button" class="tb ${PROJ.remoteId && !REMOTE_DIRTY ? 'on' : ''}" data-a="saveRemote">${PROJ.remoteId ? (REMOTE_DIRTY ? 'Save' : 'Saved') : 'Save to account'}</button>` : '') + `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
+  $('#tright').innerHTML = (PROJ ? `<button type="button" class="tb" data-a="project" title="New project or open a saved one">Projects</button><button type="button" class="tb ${PROJ.remoteId && !REMOTE_DIRTY ? 'on' : ''}" data-a="saveRemote">${PROJ.remoteId ? (REMOTE_DIRTY ? 'Save' : 'Saved') : 'Save to account'}</button>` : '') + `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button>${AUTHOR ? `<button type="button" class="tb" data-a="afSave" style="background:var(--brass);color:var(--ink);border-color:var(--brass);font-weight:600" title="${LINKPRODUCT ? 'Saves a draft version and links it to ' + esc(LINKPRODUCT) : 'Saves a draft version to the catalogue'}">Save design</button>` : ''}<button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
 }
 function renderFloors() {
   const el = $('#floors'); if (!el) return; if (!PROJ) { el.innerHTML = ''; return; }
@@ -1283,6 +1284,8 @@ document.addEventListener('click', e => {
     }
     case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from Send'); return renderUI();
     case 'afSave': return authorSave();
+    case 'afExport': { const f = afForm(), lay = DS.clone(P); delete lay.design; const file = { format: 'firmcop-design', v: 1, name: P.name, system: PRE().sys, shell: P.preset, layout: lay, rules: { shells: f.shells, lock: f.lock, options: [], finishes: f.finishes, defaults: { furnPkg: P.furnPkg } }, total: Math.round(Q.total), checks: A.map(a => ({ lvl: a.lvl, text: a.text })) };
+      const a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([JSON.stringify(file, null, 1)], { type: 'application/json' })); a2.download = (f.slug || 'design') + '.json'; document.body.appendChild(a2); a2.click(); a2.remove(); return toast('Design file downloaded. Upload it on a product in the admin'); }
     case 'signIn': return signIn();
     case 'signOut': SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (e) {} return renderRight();
     case 'copyPayload': { const t = $('#payload'); try { navigator.clipboard.writeText(t.value).then(() => toast('Copied'), () => { t.select(); }); } catch (e) { t.select(); } return; }
@@ -2027,7 +2030,7 @@ const LOGIN = { email: '', password: '' };
 const slugify = t => String(t).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'design';
 function afForm() {
   if (AF) return AF; const r = (P.design && P.design.rules) || {};
-  AF = { slug: (P.design && P.design.slug) || slugify(P.name), notes: '', shells: r.shells ? r.shells.slice() : [P.preset], lock: (r.lock || []).slice(), finishes: { floor: 'all', wall: 'all', ceil: 'all', ...(r.finishes || {}) } };
+  AF = { slug: (P.design && P.design.slug) || LINKPRODUCT || slugify(P.name), notes: '', shells: r.shells ? r.shells.slice() : [P.preset], lock: (r.lock || []).slice(), finishes: { floor: 'all', wall: 'all', ceil: 'all', ...(r.finishes || {}) } };
   return AF;
 }
 function authorPanel() {
@@ -2042,9 +2045,10 @@ function authorPanel() {
     <div class="eb" style="color:var(--muted)">Fixed in the configurator</div>${[['parts', 'Partitions'], ['opens', 'Doors and windows'], ['runs', 'Kitchen and wardrobes'], ['items', 'Furniture']].map(([k, l]) => box('lock', k, l, f.lock.includes(k))).join('')}
     <details class="how"><summary>Finishes clients may choose</summary><div style="display:flex;flex-direction:column;gap:4px;margin-top:8px"><div class="eb" style="color:var(--muted)">Floors</div>${fins('floor')}<div class="eb" style="color:var(--muted)">Walls</div>${fins('wall')}<div class="eb" style="color:var(--muted)">Ceiling</div>${fins('ceil')}</div></details>
     ${errs ? `<p class="note" style="color:var(--warn)">${errs} check${errs > 1 ? 's' : ''} marked Fix. You can save a draft, but it cannot go to review until they are fixed.</p>` : ''}
-    ${cfg && !SESSION ? `<div class="eb" style="color:var(--muted)">Sign in to ${esc(cfg.name)}</div><label class="lbl">Email<input type="text" id="lg-email" autocomplete="username" data-in="login" data-f="email"></label><label class="lbl">Password<input type="password" id="lg-pass" autocomplete="current-password" data-in="login" data-f="password" style="height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px"></label><div class="btns"><button type="button" class="btn" data-a="signIn">Sign in</button></div>` : ''}
+    ${LINKPRODUCT ? `<p class="note">Linked to the Collection product <b style="color:var(--ivory)">${esc(LINKPRODUCT)}</b>. Saving attaches this design to it.</p>` : ''}
+    ${cfg && !SESSION && !(window.FC && FC.auth && FC.auth.session) ? `<div class="eb" style="color:var(--muted)">Sign in to ${esc(cfg.name)}</div><label class="lbl">Email<input type="text" id="lg-email" autocomplete="username" data-in="login" data-f="email"></label><label class="lbl">Password<input type="password" id="lg-pass" autocomplete="current-password" data-in="login" data-f="password" style="height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px"></label><div class="btns"><button type="button" class="btn" data-a="signIn">Sign in</button></div>` : ''}
     ${SESSION ? `<p class="note">Signed in as ${esc(SESSION.email)} · <button type="button" class="tb" data-a="signOut" style="height:26px">Sign out</button></p>` : ''}
-    <div class="btns"><button type="button" class="btn gold" data-a="afSave">Save ${P.design ? 'new version' : 'to catalogue'}</button></div></div>`;
+    <div class="btns"><button type="button" class="btn gold" data-a="afSave">Save ${P.design ? 'new version' : 'to catalogue'}</button><button type="button" class="btn" data-a="afExport">Download design file</button></div></div>`;
 }
 async function signIn() {
   const cfg = window.FC_SUPA; if (!cfg) return;
@@ -2060,6 +2064,16 @@ async function authorSave() {
   if (!/^[a-z0-9-]{3,80}$/.test(f.slug)) return toast('Use 3 to 80 lowercase letters, numbers or dashes for the slug');
   if (!f.shells.length) return toast('Pick at least one size clients may choose');
   const layout = DS.clone(P); delete layout.design;
+  if (window.FC && FC.auth && FC.auth.session) {
+    const lay0 = DS.clone(P); delete lay0.design;
+    const b0 = { _slug: f.slug, _name: P.name, _system: PRE().sys, _shell: P.preset, _layout: lay0, _rules: { shells: f.shells, lock: f.lock, options: [], finishes: f.finishes, defaults: { furnPkg: P.furnPkg } }, _checks: A.map(a => ({ lvl: a.lvl, text: a.text })), _total: Math.round(Q.total), _notes: f.notes || null };
+    try {
+      const j = await FC.rest('rpc/ds_save_version', { method: 'POST', body: b0 });
+      P.design = { slug: f.slug, version: j.version, rules: b0._rules }; save();
+      if (LINKPRODUCT) await FC.rest('catalog_products?slug=eq.' + encodeURIComponent(LINKPRODUCT), { method: 'PATCH', body: { design_slug: f.slug } });
+      renderUI(); return toast(`Saved ${f.slug} v${j.version} as a draft${LINKPRODUCT ? ' and linked it to the product' : ''}. Review and publish it in the admin's Designs`);
+    } catch (e) { return toast('Could not save: ' + ((e && e.message) || e)); }
+  }
   const body = { _slug: f.slug, _name: P.name, _system: PRE().sys, _shell: P.preset, _layout: layout, _rules: { shells: f.shells, lock: f.lock, options: [], finishes: f.finishes, defaults: { furnPkg: P.furnPkg } }, _checks: A.map(a => ({ lvl: a.lvl, text: a.text })), _total: Math.round(Q.total), _notes: f.notes || null };
   if (cfg && SESSION) {
     try {
@@ -2107,6 +2121,14 @@ if (!PRESETS[P.preset]) P = DS.starter(Object.keys(PRESETS)[0]);
 }
 SHELLSYS = PRESETS[P.preset].sys;
 STAGE = 'assembly'; VISITED.add('assembly');
+if (QP.get('author') === '1') AUTHOR = true;
+if (QP.get('start') && PRESETS[QP.get('start')]) { const d = DS.starter(QP.get('start'), QP.get('name') || undefined); if (QP.get('name')) d.name = QP.get('name'); PROJ = newProject(d.name, d); PROJ_FRESH = false; P = AU().design; ALEVEL = 0; SHELLSYS = PRESETS[P.preset].sys; syncParty(); setTimeout(() => { closeStart(); toast(`Designing ${d.name}. Press Save design at the top when it is ready`); }, 0); }
+if (QP.get('version') && window.FC) FC.rest('ds_design_versions?select=id,version,layout,rules,design:ds_designs(slug,name)&id=eq.' + encodeURIComponent(QP.get('version'))).then(rows => {
+  const v = rows && rows[0]; if (!v || !v.layout) return toast('That design version is not available to you');
+  const d = { ...DS.clone(v.layout), name: (v.design && v.design.name) || v.layout.name, design: { slug: v.design && v.design.slug, version: v.version, rules: v.rules || {} } };
+  if (!PRESETS[d.preset]) return toast('That design uses a size this Studio does not have');
+  AF = null; closeStart(); startProject(newProject(d.name, d)); toast(`Editing ${d.design.slug} v${v.version}. Saving makes a new version`);
+}).catch(e => toast(e.message));
 recompute(); renderUI(); setView(WIDE() ? 'split' : '3d', true); resize(); build3D(); camPreset('front');
 </script>
 </body>
