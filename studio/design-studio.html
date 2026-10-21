@@ -33,7 +33,7 @@ html,body{margin:0;height:100%;background:var(--ink);color:var(--ivory);font:13p
 button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.app{display:grid;grid-template-columns:268px minmax(0,1fr) 348px;grid-template-rows:56px minmax(0,1fr) 62px;height:100vh;height:100dvh;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.app{display:grid;grid-template-columns:72px 276px minmax(0,1fr) 340px;grid-template-rows:56px minmax(0,1fr) 62px;height:100vh;height:100dvh;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 header.top{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
 .mark{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:var(--ivory)}
 .mark b{font:500 19px/1 var(--serif);letter-spacing:.3em}
@@ -43,7 +43,40 @@ header.top{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 1
 .stages button i{font:500 10px/1 var(--mono);font-style:normal;color:var(--faint)}
 .stages button.on{color:var(--ivory);border-bottom-color:var(--brass)}
 .stages button.on i{color:var(--brass)}
-@media (max-width:1560px){.stages button:not(.on) .l{display:none}.stages button{padding:0 9px}}
+.pjname{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;overflow:hidden}
+.pjname b{font:500 20px/1 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pjname small{font:400 10.5px/1 var(--mono);color:var(--muted);letter-spacing:.06em;white-space:nowrap}
+.rail{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;padding:8px 6px;overflow-y:auto}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px;border:0;border-radius:4px;background:none;color:var(--muted);font-size:10.5px;font-weight:600;letter-spacing:.03em}
+.rail button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rail button:hover{color:var(--ivory);background:var(--panel2)}
+.rail button.on{color:var(--brass-hi);background:var(--raise);box-shadow:inset 2px 0 0 var(--brass)}
+.rail .gap{flex:1}
+.subt{display:flex;flex-wrap:wrap;gap:5px}
+.subt button{min-height:30px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12px}
+.subt button.on{background:var(--brass);border-color:var(--brass);color:var(--ink);font-weight:600}
+.guide{display:flex;flex-direction:column}
+.guide button{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;padding:9px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ivory);font-size:12.5px}
+.guide button i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font:600 10px/1 var(--mono);font-style:normal;color:var(--faint)}
+.guide button.done i{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.guide button small{color:var(--muted);font-size:11px;display:block}
+.guide button span:last-child{color:var(--brass-hi);font-size:11.5px}
+.qtools{display:flex;align-items:center;gap:10px;padding-right:14px;border-right:1px solid var(--line);flex:none}
+.qtools .seg{width:auto}.qtools .seg button{padding:0 11px;height:34px}
+.floors{display:flex;align-items:center;gap:4px;position:relative}
+.floors>button{height:34px;padding:0 11px;border:1px solid var(--line2);background:transparent;border-radius:2px;color:var(--muted);font-size:12px;white-space:nowrap}
+.floors>button.on{background:var(--raise);color:var(--ivory);box-shadow:inset 0 -2px 0 var(--brass)}
+.flmenu{position:absolute;bottom:44px;left:0;z-index:20;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:6px;width:250px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.flmenu[hidden]{display:none}
+.selbar{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:4;display:flex;gap:4px;align-items:center;background:rgba(20,18,16,.92);border:1px solid var(--line2);border-radius:999px;padding:4px 6px 4px 14px;font-size:12px;max-width:calc(100% - 28px)}
+.selbar[hidden]{display:none}
+.selbar b{font-weight:600;margin-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.selbar button{height:30px;padding:0 11px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--ivory);font-size:12px;white-space:nowrap}
+.selbar button:hover{border-color:var(--line2)}
+.selbar button.del{color:var(--err)}
+#start .st-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 14px}
+#start .st-tabs button{height:40px;padding:0 14px;border:0;background:none;color:var(--muted);font-weight:600;font-size:13px;box-shadow:none}
+#start .st-tabs button.on{color:var(--ivory);box-shadow:inset 0 -2px 0 var(--brass)}
 .tright{display:flex;gap:6px;align-items:center}
 .tb{height:34px;padding:0 12px;border:1px solid var(--line2);background:transparent;color:var(--ivory);font-size:12px;border-radius:2px;white-space:nowrap}
 .tb:hover{border-color:var(--brass)}
@@ -86,7 +119,7 @@ aside{background:var(--panel);overflow-y:auto;min-height:0}
 .lbl>span{display:flex;justify-content:space-between}
 .lbl b{color:var(--ivory);font-weight:500}
 input[type=range]{width:100%;accent-color:var(--brass)}
-select,input[type=text],input[type=tel]{height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px;font-size:12.5px;width:100%;min-width:0}
+select,input[type=text],input[type=tel],input[type=search]{height:34px;border:1px solid var(--line2);border-radius:2px;background:var(--panel2);padding:0 8px;font-size:12.5px;width:100%;min-width:0}
 .btns{display:flex;gap:6px;flex-wrap:wrap}
 .btn{height:36px;padding:0 14px;border:1px solid var(--line2);background:transparent;border-radius:2px;font-size:12px;font-weight:600;letter-spacing:.03em}
 .btn:hover{border-color:var(--brass);color:var(--brass-hi)}
@@ -109,6 +142,9 @@ main#vp{position:relative;min-width:0;min-height:0;background:#11100e;overflow:h
 main#vp.split #plan{width:50%;right:auto;border-right:2px solid #2a2622}
 main#vp.split #three{left:50%}
 main#vp.split .vhint{max-width:calc(50% - 40px)}
+main#vp.split.stack #plan{width:100%;height:50%;bottom:auto;border-right:0;border-bottom:2px solid #2a2622}
+main#vp.split.stack #three{left:0;top:50%}
+main#vp.split.stack .vhint{max-width:min(460px,70%)}
 .fams{display:flex;flex-wrap:wrap;gap:6px}
 .ubar{position:absolute;right:14px;top:14px;z-index:3;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:55%}
 .ubar button{min-height:32px;padding:0 12px;border-radius:999px;border:1px solid #3a352e;background:rgba(20,18,16,.88);color:#e8dfd0;font:inherit;font-size:12px;cursor:pointer}
@@ -131,7 +167,7 @@ main#vp.split .vhint{max-width:calc(50% - 40px)}
 .walkpad button{height:40px;border:1px solid var(--line2);background:rgba(20,18,16,.88);border-radius:2px;font-size:15px}
 .walkpad[hidden]{display:none}
 .walkpad .x{grid-column:1/-1;font-size:11px;font-weight:600;letter-spacing:.06em}
-footer.qbar{grid-column:1/-1;display:flex;align-items:center;gap:22px;padding:0 16px;border-top:1px solid var(--line);background:var(--panel);overflow-x:auto}
+footer.qbar{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 16px;border-top:1px solid var(--line);background:var(--panel);overflow:visible;position:relative;z-index:5;min-width:0}
 .qbar .nm{font:500 18px/1 var(--serif);white-space:nowrap}
 .qbar .kv{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
 .qbar .kv small{font:400 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
@@ -179,7 +215,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
 .pano p{position:absolute;left:12px;bottom:10px;margin:0;font-size:11.5px;color:#ddd;background:rgba(0,0,0,.5);padding:4px 8px}
 .still{max-width:1200px;margin:0 auto;display:block;width:100%;height:auto}
 .empty{color:var(--faint);font-size:12px;padding:6px 0}
-@media (max-width:1000px){html,body{overflow:auto;height:auto}.app{grid-template-columns:1fr;grid-template-rows:auto 62vh auto auto auto;height:auto}main#vp{grid-row:2}#left{grid-row:3;border-right:0;border-top:1px solid var(--line)}#right{grid-row:4;border-left:0}footer.qbar{grid-row:5;flex-wrap:wrap;padding-block:10px}header.top{flex-wrap:wrap;padding-block:6px}.stages{order:3;width:100%;justify-content:flex-start}.stages button{height:42px}.doc{padding:28px 20px}.doc .grid2,.doc .mil{grid-template-columns:1fr}}
+@media (max-width:1000px){html,body{overflow-x:hidden;overflow-y:auto;height:auto}.app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 62vh auto auto auto;height:auto}.rail{grid-row:2;flex-direction:row;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto;padding:4px}.rail button{flex:1;min-width:64px}.rail .gap{display:none}main#vp{grid-row:3}#left{grid-row:4;border-right:0;border-top:1px solid var(--line)}#right{grid-row:5;border-left:0}footer.qbar{grid-row:6;flex-wrap:wrap;padding-block:10px}.qtools{border-right:0;flex-wrap:wrap}header.top{flex-wrap:wrap;padding-block:6px}.tright{flex-wrap:wrap}.doc{padding:28px 20px}.doc .grid2,.doc .mil{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script>if (window.top !== window) document.documentElement.classList.add("in-site");</script>
@@ -189,14 +225,15 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
 <div class="app">
   <header class="top">
     <a class="mark" href="Main.dc.html" target="_top"><b>FIRMCOP</b><small>Design Studio</small></a>
-    <nav class="stages" id="stages" aria-label="Stages"></nav>
+    <div class="pjname" id="pjname"></div>
     <div class="tright" id="tright"></div>
   </header>
-  <aside id="left" aria-label="Catalogue"></aside>
+  <nav class="rail" id="rail" aria-label="Tools"></nav>
+  <aside id="left" aria-label="Tool panel"></aside>
   <main id="vp">
     <div id="three"></div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" aria-label="Floor plan"></svg>
-    <div class="vtog"><div class="seg" id="vtog"></div></div><div class="ubar" id="ubar"></div>
+    <div class="selbar" id="selbar" hidden></div><div class="ubar" id="ubar"></div>
     <div class="vhint" id="vhint"></div>
     <div class="walkpad" id="walkpad" hidden>
       <span></span><button type="button" data-a="walkMove" data-v="f" aria-label="Forward">↑</button><span></span>
@@ -205,7 +242,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
     </div>
   </main>
   <aside id="right" aria-label="Inspector"></aside>
-  <footer class="qbar" id="qbar"></footer>
+  <footer class="qbar"><div class="qtools"><div class="seg" id="vtog" role="group" aria-label="View"></div><div class="floors" id="floors"></div><button type="button" class="tb" data-a="fit" title="Zoom to fit">Fit</button></div><div id="qbar" style="display:contents"></div></footer>
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <div id="toast" role="status"></div>
@@ -245,7 +282,22 @@ let AUTHOR = false, SESSION = null, AF = null;
 try { SESSION = JSON.parse(localStorage.getItem('fc-ds-session') || 'null'); } catch (e) {}
 let SCENE = 'day', CUT = false, WALK = null, STATUS = 0, LINK = null;
 const CLIENTINFO = { name: 'Achieng Otieno', phone: '+254 7XX XXX XXX', site: 'Naivasha, plot 14' };
-const STAGES = [['shell', 'Unit', '3d'], ['assembly', 'Assembly', '2d'], ['open', 'Openings', '3d'], ['ext', 'Exterior', '3d'], ['plan', 'Interior', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finishes', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
+const STAGES = [['shell', 'Size', '3d'], ['assembly', 'Units', '2d'], ['open', 'Doors and windows', '3d'], ['ext', 'Exterior', '3d'], ['plan', 'Rooms', '2d'], ['furnish', 'Library', '2d'], ['finish', 'Finishes', '3d'], ['render', 'Render', '3d'], ['share', 'Send', '3d']];
+// Coohom-style workspace: an icon rail of tool families; Build holds the shell tools as sub-tabs
+const ICON = {
+  guide: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>',
+  build: '<path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/>',
+  library: '<path d="M4 18v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5"/><path d="M2 18h20v2H2z"/><path d="M6 11V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/>',
+  finishes: '<path d="M19 11H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/><path d="M12 11v4"/><rect x="10" y="15" width="4" height="7" rx="1"/>',
+  render: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>'
+};
+const RAIL = [['build', 'Build', ['assembly', 'shell', 'open', 'ext', 'plan']], ['library', 'Library', ['furnish']], ['finishes', 'Finishes', ['finish']], ['render', 'Render', ['render']], ['send', 'Send', ['share']]];
+const BUILD_TABS = [['assembly', 'Units'], ['shell', 'Size'], ['open', 'Doors and windows'], ['ext', 'Exterior'], ['plan', 'Rooms']];
+const GUIDE_STEPS = [['assembly', 'Place the units', 'One unit, or several joined or set apart'], ['shell', 'Set the size', 'The system and size of each unit'], ['open', 'Doors and windows', 'And wall openings or extensions'], ['ext', 'Exterior', 'Cladding, colour, shades, lights, porch'], ['plan', 'Rooms', 'Walls and doors inside'], ['furnish', 'Furnish', 'Drag pieces in from the library'], ['finish', 'Finishes', 'Floors, walls and ceilings'], ['render', 'Render', 'Stills and a 360° view'], ['share', 'Send', 'Proposal, quote and deposit']];
+let GUIDE = false, FLMENU = false, LASTBUILD = 'assembly', PROJ_FRESH = false, STAB = 'new';
+const VISITED = new Set();
+const railOf = st => (RAIL.find(r => r[2].includes(st)) || RAIL[0])[0];
 const PIPE = ['Design in progress', 'Engineering review', 'Proposal sent to client', 'Deposit requested (M-Pesa)', 'Order placed'];
 
 function recompute() {
@@ -410,13 +462,12 @@ function assemblySVG() {
 function asmPanel() {
   const us = PROJ.units, au = AU(), levels = [...new Set(us.map(u => u.level || 0))].sort();
   const cs = contacts().filter(c => c.a === au.id || c.b === au.id);
-  let h = `<div class="sec"><div class="eb">Step 2 · Assembly</div><h2 class="h">${esc(PROJ.name)}</h2><p class="note">Place the units on the site plan. Drag a unit to move it; it snaps to its neighbours. Touching units can share one open space, or keep their walls.</p>
-    <div class="seg">${[0, 1].map(l => `<button type="button" class="${ALEVEL === l ? 'on' : ''}" data-a="alevel" data-v="${l}">${l ? 'Upper floor' : 'Ground floor'}${levels.includes(l) ? '' : ' ·'}</button>`).join('')}</div></div>
+  let h = `<div class="sec"><div class="eb">Build · Units</div><h2 class="h">${esc(PROJ.name)}</h2><p class="note">New here? <button type="button" class="lnk" data-a="rail" data-v="guide">Open the guide</button> for a suggested order.</p><p class="note">Place the units on the site plan (2D). Drag a unit to move it; it snaps to its neighbours. Touching units can share one open space, or keep their walls. Floors are switched and added at the bottom.</p></div>
     <div class="sec"><div class="eb">Units</div><div class="list">${us.map(u => `<button type="button" data-a="unit" data-v="${u.id}" class="${u.id === au.id ? 'sel' : ''}"><span>${esc(u.name)} · ${esc(PRES(u).name)}</span><span>${u.level ? 'Upper' : 'Ground'}</span></button>`).join('')}</div></div>
     <div class="sec"><div class="eb">Add a unit</div><div class="seg"><button type="button" class="${ADDHOW === 'beside' ? 'on' : ''}" data-a="addhow" data-v="beside">Beside</button><button type="button" class="${ADDHOW === 'end' ? 'on' : ''}" data-a="addhow" data-v="end">End to end</button><button type="button" class="${ADDHOW === 'apart' ? 'on' : ''}" data-a="addhow" data-v="apart">Set apart</button></div>
-    <div class="cards two">${Object.entries(PRESETS).map(([k, p]) => `<button type="button" class="card" data-a="addunit" data-v="${k}"><b>${esc(p.name)}</b><small>${p.L.toFixed(1)} × ${p.W.toFixed(1)} m</small>${CLIENT ? '' : `<small>From ${KSh(p.shell)}</small>`}</button>`).join('')}</div>
+    <div class="cards two">${Object.entries(PRESETS).filter(([k, p]) => LISTED(k, p)).map(([k, p]) => `<button type="button" class="card" data-a="addunit" data-v="${k}"><b>${esc(p.name)}</b><small>${p.L.toFixed(1)} × ${p.W.toFixed(1)} m</small>${CLIENT ? '' : `<small>From ${KSh(p.shell)}</small>`}</button>`).join('')}</div>
     <p class="note">The new unit is placed next to ${esc(au.name)} on the same floor, with its starter layout.</p></div>`;
-  if (PRES(au).sys === 'container' && !(au.level > 0)) h += `<div class="sec"><div class="eb">Add a floor on ${esc(au.name)}</div><div class="cards"><button type="button" class="card" data-a="addfloor" data-v="copy"><b>Copy this layout up</b><small>Same rooms, doors and windows as the floor below, ready to change</small></button><button type="button" class="card" data-a="addfloor" data-v="plain"><b>Plain floor</b><small>An empty shell with one door where the stair lands</small></button></div></div>`;
+  if (false) h += `<div class="sec"><div class="eb">Add a floor on ${esc(au.name)}</div><div class="cards"><button type="button" class="card" data-a="addfloor" data-v="copy"><b>Copy this layout up</b><small>Same rooms, doors and windows as the floor below, ready to change</small></button><button type="button" class="card" data-a="addfloor" data-v="plain"><b>Plain floor</b><small>An empty shell with one door where the stair lands</small></button></div></div>`;
   return h;
 }
 function asmRight() {
@@ -427,7 +478,7 @@ function asmRight() {
     <div class="btns">${[['←', -0.5, 0], ['→', 0.5, 0], ['↑', 0, -0.5], ['↓', 0, 0.5]].map(([l, dx, dz]) => `<button type="button" class="btn" data-a="unudge" data-dx="${dx}" data-dz="${dz}" aria-label="Move 0.5 m">${l}</button>`).join('')}</div>
     ${au.level ? `<label class="lbl">Stair<select data-in="ustair">${[['W', 'West end'], ['E', 'East end'], ['N', 'North side'], ['S', 'South side'], ['none', 'No stair (reached another way)']].map(([v, l]) => `<option value="${v}" ${au.stair === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}
     ${cs.length ? `<div class="eb" style="color:var(--muted)">Walls touching other units</div>${cs.map(c => { const o = unitOf(c.a === au.id ? c.b : c.a); return `<label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px">Open the wall to ${esc(o.name)} (${c.len.toFixed(1)} m)<input type="checkbox" data-in="ujoin" data-key="${esc(c.key)}" ${isOpen(c) ? 'checked' : ''}></label>`; }).join('')}` : ''}
-    <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="open">Next: doors and windows of ${esc(au.name)}</button></div></div>`;
+    </div>`;
   h += `<div class="sec"><div class="eb">Assembly in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}</span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}</div>` : '<p class="empty">One unit, nothing to assemble yet.</p>'}</div>`;
   h += `<div class="sec"><div class="eb">Checks</div>${checksHtml(AA)}</div>`;
   return h;
@@ -489,24 +540,26 @@ function afFrame3D(M, p) {
 }
 // ---------- start screen ----------
 function startHTML() {
-  const local = PROJECTS.list, sys = ['container', 'aframe', 'cabin'];
-  return `<div class="st-in"><div class="st-hd"><div><div class="eb">3D Studio</div><h2 class="serif" style="margin:4px 0 0;font-size:34px">Start a project</h2></div>${PROJ ? '<button type="button" class="tb" data-a="pjClose">Back to my project</button>' : ''}</div>
-    <label class="lbl" style="max-width:420px">Project name<input type="text" id="pj-name" placeholder="e.g. Naivasha family home" value=""></label>
-    <div class="eb" style="margin-top:14px">1 · Pick the first unit</div>
-    ${sys.map(sy => `<div class="eb" style="color:var(--muted);margin-top:8px">${SYS[sy].name}</div><div class="cards st-grid">${Object.entries(PRESETS).filter(([k, p]) => p.sys === sy && LISTED(k, p)).map(([k, p]) => `<button type="button" class="card" data-a="pjNew" data-v="${k}"><div class="row"><b>${esc(p.name)}</b><span class="chip">${esc(p.sub)}</span></div><small>${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>`).join('')}
-    ${(DS.DESIGNS || []).length ? `<div class="eb" style="margin-top:14px">Or start from a catalogue design</div><div class="cards st-grid">${DS.DESIGNS.map(d => `<button type="button" class="card" data-a="pjDesign" data-v="${esc(d.slug)}"><b>${esc(d.name)}</b><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('')}</div>` : ''}
-    ${local.length ? `<div class="eb" style="margin-top:14px">Projects on this device</div><div class="list">${local.map(r => `<button type="button" data-a="pjOpen" data-v="${esc(r.id)}"><span>${esc(r.name)} · ${r.units} unit${r.units === 1 ? '' : 's'}</span><span>${new Date(r.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>` : ''}
-    <div id="st-remote"></div></div>`;
+  const local = PROJECTS.list, sys = ['container', 'aframe', 'cabin'], nm = ($('#pj-name') && $('#pj-name').value) || '';
+  const tabs = [['new', 'New project'], ['designs', 'From a design'], ['mine', 'My projects']];
+  return `<div class="st-in"><div class="st-hd"><div><div class="eb">3D Studio</div><h2 class="serif" style="margin:4px 0 0;font-size:34px">Start a project</h2></div>${PROJ ? `<button type="button" class="tb" data-a="pjClose">${PROJ_FRESH ? 'Look around the demo first' : 'Back to my project'}</button>` : ''}</div>
+    <div class="st-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${STAB === k}" class="${STAB === k ? 'on' : ''}" data-a="stab" data-v="${k}">${l}${k === 'mine' && local.length ? ` · ${local.length}` : ''}</button>`).join('')}</div>
+    ${STAB !== 'mine' ? `<label class="lbl" style="max-width:420px">Project name<input type="text" id="pj-name" placeholder="e.g. Naivasha family home" value="${esc(nm)}"></label>` : ''}
+    ${STAB === 'new' ? `<div class="eb" style="margin-top:14px">Pick the first unit. You can add more units and floors inside.</div>
+    ${sys.map(sy => `<div class="eb" style="color:var(--muted);margin-top:8px">${SYS[sy].name}</div><div class="cards st-grid">${Object.entries(PRESETS).filter(([k, p]) => p.sys === sy && LISTED(k, p)).map(([k, p]) => `<button type="button" class="card" data-a="pjNew" data-v="${k}"><div class="row"><b>${esc(p.name)}</b><span class="chip">${esc(p.sub)}</span></div><small>${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>`).join('')}` : ''}
+    ${STAB === 'designs' ? ((DS.DESIGNS || []).length ? `<div class="eb" style="margin-top:14px">Catalogue designs, ready to change</div><div class="cards st-grid">${DS.DESIGNS.map(d => `<button type="button" class="card" data-a="pjDesign" data-v="${esc(d.slug)}"><b>${esc(d.name)}</b><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('')}</div>` : '<p class="empty">No catalogue designs yet.</p>') : ''}
+    ${STAB === 'mine' ? (local.length ? `<div class="eb" style="margin-top:14px">Projects on this device</div><div class="list">${local.map(r => `<button type="button" data-a="pjOpen" data-v="${esc(r.id)}"><span>${esc(r.name)} · ${r.units} unit${r.units === 1 ? '' : 's'}</span><span>${new Date(r.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>` : '<p class="empty">No projects on this device yet. Sign in to see projects saved to your account.</p>') + '<div id="st-remote"></div>' : ''}</div>`;
 }
 function openStart() {
   let el = $('#start'); if (!el) { el = document.createElement('div'); el.id = 'start'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Start a project'); document.body.appendChild(el); }
   stopLoop(); el.innerHTML = startHTML(); el.classList.add('show'); setTimeout(() => { const n = $('#pj-name'); if (n) n.focus(); }, 50);
+  if (STAB !== 'mine') return;
   if (window.FC && FC.auth && FC.auth.session) FC.rest('ds_projects?select=id,name,units,total_kes,updated_at&status=neq.archived&order=updated_at.desc&limit=20').then(rows => { const r = $('#st-remote'); if (r && rows.length) r.innerHTML = `<div class="eb" style="margin-top:14px">Saved to your account</div><div class="list">${rows.map(x => `<button type="button" data-a="pjOpenRemote" data-v="${esc(x.id)}"><span>${esc(x.name)} · ${x.units} unit${x.units === 1 ? '' : 's'}</span><span>${new Date(x.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>`; }).catch(() => {});
 }
 function closeStart() { const el = $('#start'); if (el) el.classList.remove('show'); if (SHOW3D()) startLoop(); }
 function startProject(pj) {
-  PROJ = pj; syncParty(); P = AU().design; HIST = []; FUT = []; SEL = null; SHELLSYS = PRESETS[P.preset].sys; ALEVEL = 0; FIRSTFRAME = true; DIRTY3D = true;
-  closeStart(); after(); setStage('assembly'); toast(`${PROJ.name} started. Add more units here, or go on to doors and windows`);
+  PROJ = pj; PROJ_FRESH = false; syncParty(); P = AU().design; HIST = []; FUT = []; SEL = null; SHELLSYS = PRESETS[P.preset].sys; ALEVEL = 0; FIRSTFRAME = true; DIRTY3D = true;
+  closeStart(); after(); setStage('assembly'); toast(`${PROJ.name} started. Add units here; every other tool is on the left, and Guide suggests an order`);
 }
 // ---------- saving to the customer's account ----------
 async function saveRemote(quiet) {
@@ -597,13 +650,30 @@ function freeOpenU(side, k) {
 // ---------------- UI rendering ----------------
 function renderUI() { renderTop(); renderLeft(); renderRight(); renderBar(); renderViewChrome(); }
 function renderTop() {
-  $('#stages').innerHTML = STAGES.map(([k, l], i) => `<button type="button" class="${STAGE === k ? 'on' : ''}" data-a="stage" data-v="${k}" aria-current="${STAGE === k ? 'step' : 'false'}" title="${i + 1} · ${l}" aria-label="Step ${i + 1}, ${l}"><i>${i + 1}</i><span class="l">${l}</span></button>`).join('');
+  $('#pjname').innerHTML = `<b>${esc(PROJ ? PROJ.name : P.name)}</b><small>${PROJ && PROJ.units.length > 1 ? `${PROJ.units.length} units · editing ${esc(AU().name)}` : esc(PRE().name)}</small>`;
+  const cur = GUIDE ? 'guide' : railOf(STAGE);
+  $('#rail').innerHTML = [['guide', 'Guide']].concat(RAIL.map(r => [r[0], r[1]])).map(([k, l], i) => `${i === 1 ? '' : ''}<button type="button" class="${cur === k ? 'on' : ''}" data-a="rail" data-v="${k}" aria-current="${cur === k ? 'page' : 'false'}" title="${l}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('');
   const src = DS.SOURCE || { kind: 'builtin', label: 'Built-in catalogue' };
   $('#tright').innerHTML = (PROJ ? `<button type="button" class="tb" data-a="project" title="New project or open a saved one">Projects</button><button type="button" class="tb ${PROJ.remoteId && !REMOTE_DIRTY ? 'on' : ''}" data-a="saveRemote">${PROJ.remoteId ? (REMOTE_DIRTY ? 'Save' : 'Saved') : 'Save to account'}</button>` : '') + `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
 }
+function renderFloors() {
+  const el = $('#floors'); if (!el) return; if (!PROJ) { el.innerHTML = ''; return; }
+  const lv = [...new Set(PROJ.units.map(u => u.level || 0))].sort(), cur = AU().level || 0, canUp = PRES(AU()).sys === 'container' && !(AU().level > 0) && !PROJ.units.some(o => (o.level || 0) === 1 && o.x === AU().x && o.z === AU().z);
+  el.innerHTML = lv.map(l => `<button type="button" class="${l === cur ? 'on' : ''}" data-a="floor" data-v="${l}" aria-pressed="${l === cur}">${l ? 'First floor' : 'Ground floor'}</button>`).join('')
+    + `<button type="button" data-a="floorMenu" aria-expanded="${FLMENU}" title="Add a floor">+ Floor</button>
+    <div class="flmenu" ${FLMENU ? '' : 'hidden'}>${canUp ? `<div class="eb">New floor on ${esc(AU().name)}</div><button type="button" class="card" data-a="addfloor" data-v="copy"><b>Copy this floor</b><small>Same rooms, doors and windows, ready to change</small></button><button type="button" class="card" data-a="addfloor" data-v="plain"><b>Blank floor</b><small>An empty shell with one door where the stair lands</small></button>` : `<p class="note">${PRES(AU()).sys !== 'container' ? 'Only containers can be stacked. Pick a container unit first.' : AU().level > 0 ? 'This is already an upper floor. Pick a ground-floor container.' : esc(AU().name) + ' already has a floor above.'}</p>`}</div>`;
+}
+function renderSelBar() {
+  const el = $('#selbar'); if (!el) return; const s = findSel(), k = SEL && SEL.kind;
+  if (!s || !['item', 'run', 'open', 'part'].includes(k)) { el.hidden = true; el.innerHTML = ''; return; }
+  const name = k === 'item' ? ITEMS[s.k].name : k === 'run' ? (s.kind === 'kitchen' ? 'Kitchen run' : 'Wardrobe run') : k === 'open' ? OPEN[s.k].name : 'Partition ' + (P.parts.indexOf(s) + 1);
+  el.hidden = false; el.innerHTML = `<b>${esc(name)}</b>${k === 'item' ? '<button type="button" data-a="rot">Turn</button><button type="button" data-a="dup">Duplicate</button>' : ''}${k === 'item' || k === 'open' ? '<button type="button" data-a="swapFocus">Swap</button>' : ''}<button type="button" class="del" data-a="del">Delete</button><button type="button" data-a="desel" aria-label="Done">Done</button>`;
+}
 function renderViewChrome() {
-  $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === 'split' ? 'on' : ''}" data-a="view" data-v="split" title="Plan and 3D side by side">Split</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button>`;
+  $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === 'split' ? 'on' : ''}" data-a="view" data-v="split" title="Plan and 3D together">Split</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button><button type="button" class="${WALK ? 'on' : ''}" data-a="walkStart" title="Walk through">Walk</button>`;
   $('#vp').classList.toggle('split', VIEW === 'split');
+  { const vp = $('#vp'), bb = DS.bbox(P), wide = (bb.x1 - bb.x0) / Math.max(1, bb.z1 - bb.z0) > 2.2 && vp.clientWidth > vp.clientHeight * 0.9; vp.classList.toggle('stack', VIEW === 'split' && wide && !(STAGE === 'assembly' && PROJ && PROJ.units.length > 1)); }
+  renderFloors(); renderSelBar();
   const ub = $('#ubar'); if (ub) ub.innerHTML = PROJ && PROJ.units.length > 1 ? PROJ.units.map(u => `<button type="button" class="${u.id === PROJ.active ? 'on' : ''}" data-a="unit" data-v="${u.id}" title="${esc(PRES(u).name)}">${esc(u.name)}${u.level ? ' ↑' : ''}</button>`).join('') : '';
   $('#plan').style.display = SHOW2D() ? 'block' : 'none';
   $('#three').style.visibility = SHOW3D() ? 'visible' : 'hidden';
@@ -616,21 +686,27 @@ function renderViewChrome() {
   $('#walkpad').hidden = !(WALK && SHOW3D());
 }
 const sideBtns = (cur, act) => `<div class="seg">${SYSD().sides.map(s => `<button type="button" class="${cur === s ? 'on' : ''}" data-a="${act}" data-v="${s}">${s}</button>`).join('')}</div>`;
+function guideHTML() {
+  return `<div class="sec"><div class="eb">Guide</div><h2 class="h">Your project, start to finish</h2><p class="note">Every tool is always open on the left. This list is a suggested order; it ticks itself off as you go and never locks anything.</p>
+    <div class="guide">${GUIDE_STEPS.map(([k, t, d], i) => `<button type="button" class="${VISITED.has(k) ? 'done' : ''}" data-a="stage" data-v="${k}"><i>${VISITED.has(k) ? '✓' : i + 1}</i><span>${t}<small>${d}</small></span><span>Open</span></button>`).join('')}</div></div>`;
+}
+function buildTabs() { return `<div class="sec" style="padding-bottom:12px"><div class="subt" role="tablist" aria-label="Build tools">${BUILD_TABS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${STAGE === k}" class="${STAGE === k ? 'on' : ''}" data-a="stage" data-v="${k}">${l}</button>`).join('')}</div></div>`; }
 function renderLeft() {
   const el = $('#left'); let h = '';
+  if (GUIDE) { el.innerHTML = guideHTML(); return; }
   if (STAGE === 'shell') {
     const ds = (DS.DESIGNS || []).filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
-    h = `<div class="sec"><div class="eb">Step 1 · Unit</div><h2 class="h">Choose the system and size</h2>
+    h = `<div class="sec"><div class="eb">Build · Size</div><h2 class="h">Choose the system and size</h2>
       <div class="seg">${Object.entries(SYS).map(([k, s]) => `<button type="button" class="${SHELLSYS === k ? 'on' : ''}" data-a="shellsys" data-v="${k}">${s.name}</button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Catalogue designs</div><div class="cards">${ds.map(d => `<button type="button" class="card ${P.design && P.design.slug === d.slug ? 'on' : ''}" data-a="design" data-v="${d.slug}"><div class="row"><b>${esc(d.name)}</b><span class="chip">v${d.version}</span></div><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes && !CLIENT ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('') || '<p class="empty">No published designs for this system yet.</p>'}</div></div>
       <div class="sec"><div class="eb">${allowS ? 'Sizes this design allows' : 'Or start from a blank size'}</div>
       <div class="cards">${Object.entries(PRESETS).filter(([k, p]) => p.sys === SHELLSYS && (!allowS || allowS.includes(k)) && (LISTED(k, p) || P.preset === k)).map(([k, p]) => `<button type="button" class="card ${P.preset === k ? 'on' : ''}" data-a="preset" data-v="${k}"><div class="row"><b>${p.name}</b>${P.preset === k ? '<span class="chip br">Current</span>' : ''}</div><small>${p.sub} · ${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>
-      <p class="note">This is the size of ${PROJ ? esc(AU().name) : 'the unit'}. Choosing a size loads it in 3D with a starter layout. Add more units and an upper floor in step 2, Assembly.</p></div>${afPanel()}`;
+      <p class="note">This is the size of ${PROJ ? esc(AU().name) : 'the unit'}. Choosing a size loads it in 3D with a starter layout. Add more units in Units, and an upper floor from the floor switcher at the bottom.</p></div>${afPanel()}`;
   } else if (STAGE === 'plan') {
-    h = `<div class="sec"><div class="eb">Step 5 · Interior plan</div><h2 class="h">Rooms</h2>
+    h = `<div class="sec"><div class="eb">Build · Rooms</div><h2 class="h">Rooms</h2>
       <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Partition</button><button type="button" class="${TOOL === 'room' ? 'on' : ''}" data-a="tool" data-v="room">Draw room</button></div>
       <p class="note">Draw room: drag a rectangle and its walls and door are added. Partitions split the floor into rooms, including any bump-out or door-end extension. Add a door from the partition's panel on the right.</p>
-      <p class="note">Doors and windows on the outside walls are set in <button type="button" class="lnk" data-a="stage" data-v="open">step 3</button>.</p></div>`;
+      <p class="note">Doors and windows on the outside walls are under <button type="button" class="lnk" data-a="stage" data-v="open">Doors and windows</button>.</p></div>`;
   } else if (STAGE === 'assembly' && PROJ) {
     h = asmPanel();
   } else if (STAGE === 'open') {
@@ -641,7 +717,7 @@ function renderLeft() {
     h = libraryPanel();
   } else if (STAGE === 'furnish') {
     const tabs = [['kitchen', 'Kitchens and wardrobes'], ['bath', 'Bathroom'], ['furn', 'Furniture']];
-    h = `<div class="sec"><div class="eb">Step 6 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
+    h = `<div class="sec"><div class="eb">Library</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
     if (FTAB === 'kitchen') h += `<div class="cards"><button type="button" class="card" data-a="addrun" data-v="kitchen"><b>Modular kitchen run</b><small>Base, sink, hob and tall units on a 300/600/800 mm grid. Fronts, worktop and wall cabinets are set on the right.</small><small>${CLIENT ? '' : 'From ' + KSh(165000)}</small></button><button type="button" class="card" data-a="addrun" data-v="wardrobe"><b>Modular wardrobe run</b><small>Hanging, shelf and drawer units in 500 and 1000 mm widths.</small><small>${CLIENT ? '' : 'From ' + KSh(38000)}</small></button></div><p class="note">Runs fix to an outside wall or a partition face and add their units to the BOQ.</p>`;
     else {
       const ks = Object.entries(ITEMS).filter(([, d]) => FTAB === 'bath' ? d.sanitary : !d.sanitary), cats = [...new Set(ks.map(([, d]) => d.cat))];
@@ -651,33 +727,33 @@ function renderLeft() {
     h += '</div>';
   } else if (STAGE === 'finish') {
     const tabs = [['floor', 'Floors'], ['wall', 'Walls'], ['ceil', 'Ceiling']], room = SEL && SEL.kind === 'room' ? findSel() : null;
-    h = `<div class="sec"><div class="eb">Step 7 · Finishes</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
+    h = `<div class="sec"><div class="eb">Finishes</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
       <p class="note">${NTAB === 'ceil' ? 'Applies to the whole ceiling.' : room ? `Applying to <b style="color:var(--ivory)">${esc(room.name)}</b>.` : 'Pick a room in the 3D view or the list on the right first.'}</p></div>
       <div class="sec"><div class="cards">${Object.entries(FIN[NTAB]).filter(([k]) => finAllowed(NTAB, k)).map(([k, f]) => {
         const cur = NTAB === 'ceil' ? P.ceil === k : room && room[NTAB] === k, used = Q.use[NTAB + ':' + k] || 0;
         return `<button type="button" class="card ${cur ? 'on' : ''}" data-a="fin" data-g="${NTAB}" data-v="${k}"><span class="fsw" style="background:${f.col}"></span><div class="row"><b>${f.name}</b>${f.wet ? '<span class="chip">Wet rated</span>' : ''}</div><small>${CLIENT ? '' : KSh(f.price) + ' per m² · '}${CLIENT ? (f.stock < used ? 'Ordered in' : 'In stock') : `${f.stock === 999 ? 'Made on site' : f.stock + ' m² in stock'}${used ? ` · this design ${used.toFixed(1)} m²` : ''}`}</small></button>`;
       }).join('')}</div></div>`;
   } else if (STAGE === 'render') {
-    h = `<div class="sec"><div class="eb">Step 8 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
+    h = `<div class="sec"><div class="eb">Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Camera</div><div class="btns"><button type="button" class="btn" data-a="cam" data-v="front">Front</button><button type="button" class="btn" data-a="cam" data-v="aerial">Aerial</button><button type="button" class="btn" data-a="cam" data-v="doll">Dollhouse</button></div>
       <label class="row" style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Cutaway roof<input type="checkbox" data-in="cut" ${CUT ? 'checked' : ''}></label></div>
       <div class="sec"><div class="eb">Walk inside</div><div class="list">${R.map(r => `<button type="button" data-a="walk" data-v="${r.id}"><span>${esc(r.name)}</span><span>Stand here →</span></button>`).join('')}</div></div>`;
   } else {
-    h = `<div class="sec"><div class="eb">Step 9 · Share</div><h2 class="h">Client</h2>
+    h = `<div class="sec"><div class="eb">Send</div><h2 class="h">Client</h2>
       <label class="lbl">Client name<input type="text" id="cl-name" data-in="cl" data-v="name" value="${esc(CLIENTINFO.name)}"></label>
       <label class="lbl">Phone or WhatsApp<input type="tel" id="cl-phone" data-in="cl" data-v="phone" value="${esc(CLIENTINFO.phone)}"></label>
       <label class="lbl">Site<input type="text" id="cl-site" data-in="cl" data-v="site" value="${esc(CLIENTINFO.site)}"></label>
       <p class="note">Example client, for the demo.</p></div>
       <div class="sec"><div class="eb">Deal stage</div><div class="pipe">${PIPE.map((s, i) => `<div class="${i < STATUS ? 'done' : i === STATUS ? 'cur' : ''}"><i></i><span>${s}</span></div>`).join('')}</div></div>`;
   }
-  el.innerHTML = h;
+  el.innerHTML = (railOf(STAGE) === 'build' ? buildTabs() : '') + h;
 }
 const availOpen = () => Object.entries(OPEN).filter(([, d]) => (!d.only || d.only.includes(PRE().sys)) && (!d.not || !d.not.includes(PRE().sys)));
 const rng = (id, key, label, val, min, max, step, unit = 'm', dp = 1) => `<label class="lbl"><span>${label} <b>${(+val).toFixed(dp)} ${unit}</b></span><input type="range" id="${id}" data-in="${key}" min="${min}" max="${max}" step="${step}" value="${val}"></label>`;
 const curW = () => P.ext.widen.find(w => w.side === WSIDE);
 function openingsPanel() {
   const p = PRE(), isC = p.sys === 'container', e = P.ext;
-  let h = `<div class="sec"><div class="eb">Step 3 · Openings</div><h2 class="h">Doors and windows</h2><p class="note">Pick a wall, then a door or window. Drag it along the wall in 2D, or set its position on the right.</p>${sideBtns(ADDSIDE, 'addside')}
+  let h = `<div class="sec"><div class="eb">Build · Doors and windows</div><h2 class="h">Doors and windows</h2><p class="note">Pick a wall, then a door or window. Drag it along the wall in 2D, or set its position on the right.</p>${sideBtns(ADDSIDE, 'addside')}
     <div class="cards">${availOpen().map(([k, d]) => `<button type="button" class="card" data-a="addopen" data-v="${k}"><div class="row"><b>${d.name}</b><small>${CLIENT ? '' : KSh(d.price)}</small></div><small>${d.gable ? 'Whole gable end' : `${(d.w * 1000) | 0} × ${(d.h * 1000) | 0} mm${d.sill ? ` · sill ${(d.sill * 1000) | 0}` : ''}`}${CLIENT ? '' : ` · ${d.stock} in stock`}</small></button>`).join('')}</div>
     ${p.sys === 'aframe' ? '<p class="note">On an A-frame, doors and windows go in the gable ends. The roof slopes cap their height.</p>' : ''}</div>`;
   if (!isC) return h;
@@ -702,7 +778,7 @@ function openingsPanel() {
 }
 function exteriorPanel() {
   const p = PRE(), e = P.ext, sys = p.sys, cl = e.clad, sides = SYSD().sides;
-  let h = `<div class="sec"><div class="eb">Step 4 · Exterior</div><h2 class="h">Body colour</h2><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
+  let h = `<div class="sec"><div class="eb">Build · Exterior</div><h2 class="h">Body colour</h2><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
     <p class="note">${sys === 'aframe' ? 'The roof colour of the A-frame.' : 'The paint on the shell. Cladding, if you add it, goes over it.'}</p></div>`;
   if (sys !== 'aframe') {
     const full = cl && sides.every(sd => cl.sides.includes(sd)), q = Q.lines.find(l => l.grp === 'Exterior' && cl && Q.use['clad:' + cl.k] === l.qty);
@@ -766,10 +842,10 @@ function libList() {
 }
 function libraryPanel() {
   const roots = libRoots(); if (!roots.some(r => r.slug === LFAM)) LFAM = roots.length ? roots[0].slug : '';
-  return `<div class="sec"><div class="eb">Step 6 · Furnish</div><h2 class="h">Library</h2>
+  return `<div class="sec"><div class="eb">Library</div><h2 class="h">Furniture and fittings</h2>
     <label class="lbl">Search<input type="search" id="lib-q" data-in="libq" value="${esc(LQ)}" placeholder="Sofa, bed, shower…" autocomplete="off"></label>
     <div class="fams" role="group" aria-label="Rooms">${roots.map(r => `<button type="button" class="${LFAM === r.slug && !LQ ? 'on' : ''}" data-a="lfam" data-v="${esc(r.slug)}">${esc(r.name)}</button>`).join('')}</div>
-    <p class="note">Doors and windows are in <button type="button" class="lnk" data-a="stage" data-v="open">step 3</button>, walls and rooms in <button type="button" class="lnk" data-a="stage" data-v="plan">step 5</button>, floor and wall finishes in <button type="button" class="lnk" data-a="stage" data-v="finish">step 7</button>.</p></div>
+    <p class="note">Doors and windows: <button type="button" class="lnk" data-a="stage" data-v="open">Build › Doors and windows</button>. Walls and rooms: <button type="button" class="lnk" data-a="stage" data-v="plan">Build › Rooms</button>. Floor and wall finishes: <button type="button" class="lnk" data-a="stage" data-v="finish">Finishes</button>.</p></div>
     <div class="sec" id="lib-list">${libList()}</div>`;
 }
 function optControls(s) {
@@ -841,7 +917,7 @@ function inspector() {
   return '';
 }
 function renderRight() {
-  const el = $('#right'); let h = '';
+  const el = $('#right'); let h = ''; renderSelBar();
   if (SHOWCHECKS) h += `<div class="sec"><div class="row" style="display:flex;justify-content:space-between;align-items:center"><div class="eb">Checks</div><button type="button" class="tb" data-a="checks">Close</button></div>${checksHtml(A)}</div>`;
   h += inspector();
   const ins = !!findSel();
@@ -849,13 +925,12 @@ function renderRight() {
     const p = PRE(), area = R.reduce((a, r) => a + r.area, 0);
     h += `<div class="sec"><div class="eb">Design</div><label class="lbl">Name<input type="text" id="d-name" data-in="name" value="${esc(P.name)}"></label>
       <div class="list"><div><span>System</span><span>${SYSD().name}</span></div><div><span>Shell</span><span>${p.name}</span></div><div><span>Internal floor</span><span>${m2(area)}</span></div><div><span>Rooms</span><span>${R.length}</span></div><div><span>Lead time</span><span>${Q.weeks} weeks</span></div></div></div>
-      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="assembly">Next: assembly</button></div></div>`;
+      </div>`;
   } else if (STAGE === 'assembly' && PROJ) {
     h += asmRight();
   } else if (STAGE === 'open' || STAGE === 'ext') {
     const grp = STAGE === 'open' ? ['Doors and windows', 'Extensions'] : ['Exterior'], ls = Q.lines.filter(l => grp.includes(l.grp)), sum = ls.reduce((a, l) => a + l.total, 0);
-    h += `<div class="sec"><div class="eb">${STAGE === 'open' ? 'Openings and extensions' : 'Exterior'} in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}<br><small style="color:var(--faint)">${l.qty} ${l.unit}</small></span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}${CLIENT ? '' : `<div><span><b>Subtotal</b></span><span style="color:var(--brass-hi)">${KSh(sum)}</span></div>`}</div>` : '<p class="empty">Nothing added yet.</p>'}
-      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="${STAGE === 'open' ? 'ext' : 'plan'}">${STAGE === 'open' ? 'Next: the exterior' : 'Next: plan the rooms inside'}</button></div></div>`;
+    h += `<div class="sec"><div class="eb">${STAGE === 'open' ? 'Openings and extensions' : 'Exterior'} in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}<br><small style="color:var(--faint)">${l.qty} ${l.unit}</small></span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}${CLIENT ? '' : `<div><span><b>Subtotal</b></span><span style="color:var(--brass-hi)">${KSh(sum)}</span></div>`}</div>` : '<p class="empty">Nothing added yet.</p>'}</div>`;
     if (!SHOWCHECKS) h += `<div class="sec"><div class="eb">Checks</div>${checksHtml(A)}</div>`;
   } else if (STAGE === 'plan' || STAGE === 'furnish') {
     if (STAGE === 'furnish') h += `<div class="sec"><div class="eb">Furniture package</div><label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Include furniture in the quote<input type="checkbox" id="furnpkg" data-in="furnPkg" ${P.furnPkg ? 'checked' : ''}></label><p class="note">Off: furniture shows in renders as décor only.</p></div>`;
@@ -895,8 +970,7 @@ function renderRight() {
 function renderBar() {
   const AL = PROJ ? A.concat(AA) : A, QQ = PQ || Q, e = AL.filter(a => a.lvl === 'error').length, w = AL.filter(a => a.lvl === 'warn').length, g = AL.filter(a => a.lvl === 'eng').length;
   const chip = e ? `<span class="chip err">${e} to fix</span>` : w ? `<span class="chip warn">${w} to check</span>` : '<span class="chip ok">Checks clear</span>';
-  $('#qbar').innerHTML = `<span class="nm">${esc(PROJ ? PROJ.name : P.name)}${PROJ && PROJ.units.length > 1 ? `<small style="display:block;font-size:11px;color:var(--muted)">${PROJ.units.length} units · editing ${esc(AU().name)}</small>` : ''}</span>
-    <div class="kv"><small>Floor${PROJ && PROJ.units.length > 1 ? ', this unit' : ''}</small><b>${m2(R.reduce((a, r) => a + r.area, 0))}</b></div>
+  $('#qbar').innerHTML = `<div class="kv"><small>Floor${PROJ && PROJ.units.length > 1 ? ', this unit' : ''}</small><b>${m2(R.reduce((a, r) => a + r.area, 0))}</b></div>
     <div class="kv"><small>Lead time</small><b>${QQ.weeks} wk</b></div>
     <button type="button" class="tb" data-a="checks" style="display:flex;gap:6px;align-items:center">${chip}${g ? `<span class="chip eng">${g} engineer</span>` : ''}</button>
     <span class="sp"></span>
@@ -1165,13 +1239,15 @@ function addItemAt(k, x, z) {
 
 // ---------------- actions ----------------
 function setStage(s) {
-  STAGE = s; const st = STAGES.find(x => x[0] === s); TOOL = 'select'; SHOWCHECKS = false;
+  STAGE = s; GUIDE = false; FLMENU = false; VISITED.add(s); if (railOf(s) === 'build') LASTBUILD = s; TOOL = 'select'; SHOWCHECKS = false;
   if (WALK && s !== 'render') exitWalk();
   if (s === 'finish' && !(SEL && SEL.kind === 'room')) SEL = null;
-  const wantCut = s === 'finish' || s === 'plan' || s === 'furnish';
-  if (CUT !== wantCut) { CUT = wantCut; DIRTY3D = true; }
-  const v = st[2] === '2d' && WIDE() ? 'split' : st[2]; setView(v, true); renderUI();
-  if (v !== '2d') requestAnimationFrame(() => camPreset(wantCut ? 'doll' : 'front'));
+  const wantCut = s === 'finish' || s === 'plan' || s === 'furnish', cutChanged = CUT !== wantCut;
+  if (cutChanged) { CUT = wantCut; DIRTY3D = true; }
+  // the plan tools need the 2D plan; the look-and-feel tools need 3D. Otherwise the view stays as the person set it.
+  let v = VIEW; if ((s === 'assembly' || s === 'plan') && VIEW === '3d') v = WIDE() ? 'split' : '2d'; else if ((s === 'ext' || s === 'finish' || s === 'render') && VIEW === '2d') v = WIDE() ? 'split' : '3d';
+  setView(v, true); renderUI();
+  if (v !== '2d' && cutChanged) requestAnimationFrame(() => camPreset(wantCut ? 'doll' : 'front'));
 }
 function setView(v, quiet) {
   const was = VIEW; VIEW = v;
@@ -1186,6 +1262,12 @@ document.addEventListener('click', e => {
   const a = b.dataset.a, v = b.dataset.v, s = findSel();
   switch (a) {
     case 'stage': return setStage(v);
+    case 'rail': { if (v === 'guide') { GUIDE = !GUIDE; return renderUI(); } const r = RAIL.find(x => x[0] === v); return setStage(v === 'build' ? LASTBUILD : r[2][0]); }
+    case 'floor': { const l = +v, u = PROJ.units.find(x => (x.level || 0) === l); ALEVEL = l; FLMENU = false; if (u && u.id !== PROJ.active) return setActive(u.id); renderUI(); return refreshView(); }
+    case 'floorMenu': FLMENU = !FLMENU; return renderFloors();
+    case 'fit': { if (SHOW3D()) camPreset(CUT ? 'doll' : 'front'); if (SHOW2D()) renderPlan(); return; }
+    case 'swapFocus': { const el = $('#item-swap') || $('#open-k'); if (el) { el.focus(); el.scrollIntoView({ block: 'center' }); } return; }
+    case 'walkStart': { if (WALK) return exitWalk(); if (VIEW === '2d') setView('3d', true); const rm = R.slice().sort((a, b) => b.area - a.area)[0]; if (rm) return enterWalk(rm.id); return; }
     case 'view': return setView(v);
     case 'undo': return undo();
     case 'redo': return redo();
@@ -1199,7 +1281,7 @@ document.addEventListener('click', e => {
       SEL = null; AF = null; FIRSTFRAME = true; after(); DIRTY3D = true; refreshView(); camPreset('front');
       return toast(`${d.name} v${d.version} loaded from the catalogue`);
     }
-    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 9'); return renderUI();
+    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from Send'); return renderUI();
     case 'afSave': return authorSave();
     case 'signIn': return signIn();
     case 'signOut': SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (e) {} return renderRight();
@@ -1215,7 +1297,8 @@ document.addEventListener('click', e => {
       const u = d.gable ? PRE().W / 2 : freeOpenU(side, v); if (u == null) return toast(`No free space on the ${DS.SIDE_NAME[side].toLowerCase()} for that`);
       const id = uid('o'); commit(P => P.opens.push({ id, k: v, side, u })); SEL = { kind: 'open', id }; renderUI(); refreshView(); return;
     }
-    case 'project': return openStart();
+    case 'project': STAB = PROJECTS.list.length && !PROJ_FRESH ? 'mine' : 'new'; return openStart();
+    case 'stab': STAB = v; return openStart();
     case 'pjClose': return closeStart();
     case 'pjNew': { const nm = ($('#pj-name') && $('#pj-name').value.trim()) || PRESETS[v].name + ' project', d = DS.starter(v); d.name = nm; return startProject(newProject(nm, d)); }
     case 'pjDesign': { const d = (DS.DESIGNS || []).find(x => x.slug === v); if (!d) return; const nm = ($('#pj-name') && $('#pj-name').value.trim()) || d.name, des = { ...DS.clone(d.layout), name: d.name, design: { slug: d.slug, version: d.version, rules: d.rules || {} } }; if (d.rules && d.rules.defaults) Object.assign(des, d.rules.defaults); return startProject(newProject(nm, des)); }
@@ -1227,8 +1310,8 @@ document.addEventListener('click', e => {
     case 'unit': return setActive(v);
     case 'addhow': ADDHOW = v; return renderLeft();
     case 'addunit': { const d = DS.starter(v), u = placeNew(d, ADDHOW); PROJ.units.push(u); syncParty(); ALEVEL = u.level || 0; setActive(u.id, true); return toast(`${u.name} added ${ADDHOW === 'apart' ? '3 m apart' : ADDHOW === 'end' ? 'end to end' : 'beside'}. Drag it on the plan to place it`); }
-    case 'addfloor': { const base = AU(); if (PROJ.units.some(o => (o.level || 0) === 1 && o.x === base.x && o.z === base.z)) return toast(`${base.name} already has a floor above`); const d = v === 'copy' ? DS.clone(base.design) : plainDesign(base.design.preset); DS.normExt(d); d.ext.porch = null; d.ext.widen = []; d.ext.doorEnd = null; d.ext.party = []; d.name = base.design.name + ', upper floor';
-      const u = { id: uid('u'), name: 'Unit ' + (PROJ.units.length + 1), x: base.x, z: base.z, rot: base.rot, level: 1, stair: 'W', design: d }; PROJ.units.push(u); ALEVEL = 1; setActive(u.id, true); return toast(v === 'copy' ? 'Upper floor added with the same layout. Change it in the next steps' : 'Plain upper floor added, with a door where the stair lands'); }
+    case 'addfloor': { FLMENU = false; const base = AU(); if (PRES(base).sys !== 'container' || base.level > 0) return toast('Only a ground-floor container can take a floor above'); if (PROJ.units.some(o => (o.level || 0) === 1 && o.x === base.x && o.z === base.z)) return toast(`${base.name} already has a floor above`); const d = v === 'copy' ? DS.clone(base.design) : plainDesign(base.design.preset); DS.normExt(d); d.ext.porch = null; d.ext.widen = []; d.ext.doorEnd = null; d.ext.party = []; d.name = base.design.name + ', upper floor';
+      const u = { id: uid('u'), name: 'Unit ' + (PROJ.units.length + 1), x: base.x, z: base.z, rot: base.rot, level: 1, stair: 'W', design: d }; PROJ.units.push(u); ALEVEL = 1; setActive(u.id, true); return toast(v === 'copy' ? 'First floor added as a copy. You are now editing it' : 'Blank first floor added, with a door where the stair lands. You are now editing it'); }
     case 'urot': { const u = AU(); if (PRES(u).sys !== 'container' && false) return; u.rot = (rotOf(u) + 1) % 4; DIRTY3D = true; return after(); }
     case 'unudge': { const u = AU(); u.x = Math.round((u.x + +b.dataset.dx) * 100) / 100; u.z = Math.round((u.z + +b.dataset.dz) * 100) / 100; DIRTY3D = true; return after(); }
     case 'udel': { if (PROJ.units.length < 2) return; const id = PROJ.active; if (!confirmInline(b, 'Remove it?')) return; PROJ.units = PROJ.units.filter(u => u.id !== id); Object.keys(PROJ.joins).forEach(k => { if (k.includes(id)) delete PROJ.joins[k]; }); PROJ.active = PROJ.units[0].id; return setActive(PROJ.active, true); }
@@ -2015,7 +2098,7 @@ if (!PRESETS[P.preset]) P = DS.starter(Object.keys(PRESETS)[0]);
   let showStart = false;
   if (qp.get('design') && P.design && P.design.slug === qp.get('design')) PROJ = newProject(P.name, P);
   else if (cur && !qp.get('new')) PROJ = JSON.parse(JSON.stringify(cur.data));
-  else { PROJ = newProject(P.name, P); showStart = !load() || !!qp.get('new'); }
+  else { PROJ = newProject(P.name, P); showStart = !load() || !!qp.get('new'); PROJ_FRESH = showStart; }
   PROJ.units.forEach(u => { if (!PRESETS[u.design.preset]) u.design = DS.starter(Object.keys(PRESETS)[0]); });
   if (!unitOf(PROJ.active)) PROJ.active = PROJ.units[0].id;
   P = AU().design; syncParty(); ALEVEL = AU().level || 0;
@@ -2023,7 +2106,8 @@ if (!PRESETS[P.preset]) P = DS.starter(Object.keys(PRESETS)[0]);
   if (qp.get('project') && window.FC) FC.rest('ds_projects?select=*&id=eq.' + encodeURIComponent(qp.get('project'))).then(rows => { if (rows.length) { const d = rows[0].data; d.remoteId = rows[0].id; startProject(d); } }).catch(() => {});
 }
 SHELLSYS = PRESETS[P.preset].sys;
-recompute(); renderUI(); setView('3d', true); resize(); build3D(); camPreset('front');
+STAGE = 'assembly'; VISITED.add('assembly');
+recompute(); renderUI(); setView(WIDE() ? 'split' : '3d', true); resize(); build3D(); camPreset('front');
 </script>
 </body>
 </html>
