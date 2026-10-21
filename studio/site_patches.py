@@ -233,8 +233,9 @@ def patch_studio(d):
     d = rep(d, "// ---------------- author: save to the catalogue ----------------",
             "function sendQuote() {\n"
             "  if (!window.FC) return;\n"
-            "  FC.quote({ source: 'studio', intent: 'proposal', title: P.name + ' · ' + PRE().name, design_slug: (P.design && P.design.slug) || null,\n"
-            "    lines: Q.lines.map(l => ({ label: l.name, detail: l.grp, qty: l.qty, unit: l.unit, rate: l.qty ? Math.round(l.total / l.qty) : null, amount: Math.round(l.total) })),\n"
-            "    subtotal: Math.round(Q.sub), vat: Math.round(Q.vat), total: Math.round(Q.total) });\n"
+            "  const QQ = PQ || Q, many = PROJ && PROJ.units.length > 1;\n"
+            "  FC.quote({ source: 'studio', intent: 'proposal', title: (PROJ ? PROJ.name : P.name) + ' · ' + (many ? PROJ.units.length + ' units' : PRE().name), design_slug: (P.design && P.design.slug) || null,\n"
+            "    lines: QQ.lines.map(l => ({ label: l.name, detail: l.grp, qty: l.qty, unit: l.unit, rate: l.qty ? Math.round(l.total / l.qty) : null, amount: Math.round(l.total) })),\n"
+            "    subtotal: Math.round(QQ.sub), vat: Math.round(QQ.vat), total: Math.round(QQ.total) });\n"
             "}\n\n// ---------------- author: save to the catalogue ----------------", 'design-studio')
     return d

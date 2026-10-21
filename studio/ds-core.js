@@ -120,6 +120,9 @@
     bump: { name: 'Side bump-out: floor, walls, insulated roof', price: 42000, minDepth: 0.6, maxDepth: 2.4 },
     doorEnclosed: { name: 'Door-end extension, enclosed (cargo doors as side walls, glazed front)', price: 165000, depth: 1.2 },
     doorDeck: { name: 'Door-end extension, covered deck (cargo doors open)', price: 78000, depth: 1.2 },
+    party: { name: 'Wall opened between joined units, with welded frame', price: 24000 },
+    stack: { name: 'Stacking an upper unit: twist locks, crane lift, weather seal', price: 85000 },
+    stair: { name: 'External steel stair with landing to an upper unit', price: 165000 },
   };
   // the furniture library: category tree and items from the catalogue (filled from the package)
   const LIB = { cats: [], items: {} };
@@ -133,7 +136,18 @@
   let DESIGNS = [], SOURCE = { kind: 'builtin', label: 'Built-in sample catalogue' };
 
   const clone = o => JSON.parse(JSON.stringify(o));
-  const PR = P => PRESETS[P.preset];
+  // ---------- A-frame engine models (window.AFE, af-engine.js) ----------
+  const AFC = new Map();
+  function afEval(cfg) { const k = JSON.stringify(cfg); let r = AFC.get(k); if (!r) { r = root.AFE.evaluate(cfg); AFC.set(k, r); if (AFC.size > 300) AFC.delete(AFC.keys().next().value); } return r; }
+  function afPre(cfg) {
+    const r = afEval(cfg), pr = root.AFE.product(cfg.productCode) || r.product, gm = r.geometry || {};
+    const L = +cfg.lengthM, W = +cfg.widthM, len = (pr.lengths || []).find(l => l.lengthM === L) || (pr.lengths || [])[0] || {};
+    const ridge = gm.ridgeMm ? gm.ridgeMm / 1000 : W / 2 * Math.tan((cfg.pitchDeg || 60) * Math.PI / 180);
+    return { sys: 'aframe', name: pr.name, sub: `A-frame ${W} × ${L} m`, L, W, ridge, t: 0.2, ih: 2.4, yF: 0.45, shell: r.pricing ? r.pricing.subtotal : (len.basePrice || 0), deliver: 220000, weeks: pr.leadTimeWeeks || 12, afCode: pr.code, afr: r };
+  }
+  const PR = P => (P && P.af && root.AFE) ? afPre(P.af) : PRESETS[P.preset];
+  const afModels = () => root.AFE ? root.AFE.models.filter(x => x.status === 'published') : [];
+  function afRegister() { afModels().forEach((x, i) => { PRESETS['afm:' + x.code] = { ...afPre(root.AFE.defaults(x.code)), sort: 50 + i }; }); }
   const hr = (P, z) => { const p = PR(P); if (p.sys !== 'aframe') return p.ih; return p.ridge * (1 - Math.abs(z - p.W / 2) / (p.W / 2)) - p.yF; };
   const sideLen = (P, s) => { const p = PR(P); return s === 'N' || s === 'S' ? p.L : p.W; };
 
@@ -143,7 +157,7 @@
      openings may carry o.shade = SHADE key */
   function normExt(P) {
     const e = P.ext && typeof P.ext === 'object' ? P.ext : (P.ext = {});
-    if (!Array.isArray(e.widen)) e.widen = []; if (!Array.isArray(e.lights)) e.lights = [];
+    if (!Array.isArray(e.widen)) e.widen = []; if (!Array.isArray(e.lights)) e.lights = []; if (!Array.isArray(e.party)) e.party = [];
     if (e.doorEnd === undefined) e.doorEnd = null; if (e.clad === undefined) e.clad = null; if (e.porch === undefined) e.porch = null;
     if (PR(P).sys !== 'container') { e.widen = []; e.doorEnd = null; }
     if (Array.isArray(P.items)) P.items = P.items.filter(it => ITEMS[it.k]);
@@ -167,7 +181,8 @@
   // wall stretch removed from the main shell on a side: [[u0,u1], ...]
   function removedSpans(P, side) {
     const p = PR(P);
-    return annexes(P).filter(a => a.side === side).map(a => a.kind === 'widen' ? [a.u0, a.u1] : [0, p.W]);
+    return annexes(P).filter(a => a.side === side).map(a => a.kind === 'widen' ? [a.u0, a.u1] : [0, p.W])
+      .concat((normExt(P).party || []).filter(q => q.side === side).map(q => [q.u0, q.u1]));
   }
   // a partition that meets an opened wall carries on to the extension's outer wall
   function partSpan(P, q) {
@@ -403,7 +418,8 @@
   function quote(P, G, R, L) {
     const p = PR(P), lines = [], use = {};
     const add = (grp, name, qty, unit, rate, x = {}) => { if (qty > 0) lines.push({ grp, name, qty, unit, rate, total: qty * rate, ...x }); };
-    add('Shell', `${p.name} shell, insulated and wired`, 1, 'lot', p.shell);
+    if (p.afr && p.afr.pricing) p.afr.pricing.lines.forEach(l => add('Shell', l.code === 'BASE' ? `${l.label}, steel A-frame, insulated and wired` : l.label, 1, 'lot', l.amount, { af: l.code }));
+    else add('Shell', `${p.name} shell, insulated and wired`, 1, 'lot', p.shell);
     // openings
     const oc = {}; P.opens.forEach(o => { oc[o.k] = (oc[o.k] || 0) + 1; });
     for (const k in oc) add('Doors and windows', OPEN[k].name, oc[k], 'ea', OPEN[k].price, { stock: OPEN[k].stock, short: oc[k] > OPEN[k].stock });
@@ -484,6 +500,7 @@
   // ---------- checks ----------
   function analyze(P, G, R) {
     const p = PR(P), out = [], E = (lvl, text, ref) => out.push({ lvl, text, ref });
+    if (p.afr) p.afr.findings.forEach(f => E(f.severity === 'RED' ? 'error' : 'warn', `${f.message} ${f.action || ''}`.trim(), { kind: 'af', code: f.ruleCode, alts: f.alternatives || [] }));
     const things = [];
     P.items.forEach(it => things.push({ ref: { kind: 'item', id: it.id }, name: ITEMS[it.k].name, r: itemRect(it), flat: !!ITEMS[it.k].flat }));
     P.runs.forEach(rn => { const r = runRect(P, rn); if (r) things.push({ ref: { kind: 'run', id: rn.id }, name: rn.kind === 'kitchen' ? 'Kitchen run' : 'Wardrobe run', r }); else E('error', 'A run is attached to a partition that no longer exists', { kind: 'run', id: rn.id }); });
@@ -522,7 +539,7 @@
     // extensions and exterior
     const AX = annexes(P), e = normExt(P);
     P.opens.forEach(o => { const d = OPEN[o.k]; if (d.gable) return; const sp = openSpan(P, o);
-      removedSpans(P, o.side).forEach(([u0, u1]) => { if (sp.u0 < u1 - 0.01 && sp.u1 > u0 + 0.01) E('error', AX.some(a => a.kind === 'doorEnd' && a.side === o.side) ? `${d.name} is in the end opened for the door-end extension. Move it to another wall` : `${d.name} is in the wall section opened for the extension. Move it or shorten the opening`, { kind: 'open', id: o.id }); }); });
+      removedSpans(P, o.side).forEach(([u0, u1]) => { if (sp.u0 < u1 - 0.01 && sp.u1 > u0 + 0.01) E('error', (e.party || []).some(q => q.side === o.side && q.u0 === u0 && q.u1 === u1) ? `${d.name} is in the wall opened to the next unit. Move it, or close that wall in Assembly` : AX.some(a => a.kind === 'doorEnd' && a.side === o.side) ? `${d.name} is in the end opened for the door-end extension. Move it to another wall` : `${d.name} is in the wall section opened for the extension. Move it or shorten the opening`, { kind: 'open', id: o.id }); }); });
     AX.filter(a => a.kind === 'widen').forEach(a => {
       const len = a.u1 - a.u0;
       E('eng', `${a.side === 'N' ? 'North' : 'South'} wall opened for ${len.toFixed(1)} m: the welded frame and the bump-out roof need an engineer's sign-off (in the quote)`, null);
@@ -626,7 +643,22 @@
       items: [it('shower', 8.65, 0.65), it('wc', 7.35, 0.6, 3), it('basin', 7.225, 1.65, 3), it('dining', 5.0, 2.0), it('sofa', 8.65, 4.2, 1), it('coffee', 7.5, 4.2, 1), it('rug', 7.6, 4.2, 1), it('bedD', 1.225, 1.65, 3), it('bedD', 1.225, 4.4, 3), it('bedD', 10.775, 4.6, 1), it('desk', 10.5, 0.5, 0)],
     }),
   };
+  function afStarter(key) {
+    const cfg = root.AFE.defaults(key.slice(4)), p = afPre(cfg), bk = p.L < 10 ? 'af8' : 'af12', b = PRESETS[bk] || { L: bk === 'af8' ? 8 : 12, W: 6 }, s = STARTERS[bk]();
+    const bL = b.L || 8, bW = b.W || 6, cl = v => Math.max(0.2, Math.min(p.W - 0.2, v));
+    // growing: stretch the plan; shrinking: keep the bathroom block at full size against the end gable and squeeze the living space
+    const sx = p.L >= bL ? v => +(v * p.L / bL).toFixed(2) : v => +(v >= bL - 2 ? v + p.L - bL : v * (p.L - 2) / (bL - 2)).toFixed(2);
+    const sz = p.L >= bL ? v => +(v * p.W / bW).toFixed(2) : v => +cl(v + (p.W - bW) / 2 - (p.W < 6 ? 0.6 : 0)).toFixed(2), fx = 1, fz = 1;
+    s.parts.forEach(q => { if (q.a === 'z') { q.at = sx(q.at); q.s0 = sz(q.s0); q.s1 = sz(q.s1); } else { q.at = sz(q.at); q.s0 = sx(q.s0); q.s1 = sx(q.s1); } if (q.door != null) q.door = +(q.door * (q.a === 'z' ? fz : fx)).toFixed(2); });
+    s.opens.forEach(o => { o.u = sz(o.u); });
+    s.runs.forEach(r => { if (/^[NS]$/.test(r.side)) r.u0 = sx(r.u0); else if (/^[WE]$/.test(r.side)) r.u0 = sz(r.u0); });
+    s.items.forEach(i => { i.x = sx(i.x); i.z = sz(i.z); });
+    if (p.L < 9) s.items = s.items.filter(i => !/^bed|^night/.test(i.k));
+    if (p.L < bL) { s.opens = s.opens.filter(o => o.k !== 'wSmall'); s.runs.filter(r => r.kind === 'kitchen' && /^[WE]$/.test(r.side)).forEach(r => { r.units = r.units.slice(0, 2); r.u0 = +(sz(3.6) - 0.3 - runLen(r)).toFixed(2); }); s.items = s.items.filter(i => i.k !== 'arm'); }
+    return { s, cfg, p };
+  }
   function starter(key, name) {
+    if (/^afm:/.test(key) && root.AFE) { const { s, cfg, p } = afStarter(key); return { v: 1, name: name || `${p.name} · A-frame`, preset: key, af: cfg, colour: SYS.aframe.colours[0][0], ceil: 'pine', furnPkg: true, roomCfg: [], ext: { widen: [], doorEnd: null, clad: null, lights: [], porch: null }, ...s }; }
     const s = STARTERS[key](), p = PRESETS[key];
     return { v: 1, name: name || `${p.name} · ${p.sub}`, preset: key, colour: SYS[p.sys].colours[0][0], ceil: p.sys === 'aframe' ? 'pine' : 'gyp', furnPkg: true, roomCfg: [], ext: { widen: [], doorEnd: null, clad: null, lights: [], porch: null }, ...s };
   }
@@ -636,7 +668,7 @@
   function applyPackage(pkg, source) {
     if (!pkg || !pkg.shells || !pkg.catalog) throw new Error('Not a design package');
     const c = pkg.catalog, ALL = 3;
-    fill(PRESETS, pkg.shells, v => ({ ...v }));
+    fill(PRESETS, pkg.shells, v => ({ ...v })); afRegister();
     if (c.opening) fill(OPEN, c.opening, v => { const o = { ...v }; if (v.systems && v.systems.length < ALL) o.only = v.systems; return o; });
     ['floor', 'wall', 'ceil'].forEach(g => { if (c[g]) fill(FIN[g], c[g]); });
     if (c.kitchen_unit) fill(KU, c.kitchen_unit);
@@ -665,5 +697,6 @@
     return pkg;
   }
 
-  root.DS = { LIB, itemDims, itemPrice, itemOptText, itemColour, partSpan, CLAD, LIGHT, PORCH, SHADE, EXT, normExt, annexes, removedSpans, bbox, wallHeight, applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
+  afRegister();
+  root.DS = { afPre, afEval, afModels, afRegister, LIB, itemDims, itemPrice, itemOptText, itemColour, partSpan, CLAD, LIGHT, PORCH, SHADE, EXT, normExt, annexes, removedSpans, bbox, wallHeight, applyPackage, SERVICES, DESIGNS, SOURCE, C, PRESETS, SYS, SIDE_NAME, OPEN, FIN, KU, WU, FRONTS, TOPS, ITEMS, PART_PER_M, PART_DOOR, DOOR_W, DOOR_H, clone, PR, hr, sideLen, itemRect, runCat, runLen, runBase, runRect, runUnits, openSpan, grid, roomInfo, setRoom, lining, quote, analyze, starter, doorLinks };
 })(typeof window !== 'undefined' ? window : globalThis);

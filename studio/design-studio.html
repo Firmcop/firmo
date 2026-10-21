@@ -38,11 +38,12 @@ header.top{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 1
 .mark{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:var(--ivory)}
 .mark b{font:500 19px/1 var(--serif);letter-spacing:.3em}
 .mark small{font:400 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:5px}
-.stages{display:flex;gap:2px;flex:1;justify-content:center;min-width:0;overflow-x:auto}
-.stages button{display:flex;align-items:center;gap:8px;height:56px;padding:0 14px;border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.04em;border-bottom:2px solid transparent;white-space:nowrap}
+.stages{display:flex;gap:0;flex:1;justify-content:safe center;min-width:0;overflow-x:auto;scrollbar-width:none}
+.stages button{display:flex;align-items:center;gap:6px;height:56px;padding:0 10px;border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.04em;border-bottom:2px solid transparent;white-space:nowrap}
 .stages button i{font:500 10px/1 var(--mono);font-style:normal;color:var(--faint)}
 .stages button.on{color:var(--ivory);border-bottom-color:var(--brass)}
 .stages button.on i{color:var(--brass)}
+@media (max-width:1560px){.stages button:not(.on) .l{display:none}.stages button{padding:0 9px}}
 .tright{display:flex;gap:6px;align-items:center}
 .tb{height:34px;padding:0 12px;border:1px solid var(--line2);background:transparent;color:var(--ivory);font-size:12px;border-radius:2px;white-space:nowrap}
 .tb:hover{border-color:var(--brass)}
@@ -70,6 +71,7 @@ aside{background:var(--panel);overflow-y:auto;min-height:0}
 .card small{color:var(--muted);font:400 10.5px/1.35 var(--mono)}
 .card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:4px;font:500 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:2px;border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.afinds{display:grid;gap:6px;margin:8px 0}.afind{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:7px 9px;display:grid;gap:4px;font-size:12.5px}.afind.err{border-left-color:var(--err)}.afind small{color:var(--muted)}.afind .tb{justify-self:start}.aflines{width:100%;font-size:12px;border-collapse:collapse;margin-top:6px}.aflines td{padding:3px 0;border-bottom:1px solid var(--line)}.aflines .n{text-align:right}
 .chip.ok{color:var(--ok);border-color:rgba(127,180,138,.4)} .chip.warn{color:var(--warn);border-color:rgba(226,178,92,.4)} .chip.err{color:var(--err);border-color:rgba(224,122,106,.45)} .chip.eng{color:var(--eng);border-color:rgba(143,179,217,.45)} .chip.br{color:var(--brass);border-color:rgba(201,164,106,.5)}
 .sw{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.18);padding:0}
 .sw.on{outline:2px solid var(--brass);outline-offset:2px}
@@ -108,6 +110,14 @@ main#vp.split #plan{width:50%;right:auto;border-right:2px solid #2a2622}
 main#vp.split #three{left:50%}
 main#vp.split .vhint{max-width:calc(50% - 40px)}
 .fams{display:flex;flex-wrap:wrap;gap:6px}
+.ubar{position:absolute;right:14px;top:14px;z-index:3;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:55%}
+.ubar button{min-height:32px;padding:0 12px;border-radius:999px;border:1px solid #3a352e;background:rgba(20,18,16,.88);color:#e8dfd0;font:inherit;font-size:12px;cursor:pointer}
+.ubar button.on{background:#a37b3e;border-color:#a37b3e;color:#fff}
+#start{position:fixed;inset:0;z-index:60;background:rgba(13,12,10,.94);overflow:auto;display:none}
+#start.show{display:block}
+#start .st-in{max-width:1100px;margin:0 auto;padding:32px 24px 60px}
+#start .st-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:16px}
+#start .st-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
 .fams button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line,#3a352e);background:transparent;color:inherit;font:inherit;font-size:12.5px;cursor:pointer}
 .fams button.on{background:var(--brass,#a37b3e);border-color:var(--brass,#a37b3e);color:#fff}
 .card .th{display:block;width:100%;aspect-ratio:16/10;border-radius:3px;background:#f4efe6 center/cover no-repeat;margin-bottom:4px;overflow:hidden}
@@ -186,7 +196,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
   <main id="vp">
     <div id="three"></div>
     <svg id="plan" xmlns="http://www.w3.org/2000/svg" aria-label="Floor plan"></svg>
-    <div class="vtog"><div class="seg" id="vtog"></div></div>
+    <div class="vtog"><div class="seg" id="vtog"></div></div><div class="ubar" id="ubar"></div>
     <div class="vhint" id="vhint"></div>
     <div class="walkpad" id="walkpad" hidden>
       <span></span><button type="button" data-a="walkMove" data-v="f" aria-label="Forward">↑</button><span></span>
@@ -201,6 +211,7 @@ details.how ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11.
 <div id="toast" role="status"></div>
 <div id="chip"></div>
 <script src="ds-config.js"></script>
+<script src="af-engine.js"></script>
 <script src="ds-core.js"></script>
 <script src="fc-site.js"></script>
 <script type="module">
@@ -221,7 +232,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ---------------- state ----------------
 const KEY = 'fc-design-studio-v1';
 function load() { try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && PRESETS[s.preset] && Array.isArray(s.parts)) return s; } catch (e) {} return null; }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} if (PROJ) { AU().design = P; saveProject(); } }
 let P = load() || DS.starter('tw40', 'Twin 40 family home');
 let HIST = [], FUT = [], PENDING = false;
 let STAGE = 'shell', VIEW = '3d', SEL = null, TOOL = 'select', CLIENT = false, SHOWCHECKS = false;
@@ -234,11 +245,13 @@ let AUTHOR = false, SESSION = null, AF = null;
 try { SESSION = JSON.parse(localStorage.getItem('fc-ds-session') || 'null'); } catch (e) {}
 let SCENE = 'day', CUT = false, WALK = null, STATUS = 0, LINK = null;
 const CLIENTINFO = { name: 'Achieng Otieno', phone: '+254 7XX XXX XXX', site: 'Naivasha, plot 14' };
-const STAGES = [['shell', 'Size', '3d'], ['open', 'Openings', '3d'], ['ext', 'Exterior', '3d'], ['plan', 'Interior', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finishes', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
+const STAGES = [['shell', 'Unit', '3d'], ['assembly', 'Assembly', '2d'], ['open', 'Openings', '3d'], ['ext', 'Exterior', '3d'], ['plan', 'Interior', '2d'], ['furnish', 'Furnish', '2d'], ['finish', 'Finishes', '3d'], ['render', 'Render', '3d'], ['share', 'Share', '3d']];
 const PIPE = ['Design in progress', 'Engineering review', 'Proposal sent to client', 'Deposit requested (M-Pesa)', 'Order placed'];
 
 function recompute() {
+  if (PROJ) { AU().design = P; syncParty(); }
   DS.normExt(P); G = DS.grid(P); R = DS.roomInfo(P, G); L = DS.lining(P, G); Q = DS.quote(P, G, R, L); A = DS.analyze(P, G, R);
+  if (PROJ) { PQ = projectQuote(); AA = assemblyChecks(); }
   if (SEL && !findSel()) SEL = null;
 }
 function snapshot() { HIST.push(JSON.stringify(P)); if (HIST.length > 80) HIST.shift(); FUT = []; }
@@ -260,8 +273,265 @@ function locked(kind) { const l = P.design && P.design.rules && P.design.rules.l
 function lockToast(kind) { toast(`${{ items: 'Furniture', runs: 'Joinery', opens: 'Doors and windows', parts: 'Partitions' }[LOCKKEY[kind] || kind]} are fixed in this design. Switch on Author to change them`); }
 function finAllowed(g, k) { const f = P.design && P.design.rules && P.design.rules.finishes; if (AUTHOR || !f || !f[g] || f[g] === 'all') return true; return f[g].includes(k); }
 let toastT; function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 2600); }
-const PRE = () => PRESETS[P.preset];
+const PRE = () => DS.PR(P);
 const SYSD = () => SYS[PRE().sys];
+
+// ---------------- project: one or more units placed on a site, on one or two levels ----------------
+/* PROJ = { v:2, id, name, units:[{ id, name, x, z, rot, level, stair, design }], active, joins:{ key:false }, remoteId }
+   Every step after Assembly edits the active unit (P is its design). Units can be joined (touching, shared wall opened)
+   or set apart; an upper unit sits on the one below. */
+const PKEY = 'fc-studio-projects-v1', LH = 2.59;
+function loadProjects() { try { const j = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (j && Array.isArray(j.list)) return j; } catch (e) {} return { list: [], current: null }; }
+let PROJECTS = loadProjects(), PROJ = null, PQ = null, AA = [], ALEVEL = 0, REMOTE_DIRTY = false;
+const unitOf = id => PROJ && PROJ.units.find(u => u.id === id);
+const AU = () => unitOf(PROJ.active) || PROJ.units[0];
+const PRES = u => DS.PR(u.design);
+function newProject(name, design) { const u = { id: uid('u'), name: 'Unit 1', x: 0, z: 0, rot: 0, level: 0, stair: 'W', design }; return { v: 2, id: uid('pj'), name: name || design.name, units: [u], active: u.id, joins: {}, created: Date.now() }; }
+function saveProject() {
+  if (!PROJ) return; const i = PROJECTS.list.findIndex(x => x.id === PROJ.id), row = { id: PROJ.id, name: PROJ.name, updated: Date.now(), units: PROJ.units.length, data: PROJ };
+  if (i >= 0) PROJECTS.list[i] = row; else PROJECTS.list.unshift(row);
+  PROJECTS.list = PROJECTS.list.slice(0, 12); PROJECTS.current = PROJ.id; REMOTE_DIRTY = true;
+  try { localStorage.setItem(PKEY, JSON.stringify(PROJECTS)); } catch (e) {}
+}
+// geometry of a unit on the site: footprint corner at (x, z), turned in quarter turns
+const rotOf = u => ((u.rot || 0) % 4 + 4) % 4;
+function dimsOf(u) { const p = PRES(u); return rotOf(u) % 2 ? [p.W, p.L] : [p.L, p.W]; }
+function toWorld(u, lx, lz) { const p = PRES(u), r = rotOf(u); return r === 0 ? [u.x + lx, u.z + lz] : r === 1 ? [u.x + p.W - lz, u.z + lx] : r === 2 ? [u.x + p.L - lx, u.z + p.W - lz] : [u.x + lz, u.z + p.L - lx]; }
+function toLocal(u, wx, wz) { const p = PRES(u), r = rotOf(u), dx = wx - u.x, dz = wz - u.z; return r === 0 ? [dx, dz] : r === 1 ? [dz, p.W - dx] : r === 2 ? [p.L - dx, p.W - dz] : [p.L - dz, dx]; }
+function unitMatrix(u) { const p = PRES(u), r = rotOf(u), off = [[u.x, u.z], [u.x + p.W, u.z], [u.x + p.L, u.z + p.W], [u.x, u.z + p.L]][r]; return new THREE.Matrix4().makeRotationY(-r * Math.PI / 2).setPosition(off[0], (u.level || 0) * LH, off[1]); }
+function rectOf(u) { const [w, d] = dimsOf(u); return { x0: u.x, x1: u.x + w, z0: u.z, z1: u.z + d }; }
+const SIDE_N = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+function sideEnds(u, s) { const p = PRES(u); const e = { N: [[0, 0], [p.L, 0]], S: [[0, p.W], [p.L, p.W]], W: [[0, 0], [0, p.W]], E: [[p.L, 0], [p.L, p.W]] }[s]; return e.map(([a, b]) => toWorld(u, a, b)); }
+function worldNormal(u, s) { const [vx, vz] = SIDE_N[s], r = rotOf(u); return r === 0 ? [vx, vz] : r === 1 ? [-vz, vx] : r === 2 ? [-vx, -vz] : [vz, -vx]; }
+// walls of two units that face each other on the same line and overlap: a joint
+function contacts() {
+  const out = [], us = PROJ.units;
+  for (let i = 0; i < us.length; i++) for (let j = i + 1; j < us.length; j++) {
+    const a = us[i], b = us[j]; if ((a.level || 0) !== (b.level || 0) || PRES(a).sys !== 'container' || PRES(b).sys !== 'container') continue;
+    for (const sa of ['N', 'S', 'W', 'E']) for (const sb of ['N', 'S', 'W', 'E']) {
+      const na = worldNormal(a, sa), nb = worldNormal(b, sb); if (na[0] + nb[0] !== 0 || na[1] + nb[1] !== 0) continue;
+      const ea = sideEnds(a, sa), eb = sideEnds(b, sb), alongX = na[0] === 0, k = alongX ? 1 : 0, m = alongX ? 0 : 1;
+      if (Math.abs(ea[0][k] - eb[0][k]) > 0.06) continue;
+      const lo = Math.max(Math.min(ea[0][m], ea[1][m]), Math.min(eb[0][m], eb[1][m])), hi = Math.min(Math.max(ea[0][m], ea[1][m]), Math.max(eb[0][m], eb[1][m]));
+      if (hi - lo < 0.6) continue;
+      const span = (u, s) => { const p0 = alongX ? [lo, ea[0][k]] : [ea[0][k], lo], p1 = alongX ? [hi, ea[0][k]] : [ea[0][k], hi], l0 = toLocal(u, ...p0), l1 = toLocal(u, ...p1), ix = s === 'N' || s === 'S' ? 0 : 1, len = s === 'N' || s === 'S' ? PRES(u).L : PRES(u).W; return [Math.max(0.16, Math.min(l0[ix], l1[ix])), Math.min(len - 0.16, Math.max(l0[ix], l1[ix]))].map(v => Math.round(v * 100) / 100); };
+      out.push({ key: a.id + '|' + b.id + '|' + sa, a: a.id, b: b.id, sa, sb, ua: span(a, sa), ub: span(b, sb), len: Math.round((hi - lo) * 100) / 100 });
+    }
+  }
+  return out;
+}
+const isOpen = c => PROJ.joins[c.key] !== false;
+function syncParty() {
+  if (!PROJ) return; const cs = contacts();
+  PROJ.units.forEach(u => { DS.normExt(u.design); u.design.ext.party = []; });
+  cs.filter(isOpen).forEach(c => { unitOf(c.a).design.ext.party.push({ side: c.sa, u0: c.ua[0], u1: c.ua[1] }); unitOf(c.b).design.ext.party.push({ side: c.sb, u0: c.ub[0], u1: c.ub[1] }); });
+}
+function withUnit(u, fn) {
+  const sv = { P, G, R, L, Q, A }; P = u.design; DS.normExt(P); G = DS.grid(P); R = DS.roomInfo(P, G); L = DS.lining(P, G); Q = DS.quote(P, G, R, L); A = DS.analyze(P, G, R);
+  try { return fn(); } finally { P = sv.P; G = sv.G; R = sv.R; L = sv.L; Q = sv.Q; A = sv.A; }
+}
+function assemblyChecks() {
+  const out = [], E = (lvl, text, id) => out.push({ lvl, text, ref: id ? { kind: 'unit', id } : null }), us = PROJ.units;
+  us.forEach(u => {
+    if ((u.level || 0) > 0) {
+      if (PRES(u).sys !== 'container') E('error', `${u.name}: only containers can be stacked`, u.id);
+      const r = rectOf(u), lows = us.filter(o => (o.level || 0) === (u.level || 0) - 1).map(rectOf);
+      const on = (x, z) => lows.some(q => x >= q.x0 - 0.05 && x <= q.x1 + 0.05 && z >= q.z0 - 0.05 && z <= q.z1 + 0.05);
+      if (![[r.x0, r.z0], [r.x1, r.z0], [r.x0, r.z1], [r.x1, r.z1]].every(([x, z]) => on(x, z))) E('error', `${u.name} is not fully carried by the unit below. Set it over a unit, or ask for an engineered frame`, u.id);
+      else E('eng', `${u.name} is stacked: corner castings, twist locks and the crane lift are checked by the engineer (in the quote)`, u.id);
+      if (!u.design.opens.some(o => OPEN[o.k] && OPEN[o.k].door)) E('warn', `${u.name} has no door. Add one where the stair lands`, u.id);
+    }
+  });
+  for (let i = 0; i < us.length; i++) for (let j = i + 1; j < us.length; j++) {
+    const a = us[i], b = us[j]; if ((a.level || 0) !== (b.level || 0)) continue;
+    const ra = rectOf(a), rb = rectOf(b), ox = Math.min(ra.x1, rb.x1) - Math.max(ra.x0, rb.x0), oz = Math.min(ra.z1, rb.z1) - Math.max(ra.z0, rb.z0);
+    if (ox > 0.05 && oz > 0.05) E('error', `${a.name} and ${b.name} overlap. Move one of them`, b.id);
+    else { const gap = Math.max(-ox, -oz, 0); if (gap > 0.02 && gap < 0.9 && (ox > 0 || oz > 0)) E('warn', `${a.name} and ${b.name} are ${gap.toFixed(2)} m apart. Join them, or leave at least 0.9 m for a path`, b.id); }
+  }
+  return out;
+}
+function projectQuote() {
+  const lines = [], many = PROJ.units.length > 1; let weeks = 0, seenFee = false;
+  PROJ.units.forEach(u => withUnit(u, () => {
+    weeks = Math.max(weeks, Q.weeks);
+    Q.lines.forEach(l => { if (/Design and engineering review/.test(l.name)) { if (seenFee) return; seenFee = true; } lines.push({ ...l, grp: many ? `${u.name} · ${l.grp}` : l.grp, unit_id: u.id }); });
+  }));
+  const add = (name, qty, unit, rate, x = {}) => { if (qty > 0) lines.push({ grp: 'Assembly', name, qty, unit, rate, total: qty * rate, ...x }); };
+  contacts().filter(isOpen).forEach(c => add(`${EXT.party.name}: ${unitOf(c.a).name} to ${unitOf(c.b).name}`, Math.round((c.ua[1] - c.ua[0]) * 100) / 100, 'm', EXT.party.price, { eng: true }));
+  PROJ.units.filter(u => (u.level || 0) > 0).forEach(u => { add(`${EXT.stack.name}, ${u.name}`, 1, 'lot', EXT.stack.price, { eng: true }); if (u.stair && u.stair !== 'none') add(`${EXT.stair.name}, ${u.name}`, 1, 'lot', EXT.stair.price); });
+  const sub = lines.reduce((a, l) => a + l.total, 0), vat = sub * 0.16, total = sub + vat;
+  if (PROJ.units.length > 1) weeks += 1; if (PROJ.units.some(u => (u.level || 0) > 0)) weeks += 2;
+  return { lines, sub, vat, total, deposit: total * 0.3, weeks, shortfall: lines.filter(l => l.short) };
+}
+function setActive(id, quiet) {
+  if (!unitOf(id) || (PROJ.active === id && !quiet)) return;
+  PROJ.active = id; P = AU().design; HIST = []; FUT = []; SEL = null; SHELLSYS = PRESETS[P.preset].sys; ALEVEL = AU().level || 0; DIRTY3D = true; after();
+  if (!quiet) toast(`Editing ${AU().name}`);
+}
+// a free spot next to the last unit: joined beside it, end to end, or set apart
+function placeNew(design, how) {
+  const last = AU(), r = rectOf(last), p = DS.PR(design), gap = how === 'apart' ? 3 : 0;
+  const lvl = last.level || 0;
+  let x = r.x0, z = r.z1 + gap; if (how === 'end') { x = r.x1 + gap; z = r.z0; }
+  const u = { id: uid('u'), name: 'Unit ' + (PROJ.units.length + 1), x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, rot: rotOf(last) % 2 && how !== 'end' ? 1 : 0, level: lvl, stair: 'W', design };
+  if (p.sys !== 'container') u.rot = 0;
+  return u;
+}
+// snap a dragged unit to its neighbours' edges
+function snapUnit(u) {
+  const [w, d] = dimsOf(u), others = PROJ.units.filter(o => o !== u && ((o.level || 0) === (u.level || 0) || (o.level || 0) === (u.level || 0) - 1));
+  let bx = null, bz = null, dx = 0.3, dz = 0.3;
+  others.forEach(o => { const q = rectOf(o); [q.x0, q.x1, q.x0 - w, q.x1 - w].forEach(c => { const dd = Math.abs(u.x - c); if (dd < dx) { dx = dd; bx = c; } }); [q.z0, q.z1, q.z0 - d, q.z1 - d].forEach(c => { const dd = Math.abs(u.z - c); if (dd < dz) { dz = dd; bz = c; } }); });
+  if (bx != null) u.x = Math.round(bx * 100) / 100; if (bz != null) u.z = Math.round(bz * 100) / 100;
+}
+function siteBBox(units) {
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; (units || PROJ.units).forEach(u => { const q = rectOf(u); x0 = Math.min(x0, q.x0); x1 = Math.max(x1, q.x1); z0 = Math.min(z0, q.z0); z1 = Math.max(z1, q.z1); });
+  return { x0, x1, z0, z1 };
+}
+// the site plan for Assembly: every unit on the chosen level, the level below shown faintly
+function assemblySVG() {
+  const X = PAPER, us = PROJ.units, onLvl = us.filter(u => (u.level || 0) === ALEVEL), below = us.filter(u => (u.level || 0) === ALEVEL - 1);
+  const bb = siteBBox(onLvl.length ? onLvl.concat(below) : us), pad = 2.5, vb = [bb.x0 - pad, bb.z0 - pad, bb.x1 - bb.x0 + 2 * pad, bb.z1 - bb.z0 + 2 * pad];
+  let s = `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${X.bg}"/>`;
+  for (let x = Math.floor(vb[0]); x <= vb[0] + vb[2]; x++) s += `<line x1="${x}" y1="${vb[1]}" x2="${x}" y2="${vb[1] + vb[3]}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  for (let z = Math.floor(vb[1]); z <= vb[1] + vb[3]; z++) s += `<line x1="${vb[0]}" y1="${z}" x2="${vb[0] + vb[2]}" y2="${z}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  below.forEach(u => { const q = rectOf(u); s += `<rect x="${q.x0}" y="${q.z0}" width="${q.x1 - q.x0}" height="${q.z1 - q.z0}" fill="none" stroke="${X.mid}" stroke-width="0.03" stroke-dasharray="0.15 0.1"/><text x="${q.x0 + 0.15}" y="${q.z1 - 0.15}" font-size="0.22" fill="${X.mid}" font-family="IBM Plex Mono, monospace">${esc(u.name)} below</text>`; });
+  onLvl.forEach(u => {
+    const p = PRES(u), r = rotOf(u), off = [[u.x, u.z], [u.x + p.W, u.z], [u.x + p.L, u.z + p.W], [u.x, u.z + p.L]][r], q = rectOf(u), on = u.id === PROJ.active;
+    const body = withUnit(u, () => planSVG(true, true).body);
+    s += `<g data-k="unit:${u.id}" style="cursor:move"><g transform="translate(${off[0]} ${off[1]}) rotate(${r * 90})">${body}</g><rect x="${q.x0}" y="${q.z0}" width="${q.x1 - q.x0}" height="${q.z1 - q.z0}" fill="${on ? X.sel : '#000'}" fill-opacity="${on ? 0.08 : 0.001}" stroke="${on ? X.sel : 'none'}" stroke-width="0.06"/>
+      <text x="${(q.x0 + q.x1) / 2}" y="${q.z0 - 0.25}" font-size="0.3" text-anchor="middle" fill="${on ? X.sel : X.ink}" font-family="Manrope, sans-serif" font-weight="700">${esc(u.name)} · ${esc(p.name)}${u.level ? ' · upper' : ''}</text></g>`;
+  });
+  contacts().forEach(c => { const a = unitOf(c.a); if ((a.level || 0) !== ALEVEL) return; const [p0, p1] = [toWorld(a, ...(c.sa === 'N' || c.sa === 'S' ? [c.ua[0], c.sa === 'N' ? 0 : PRES(a).W] : [c.sa === 'W' ? 0 : PRES(a).L, c.ua[0]])), toWorld(a, ...(c.sa === 'N' || c.sa === 'S' ? [c.ua[1], c.sa === 'N' ? 0 : PRES(a).W] : [c.sa === 'W' ? 0 : PRES(a).L, c.ua[1]]))];
+    s += `<line x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}" stroke="${isOpen(c) ? '#3f9a5a' : '#b0413e'}" stroke-width="0.12" stroke-linecap="round" stroke-dasharray="${isOpen(c) ? '0.3 0.12' : '0'}"/>`; });
+  if (onLvl.length > 1 || below.length) { const b = siteBBox(onLvl.length ? onLvl : us); s += `<text x="${b.x0}" y="${b.z1 + 0.8}" font-size="0.26" fill="${X.mid}" font-family="IBM Plex Mono, monospace">Site ${(b.x1 - b.x0).toFixed(1)} × ${(b.z1 - b.z0).toFixed(1)} m · green dashes: walls opened between units</text>`; }
+  return { vb, body: s };
+}
+function asmPanel() {
+  const us = PROJ.units, au = AU(), levels = [...new Set(us.map(u => u.level || 0))].sort();
+  const cs = contacts().filter(c => c.a === au.id || c.b === au.id);
+  let h = `<div class="sec"><div class="eb">Step 2 · Assembly</div><h2 class="h">${esc(PROJ.name)}</h2><p class="note">Place the units on the site plan. Drag a unit to move it; it snaps to its neighbours. Touching units can share one open space, or keep their walls.</p>
+    <div class="seg">${[0, 1].map(l => `<button type="button" class="${ALEVEL === l ? 'on' : ''}" data-a="alevel" data-v="${l}">${l ? 'Upper floor' : 'Ground floor'}${levels.includes(l) ? '' : ' ·'}</button>`).join('')}</div></div>
+    <div class="sec"><div class="eb">Units</div><div class="list">${us.map(u => `<button type="button" data-a="unit" data-v="${u.id}" class="${u.id === au.id ? 'sel' : ''}"><span>${esc(u.name)} · ${esc(PRES(u).name)}</span><span>${u.level ? 'Upper' : 'Ground'}</span></button>`).join('')}</div></div>
+    <div class="sec"><div class="eb">Add a unit</div><div class="seg"><button type="button" class="${ADDHOW === 'beside' ? 'on' : ''}" data-a="addhow" data-v="beside">Beside</button><button type="button" class="${ADDHOW === 'end' ? 'on' : ''}" data-a="addhow" data-v="end">End to end</button><button type="button" class="${ADDHOW === 'apart' ? 'on' : ''}" data-a="addhow" data-v="apart">Set apart</button></div>
+    <div class="cards two">${Object.entries(PRESETS).map(([k, p]) => `<button type="button" class="card" data-a="addunit" data-v="${k}"><b>${esc(p.name)}</b><small>${p.L.toFixed(1)} × ${p.W.toFixed(1)} m</small>${CLIENT ? '' : `<small>From ${KSh(p.shell)}</small>`}</button>`).join('')}</div>
+    <p class="note">The new unit is placed next to ${esc(au.name)} on the same floor, with its starter layout.</p></div>`;
+  if (PRES(au).sys === 'container' && !(au.level > 0)) h += `<div class="sec"><div class="eb">Add a floor on ${esc(au.name)}</div><div class="cards"><button type="button" class="card" data-a="addfloor" data-v="copy"><b>Copy this layout up</b><small>Same rooms, doors and windows as the floor below, ready to change</small></button><button type="button" class="card" data-a="addfloor" data-v="plain"><b>Plain floor</b><small>An empty shell with one door where the stair lands</small></button></div></div>`;
+  return h;
+}
+function asmRight() {
+  const au = AU(), cs = contacts().filter(c => c.a === au.id || c.b === au.id), ls = PQ.lines.filter(l => l.grp === 'Assembly');
+  let h = `<div class="sec insp"><div class="eb">${au.level ? 'Upper floor' : 'Ground floor'}</div><label class="lbl">Unit name<input type="text" id="u-name" data-in="uname" value="${esc(au.name)}"></label>
+    <div class="sub">${esc(PRES(au).name)} · at ${au.x.toFixed(1)}, ${au.z.toFixed(1)} m</div>
+    <div class="btns"><button type="button" class="btn" data-a="urot">Turn 90°</button>${PROJ.units.length > 1 ? '<button type="button" class="btn del" data-a="udel">Remove unit</button>' : ''}</div>
+    <div class="btns">${[['←', -0.5, 0], ['→', 0.5, 0], ['↑', 0, -0.5], ['↓', 0, 0.5]].map(([l, dx, dz]) => `<button type="button" class="btn" data-a="unudge" data-dx="${dx}" data-dz="${dz}" aria-label="Move 0.5 m">${l}</button>`).join('')}</div>
+    ${au.level ? `<label class="lbl">Stair<select data-in="ustair">${[['W', 'West end'], ['E', 'East end'], ['N', 'North side'], ['S', 'South side'], ['none', 'No stair (reached another way)']].map(([v, l]) => `<option value="${v}" ${au.stair === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}
+    ${cs.length ? `<div class="eb" style="color:var(--muted)">Walls touching other units</div>${cs.map(c => { const o = unitOf(c.a === au.id ? c.b : c.a); return `<label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px">Open the wall to ${esc(o.name)} (${c.len.toFixed(1)} m)<input type="checkbox" data-in="ujoin" data-key="${esc(c.key)}" ${isOpen(c) ? 'checked' : ''}></label>`; }).join('')}` : ''}
+    <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="open">Next: doors and windows of ${esc(au.name)}</button></div></div>`;
+  h += `<div class="sec"><div class="eb">Assembly in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}</span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}</div>` : '<p class="empty">One unit, nothing to assemble yet.</p>'}</div>`;
+  h += `<div class="sec"><div class="eb">Checks</div>${checksHtml(AA)}</div>`;
+  return h;
+}
+// ---------- A-frame engine (af-engine.js): spec, rules, pricing, steel frame ----------
+let FRAME = false;
+const AFNM = { none: 'No loft', partial: 'Partial loft', full: 'Full loft', corrugated: 'Corrugated sheet', stone: 'Stone-coated tile', standing: 'Standing seam', fibre_cement: 'Fibre cement boards', timber_composite: 'Timber composite', standard: 'Standard gable windows', premium: 'Premium glazed gable' };
+const LISTED = (k, p) => !(p.sys === 'aframe' && !p.afCode && DS.afModels().length);
+function afPanel() {
+  if (!P.af || !window.AFE) return '';
+  const p = PRE(), r = p.afr, c = P.af, pr = AFE.product(c.productCode) || {}, D = AFE.params, lk = pr.locked || {};
+  const fx = k => (k in lk) ? ' <span class="chip">Fixed on this model</span>' : '';
+  const sel = (k, list, lab = v => AFNM[v] || v) => `<label class="lbl"><span>${D[k].label}${fx(k)}</span><select data-in="afp" data-k="${k}" ${k in lk || list.length < 2 ? 'disabled' : ''}>${list.map(v => `<option value="${v}" ${String(c[k]) === String(v) ? 'selected' : ''}>${esc(lab(v))}</option>`).join('')}</select></label>`;
+  const st = { GREEN: ['ok', 'Ready to quote'], AMBER: ['warn', 'Quote subject to engineering review'], RED: ['err', 'Not buildable as set'] }[r.status] || ['', r.status];
+  const steel = r.pricing && r.pricing.steel;
+  const fnd = r.findings.map(f => `<div class="afind ${f.severity === 'RED' ? 'err' : 'warn'}"><b>${esc(f.message)}</b><small>${esc(f.action || '')}</small>${(f.alternatives || []).map((a, i) => `<button type="button" class="tb" data-a="afalt" data-v="${esc(f.ruleCode)}|${i}">${esc(a.label)}</button>`).join('')}</div>`).join('');
+  const lines = r.pricing && !CLIENT ? `<table class="aflines">${r.pricing.lines.map(l => `<tr><td>${esc(l.label)}</td><td class="n">${KSh(l.amount)}</td></tr>`).join('')}<tr><td><b>A-frame subtotal</b></td><td class="n"><b>${KSh(r.pricing.subtotal)}</b></td></tr></table>` : '';
+  return `<div class="sec" id="af-spec"><div class="eb">A-frame specification · ${esc(pr.code || '')}</div>
+    <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0 8px"><span class="chip ${st[0]}" id="af-status" data-s="${r.status}">${r.status} · ${st[1]}</span><small style="color:var(--muted)">${pr.bedrooms || 0} bed · ${pr.bathrooms || 0} bath · ${pr.leadTimeWeeks || '?'} weeks</small></div>
+    ${sel('lengthM', (pr.lengths || []).map(l => l.lengthM), v => v + ' m')}
+    ${sel('widthM', pr.widths || [c.widthM], v => v + ' m')}
+    <label class="lbl"><span>Roof pitch${fx('pitchDeg')} <b>${c.pitchDeg}°</b></span><input type="range" data-in="afp" data-k="pitchDeg" min="${D.pitchDeg.min}" max="${D.pitchDeg.max}" step="1" value="${c.pitchDeg}" ${'pitchDeg' in lk ? 'disabled' : ''}></label>
+    ${sel('loft', pr.lofts || ['none'])}
+    ${c.loft === 'partial' ? `<label class="lbl"><span>Loft bays${fx('loftBays')} <b>${c.loftBays}</b></span><input type="range" data-in="afp" data-k="loftBays" min="1" max="${Math.max(1, (r.geometry ? r.geometry.bays : 10) - 1)}" step="1" value="${c.loftBays}" ${'loftBays' in lk ? 'disabled' : ''}></label>` : ''}
+    ${sel('roofing', D.roofing.allowed)}${sel('cladding', D.cladding.allowed)}${sel('windows', D.windows.allowed)}
+    <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px">Front deck, 2.4 m deep${fx('deck')}<input type="checkbox" data-in="afp" data-k="deck" ${c.deck ? 'checked' : ''} ${'deck' in lk ? 'disabled' : ''}></label>
+    ${fnd ? `<div class="afinds">${fnd}</div>` : '<p class="note" style="color:var(--ok)">All product rules pass.</p>'}
+    ${lines}
+    <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px;margin-top:8px">Show the steel frame in 3D<input type="checkbox" data-in="afframe" ${FRAME ? 'checked' : ''}></label>
+    <p class="note">Frame ${esc(r.frameSection || '—')} · ${r.components.length} members${steel ? ` · ${steel.kg.toLocaleString('en-GB')} kg steel` : ''}${r.geometry ? ` · ${r.geometry.frames} frames at ${r.geometry.spacingMm} mm` : ''}. Rules ${esc(r.ruleSetVersion || '')}, price list ${esc((r.pricing && r.pricing.priceList) || '—')}. Engineering signs off every A-frame before it is released to the yard.</p></div>`;
+}
+function afSet(k, v) {
+  if (!P.af) return; const D = AFE.params[k]; let val = v;
+  if (k === 'deck') val = !!v; else if (D && (D.min != null || typeof (D.allowed || [])[0] === 'number')) val = +v;
+  commit(P => { P.af = { ...P.af, [k]: val }; }); afAfter();
+}
+function afAfter() { FIRSTFRAME = false; DIRTY3D = true; refreshView(); }
+function afAlt(code, i) {
+  const f = PRE().afr.findings.find(x => x.ruleCode === code), a = f && (f.alternatives || [])[+i]; if (!a) return;
+  commit(P => { P.af = { ...P.af, ...a.patch }; }); afAfter(); toast(a.label);
+}
+function afLoft3D(M, p) {
+  const gm = p.afr && p.afr.geometry; if (!gm || !gm.loftBays) return; const len = Math.min(p.L, gm.loftBays * gm.spacingMm / 1000), w = gm.loftBeamMm / 1000, y = gm.loftBeamHeightMm / 1000 + 0.06;
+  const fl = mat('#a77b4f', { r: 0.8, tex: 'deck' }), rail = mat('#2b2b2b', { r: 0.5, m: 0.5 });
+  const d = bx(M, len - 0.1, 0.12, w - 0.1, len / 2, y, p.W / 2, fl); worldUV(d, 1); d.userData.loft = true;
+  if (len < p.L - 0.2) { bx(M, 0.04, 0.95, w - 0.2, len - 0.05, y + 0.5, p.W / 2, rail); bx(M, 0.06, 0.06, w - 0.2, len - 0.05, y + 1.0, p.W / 2, rail); }
+}
+function afFrame3D(M, p) {
+  const r = p.afr; if (!r) return; const W2 = p.W / 2, S = AFE.sections;
+  const steel = mat('#8c939b', { r: 0.45, m: 0.6 }), loft = mat('#b3833f', { r: 0.6, m: 0.3 }), up = new THREE.Vector3(0, 1, 0);
+  const g = new THREE.Group(); g.name = 'af-frame';
+  r.components.forEach(c => {
+    const a = new THREE.Vector3(c.start[2] / 1000, c.start[1] / 1000, c.start[0] / 1000 + W2), b = new THREE.Vector3(c.end[2] / 1000, c.end[1] / 1000, c.end[0] / 1000 + W2);
+    const len = a.distanceTo(b); if (len < 0.01) return; const sec = S[c.section] || { hMm: 80, bMm: 40 };
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sec.bMm / 1000, len, sec.hMm / 1000), /loft/.test(c.type) ? loft : steel);
+    m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(up, b.clone().sub(a).normalize()); m.castShadow = true; m.userData.member = c.key; g.add(m);
+  });
+  M.add(g);
+}
+// ---------- start screen ----------
+function startHTML() {
+  const local = PROJECTS.list, sys = ['container', 'aframe', 'cabin'];
+  return `<div class="st-in"><div class="st-hd"><div><div class="eb">3D Studio</div><h2 class="serif" style="margin:4px 0 0;font-size:34px">Start a project</h2></div>${PROJ ? '<button type="button" class="tb" data-a="pjClose">Back to my project</button>' : ''}</div>
+    <label class="lbl" style="max-width:420px">Project name<input type="text" id="pj-name" placeholder="e.g. Naivasha family home" value=""></label>
+    <div class="eb" style="margin-top:14px">1 · Pick the first unit</div>
+    ${sys.map(sy => `<div class="eb" style="color:var(--muted);margin-top:8px">${SYS[sy].name}</div><div class="cards st-grid">${Object.entries(PRESETS).filter(([k, p]) => p.sys === sy && LISTED(k, p)).map(([k, p]) => `<button type="button" class="card" data-a="pjNew" data-v="${k}"><div class="row"><b>${esc(p.name)}</b><span class="chip">${esc(p.sub)}</span></div><small>${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>`).join('')}
+    ${(DS.DESIGNS || []).length ? `<div class="eb" style="margin-top:14px">Or start from a catalogue design</div><div class="cards st-grid">${DS.DESIGNS.map(d => `<button type="button" class="card" data-a="pjDesign" data-v="${esc(d.slug)}"><b>${esc(d.name)}</b><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('')}</div>` : ''}
+    ${local.length ? `<div class="eb" style="margin-top:14px">Projects on this device</div><div class="list">${local.map(r => `<button type="button" data-a="pjOpen" data-v="${esc(r.id)}"><span>${esc(r.name)} · ${r.units} unit${r.units === 1 ? '' : 's'}</span><span>${new Date(r.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>` : ''}
+    <div id="st-remote"></div></div>`;
+}
+function openStart() {
+  let el = $('#start'); if (!el) { el = document.createElement('div'); el.id = 'start'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Start a project'); document.body.appendChild(el); }
+  stopLoop(); el.innerHTML = startHTML(); el.classList.add('show'); setTimeout(() => { const n = $('#pj-name'); if (n) n.focus(); }, 50);
+  if (window.FC && FC.auth && FC.auth.session) FC.rest('ds_projects?select=id,name,units,total_kes,updated_at&status=neq.archived&order=updated_at.desc&limit=20').then(rows => { const r = $('#st-remote'); if (r && rows.length) r.innerHTML = `<div class="eb" style="margin-top:14px">Saved to your account</div><div class="list">${rows.map(x => `<button type="button" data-a="pjOpenRemote" data-v="${esc(x.id)}"><span>${esc(x.name)} · ${x.units} unit${x.units === 1 ? '' : 's'}</span><span>${new Date(x.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>`; }).catch(() => {});
+}
+function closeStart() { const el = $('#start'); if (el) el.classList.remove('show'); if (SHOW3D()) startLoop(); }
+function startProject(pj) {
+  PROJ = pj; syncParty(); P = AU().design; HIST = []; FUT = []; SEL = null; SHELLSYS = PRESETS[P.preset].sys; ALEVEL = 0; FIRSTFRAME = true; DIRTY3D = true;
+  closeStart(); after(); setStage('assembly'); toast(`${PROJ.name} started. Add more units here, or go on to doors and windows`);
+}
+// ---------- saving to the customer's account ----------
+async function saveRemote(quiet) {
+  if (!window.FC || !FC.auth) return quiet ? null : toast('Saving to an account is available on the Firmcop website');
+  if (!FC.auth.session) return quiet ? null : openSignIn();
+  const body = { name: PROJ.name, data: PROJ, units: PROJ.units.length, total_kes: Math.round(PQ.total) };
+  try {
+    if (PROJ.remoteId) await FC.rest('ds_projects?id=eq.' + PROJ.remoteId, { method: 'PATCH', body });
+    else { const r = await FC.rest('ds_projects', { method: 'POST', body, headers: { Prefer: 'return=representation' } }); PROJ.remoteId = r && r[0] && r[0].id; saveProject(); }
+    REMOTE_DIRTY = false; renderTop(); if (!quiet) toast('Saved to your account. Open it from any device');
+  } catch (e) { if (!quiet) toast('Could not save just now: ' + e.message); }
+}
+function openSignIn() {
+  const m = $('#modal'); m.innerHTML = `<div class="mbar"><span class="eb">Save your project</span><button type="button" class="tb" data-a="closeModal">Close</button></div>
+    <article class="doc" style="max-width:440px"><h1 style="font-size:30px">Sign in to save</h1><p class="meta">Your project is kept on this device. Sign in to keep it in your Firmcop account too, so you can open it anywhere and share it with our team.</p>
+    <form id="si-f" style="display:grid;gap:10px;margin-top:12px"><label class="lbl">Email<input type="email" name="email" required autocomplete="email" value="${esc((FC.auth && FC.auth.email) || '')}"></label><label class="lbl">Password<input type="password" name="password" autocomplete="current-password"></label>
+    <div class="btns"><button type="submit" class="btn gold">Sign in and save</button><button type="button" class="btn" data-a="siLink">Email me a sign-in link</button></div><p class="meta" id="si-msg" role="status"></p></form></article>`;
+  m.classList.add('show');
+  $('#si-f').onsubmit = async ev => { ev.preventDefault(); const f = ev.target, msg = $('#si-msg'); msg.textContent = 'Signing in…'; try { await FC.auth.signIn(f.email.value.trim(), f.password.value); closeModal(); saveRemote(); } catch (e) { msg.textContent = (e && e.message) || 'Sign-in failed'; } };
+}
+setInterval(() => { if (PROJ && PROJ.remoteId && REMOTE_DIRTY && window.FC && FC.auth && FC.auth.session) saveRemote(true); }, 30000);
+
+let ADDHOW = 'beside', ADRAG = null;
+function confirmInline(btn, text) { if (btn.dataset.armed) return true; btn.dataset.armed = '1'; const t0 = btn.textContent; btn.textContent = text; setTimeout(() => { delete btn.dataset.armed; btn.textContent = t0; }, 3000); return false; }
+function plainDesign(preset) { const d = DS.starter(preset); d.parts = []; d.items = []; d.runs = []; d.roomCfg = []; const dk = Object.keys(OPEN).find(k => OPEN[k].door && !OPEN[k].gable && OPEN[k].w <= 1) || Object.keys(OPEN)[0]; d.opens = [{ id: uid('o'), k: dk, side: 'W', u: Math.round(PRESETS[preset].W / 2 * 100) / 100 }]; return d; }
 
 // ---------------- placement helpers ----------------
 function rectFree(r, ignore) {
@@ -327,13 +597,14 @@ function freeOpenU(side, k) {
 // ---------------- UI rendering ----------------
 function renderUI() { renderTop(); renderLeft(); renderRight(); renderBar(); renderViewChrome(); }
 function renderTop() {
-  $('#stages').innerHTML = STAGES.map(([k, l], i) => `<button type="button" class="${STAGE === k ? 'on' : ''}" data-a="stage" data-v="${k}" aria-current="${STAGE === k ? 'step' : 'false'}"><i>${i + 1}</i>${l}</button>`).join('');
+  $('#stages').innerHTML = STAGES.map(([k, l], i) => `<button type="button" class="${STAGE === k ? 'on' : ''}" data-a="stage" data-v="${k}" aria-current="${STAGE === k ? 'step' : 'false'}" title="${i + 1} · ${l}" aria-label="Step ${i + 1}, ${l}"><i>${i + 1}</i><span class="l">${l}</span></button>`).join('');
   const src = DS.SOURCE || { kind: 'builtin', label: 'Built-in catalogue' };
-  $('#tright').innerHTML = `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
+  $('#tright').innerHTML = (PROJ ? `<button type="button" class="tb" data-a="project" title="New project or open a saved one">Projects</button><button type="button" class="tb ${PROJ.remoteId && !REMOTE_DIRTY ? 'on' : ''}" data-a="saveRemote">${PROJ.remoteId ? (REMOTE_DIRTY ? 'Save' : 'Saved') : 'Save to account'}</button>` : '') + `<span class="chip ${src.kind === 'db' ? 'ok' : 'br'}" title="${src.kind === 'db' ? 'Catalogue and designs load live from the database' : src.kind === 'snapshot' ? 'This preview cannot reach the database, so it uses a snapshot exported from it' : 'Using the built-in sample catalogue'}">${esc(src.label)}</span><button type="button" class="tb ${AUTHOR ? 'on' : ''}" data-a="author" aria-pressed="${AUTHOR}">Author</button><button type="button" class="tb" data-a="undo" ${HIST.length ? '' : 'disabled'}>Undo</button><button type="button" class="tb" data-a="redo" ${FUT.length ? '' : 'disabled'}>Redo</button><button type="button" class="tb ${CLIENT ? 'on' : ''}" data-a="client" aria-pressed="${CLIENT}">Client view</button>`;
 }
 function renderViewChrome() {
   $('#vtog').innerHTML = `<button type="button" class="${VIEW === '2d' ? 'on' : ''}" data-a="view" data-v="2d">2D</button><button type="button" class="${VIEW === 'split' ? 'on' : ''}" data-a="view" data-v="split" title="Plan and 3D side by side">Split</button><button type="button" class="${VIEW === '3d' ? 'on' : ''}" data-a="view" data-v="3d">3D</button>`;
   $('#vp').classList.toggle('split', VIEW === 'split');
+  const ub = $('#ubar'); if (ub) ub.innerHTML = PROJ && PROJ.units.length > 1 ? PROJ.units.map(u => `<button type="button" class="${u.id === PROJ.active ? 'on' : ''}" data-a="unit" data-v="${u.id}" title="${esc(PRES(u).name)}">${esc(u.name)}${u.level ? ' ↑' : ''}</button>`).join('') : '';
   $('#plan').style.display = SHOW2D() ? 'block' : 'none';
   $('#three').style.visibility = SHOW3D() ? 'visible' : 'hidden';
   const h = $('#vhint');
@@ -349,17 +620,19 @@ function renderLeft() {
   const el = $('#left'); let h = '';
   if (STAGE === 'shell') {
     const ds = (DS.DESIGNS || []).filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
-    h = `<div class="sec"><div class="eb">Step 1 · Size</div><h2 class="h">Choose the system and size</h2>
+    h = `<div class="sec"><div class="eb">Step 1 · Unit</div><h2 class="h">Choose the system and size</h2>
       <div class="seg">${Object.entries(SYS).map(([k, s]) => `<button type="button" class="${SHELLSYS === k ? 'on' : ''}" data-a="shellsys" data-v="${k}">${s.name}</button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Catalogue designs</div><div class="cards">${ds.map(d => `<button type="button" class="card ${P.design && P.design.slug === d.slug ? 'on' : ''}" data-a="design" data-v="${d.slug}"><div class="row"><b>${esc(d.name)}</b><span class="chip">v${d.version}</span></div><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes && !CLIENT ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('') || '<p class="empty">No published designs for this system yet.</p>'}</div></div>
       <div class="sec"><div class="eb">${allowS ? 'Sizes this design allows' : 'Or start from a blank size'}</div>
-      <div class="cards">${Object.entries(PRESETS).filter(([k, p]) => p.sys === SHELLSYS && (!allowS || allowS.includes(k))).map(([k, p]) => `<button type="button" class="card ${P.preset === k ? 'on' : ''}" data-a="preset" data-v="${k}"><div class="row"><b>${p.name}</b>${P.preset === k ? '<span class="chip br">Current</span>' : ''}</div><small>${p.sub} · ${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>
-      <p class="note">Choosing a size loads it in 3D with a starter layout. Next come the doors, windows and extensions, then the outside finishes, then the rooms inside.</p></div>`;
+      <div class="cards">${Object.entries(PRESETS).filter(([k, p]) => p.sys === SHELLSYS && (!allowS || allowS.includes(k)) && (LISTED(k, p) || P.preset === k)).map(([k, p]) => `<button type="button" class="card ${P.preset === k ? 'on' : ''}" data-a="preset" data-v="${k}"><div class="row"><b>${p.name}</b>${P.preset === k ? '<span class="chip br">Current</span>' : ''}</div><small>${p.sub} · ${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>
+      <p class="note">This is the size of ${PROJ ? esc(AU().name) : 'the unit'}. Choosing a size loads it in 3D with a starter layout. Add more units and an upper floor in step 2, Assembly.</p></div>${afPanel()}`;
   } else if (STAGE === 'plan') {
-    h = `<div class="sec"><div class="eb">Step 4 · Interior plan</div><h2 class="h">Rooms</h2>
+    h = `<div class="sec"><div class="eb">Step 5 · Interior plan</div><h2 class="h">Rooms</h2>
       <div class="seg"><button type="button" class="${TOOL === 'select' ? 'on' : ''}" data-a="tool" data-v="select">Select</button><button type="button" class="${TOOL === 'part' ? 'on' : ''}" data-a="tool" data-v="part">Partition</button><button type="button" class="${TOOL === 'room' ? 'on' : ''}" data-a="tool" data-v="room">Draw room</button></div>
       <p class="note">Draw room: drag a rectangle and its walls and door are added. Partitions split the floor into rooms, including any bump-out or door-end extension. Add a door from the partition's panel on the right.</p>
-      <p class="note">Doors and windows on the outside walls are set in <button type="button" class="lnk" data-a="stage" data-v="open">step 2</button>.</p></div>`;
+      <p class="note">Doors and windows on the outside walls are set in <button type="button" class="lnk" data-a="stage" data-v="open">step 3</button>.</p></div>`;
+  } else if (STAGE === 'assembly' && PROJ) {
+    h = asmPanel();
   } else if (STAGE === 'open') {
     h = openingsPanel();
   } else if (STAGE === 'ext') {
@@ -368,7 +641,7 @@ function renderLeft() {
     h = libraryPanel();
   } else if (STAGE === 'furnish') {
     const tabs = [['kitchen', 'Kitchens and wardrobes'], ['bath', 'Bathroom'], ['furn', 'Furniture']];
-    h = `<div class="sec"><div class="eb">Step 5 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
+    h = `<div class="sec"><div class="eb">Step 6 · Furnish</div><h2 class="h">Catalogue</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${FTAB === k ? 'on' : ''}" data-a="ftab" data-v="${k}">${l.split(' ')[0]}</button>`).join('')}</div></div><div class="sec">`;
     if (FTAB === 'kitchen') h += `<div class="cards"><button type="button" class="card" data-a="addrun" data-v="kitchen"><b>Modular kitchen run</b><small>Base, sink, hob and tall units on a 300/600/800 mm grid. Fronts, worktop and wall cabinets are set on the right.</small><small>${CLIENT ? '' : 'From ' + KSh(165000)}</small></button><button type="button" class="card" data-a="addrun" data-v="wardrobe"><b>Modular wardrobe run</b><small>Hanging, shelf and drawer units in 500 and 1000 mm widths.</small><small>${CLIENT ? '' : 'From ' + KSh(38000)}</small></button></div><p class="note">Runs fix to an outside wall or a partition face and add their units to the BOQ.</p>`;
     else {
       const ks = Object.entries(ITEMS).filter(([, d]) => FTAB === 'bath' ? d.sanitary : !d.sanitary), cats = [...new Set(ks.map(([, d]) => d.cat))];
@@ -378,19 +651,19 @@ function renderLeft() {
     h += '</div>';
   } else if (STAGE === 'finish') {
     const tabs = [['floor', 'Floors'], ['wall', 'Walls'], ['ceil', 'Ceiling']], room = SEL && SEL.kind === 'room' ? findSel() : null;
-    h = `<div class="sec"><div class="eb">Step 6 · Finishes</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
+    h = `<div class="sec"><div class="eb">Step 7 · Finishes</div><h2 class="h">Stocked finishes</h2><div class="seg">${tabs.map(([k, l]) => `<button type="button" class="${NTAB === k ? 'on' : ''}" data-a="ntab" data-v="${k}">${l}</button>`).join('')}</div>
       <p class="note">${NTAB === 'ceil' ? 'Applies to the whole ceiling.' : room ? `Applying to <b style="color:var(--ivory)">${esc(room.name)}</b>.` : 'Pick a room in the 3D view or the list on the right first.'}</p></div>
       <div class="sec"><div class="cards">${Object.entries(FIN[NTAB]).filter(([k]) => finAllowed(NTAB, k)).map(([k, f]) => {
         const cur = NTAB === 'ceil' ? P.ceil === k : room && room[NTAB] === k, used = Q.use[NTAB + ':' + k] || 0;
         return `<button type="button" class="card ${cur ? 'on' : ''}" data-a="fin" data-g="${NTAB}" data-v="${k}"><span class="fsw" style="background:${f.col}"></span><div class="row"><b>${f.name}</b>${f.wet ? '<span class="chip">Wet rated</span>' : ''}</div><small>${CLIENT ? '' : KSh(f.price) + ' per m² · '}${CLIENT ? (f.stock < used ? 'Ordered in' : 'In stock') : `${f.stock === 999 ? 'Made on site' : f.stock + ' m² in stock'}${used ? ` · this design ${used.toFixed(1)} m²` : ''}`}</small></button>`;
       }).join('')}</div></div>`;
   } else if (STAGE === 'render') {
-    h = `<div class="sec"><div class="eb">Step 7 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
+    h = `<div class="sec"><div class="eb">Step 8 · Render</div><h2 class="h">Scene</h2><div class="cards two">${Object.entries(SCENES).map(([k, s]) => `<button type="button" class="card ${SCENE === k ? 'on' : ''}" data-a="scene" data-v="${k}"><b>${s.label}</b></button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Camera</div><div class="btns"><button type="button" class="btn" data-a="cam" data-v="front">Front</button><button type="button" class="btn" data-a="cam" data-v="aerial">Aerial</button><button type="button" class="btn" data-a="cam" data-v="doll">Dollhouse</button></div>
       <label class="row" style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">Cutaway roof<input type="checkbox" data-in="cut" ${CUT ? 'checked' : ''}></label></div>
       <div class="sec"><div class="eb">Walk inside</div><div class="list">${R.map(r => `<button type="button" data-a="walk" data-v="${r.id}"><span>${esc(r.name)}</span><span>Stand here →</span></button>`).join('')}</div></div>`;
   } else {
-    h = `<div class="sec"><div class="eb">Step 8 · Share</div><h2 class="h">Client</h2>
+    h = `<div class="sec"><div class="eb">Step 9 · Share</div><h2 class="h">Client</h2>
       <label class="lbl">Client name<input type="text" id="cl-name" data-in="cl" data-v="name" value="${esc(CLIENTINFO.name)}"></label>
       <label class="lbl">Phone or WhatsApp<input type="tel" id="cl-phone" data-in="cl" data-v="phone" value="${esc(CLIENTINFO.phone)}"></label>
       <label class="lbl">Site<input type="text" id="cl-site" data-in="cl" data-v="site" value="${esc(CLIENTINFO.site)}"></label>
@@ -404,7 +677,7 @@ const rng = (id, key, label, val, min, max, step, unit = 'm', dp = 1) => `<label
 const curW = () => P.ext.widen.find(w => w.side === WSIDE);
 function openingsPanel() {
   const p = PRE(), isC = p.sys === 'container', e = P.ext;
-  let h = `<div class="sec"><div class="eb">Step 2 · Openings</div><h2 class="h">Doors and windows</h2><p class="note">Pick a wall, then a door or window. Drag it along the wall in 2D, or set its position on the right.</p>${sideBtns(ADDSIDE, 'addside')}
+  let h = `<div class="sec"><div class="eb">Step 3 · Openings</div><h2 class="h">Doors and windows</h2><p class="note">Pick a wall, then a door or window. Drag it along the wall in 2D, or set its position on the right.</p>${sideBtns(ADDSIDE, 'addside')}
     <div class="cards">${availOpen().map(([k, d]) => `<button type="button" class="card" data-a="addopen" data-v="${k}"><div class="row"><b>${d.name}</b><small>${CLIENT ? '' : KSh(d.price)}</small></div><small>${d.gable ? 'Whole gable end' : `${(d.w * 1000) | 0} × ${(d.h * 1000) | 0} mm${d.sill ? ` · sill ${(d.sill * 1000) | 0}` : ''}`}${CLIENT ? '' : ` · ${d.stock} in stock`}</small></button>`).join('')}</div>
     ${p.sys === 'aframe' ? '<p class="note">On an A-frame, doors and windows go in the gable ends. The roof slopes cap their height.</p>' : ''}</div>`;
   if (!isC) return h;
@@ -429,7 +702,7 @@ function openingsPanel() {
 }
 function exteriorPanel() {
   const p = PRE(), e = P.ext, sys = p.sys, cl = e.clad, sides = SYSD().sides;
-  let h = `<div class="sec"><div class="eb">Step 3 · Exterior</div><h2 class="h">Body colour</h2><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
+  let h = `<div class="sec"><div class="eb">Step 4 · Exterior</div><h2 class="h">Body colour</h2><div class="sws">${SYSD().colours.map(([c, n]) => `<button type="button" class="sw ${P.colour === c ? 'on' : ''}" style="background:${c}" data-a="colour" data-v="${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
     <p class="note">${sys === 'aframe' ? 'The roof colour of the A-frame.' : 'The paint on the shell. Cladding, if you add it, goes over it.'}</p></div>`;
   if (sys !== 'aframe') {
     const full = cl && sides.every(sd => cl.sides.includes(sd)), q = Q.lines.find(l => l.grp === 'Exterior' && cl && Q.use['clad:' + cl.k] === l.qty);
@@ -493,10 +766,10 @@ function libList() {
 }
 function libraryPanel() {
   const roots = libRoots(); if (!roots.some(r => r.slug === LFAM)) LFAM = roots.length ? roots[0].slug : '';
-  return `<div class="sec"><div class="eb">Step 5 · Furnish</div><h2 class="h">Library</h2>
+  return `<div class="sec"><div class="eb">Step 6 · Furnish</div><h2 class="h">Library</h2>
     <label class="lbl">Search<input type="search" id="lib-q" data-in="libq" value="${esc(LQ)}" placeholder="Sofa, bed, shower…" autocomplete="off"></label>
     <div class="fams" role="group" aria-label="Rooms">${roots.map(r => `<button type="button" class="${LFAM === r.slug && !LQ ? 'on' : ''}" data-a="lfam" data-v="${esc(r.slug)}">${esc(r.name)}</button>`).join('')}</div>
-    <p class="note">Doors and windows are in <button type="button" class="lnk" data-a="stage" data-v="open">step 2</button>, walls and rooms in <button type="button" class="lnk" data-a="stage" data-v="plan">step 4</button>, floor and wall finishes in <button type="button" class="lnk" data-a="stage" data-v="finish">step 6</button>.</p></div>
+    <p class="note">Doors and windows are in <button type="button" class="lnk" data-a="stage" data-v="open">step 3</button>, walls and rooms in <button type="button" class="lnk" data-a="stage" data-v="plan">step 5</button>, floor and wall finishes in <button type="button" class="lnk" data-a="stage" data-v="finish">step 7</button>.</p></div>
     <div class="sec" id="lib-list">${libList()}</div>`;
 }
 function optControls(s) {
@@ -576,7 +849,9 @@ function renderRight() {
     const p = PRE(), area = R.reduce((a, r) => a + r.area, 0);
     h += `<div class="sec"><div class="eb">Design</div><label class="lbl">Name<input type="text" id="d-name" data-in="name" value="${esc(P.name)}"></label>
       <div class="list"><div><span>System</span><span>${SYSD().name}</span></div><div><span>Shell</span><span>${p.name}</span></div><div><span>Internal floor</span><span>${m2(area)}</span></div><div><span>Rooms</span><span>${R.length}</span></div><div><span>Lead time</span><span>${Q.weeks} weeks</span></div></div></div>
-      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="open">Next: doors, windows and extensions</button></div></div>`;
+      <div class="btns"><button type="button" class="btn gold" data-a="stage" data-v="assembly">Next: assembly</button></div></div>`;
+  } else if (STAGE === 'assembly' && PROJ) {
+    h += asmRight();
   } else if (STAGE === 'open' || STAGE === 'ext') {
     const grp = STAGE === 'open' ? ['Doors and windows', 'Extensions'] : ['Exterior'], ls = Q.lines.filter(l => grp.includes(l.grp)), sum = ls.reduce((a, l) => a + l.total, 0);
     h += `<div class="sec"><div class="eb">${STAGE === 'open' ? 'Openings and extensions' : 'Exterior'} in the quote</div>${ls.length ? `<div class="list">${ls.map(l => `<div><span style="white-space:normal">${esc(l.name)}<br><small style="color:var(--faint)">${l.qty} ${l.unit}</small></span><span>${CLIENT ? '' : KSh(l.total)}</span></div>`).join('')}${CLIENT ? '' : `<div><span><b>Subtotal</b></span><span style="color:var(--brass-hi)">${KSh(sum)}</span></div>`}</div>` : '<p class="empty">Nothing added yet.</p>'}
@@ -618,29 +893,30 @@ function renderRight() {
   el.innerHTML = h;
 }
 function renderBar() {
-  const e = A.filter(a => a.lvl === 'error').length, w = A.filter(a => a.lvl === 'warn').length, g = A.filter(a => a.lvl === 'eng').length;
+  const AL = PROJ ? A.concat(AA) : A, QQ = PQ || Q, e = AL.filter(a => a.lvl === 'error').length, w = AL.filter(a => a.lvl === 'warn').length, g = AL.filter(a => a.lvl === 'eng').length;
   const chip = e ? `<span class="chip err">${e} to fix</span>` : w ? `<span class="chip warn">${w} to check</span>` : '<span class="chip ok">Checks clear</span>';
-  $('#qbar').innerHTML = `<span class="nm">${esc(P.name)}</span>
-    <div class="kv"><small>Floor</small><b>${m2(R.reduce((a, r) => a + r.area, 0))}</b></div>
-    <div class="kv"><small>Lead time</small><b>${Q.weeks} wk</b></div>
+  $('#qbar').innerHTML = `<span class="nm">${esc(PROJ ? PROJ.name : P.name)}${PROJ && PROJ.units.length > 1 ? `<small style="display:block;font-size:11px;color:var(--muted)">${PROJ.units.length} units · editing ${esc(AU().name)}</small>` : ''}</span>
+    <div class="kv"><small>Floor${PROJ && PROJ.units.length > 1 ? ', this unit' : ''}</small><b>${m2(R.reduce((a, r) => a + r.area, 0))}</b></div>
+    <div class="kv"><small>Lead time</small><b>${QQ.weeks} wk</b></div>
     <button type="button" class="tb" data-a="checks" style="display:flex;gap:6px;align-items:center">${chip}${g ? `<span class="chip eng">${g} engineer</span>` : ''}</button>
     <span class="sp"></span>
-    ${CLIENT ? '' : `<div class="kv"><small>Subtotal</small><b>${KSh(Q.sub)}</b></div>`}
-    <div class="kv"><small>Deposit 30%</small><b>${KSh(Q.deposit)}</b></div>
-    <div class="kv"><small>Total incl. VAT</small><b class="big">${KSh(Q.total)}</b></div>
+    ${CLIENT ? '' : `<div class="kv"><small>Subtotal</small><b>${KSh(QQ.sub)}</b></div>`}
+    <div class="kv"><small>Deposit 30%</small><b>${KSh(QQ.deposit)}</b></div>
+    <div class="kv"><small>Total incl. VAT</small><b class="big">${KSh(QQ.total)}</b></div>
     <button type="button" class="btn gold" data-a="proposal">Proposal</button>`;
 }
 
 // ---------------- 2D plan ----------------
 const svg = $('#plan');
 const PAPER = { bg: '#F4EFE6', ink: '#2a2724', mid: '#6b645a', faint: '#d8d0c2', grid: '#e7e0d3', brass: '#a37b3e', sel: '#b8873a' };
-function planSVG(stat) {
+function planSVG(stat, mini) {
   const p = PRE(), X = PAPER, pad = 0.9, dx0 = p.sys === 'aframe' ? 2.2 : 0, ver = p.veranda || 0, bb = DS.bbox(P), pr = porchRect();
   const X0 = Math.min(bb.x0, -dx0, pr ? pr.x0 - 0.6 : 0), X1 = Math.max(bb.x1, pr ? pr.x1 + 0.6 : 0), Z0 = Math.min(bb.z0, pr ? pr.z0 - 0.6 : 0), Z1 = Math.max(bb.z1, p.W + ver, pr ? pr.z1 + 0.6 : 0);
   const vb = [X0 - pad, Z0 - pad, X1 - X0 + 2 * pad, Z1 - Z0 + 2 * pad];
-  let s = `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${X.bg}"/>`;
-  for (let x = 0; x <= p.L + 1e-6; x += 0.5) s += `<line x1="${x}" y1="0" x2="${x}" y2="${p.W}" stroke="${X.grid}" stroke-width="0.01"/>`;
-  for (let z = 0; z <= p.W + 1e-6; z += 0.5) s += `<line x1="0" y1="${z}" x2="${p.L}" y2="${z}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  let s = mini ? '' : `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${X.bg}"/>`;
+  if (mini) s += `<rect x="0" y="0" width="${p.L}" height="${p.W}" fill="${X.bg}"/>`;
+  if (!mini) for (let x = 0; x <= p.L + 1e-6; x += 0.5) s += `<line x1="${x}" y1="0" x2="${x}" y2="${p.W}" stroke="${X.grid}" stroke-width="0.01"/>`;
+  if (!mini) for (let z = 0; z <= p.W + 1e-6; z += 0.5) s += `<line x1="0" y1="${z}" x2="${p.L}" y2="${z}" stroke="${X.grid}" stroke-width="0.01"/>`;
   if (ver) s += `<rect x="0.3" y="${p.W}" width="${p.L - 0.6}" height="${ver}" fill="#e9dfcd" stroke="${X.mid}" stroke-width="0.015" stroke-dasharray="0.08 0.06"/><text x="${p.L / 2}" y="${p.W + ver / 2 + 0.06}" font-size="0.17" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" letter-spacing="0.03">COVERED VERANDA · ${ver.toFixed(1)} m</text>`;
   if (dx0) s += `<rect x="${-dx0 + 0.2}" y="0.6" width="${dx0 - 0.2}" height="${p.W - 1.2}" fill="#e9dfcd" stroke="${X.mid}" stroke-width="0.015" stroke-dasharray="0.08 0.06"/><text x="${-dx0 / 2 + 0.1}" y="${p.W / 2}" font-size="0.17" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" transform="rotate(-90 ${-dx0 / 2 + 0.1} ${p.W / 2})">DECK</text>`;
   // rooms
@@ -736,9 +1012,11 @@ function planSVG(stat) {
   R.forEach(r => { s += `<text x="${r.ax}" y="${r.az - 0.02}" font-size="0.17" text-anchor="middle" fill="${X.ink}" font-family="Manrope, sans-serif" font-weight="600" pointer-events="none">${esc(r.name)}</text><text x="${r.ax}" y="${r.az + 0.18}" font-size="0.13" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" pointer-events="none">${r.area.toFixed(1)} m²</text>`; });
   // dimensions
   const dm = (x1, y1, x2, y2, t, rot) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${X.mid}" stroke-width="0.01"/><text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 0.08}" font-size="0.15" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" ${rot ? `transform="rotate(-90 ${(x1 + x2) / 2} ${(y1 + y2) / 2})"` : ''}>${t}</text>`;
-  s += dm(0, -0.45, p.L, -0.45, p.L.toFixed(2) + ' m') + `<line x1="0" y1="-0.55" x2="0" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L}" y1="-0.55" x2="${p.L}" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/>`;
-  s += dm(p.L + 0.45, 0, p.L + 0.45, p.W, p.W.toFixed(2) + ' m', true) + `<line x1="${p.L + 0.35}" y1="0" x2="${p.L + 0.55}" y2="0" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L + 0.35}" y1="${p.W}" x2="${p.L + 0.55}" y2="${p.W}" stroke="${X.mid}" stroke-width="0.01"/>`;
-  s += `<g transform="translate(${vb[0] + 0.35} ${vb[1] + 0.4})"><path d="M0 -0.2L0.09 0.12L0 0.06L-0.09 0.12Z" fill="${X.ink}"/><text y="0.32" font-size="0.14" text-anchor="middle" fill="${X.ink}" font-family="IBM Plex Mono, monospace">N</text></g>`;
+  if (!mini) s += dm(0, -0.45, p.L, -0.45, p.L.toFixed(2) + ' m') + `<line x1="0" y1="-0.55" x2="0" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L}" y1="-0.55" x2="${p.L}" y2="-0.35" stroke="${X.mid}" stroke-width="0.01"/>`;
+  if (!mini) s += dm(p.L + 0.45, 0, p.L + 0.45, p.W, p.W.toFixed(2) + ' m', true) + `<line x1="${p.L + 0.35}" y1="0" x2="${p.L + 0.55}" y2="0" stroke="${X.mid}" stroke-width="0.01"/><line x1="${p.L + 0.35}" y1="${p.W}" x2="${p.L + 0.55}" y2="${p.W}" stroke="${X.mid}" stroke-width="0.01"/>`;
+  // the other units on this floor, faintly, where they sit around this one
+  if (!stat && !mini && PROJ && PROJ.units.length > 1) PROJ.units.filter(o => o.id !== PROJ.active && (o.level || 0) === (AU().level || 0)).forEach(o => { const q = rectOf(o), pts = [[q.x0, q.z0], [q.x1, q.z0], [q.x1, q.z1], [q.x0, q.z1]].map(([x, z]) => toLocal(AU(), x, z)); s += `<polygon points="${pts.map(v => v.join(',')).join(' ')}" fill="${X.faint}" fill-opacity="0.25" stroke="${X.mid}" stroke-width="0.02" stroke-dasharray="0.12 0.08" pointer-events="none"/><text x="${pts.reduce((a, v) => a + v[0], 0) / 4}" y="${pts.reduce((a, v) => a + v[1], 0) / 4}" font-size="0.2" text-anchor="middle" fill="${X.mid}" font-family="IBM Plex Mono, monospace" pointer-events="none">${esc(o.name)}</text>`; });
+  if (!mini) s += `<g transform="translate(${vb[0] + 0.35} ${vb[1] + 0.4})"><path d="M0 -0.2L0.09 0.12L0 0.06L-0.09 0.12Z" fill="${X.ink}"/><text y="0.32" font-size="0.14" text-anchor="middle" fill="${X.ink}" font-family="IBM Plex Mono, monospace">N</text></g>`;
   if (!stat && DRAFT && DRAFT.room) { const x0 = Math.min(DRAFT.x0, DRAFT.x1), z0 = Math.min(DRAFT.z0, DRAFT.z1), w = Math.abs(DRAFT.x1 - DRAFT.x0), h = Math.abs(DRAFT.z1 - DRAFT.z0); s += `<rect x="${x0}" y="${z0}" width="${w}" height="${h}" fill="${X.sel}" fill-opacity="0.12" stroke="${X.sel}" stroke-width="0.04" stroke-dasharray="0.12 0.08"/><text x="${x0 + w / 2}" y="${z0 + h / 2}" font-size="0.18" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${w.toFixed(1)} × ${h.toFixed(1)} m · ${(w * h).toFixed(1)} m²</text>`; }
   else if (!stat && DRAFT) s += `<line x1="${DRAFT.x0}" y1="${DRAFT.z0}" x2="${DRAFT.x1}" y2="${DRAFT.z1}" stroke="${X.sel}" stroke-width="0.1" stroke-opacity="0.75"/><text x="${(DRAFT.x0 + DRAFT.x1) / 2}" y="${(DRAFT.z0 + DRAFT.z1) / 2 - 0.15}" font-size="0.16" text-anchor="middle" fill="${X.sel}" font-family="IBM Plex Mono, monospace">${Math.hypot(DRAFT.x1 - DRAFT.x0, DRAFT.z1 - DRAFT.z0).toFixed(1)} m</text>`;
   return { vb, body: s };
@@ -807,11 +1085,12 @@ function makeRoom(d) {
   toast(`Room drawn: ${edges.length} wall${edges.length === 1 ? '' : 's'} and a door added. Name it on the right`);
 }
 let DRAFT = null;
-function renderPlan() { const { vb, body } = planSVG(false); svg.setAttribute('viewBox', vb.join(' ')); svg.innerHTML = body; }
+function renderPlan() { const { vb, body } = STAGE === 'assembly' && PROJ ? assemblySVG() : planSVG(false); svg.setAttribute('viewBox', vb.join(' ')); svg.innerHTML = body; }
 function svgPt(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
 let DRAG = null;
 svg.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
+  if (STAGE === 'assembly' && PROJ) { const hit = e.target.closest('[data-k^="unit:"]'); if (!hit) return; const id = hit.dataset.k.slice(5), [x, z] = svgPt(e); if (id !== PROJ.active) setActive(id, true); const u = AU(); ADRAG = { x, z, ox: u.x, oz: u.z, moved: false }; svg.setPointerCapture(e.pointerId); return; }
   const [x, z] = svgPt(e), hitEl = e.target.closest('[data-k]');
   if ((TOOL === 'part' || TOOL === 'room') && locked('part')) { TOOL = 'select'; renderUI(); return lockToast('part'); }
   if (TOOL === 'room') { DRAFT = { room: true, x0: snap(x, 0.1), z0: snap(z, 0.1), x1: snap(x, 0.1), z1: snap(z, 0.1) }; svg.setPointerCapture(e.pointerId); renderPlan(); return; }
@@ -824,6 +1103,7 @@ svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); renderUI(); renderPlan();
 });
 svg.addEventListener('pointermove', e => {
+  if (ADRAG) { const [x, z] = svgPt(e), u = AU(), dx = x - ADRAG.x, dz = z - ADRAG.z; if (!ADRAG.moved && Math.hypot(dx, dz) < 0.05) return; ADRAG.moved = true; u.x = Math.round((ADRAG.ox + dx) * 10) / 10; u.z = Math.round((ADRAG.oz + dz) * 10) / 10; snapUnit(u); syncParty(); renderPlan(); return; }
   if (DRAFT && DRAFT.room) { const [x, z] = svgPt(e); DRAFT.x1 = snap(x, 0.1); DRAFT.z1 = snap(z, 0.1); renderPlan(); return; }
   if (DRAFT) { const [x, z] = svgPt(e), X = snap(x, 0.1), Z = snap(z, 0.1); if (Math.abs(X - DRAFT.x0) >= Math.abs(Z - DRAFT.z0)) { DRAFT.x1 = X; DRAFT.z1 = DRAFT.z0; } else { DRAFT.z1 = Z; DRAFT.x1 = DRAFT.x0; } renderPlan(); return; }
   if (!DRAG) return;
@@ -839,6 +1119,7 @@ svg.addEventListener('pointermove', e => {
   recompute(); renderPlan(); renderBar(); if (VIEW === 'split') { DIRTY3D = true; queue3D(); }
 });
 svg.addEventListener('pointerup', e => {
+  if (ADRAG) { const m = ADRAG.moved; ADRAG = null; if (m) { DIRTY3D = true; after(); } return; }
   if (DRAFT && DRAFT.room) { const d = DRAFT; DRAFT = null; makeRoom(d); return; }
   if (DRAFT) {
     const d = DRAFT; DRAFT = null; const len = Math.hypot(d.x1 - d.x0, d.z1 - d.z0);
@@ -918,7 +1199,7 @@ document.addEventListener('click', e => {
       SEL = null; AF = null; FIRSTFRAME = true; after(); DIRTY3D = true; refreshView(); camPreset('front');
       return toast(`${d.name} v${d.version} loaded from the catalogue`);
     }
-    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 8'); return renderUI();
+    case 'author': AUTHOR = !AUTHOR; if (AUTHOR && STAGE !== 'share') toast('Author mode: the design rules are lifted. Save to the catalogue from step 9'); return renderUI();
     case 'afSave': return authorSave();
     case 'signIn': return signIn();
     case 'signOut': SESSION = null; try { localStorage.removeItem('fc-ds-session'); } catch (e) {} return renderRight();
@@ -934,6 +1215,23 @@ document.addEventListener('click', e => {
       const u = d.gable ? PRE().W / 2 : freeOpenU(side, v); if (u == null) return toast(`No free space on the ${DS.SIDE_NAME[side].toLowerCase()} for that`);
       const id = uid('o'); commit(P => P.opens.push({ id, k: v, side, u })); SEL = { kind: 'open', id }; renderUI(); refreshView(); return;
     }
+    case 'project': return openStart();
+    case 'pjClose': return closeStart();
+    case 'pjNew': { const nm = ($('#pj-name') && $('#pj-name').value.trim()) || PRESETS[v].name + ' project', d = DS.starter(v); d.name = nm; return startProject(newProject(nm, d)); }
+    case 'pjDesign': { const d = (DS.DESIGNS || []).find(x => x.slug === v); if (!d) return; const nm = ($('#pj-name') && $('#pj-name').value.trim()) || d.name, des = { ...DS.clone(d.layout), name: d.name, design: { slug: d.slug, version: d.version, rules: d.rules || {} } }; if (d.rules && d.rules.defaults) Object.assign(des, d.rules.defaults); return startProject(newProject(nm, des)); }
+    case 'pjOpen': { const r = PROJECTS.list.find(x => x.id === v); if (r) startProject(JSON.parse(JSON.stringify(r.data))); return; }
+    case 'pjOpenRemote': return FC.rest('ds_projects?select=*&id=eq.' + encodeURIComponent(v)).then(rows => { if (!rows.length) return toast('That project is not available'); const d = rows[0].data; d.remoteId = rows[0].id; startProject(d); }).catch(err => toast(err.message));
+    case 'saveRemote': return saveRemote();
+    case 'siLink': { const em = $('#si-f') && $('#si-f').email.value.trim(); if (!em) return toast('Enter your email first'); return FC.auth.magicLink(em).then(() => { $('#si-msg').textContent = 'Check your email for the sign-in link, then come back and press Save.'; }).catch(err => { $('#si-msg').textContent = err.message; }); }
+    case 'alevel': ALEVEL = +v; return renderPlan();
+    case 'unit': return setActive(v);
+    case 'addhow': ADDHOW = v; return renderLeft();
+    case 'addunit': { const d = DS.starter(v), u = placeNew(d, ADDHOW); PROJ.units.push(u); syncParty(); ALEVEL = u.level || 0; setActive(u.id, true); return toast(`${u.name} added ${ADDHOW === 'apart' ? '3 m apart' : ADDHOW === 'end' ? 'end to end' : 'beside'}. Drag it on the plan to place it`); }
+    case 'addfloor': { const base = AU(); if (PROJ.units.some(o => (o.level || 0) === 1 && o.x === base.x && o.z === base.z)) return toast(`${base.name} already has a floor above`); const d = v === 'copy' ? DS.clone(base.design) : plainDesign(base.design.preset); DS.normExt(d); d.ext.porch = null; d.ext.widen = []; d.ext.doorEnd = null; d.ext.party = []; d.name = base.design.name + ', upper floor';
+      const u = { id: uid('u'), name: 'Unit ' + (PROJ.units.length + 1), x: base.x, z: base.z, rot: base.rot, level: 1, stair: 'W', design: d }; PROJ.units.push(u); ALEVEL = 1; setActive(u.id, true); return toast(v === 'copy' ? 'Upper floor added with the same layout. Change it in the next steps' : 'Plain upper floor added, with a door where the stair lands'); }
+    case 'urot': { const u = AU(); if (PRES(u).sys !== 'container' && false) return; u.rot = (rotOf(u) + 1) % 4; DIRTY3D = true; return after(); }
+    case 'unudge': { const u = AU(); u.x = Math.round((u.x + +b.dataset.dx) * 100) / 100; u.z = Math.round((u.z + +b.dataset.dz) * 100) / 100; DIRTY3D = true; return after(); }
+    case 'udel': { if (PROJ.units.length < 2) return; const id = PROJ.active; if (!confirmInline(b, 'Remove it?')) return; PROJ.units = PROJ.units.filter(u => u.id !== id); Object.keys(PROJ.joins).forEach(k => { if (k.includes(id)) delete PROJ.joins[k]; }); PROJ.active = PROJ.units[0].id; return setActive(PROJ.active, true); }
     case 'wside': WSIDE = v; return renderLeft();
     case 'wAdd': { if (locked('open')) return lockToast('open'); const L0 = PRE().L, u0 = Math.round(L0 * 0.3 * 10) / 10, u1 = Math.round(L0 * 0.7 * 10) / 10;
       commit(P => P.ext.widen.push({ id: uid('w'), side: WSIDE, u0, u1, d: 1.2 }));
@@ -971,7 +1269,7 @@ document.addEventListener('click', e => {
     }
     case 'allfloor': { const room = findSel(); if (!room) return; return commit(P => R.filter(r => r.type !== 'bath').forEach(r => DS.setRoom(P, G, r, { floor: room.floor }))); }
     case 'sel': SEL = { kind: b.dataset.k, id: b.dataset.k === 'room' ? +b.dataset.id : b.dataset.id }; renderUI(); return refreshView();
-    case 'ref': { const k = b.dataset.k; if (!k) return; SEL = { kind: k, id: k === 'room' ? +b.dataset.id : b.dataset.id }; if (!findSel()) SEL = null; renderUI(); return refreshView(); }
+    case 'ref': { const k = b.dataset.k; if (!k) return; if (k === 'af') { setStage('shell'); const el = $('#af-spec'); if (el) el.scrollIntoView({ block: 'start' }); return; } SEL = { kind: k, id: k === 'room' ? +b.dataset.id : b.dataset.id }; if (!findSel()) SEL = null; renderUI(); return refreshView(); }
     case 'desel': SEL = null; renderUI(); return refreshView();
     case 'del': return deleteSel();
     case 'rot': return rotateSel();
@@ -991,6 +1289,7 @@ document.addEventListener('click', e => {
     case 'job': return queueJob(v);
     case 'proposal': return openProposal();
     case 'sendQuote': return sendQuote();
+    case 'afalt': { const [c, i] = v.split('|'); return afAlt(c, i); }
     case 'closeModal': return closeModal();
     case 'handoff': {
       const n = +v, errs = A.filter(x => x.lvl === 'error').length;
@@ -1006,9 +1305,11 @@ document.addEventListener('input', e => {
   if (k === 'name') { P.name = t.value || 'Untitled design'; save(); return renderBar(); }
   if (k === 'roomName') { if (!PENDING) { snapshot(); PENDING = true; } DS.setRoom(P, G, s, { name: t.value }); recompute(); if (SHOW2D()) renderPlan(); return; }
   if (k === 'cl') { CLIENTINFO[t.dataset.v] = t.value; return; }
+  if (k === 'uname' && PROJ) { AU().name = t.value || 'Unit'; saveProject(); if (SHOW2D()) renderPlan(); return; }
   if (k === 'libq') { LQ = t.value; const l = $('#lib-list'); if (l) l.innerHTML = libList(); $('#left').querySelectorAll('.fams button').forEach(x => x.classList.toggle('on', !LQ && x.dataset.v === LFAM)); return; }
   if (k === 'itemNum' && s && SEL.kind === 'item') { if (locked('item')) return; if (!PENDING) { snapshot(); PENDING = true; } s.opt = { ...(s.opt || {}), [t.dataset.key]: +t.value }; recompute(); DIRTY3D = true; if (SHOW2D()) renderPlan(); if (SHOW3D()) queue3D(); renderBar(); const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = t.value + ' mm'; return; }
   if (k === 'af') { afForm()[t.dataset.f] = t.value; return; }
+  if (k === 'afp' && t.type === 'range') { const lab = t.closest('label') && t.closest('label').querySelector('b'); if (lab) lab.textContent = t.value + (t.dataset.k === 'pitchDeg' ? '°' : ''); return; }
   if (k === 'login') { LOGIN[t.dataset.f] = t.value; return; }
   const extLive = { wU0: () => { const w = curW(); if (w) w.u0 = Math.min(+t.value, w.u1 - 0.6); }, wU1: () => { const w = curW(); if (w) w.u1 = Math.max(+t.value, w.u0 + 0.6); }, wD: () => { const w = curW(); if (w) w.d = +t.value; },
     pW: () => { if (P.ext.porch) P.ext.porch.w = +t.value; }, pD: () => { if (P.ext.porch) P.ext.porch.d = +t.value; }, pU: () => { if (P.ext.porch) P.ext.porch.u = +t.value; } }[k];
@@ -1030,6 +1331,11 @@ document.addEventListener('change', e => {
   if (k === 'lightK') { LIGHTK = t.value; if (P.ext.lights.length) return commit(P => P.ext.lights.forEach(l => { l.k = t.value; })); return; }
   if (k === 'afSet') { const f = afForm(), [grp, key] = t.dataset.f.split(':'); if (grp === 'shells' || grp === 'lock') { const a = new Set(f[grp]); t.checked ? a.add(key) : a.delete(key); f[grp] = [...a]; } else { const all = Object.keys(FIN[grp]); let cur = f.finishes[grp] === 'all' ? all.slice() : f.finishes[grp].slice(); cur = t.checked ? [...new Set([...cur, key])] : cur.filter(x => x !== key); f.finishes[grp] = cur.length === all.length ? 'all' : cur; } return; }
   if (k === 'cut') { CUT = t.checked; DIRTY3D = true; return refreshView(); }
+  if (k === 'afp') return afSet(t.dataset.k, t.type === 'checkbox' ? t.checked : t.value);
+  if (k === 'afframe') { FRAME = t.checked; DIRTY3D = true; return refreshView(); }
+  if (k === 'uname') return renderUI();
+  if (k === 'ustair') { AU().stair = t.value; DIRTY3D = true; return after(); }
+  if (k === 'ujoin') { if (t.checked) delete PROJ.joins[t.dataset.key]; else PROJ.joins[t.dataset.key] = false; DIRTY3D = true; return after(); }
   if (k === 'furnPkg') return commit(P => { P.furnPkg = t.checked; });
   if (!s) return;
   if (SEL && locked(SEL.kind)) { lockToast(SEL.kind); return renderRight(); }
@@ -1131,7 +1437,7 @@ function worldUV(me, s = 1) {
 }
 function bx(par, w, h, d, x, y, z, m, pick) { const me = new THREE.Mesh(new THREE.BoxGeometry(Math.max(w, 0.002), Math.max(h, 0.002), Math.max(d, 0.002)), m); me.position.set(x, y, z); me.castShadow = me.receiveShadow = true; if (pick) me.userData.pick = pick; par.add(me); return me; }
 function cy(par, r, h, x, y, z, m) { const me = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 18), m); me.position.set(x, y, z); me.castShadow = true; par.add(me); return me; }
-let MODEL = null, REFS = {}, FLOORTEX = null;
+let MODEL = null, REFS = {};
 const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xC9A46A); selBox.visible = false; scene.add(selBox);
 
 // wall with rectangular openings: along u (0..len) on a side, from y0 to y1
@@ -1242,15 +1548,42 @@ function floorCanvas() {
   }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
+// every unit of the project, drawn in the active unit's own frame so editing stays in local metres
+let FLOORTEXS = [];
 function build3D() {
   DIRTY3D = false;
   if (MODEL) { scene.remove(MODEL); MODEL.traverse(n => { if (n.isMesh) n.geometry.dispose(); }); }
-  if (FLOORTEX) FLOORTEX.dispose();
-  MODEL = new THREE.Group(); REFS = {}; scene.add(MODEL);
-  const p = PRE(), yF = p.yF, col = P.colour, roofHide = CUT, M = MODEL;
+  FLOORTEXS.forEach(t => t.dispose()); FLOORTEXS = [];
+  MODEL = new THREE.Group(); REFS = {}; scene.add(MODEL); EXTL = [];
+  if (!PROJ) { buildUnit(MODEL, 0); GROUND.position.y = 0; }
+  else {
+    const act = AU(), site = new THREE.Group(); site.matrixAutoUpdate = false; site.matrix.copy(unitMatrix(act).invert()); MODEL.add(site); MODEL.updateMatrixWorld(true);
+    PROJ.units.forEach(u => {
+      if (CUT && (u.level || 0) > (act.level || 0)) return;
+      const g = new THREE.Group(); g.matrixAutoUpdate = false; g.matrix.copy(unitMatrix(u)); site.add(g); g.updateMatrixWorld(true);
+      if (u.id === act.id) { buildUnit(g, u.level || 0); stair3D(g, u); }
+      else { withUnit(u, () => { buildUnit(g, u.level || 0); stair3D(g, u); }); g.traverse(n => { n.userData.pick = { kind: 'unit', id: u.id }; }); }
+    });
+    GROUND.position.y = -(act.level || 0) * LH;
+  }
+  applyScene(); updateSelBox(); if (FIRSTFRAME) { FIRSTFRAME = false; camPreset(STAGE === 'finish' ? 'doll' : 'front'); }
+}
+// an outside steel stair from the ground to an upper unit's door
+function stair3D(g, u) {
+  if (!u.level || !u.stair || u.stair === 'none') return;
+  const p = PRE(), rise = u.level * LH + p.yF, n = Math.ceil(rise / 0.18), h = rise / n, run = 0.27, wd = 1.0, steel = mat('#3b3d40', { r: 0.5, m: 0.4 }), tread = mat('#7b7f83', { r: 0.6, m: 0.3 });
+  const along = u.stair === 'W' || u.stair === 'E' ? p.W / 2 : 1.1, sg = onWall(g, u.stair, along, -u.level * LH, faceOff(u.stair));
+  bx(sg, wd + 0.2, 0.06, 1.2, 0, rise - 0.03, 0.6, tread);
+  for (const x of [-(wd / 2 + 0.05), wd / 2 + 0.05]) { bx(sg, 0.06, rise, 0.06, x, rise / 2, 1.17, steel); bx(sg, 0.04, 1.0, 0.04, x, rise + 0.5, 1.17, steel); }
+  for (let i = 0; i < n - 1; i++) { const y = rise - (i + 1) * h, z = 1.2 + (i + 0.5) * run; bx(sg, wd, 0.04, run - 0.02, 0, y, z, tread); }
+  const L0 = (n - 1) * run, ang = Math.atan2(rise, L0);
+  for (const x of [-(wd / 2 + 0.03), wd / 2 + 0.03]) { const st = bx(sg, 0.05, 0.22, Math.hypot(rise, L0), x, rise / 2, 1.2 + L0 / 2, steel); st.rotation.x = ang; const rl = bx(sg, 0.03, 0.03, Math.hypot(rise, L0), x, rise / 2 + 0.95, 1.2 + L0 / 2, steel); rl.rotation.x = ang; }
+}
+function buildUnit(M, lvl) {
+  const p = PRE(), yF = p.yF, col = P.colour, roofHide = CUT;
   // floor
-  FLOORTEX = floorCanvas();
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(G.nx * C, G.nz * C), new THREE.MeshStandardMaterial({ map: FLOORTEX, roughness: 0.6 }));
+  const ftx = floorCanvas(); FLOORTEXS.push(ftx);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(G.nx * C, G.nz * C), new THREE.MeshStandardMaterial({ map: ftx, roughness: 0.6 }));
   fl.rotation.x = -Math.PI / 2; fl.position.set((G.ox || 0) + G.nx * C / 2, yF + 0.003, (G.oz || 0) + G.nz * C / 2); fl.receiveShadow = true; fl.userData.pick = { kind: 'floor' }; M.add(fl);
   // lining
   const byRoom = {}; R.forEach(r => { byRoom[r.id] = r; });
@@ -1282,7 +1615,7 @@ function build3D() {
   // openings
   P.opens.forEach(o => openingMesh(M, o));
   // shell
-  if (p.sys === 'container') shellContainer(M, p, col, roofHide); else if (p.sys === 'aframe') shellAframe(M, p, col, roofHide); else shellCabin(M, p, col, roofHide);
+  if (p.sys === 'container') shellContainer(M, p, col, roofHide); else if (p.sys === 'aframe') { shellAframe(M, p, col, roofHide || (FRAME && !!P.af)); if (FRAME && P.af) afFrame3D(M, p); if (P.af) afLoft3D(M, p); } else shellCabin(M, p, col, roofHide);
   exterior3D(M, p, roofHide);
   // ceiling
   if (!roofHide && p.sys !== 'aframe') { const cf = FIN.ceil[P.ceil], cm = mat(cf.col, { r: 0.85, tex: cf.pat === 'vplank' ? 'vplank' : null }); const ce = new THREE.Mesh(new THREE.PlaneGeometry(p.L - 2 * p.t, p.W - 2 * p.t), cm); ce.rotation.x = Math.PI / 2; ce.position.set(p.L / 2, yF + p.ih, p.W / 2); ce.userData.pick = { kind: 'ceil' }; M.add(ce); if (cf.pat) worldUV(ce, 1);
@@ -1290,8 +1623,7 @@ function build3D() {
       const ac = new THREE.Mesh(new THREE.PlaneGeometry(Math.max(0.05, x1 - x0), Math.max(0.05, z1 - z0)), cm); ac.rotation.x = Math.PI / 2; ac.position.set((x0 + x1) / 2, yF + p.ih, (z0 + z1) / 2); ac.userData.pick = { kind: 'ceil' }; M.add(ac); }); }
   // gravel pad
   const pb = DS.bbox(P), pr = P.ext.porch ? porchRect() : null, gx0 = Math.min(pb.x0, pr ? pr.x0 : 0) - (p.sys === 'aframe' ? 2.4 : 0), gx1 = Math.max(pb.x1, pr ? pr.x1 : 0), gz0 = Math.min(pb.z0, pr ? pr.z0 : 0), gz1 = Math.max(pb.z1 + (p.veranda || 0), pr ? pr.z1 : 0);
-  const pad = new THREE.Mesh(new THREE.PlaneGeometry(gx1 - gx0 + 4, gz1 - gz0 + 4), mat('#a59e91', { r: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.set((gx0 + gx1) / 2, 0.004, (gz0 + gz1) / 2); pad.receiveShadow = true; M.add(pad);
-  applyScene(); updateSelBox(); if (FIRSTFRAME) { FIRSTFRAME = false; camPreset(STAGE === 'finish' ? 'doll' : 'front'); }
+  if (!lvl) { const pad = new THREE.Mesh(new THREE.PlaneGeometry(gx1 - gx0 + 4, gz1 - gz0 + 4), mat('#a59e91', { r: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.set((gx0 + gx1) / 2, 0.004, (gz0 + gz1) / 2); pad.receiveShadow = true; M.add(pad); }
 }
 let FIRSTFRAME = true;
 function sideCuts(side, yBase) { return P.opens.filter(o => o.side === side && !OPEN[o.k].gable).map(o => { const s = DS.openSpan(P, o); return [s.u0, s.u1, PRE().yF + s.v0, PRE().yF + s.v1]; }); }
@@ -1364,7 +1696,6 @@ function porchRect() {
 }
 function exterior3D(M, p, hide) {
   const e = P.ext, isC = p.sys === 'container', y0 = isC ? 0.2 : p.yF, y1 = y0 + (p.H || 2.6);
-  EXTL = [];
   // cladding over the chosen walls, and over the bump-outs on those sides
   if (e.clad && CLAD[e.clad.k] && p.sys !== 'aframe') {
     const cd = CLAD[e.clad.k], cm = mat(e.clad.col || cd.col, { r: cd.pat === 'ribs' ? 0.5 : 0.85, m: cd.pat === 'ribs' ? 0.3 : 0, tex: cd.pat === 'ribs' ? 'vplank' : cd.pat === 'boards' ? 'clad' : 'tile' });
@@ -1397,7 +1728,7 @@ function exterior3D(M, p, hide) {
   e.lights.forEach(l => {
     const L = LIGHT[l.k]; if (!L) return; const lw = L.w || 0.12, lh = L.h || 0.2, g = onWall(M, l.side, l.u, Math.min(y1 - 0.35, p.yF + 2.25), faceOff(l.side));
     bx(g, lw, lh, 0.08, 0, 0, 0.04, mat(L.col || '#2b2b2b', { r: 0.4, m: 0.5 })); bx(g, lw * 0.7, 0.025, 0.06, 0, -lh / 2 - 0.012, 0.05, mat('#fff1cf', { r: 0.2, glass: true }));
-    g.updateMatrixWorld(true); EXTL.push(g.localToWorld(new THREE.Vector3(0, -0.25, 0.45)));
+    g.updateWorldMatrix(true, true); EXTL.push(g.localToWorld(new THREE.Vector3(0, -0.25, 0.45)));
   });
   // entry porch: deck or patio, with posts and a pergola or canopy roof
   const pc = e.porch, pd = pc && PORCH[pc.k];
@@ -1461,8 +1792,14 @@ function updateSelBox() {
   selBox.visible = false;
 }
 let raf3 = 0; function queue3D() { if (raf3) return; raf3 = requestAnimationFrame(() => { raf3 = 0; if (SHOW3D() && DIRTY3D) build3D(); }); }
+function camBox() {
+  if (!PROJ || PROJ.units.length < 2 || ['plan', 'furnish', 'finish'].includes(STAGE)) return DS.bbox(P);
+  const act = AU(); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  PROJ.units.forEach(u => { const q = rectOf(u); [[q.x0, q.z0], [q.x1, q.z0], [q.x0, q.z1], [q.x1, q.z1]].forEach(([x, z]) => { const [a, b] = toLocal(act, x, z); x0 = Math.min(x0, a); x1 = Math.max(x1, a); z0 = Math.min(z0, b); z1 = Math.max(z1, b); }); });
+  return { x0, x1, z0, z1 };
+}
 function camPreset(k) {
-  resize(); const p = PRE(), bb = DS.bbox(P), L0 = bb.x1 - bb.x0, W0 = bb.z1 - bb.z0, narrow = Math.max(1, 1.2 / Math.max(0.3, camera.aspect || 1.5)), r = Math.max(L0, W0 * 1.6) * narrow, cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2;
+  resize(); const p = PRE(), bb = camBox(), L0 = bb.x1 - bb.x0, W0 = bb.z1 - bb.z0, narrow = Math.max(1, 1.2 / Math.max(0.3, camera.aspect || 1.5)), r = Math.max(L0, W0 * 1.6) * narrow, cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2;
   const set = (pos, tgt) => { camera.position.set(...pos); controls.target.set(...tgt); controls.update(); };
   if (k === 'front' && p.sys === 'aframe') set([-r * 0.95, 2.6 + r * 0.25, cz + r * 0.95], [cx * 0.7, 2.4, cz]);
   else if (k === 'front') set([cx + r * 0.45, 2.0 + r * 0.25, bb.z1 + (p.veranda || 0) + r * 1.05], [cx, 1.4, cz]);
@@ -1485,6 +1822,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (pk.kind === 'floor') { const id = G.at(hit.point.x, hit.point.z); if (id > 0) SEL = { kind: 'room', id }; }
   else if (pk.kind === 'wall') SEL = { kind: 'room', id: pk.room };
   else if (pk.kind === 'ceil') { if (STAGE === 'finish') { NTAB = 'ceil'; } return renderUI(); }
+  else if (pk.kind === 'unit') return setActive(pk.id);
   else SEL = { kind: pk.kind, id: pk.id };
   if (STAGE === 'finish' && SEL && SEL.kind !== 'room') { const s = findSel(); const room = SEL.kind === 'item' ? G.at(s.x, s.z) : 0; SEL = room > 0 ? { kind: 'room', id: room } : SEL; }
   renderUI(); updateSelBox();
@@ -1523,8 +1861,8 @@ function exitWalk() {
 function ensure3D() { if (DIRTY3D || !MODEL) build3D(); }
 function grabStill(w = 1600) {
   ensure3D(); const cv = renderer.domElement, ow = cv.clientWidth, oh = cv.clientHeight, pr = renderer.getPixelRatio(), sv = selBox.visible;
-  selBox.visible = false; const h = Math.round(w * oh / ow); renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.render(scene, camera);
-  const url = cv.toDataURL('image/jpeg', 0.9); renderer.setPixelRatio(pr); renderer.setSize(ow, oh, false); camera.aspect = ow / oh; camera.updateProjectionMatrix(); selBox.visible = sv; return url;
+  selBox.visible = false; const h = ow > 10 && oh > 10 ? Math.round(w * oh / ow) : Math.round(w * 0.6); renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.render(scene, camera);
+  const url = cv.toDataURL('image/jpeg', 0.9); renderer.setPixelRatio(pr); renderer.setSize(Math.max(ow, 1), Math.max(oh, 1), false); if (ow > 10 && oh > 10) camera.aspect = ow / oh; camera.updateProjectionMatrix(); selBox.visible = sv; return url;
 }
 function thumbOf(url) { return new Promise(res => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = 240; c.height = 180; const g = c.getContext('2d'), s = Math.max(240 / im.width, 180 / im.height); g.drawImage(im, (240 - im.width * s) / 2, (180 - im.height * s) / 2, im.width * s, im.height * s); res(c.toDataURL('image/jpeg', 0.8)); }; im.src = url; }); }
 async function captureStill() { if (VIEW !== '3d') setView('3d'); const img = grabStill(1920), id = uid('s'); RENDERS.unshift({ id, kind: 'still', img, thumb: await thumbOf(img), scene: SCENE }); renderRight(); toast('Still captured'); return id; }
@@ -1538,7 +1876,7 @@ function grabPano() {
   qs.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), qm));
   const cv = renderer.domElement, ow = cv.clientWidth, oh = cv.clientHeight, pr = renderer.getPixelRatio();
   renderer.setPixelRatio(1); renderer.setSize(2048, 1024, false); renderer.render(qs, qc); const url = cv.toDataURL('image/jpeg', 0.9);
-  renderer.setPixelRatio(pr); renderer.setSize(ow, oh, false); camera.aspect = ow / oh; camera.updateProjectionMatrix();
+  renderer.setPixelRatio(pr); renderer.setSize(Math.max(ow, 1), Math.max(oh, 1), false); if (ow > 10 && oh > 10) camera.aspect = ow / oh; camera.updateProjectionMatrix();
   rt.dispose(); qm.dispose(); selBox.visible = sv; if (wasCut) { CUT = true; build3D(); }
   return url;
 }
@@ -1576,28 +1914,29 @@ function openRender(id) {
 function openProposal() {
   const m = $('#modal'), p = PRE(), cover = RENDERS.find(r => r.kind === 'still') || null; let img = cover ? cover.img : null;
   if (!img) { const was = VIEW; if (VIEW !== '3d') { $('#three').style.visibility = 'hidden'; } const sv = [camera.position.clone(), controls.target.clone()], cut = CUT; if (CUT) { CUT = false; DIRTY3D = true; } if (!WALK) camPreset('front'); img = grabStill(1600); if (!WALK) { camera.position.copy(sv[0]); controls.target.copy(sv[1]); controls.update(); } if (cut) { CUT = true; DIRTY3D = true; refreshView(); } }
-  const { vb, body } = planSVG(true), groups = [...new Set(Q.lines.map(l => l.grp))], dt = new Date().toLocaleDateString('en-GB', { dateStyle: 'long' }), ref = LINK || 'FC-' + (P.name.length * 7919 % 99999).toString().padStart(5, '0');
-  const boq = CLIENT ? `<table><tr><th>Section</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td>${g}</td><td class="n">${KSh(Q.lines.filter(l => l.grp === g).reduce((a, l) => a + l.total, 0))}</td></tr>`).join('')}</table>`
-    : `<table><tr><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td colspan="4" style="font-weight:600;color:#7A5C2A;padding-top:12px">${g}</td></tr>` + Q.lines.filter(l => l.grp === g).map(l => `<tr><td>${esc(l.name)}${l.short ? ' <span style="color:#9a6200">· ordered in</span>' : ''}</td><td class="n">${l.qty} ${l.unit}</td><td class="n">${KSh(l.rate)}</td><td class="n">${KSh(l.total)}</td></tr>`).join('')).join('')}</table>`;
+  const QQ = PQ || Q, { vb, body } = PROJ && PROJ.units.length > 1 ? assemblySVG() : planSVG(true), groups = [...new Set(QQ.lines.map(l => l.grp))], dt = new Date().toLocaleDateString('en-GB', { dateStyle: 'long' }), ref = LINK || 'FC-' + (P.name.length * 7919 % 99999).toString().padStart(5, '0');
+  const boq = CLIENT ? `<table><tr><th>Section</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td>${g}</td><td class="n">${KSh(QQ.lines.filter(l => l.grp === g).reduce((a, l) => a + l.total, 0))}</td></tr>`).join('')}</table>`
+    : `<table><tr><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr>${groups.map(g => `<tr><td colspan="4" style="font-weight:600;color:#7A5C2A;padding-top:12px">${g}</td></tr>` + QQ.lines.filter(l => l.grp === g).map(l => `<tr><td>${esc(l.name)}${l.short ? ' <span style="color:#9a6200">· ordered in</span>' : ''}</td><td class="n">${l.qty} ${l.unit}</td><td class="n">${KSh(l.rate)}</td><td class="n">${KSh(l.total)}</td></tr>`).join('')).join('')}</table>`;
   const joinery = P.runs.map(rn => { const cat = DS.runCat(rn); return `<tr><td>${rn.kind === 'kitchen' ? 'Kitchen' : 'Wardrobe'}</td><td>${rn.units.map(u => cat[u].name).join(', ')}</td><td>${FRONTS[rn.front].name}${rn.kind === 'kitchen' ? ` · ${TOPS[rn.top].name} worktop${rn.wallCab ? ' · wall cabinets' : ''}` : ''}</td></tr>`; }).join('');
   m.innerHTML = `<div class="mbar"><span class="eb">Proposal preview${CLIENT ? ' · client view' : ' · sales view with full BOQ'}</span><span style="display:flex;gap:8px"><button type="button" class="tb" data-a="sendQuote" style="background:#C9A46A;color:#0D0C0A;border-color:#C9A46A">Request this quote</button><button type="button" class="tb" data-a="closeModal">Close</button></span></div>
-  <article class="doc"><div class="meta">FIRMCOP · MODULAR · Proposal ${ref} · ${dt}</div><h1>${esc(P.name)}</h1><div class="meta">Prepared for ${esc(CLIENTINFO.name)} · ${esc(CLIENTINFO.site)} · ${p.name}, ${SYSD().name.toLowerCase()} system</div>
+  <article class="doc"><div class="meta">FIRMCOP · MODULAR · Proposal ${ref} · ${dt}</div><h1>${esc(PROJ ? PROJ.name : P.name)}</h1><div class="meta">Prepared for ${esc(CLIENTINFO.name)} · ${esc(CLIENTINFO.site)} · ${p.name}, ${SYSD().name.toLowerCase()} system</div>
   <img class="cover" src="${img}" alt="Render of the design">
   <h2>Plan</h2><svg viewBox="${vb.join(' ')}" xmlns="http://www.w3.org/2000/svg">${body}</svg>
   <div class="grid2"><div><h2>Rooms and finishes</h2><table><tr><th>Room</th><th class="n">Area</th><th>Floor</th><th>Walls</th></tr>${R.map(r => `<tr><td>${esc(r.name)}</td><td class="n">${r.area.toFixed(1)} m²</td><td>${FIN.floor[r.floor].name}</td><td>${FIN.wall[r.wall].name}</td></tr>`).join('')}<tr><td>Ceiling</td><td></td><td colspan="2">${FIN.ceil[P.ceil].name}</td></tr></table></div>
   <div><h2>Joinery</h2>${joinery ? `<table><tr><th>Run</th><th>Units</th><th>Finish</th></tr>${joinery}</table>` : '<p>None.</p>'}<h2>Doors and windows</h2><table>${P.opens.map(o => `<tr><td>${OPEN[o.k].name}</td><td>${DS.SIDE_NAME[o.side]}</td></tr>`).join('')}</table></div></div>
   <h2>Bill of quantities</h2>${boq}
-  <div class="tot"><span>Subtotal</span><span>${KSh(Q.sub)}</span></div><div class="tot"><span>VAT 16%</span><span>${KSh(Q.vat)}</span></div><div class="tot"><span>Total</span><b>${KSh(Q.total)}</b></div>
-  <h2>Payment and programme</h2><div class="mil">${[['30%', 'Deposit, to start fabrication'], ['30%', 'Shell complete at the yard'], ['30%', 'Fit-out complete'], ['10%', 'Handover on site']].map(([a, b]) => `<div><b>${a}</b>${b}<br><span class="meta">${KSh(Q.total * parseFloat(a) / 100)}</span></div>`).join('')}</div>
-  <p class="meta" style="margin-top:14px">Lead time about ${Q.weeks} weeks from deposit${Q.shortfall.length ? ', including 2 weeks for finishes ordered in' : ''}. Sample price book for demonstration. The final price follows the site survey and engineering review. Valid for 30 days.</p></article>`;
+  <div class="tot"><span>Subtotal</span><span>${KSh(QQ.sub)}</span></div><div class="tot"><span>VAT 16%</span><span>${KSh(QQ.vat)}</span></div><div class="tot"><span>Total</span><b>${KSh(QQ.total)}</b></div>
+  <h2>Payment and programme</h2><div class="mil">${[['30%', 'Deposit, to start fabrication'], ['30%', 'Shell complete at the yard'], ['30%', 'Fit-out complete'], ['10%', 'Handover on site']].map(([a, b]) => `<div><b>${a}</b>${b}<br><span class="meta">${KSh(QQ.total * parseFloat(a) / 100)}</span></div>`).join('')}</div>
+  <p class="meta" style="margin-top:14px">Lead time about ${QQ.weeks} weeks from deposit${QQ.shortfall.length ? ', including 2 weeks for finishes ordered in' : ''}. Sample price book for demonstration. The final price follows the site survey and engineering review. Valid for 30 days.</p></article>`;
   m.classList.add('show'); m.scrollTop = 0;
 }
 
 function sendQuote() {
   if (!window.FC) return;
-  FC.quote({ source: 'studio', intent: 'proposal', title: P.name + ' · ' + PRE().name, design_slug: (P.design && P.design.slug) || null,
-    lines: Q.lines.map(l => ({ label: l.name, detail: l.grp, qty: l.qty, unit: l.unit, rate: l.qty ? Math.round(l.total / l.qty) : null, amount: Math.round(l.total) })),
-    subtotal: Math.round(Q.sub), vat: Math.round(Q.vat), total: Math.round(Q.total) });
+  const QQ = PQ || Q, many = PROJ && PROJ.units.length > 1;
+  FC.quote({ source: 'studio', intent: 'proposal', title: (PROJ ? PROJ.name : P.name) + ' · ' + (many ? PROJ.units.length + ' units' : PRE().name), design_slug: (P.design && P.design.slug) || null,
+    lines: QQ.lines.map(l => ({ label: l.name, detail: l.grp, qty: l.qty, unit: l.unit, rate: l.qty ? Math.round(l.total / l.qty) : null, amount: Math.round(l.total) })),
+    subtotal: Math.round(QQ.sub), vat: Math.round(QQ.vat), total: Math.round(QQ.total) });
 }
 
 // ---------------- author: save to the catalogue ----------------
@@ -1671,6 +2010,18 @@ async function loadPackage() {
 await loadPackage();
 try { let want = new URLSearchParams(location.search).get('design'); if (!want) want = localStorage.getItem('fc-ds-open'); if (want) { localStorage.removeItem('fc-ds-open'); const d = (DS.DESIGNS || []).find(x => x.slug === want); if (d) P = { ...DS.clone(d.layout), name: d.name, design: { slug: d.slug, version: d.version, rules: d.rules || {} } }; } } catch (e) {}
 if (!PRESETS[P.preset]) P = DS.starter(Object.keys(PRESETS)[0]);
+{
+  const qp = new URLSearchParams(location.search), cur = PROJECTS.list.find(r => r.id === PROJECTS.current);
+  let showStart = false;
+  if (qp.get('design') && P.design && P.design.slug === qp.get('design')) PROJ = newProject(P.name, P);
+  else if (cur && !qp.get('new')) PROJ = JSON.parse(JSON.stringify(cur.data));
+  else { PROJ = newProject(P.name, P); showStart = !load() || !!qp.get('new'); }
+  PROJ.units.forEach(u => { if (!PRESETS[u.design.preset]) u.design = DS.starter(Object.keys(PRESETS)[0]); });
+  if (!unitOf(PROJ.active)) PROJ.active = PROJ.units[0].id;
+  P = AU().design; syncParty(); ALEVEL = AU().level || 0;
+  if (showStart) setTimeout(openStart, 0);
+  if (qp.get('project') && window.FC) FC.rest('ds_projects?select=*&id=eq.' + encodeURIComponent(qp.get('project'))).then(rows => { if (rows.length) { const d = rows[0].data; d.remoteId = rows[0].id; startProject(d); } }).catch(() => {});
+}
 SHELLSYS = PRESETS[P.preset].sys;
 recompute(); renderUI(); setView('3d', true); resize(); build3D(); camPreset('front');
 </script>

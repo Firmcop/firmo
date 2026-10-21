@@ -82,7 +82,7 @@ for bid, fn in BLOBS.items():
 for fn in os.listdir(os.path.join(f3d, 'img')):
     shutil.copy(os.path.join(f3d, 'img', fn), os.path.join(out, 'img', fn))
 # 3D tools and data
-for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
+for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'af-engine.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
 # the Studio as a page of the site: site header on top, Studio framed beneath
 shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))

@@ -83,6 +83,7 @@ label.ck input{width:20px;height:20px}
 .kv{display:grid;grid-template-columns:140px 1fr;gap:6px 14px;font-size:14px}
 .kv dt{color:var(--muted)}
 .kv dd{margin:0;word-break:break-word}
+.afsum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.afsum div{display:grid;gap:2px}.afsum b{font-size:13px}@media(max-width:640px){.afsum{grid-template-columns:repeat(2,1fr)}}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
 .tabs button{background:transparent;border:0;padding:10px 12px;min-height:42px;cursor:pointer;color:var(--muted);font-weight:600}
 .tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--brass)}
@@ -116,6 +117,7 @@ pre.json{background:#FAF8F4;border:1px solid var(--line);border-radius:4px;paddi
 <body>
 <div id="root"></div>
 <script src="ds-config.js"></script>
+<script src="af-engine.js"></script>
 <script src="fc-site.js"></script>
 <script>
 (function () {
@@ -199,7 +201,7 @@ where email = '${esc(ME.email)}';</pre>
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
   ['builds', 'Client builds', 'variations_pending'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
-  ['designs', 'Designs', 'designs_review'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
+  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
   root.innerHTML = `<div class="app"><aside><a class="brand" href="Main.dc.html" title="Open the website"><b>FIRMCOP</b><small>Admin</small></a>
@@ -421,6 +423,183 @@ VIEWS.quotes = (m) => listView(m, {
   }
 });
 
+const PROJ_ST = ['draft', 'quoted', 'archived'];
+VIEWS.projects = (m) => listView(m, {
+  table: 'ds_projects', title: 'Studio projects', eyebrow: '3D Studio', search: ['name'], filter: { col: 'status', options: PROJ_ST },
+  cols: [{ k: 'name', label: 'Project' }, { k: 'units', label: 'Units', n: true }, { k: 'total_kes', label: 'Total', n: true, fmt: kes }, { k: 'status', label: 'Status', fmt: pill }, { k: 'updated_at', label: 'Last saved', fmt: when }],
+  newLabel: false, fields: [], label: (r) => r.name,
+  detail: async (r, d, reload) => {
+    const us = (r.data && r.data.units) || [];
+    d.el.innerHTML = `<div class="tools"><a class="btn sm" href="3d-studio.html?project=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">Open in the 3D Studio</a></div>
+      <section class="card"><dl class="kv"><dt>Saved by</dt><dd class="mono small">${esc(r.user_id)}</dd><dt>Created</dt><dd>${when(r.created_at)}</dd><dt>Last saved</dt><dd>${when(r.updated_at)}</dd><dt>Total</dt><dd>${kes(r.total_kes)}</dd></dl></section>
+      <section class="card"><h3>Units</h3><div class="tablewrap"><table><thead><tr><th>Unit</th><th>Size</th><th>Floor</th><th>Position (m)</th><th class="n">Rooms drawn</th><th class="n">Items</th></tr></thead><tbody>
+      ${us.map((u) => `<tr><td>${esc(u.name)}</td><td>${esc(u.design && u.design.af ? u.design.af.productCode + ' · ' + u.design.af.widthM + ' × ' + u.design.af.lengthM + ' m' : (u.design && u.design.preset) || '')}</td><td>${u.level ? 'Upper' : 'Ground'}</td><td class="mono small">${(+u.x).toFixed(1)}, ${(+u.z).toFixed(1)}${u.rot ? ' · turned ' + u.rot * 90 + '°' : ''}</td><td class="n">${((u.design && u.design.parts) || []).length}</td><td class="n">${((u.design && u.design.items) || []).length}</td></tr>`).join('')}</tbody></table></div></section>
+      ${afUnitsOf(r).length ? `<section class="card"><h3>A-frame engineering</h3><p class="small muted">Open an engineering and production job for an A-frame unit in this project.</p><div class="tools">${afUnitsOf(r).map((x, i) => `<button class="btn sm line" type="button" data-afj="${i}">${esc(x.unit.name)} · ${esc(x.unit.design.af.productCode)}</button>`).join('')}</div></section>` : ''}
+      <section class="card"><form class="f" id="pf"><label class="fl">Status<select name="status">${PROJ_ST.map((x) => `<option ${x === r.status ? 'selected' : ''}>${x}</option>`).join('')}</select></label><div class="wide tools"><button class="btn" type="submit">Save</button></div></form></section>`;
+    d.el.querySelectorAll('[data-afj]').forEach((b) => b.onclick = async () => { const x = afUnitsOf(r)[+b.dataset.afj]; const ex = await api('af_jobs?select=id&project_id=eq.' + r.id + '&unit_id=eq.' + encodeURIComponent(x.unit.id)); if (!ex.length) await afNewJob({ ...x, customer: r.name }); else toast('A job already exists for this unit'); d.close(); location.hash = 'aframe'; });
+    $('#pf', d.el).onsubmit = async (e) => { e.preventDefault(); await guard(api('ds_projects?id=eq.' + r.id, { method: 'PATCH', body: { status: e.target.status.value } }), 'Saved'); d.close(); reload(); };
+  }
+});
+// ---------- A-frame engineering and production (af-engine.js) ----------
+const AF_NM = { none: 'No loft', partial: 'Partial loft', full: 'Full loft', corrugated: 'Corrugated sheet', stone: 'Stone-coated tile', standing: 'Standing seam', fibre_cement: 'Fibre cement boards', timber_composite: 'Timber composite', standard: 'Standard gable windows', premium: 'Premium glazed gable' };
+const AF_ROLES = [['ENGINEER', 'Engineer'], ['SALES', 'Sales'], ['PRODUCTION_MANAGER', 'Production manager'], ['QC', 'QC inspector']];
+const AF_STAGE = ['engineering', 'commercial', 'released', 'production', 'dispatched', 'archived'];
+const afNow = () => new Date().toISOString();
+const afPct = (u) => Math.round((u || 0) * 100) + '%';
+const afRag = (s) => `<span class="pill ${s === 'GREEN' || s === 'PASS' ? 'won' : s === 'RED' || s === 'FAIL' ? 'lost' : 'pending_review'}">${esc(s)}</span>`;
+function afUser() { let u = {}; try { u = JSON.parse(localStorage.getItem('fc-af-user') || '{}'); } catch (e) {} return { name: u.name || ME.email, role: u.role || 'ENGINEER' }; }
+function afSetUser(u) { try { localStorage.setItem('fc-af-user', JSON.stringify(u)); } catch (e) {} }
+function afParamFields(cfg) {
+  const pr = AFE.product(cfg.productCode) || {}, D = AFE.params, lk = pr.locked || {};
+  const sel = (k, list, lab = (v) => AF_NM[v] || v) => `<label class="fl">${esc(D[k].label)}${k in lk ? ' <span class="hint">fixed on this model</span>' : ''}<select name="${k}" ${k in lk ? 'disabled' : ''}>${list.map((v) => `<option value="${esc(v)}" ${String(cfg[k]) === String(v) ? 'selected' : ''}>${esc(lab(v))}</option>`).join('')}</select></label>`;
+  return sel('lengthM', (pr.lengths || []).map((l) => l.lengthM), (v) => v + ' m') + sel('widthM', pr.widths || [cfg.widthM], (v) => v + ' m')
+    + `<label class="fl">Roof pitch, degrees${'pitchDeg' in lk ? ' <span class="hint">fixed on this model</span>' : ''}<input name="pitchDeg" type="number" min="${D.pitchDeg.min}" max="${D.pitchDeg.max}" step="1" value="${cfg.pitchDeg}" ${'pitchDeg' in lk ? 'readonly' : ''}></label>`
+    + sel('loft', pr.lofts || ['none']) + `<label class="fl">Loft bays<input name="loftBays" type="number" min="1" max="12" step="1" value="${cfg.loftBays}" ${'loftBays' in lk ? 'readonly' : ''}></label>`
+    + sel('roofing', D.roofing.allowed) + sel('cladding', D.cladding.allowed) + sel('windows', D.windows.allowed)
+    + `<label class="ck"><input type="checkbox" name="deck" ${cfg.deck ? 'checked' : ''} ${'deck' in lk ? 'disabled' : ''}>Front deck, 2.4 m deep</label>`;
+}
+function afReadParams(form, cfg) {
+  const out = { ...cfg };
+  ['lengthM', 'widthM', 'pitchDeg', 'loftBays'].forEach((k) => { const el = form.elements[k]; if (el && !el.disabled) out[k] = +el.value; });
+  ['loft', 'roofing', 'cladding', 'windows'].forEach((k) => { const el = form.elements[k]; if (el && !el.disabled) out[k] = el.value; });
+  if (form.elements.deck && !form.elements.deck.disabled) out.deck = form.elements.deck.checked;
+  return out;
+}
+// A-frame units in Studio projects
+function afUnitsOf(p) { return ((p.data && p.data.units) || []).filter((u) => u.design && u.design.af).map((u) => ({ project: p, unit: u })); }
+async function afNewJob(from) {
+  const code = 'AF-' + String(Date.now()).slice(-5);
+  const cfg = from && from.unit ? { ...AFE.defaults(from.unit.design.af.productCode), ...from.unit.design.af } : AFE.defaults(from && from.model || 'AF-40-2BR');
+  const body = { code, project_id: from && from.project ? from.project.id : null, unit_id: from && from.unit ? from.unit.id : null, customer: from && from.customer || (from && from.project ? from.project.name : null), site: from && from.site || null, site_qp: from && from.qp || AFE.site.qp, draft: cfg, revisions: [], lifecycle: AFE.lifecycle() };
+  const r = await guard(api('af_jobs', { method: 'POST', body, headers: { Prefer: 'return=representation' } }), 'Job ' + code + ' created');
+  return r[0];
+}
+VIEWS.aframe = (m) => listView(m, {
+  table: 'af_jobs', title: 'A-frame engineering', eyebrow: 'Engineering · production', search: ['code', 'customer', 'site'], filter: { col: 'stage', label: 'stages', options: AF_STAGE },
+  order: 'updated_at.desc',
+  cols: [{ k: 'code', label: 'Job', fmt: (v) => `<span class="mono">${esc(v)}</span>` }, { k: 'customer', label: 'Customer / project' }, { k: 'draft', label: 'Model', fmt: (v) => esc(v && v.productCode || '') + (v ? `<br><span class="small muted">${v.widthM} × ${v.lengthM} m · ${esc(AF_NM[v.loft] || v.loft)}</span>` : '') },
+    { k: 'revisions', label: 'Rev', fmt: (v) => esc((v || []).length ? v[v.length - 1].revision : '—') }, { k: 'stage', label: 'Stage', fmt: pill }, { k: 'updated_at', label: 'Updated', fmt: when }],
+  newLabel: false, fields: [], label: (r) => r.code + (r.customer ? ' · ' + r.customer : ''),
+  extraTools: '<button class="btn" type="button" id="af-new">New A-frame job</button>',
+  onTools: (m, t) => { $('#af-new', m).onclick = () => afNewDrawer(t); },
+  detail: (r, d, reload) => afJob(r, d, reload),
+});
+async function afNewDrawer(t) {
+  const ps = await api('ds_projects?select=id,name,data,updated_at&status=neq.archived&order=updated_at.desc&limit=100').catch(() => []);
+  const units = ps.flatMap(afUnitsOf), models = AFE.models;
+  drawer('New A-frame job', 'A-frame engineering', `<section class="card"><form class="f" id="afn">
+    <label class="fl wide">Start from<select name="from"><option value="">A model, blank</option>${units.map((x, i) => `<option value="${i}">${esc(x.project.name)} · ${esc(x.unit.name)} (${esc(x.unit.design.af.productCode)})</option>`).join('')}</select></label>
+    <label class="fl">Model, if blank<select name="model">${models.map((x) => `<option value="${x.code}" ${x.code === 'AF-40-2BR' ? 'selected' : ''}>${esc(x.code)} · ${esc(x.name)}${x.status !== 'published' ? ' (draft)' : ''}</option>`).join('')}</select></label>
+    <label class="fl">Customer<input name="customer" placeholder="Name"></label><label class="fl">Site<input name="site" placeholder="e.g. Naivasha plot"></label>
+    <label class="fl">Site wind pressure qp, kN/m²<input name="qp" type="number" step="0.01" min="0.2" max="2" value="${AFE.site.qp}"></label>
+    <p class="wide small muted">${units.length ? units.length + ' A-frame units found in saved Studio projects.' : 'No saved Studio project has an A-frame unit yet.'} The site value is a demo default until the engineer sets it from the site survey.</p>
+    <div class="wide tools"><button class="btn" type="submit">Create job</button></div></form></section>`, (d) => {
+    $('#afn', d.el).onsubmit = async (e) => {
+      e.preventDefault(); const f = e.target, u = f.from.value === '' ? null : units[+f.from.value];
+      const job = await afNewJob({ ...(u || {}), model: f.model.value, customer: f.customer.value.trim() || null, site: f.site.value.trim() || null, qp: +f.qp.value || AFE.site.qp });
+      d.close(); await t.reload(); t.edit(job);
+    };
+  });
+}
+function afJob(r0, d, reload) {
+  let job = { ...r0, lifecycle: r0.lifecycle || AFE.lifecycle(), revisions: r0.revisions || [] }, TAB = 'config';
+  const save = async (patch, msg) => { job = { ...job, ...patch }; await guard(api('af_jobs?id=eq.' + job.id, { method: 'PATCH', body: patch }), msg); reload(); draw(); };
+  const act = async (fn, msg) => { try { const patch = fn(); if (patch) await save(patch, msg); } catch (e) { toast(e.message || String(e), true); } };
+  function ctx() {
+    const rev = job.revisions[job.revisions.length - 1] || null, res = AFE.evaluate(job.draft), site = AFE.siteOf({ siteQp: +job.site_qp, site: job.site || 'Site' });
+    const dirty = !rev || AFE.hash(rev.input) !== AFE.hash(job.draft);
+    let an = null; try { an = res.status === 'RED' ? null : AFE.analyse(res, site); } catch (e) { an = null; }
+    return { rev, res, site, dirty, an, sum: AFE.summary(job.lifecycle, rev, res, an, dirty), user: afUser() };
+  }
+  function draw() {
+    const c = ctx(), T = [['config', 'Configuration'], ['eng', 'Engineering'], ['com', 'Commercial'], ['rel', 'Release'], ['prod', 'Production']];
+    const head = `<div class="tools" style="align-items:center;flex-wrap:wrap">${job.project_id ? `<a class="btn sm line" href="3d-studio.html?project=${encodeURIComponent(job.project_id)}" target="_blank" rel="noopener">Open the Studio project</a>` : ''}
+      <label class="small" style="display:flex;gap:6px;align-items:center">Acting as<select id="af-role">${AF_ROLES.map(([k, l]) => `<option value="${k}" ${c.user.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <input id="af-uname" aria-label="Your name" value="${esc(c.user.name)}" style="min-height:36px;padding:0 8px;border:1.5px solid #BDB29C;border-radius:4px;width:200px"></div>
+      <section class="card"><div class="afsum">${[['Rules', c.sum.rules], ['Analysis', c.sum.analysis], ['Approval', c.sum.approval], ['Commercial', c.sum.commercial], ['Production', c.sum.production]].map(([k, v]) => `<div><span class="small muted">${k}</span><b>${esc(v)}</b></div>`).join('')}</div>
+      <p class="small muted" style="margin:8px 0 0">${c.rev ? `Rev ${esc(c.rev.revision)} saved ${when(c.rev.savedAt)}${c.dirty ? ' · <b>the configuration below has unsaved changes</b>' : ''}` : 'No revision saved yet. Save the configuration as Rev A to start engineering.'} · Site ${esc(job.site || '—')}, qp ${(+job.site_qp).toFixed(2)} kN/m²${c.site.isDemo ? ' (demo value)' : ''}</p></section>
+      <div class="tabs" role="tablist">${T.map(([k, l]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${TAB === k}">${l}</button>`).join('')}</div><div id="af-tab" style="padding-top:12px"></div>`;
+    d.el.innerHTML = head;
+    d.el.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => { TAB = b.dataset.t; draw(); });
+    $('#af-role', d.el).onchange = (e) => { afSetUser({ ...afUser(), role: e.target.value }); draw(); };
+    $('#af-uname', d.el).onchange = (e) => { afSetUser({ ...afUser(), name: e.target.value.trim() }); };
+    const el = $('#af-tab', d.el);
+    ({ config: tabConfig, eng: tabEng, com: tabCom, rel: tabRel, prod: tabProd })[TAB](el, c);
+  }
+  function tabConfig(el, c) {
+    const r = c.res, pr = r.pricing;
+    el.innerHTML = `<section class="card"><h3>${esc(job.draft.productCode)} ${afRag(r.status)}</h3><form class="f" id="afc">${afParamFields(job.draft)}
+      <label class="fl">Site<input name="site" value="${esc(job.site || '')}"></label><label class="fl">Site qp, kN/m²<input name="qp" type="number" step="0.01" value="${job.site_qp}"></label>
+      <div class="wide tools"><button class="btn line" type="submit">Update configuration</button></div></form></section>
+      <section class="card"><h3>Rule findings</h3>${r.findings.length ? r.findings.map((f) => `<p>${afRag(f.severity)} <b>${esc(f.ruleCode)}</b> ${esc(f.message)}<br><span class="small muted">${esc(f.action || '')}</span></p>`).join('') : '<p class="small muted">All product rules pass.</p>'}</section>
+      ${pr ? `<section class="card"><h3>Price, list ${esc(pr.priceList)}</h3><table>${pr.lines.map((l) => `<tr><td>${esc(l.label)}</td><td class="n">${kes(l.amount)}</td></tr>`).join('')}<tr><td>Subtotal</td><td class="n">${kes(pr.subtotal)}</td></tr><tr><td>VAT</td><td class="n">${kes(pr.vat)}</td></tr><tr><td><b>Total</b></td><td class="n"><b>${kes(pr.total)}</b></td></tr>
+        <tr><td class="small muted">Cost ${kes(pr.cost.total)} · margin ${afPct(pr.marginPct)} · steel ${fmt(pr.steel.kg)} kg</td><td></td></tr></table></section>` : ''}
+      <section class="card"><h3>Save a revision</h3><form class="f" id="afr"><label class="fl wide">Reason<input name="reason" placeholder="e.g. Client asked for a partial loft" required></label><div class="wide tools"><button class="btn" type="submit" ${c.dirty ? '' : 'disabled'}>Save as Rev ${String.fromCharCode(65 + job.revisions.length)}</button></div></form>
+      ${job.revisions.length ? `<table>${job.revisions.map((v) => `<tr><td class="mono">Rev ${esc(v.revision)}</td><td>${esc(v.reason)}</td><td>${afRag(v.status)}</td><td class="n">${kes(v.subtotal)}</td><td class="small muted">${when(v.savedAt)}</td></tr>`).join('')}</table>` : ''}</section>`;
+    $('#afc', el).onsubmit = (e) => { e.preventDefault(); const f = e.target; act(() => ({ draft: afReadParams(f, job.draft), site: f.site.value.trim() || null, site_qp: +f.qp.value || job.site_qp }), 'Configuration updated'); };
+    $('#afr', el).onsubmit = (e) => { e.preventDefault(); const reason = e.target.reason.value.trim(); act(() => { if (!c.dirty) throw new Error('Nothing changed since the last revision.'); const rv = { revision: String.fromCharCode(65 + job.revisions.length), input: { ...job.draft }, reason, status: c.res.status, subtotal: c.res.pricing ? c.res.pricing.subtotal : null, savedAt: afNow(), savedBy: c.user.name }; return { revisions: [...job.revisions, rv] }; }, 'Revision saved'); };
+  }
+  function tabEng(el, c) {
+    const a = c.an;
+    if (!a) { el.innerHTML = `<section class="card"><p>${c.res.status === 'RED' ? 'The configuration is RED. Fix the rule findings first.' : 'The analysis could not run for this configuration.'}</p></section>`; return; }
+    const mem = a.frames.flatMap((f) => f.members.map((x) => ({ ...x, frame: f.label })));
+    const ck = AFE.checklist(c.res, a);
+    el.innerHTML = `<section class="card"><h3>Structural analysis ${afRag(a.status)}</h3><p class="small muted">${esc(a.basis.code)} · engine ${esc(a.engineVersion)} · governing ${esc(a.governing.member)} in ${esc(a.governing.frame)}, ${afPct(a.governing.utilisation)} ${esc(a.governing.check)} (${esc(a.governing.combo)})</p>
+      <div class="tablewrap"><table><thead><tr><th>Frame</th><th>Member</th><th>Section</th><th>Governing</th><th class="n">Utilisation</th><th></th></tr></thead><tbody>${mem.map((x) => `<tr><td class="small">${esc(x.frame)}</td><td>${esc(x.label)}</td><td class="mono small">${esc(x.section)}</td><td class="small">${esc(x.governing)}</td><td class="n">${afPct(x.utilisation)}</td><td>${afRag(x.status)}</td></tr>`).join('')}
+      ${a.secondary.map((x) => `<tr><td class="small">Secondary</td><td>${esc(x.label)}</td><td class="mono small">${esc(x.section)}</td><td></td><td class="n">${afPct(x.utilisation)}</td><td>${afRag(x.status)}</td></tr>`).join('')}</tbody></table></div>
+      <h3 style="margin-top:12px">Base reactions</h3><table>${a.frames.map((f) => `<tr><td>${esc(f.label)}</td><td class="small">down ${f.reactions.maxDownKN.toFixed(1)} kN · uplift ${f.reactions.minVertKN.toFixed(1)} kN · horizontal ${f.reactions.maxHorizKN.toFixed(1)} kN</td></tr>`).join('')}</table>
+      <details style="margin-top:10px"><summary>Assumptions and what is not analysed</summary><ul class="small">${a.assumptions.map((x) => `<li>${esc(x)}</li>`).join('')}</ul><ul class="small">${a.notAnalysed.map((x) => `<li><b>Not analysed:</b> ${esc(x)}</li>`).join('')}</ul></details></section>
+      <section class="card"><h3>Engineer decision on Rev ${esc(c.rev ? c.rev.revision : '—')}</h3><form class="f" id="afs">
+        ${ck.map((x, i) => `<label class="ck wide"><input type="checkbox" name="ck${i}">${esc(x.item)}</label>`).join('')}
+        <label class="fl">Decision<select name="decision"><option value="APPROVED">Approve</option><option value="CHANGES_REQUIRED">Changes required</option><option value="REJECTED">Reject</option></select></label>
+        <label class="fl">Registration number<input name="registration"></label><label class="fl">National annex used<input name="annex" placeholder="e.g. KS EN 1993-1-1 NA"></label>
+        <label class="fl wide">Comment<textarea name="comment"></textarea></label><div class="wide tools"><button class="btn" type="submit">Sign the decision</button></div></form>
+        ${job.lifecycle.approvals.length ? `<table>${job.lifecycle.approvals.map((x) => `<tr><td class="mono">${esc(x.id)}</td><td>${esc(x.decision.replace('_', ' '))}</td><td>${esc(x.engineer)} · ${esc(x.registration)}</td><td class="small muted">${esc(x.basis.governing || '')} · ${when(x.signedAt)}</td></tr>`).join('')}</table>` : ''}</section>`;
+    $('#afs', el).onsubmit = (e) => { e.preventDefault(); const f = e.target; act(() => {
+      if (!c.rev) throw new Error('Save a revision before signing.');
+      const form = { decision: f.decision.value, registration: f.registration.value, nationalAnnex: f.annex.value, comment: f.comment.value, checklist: ck.map((x, i) => ({ ...x, checked: f['ck' + i].checked })) };
+      return { lifecycle: AFE.sign(job.lifecycle, c.rev, c.res, c.an, c.user, form, afNow()), stage: form.decision === 'APPROVED' ? 'commercial' : job.stage };
+    }, 'Decision signed'); };
+  }
+  function tabCom(el, c) {
+    const qs = job.lifecycle.quotes;
+    el.innerHTML = `<section class="card"><h3>Quotations</h3><p class="small muted">Sales issues the quotation on a saved revision. Before the engineer approves it, it is marked subject to engineering.</p>
+      <div class="tools"><button class="btn" type="button" id="afq">Issue a quotation on Rev ${esc(c.rev ? c.rev.revision : '—')}</button></div>
+      ${qs.length ? `<table>${qs.map((q) => `<tr><td class="mono">${esc(q.number)}</td><td>Rev ${esc(q.revision)}</td><td>${pill(q.status.toLowerCase())}${q.subjectToEngineering ? ' <span class="small muted">subject to engineering</span>' : ''}</td><td class="n">${kes(q.total)}</td><td class="small muted">valid to ${esc(q.validUntil)}</td><td>${q.status === 'SENT' ? `<button class="btn sm line" type="button" data-acc="${esc(q.number)}">Record acceptance</button>` : ''}</td></tr>`).join('')}</table>` : '<p class="small muted">No quotation yet.</p>'}</section>
+      ${job.lifecycle.snapshots.length ? `<section class="card"><h3>Snapshots</h3><table>${job.lifecycle.snapshots.map((s) => `<tr><td class="mono">${esc(s.id)}</td><td>${esc(s.reason)}</td><td class="mono small">sha256 ${esc(s.hash.slice(0, 12))}…</td><td class="small muted">${when(s.createdAt)}</td></tr>`).join('')}</table></section>` : ''}`;
+    $('#afq', el).onclick = () => act(() => { if (!c.rev) throw new Error('Save a revision first.'); return { lifecycle: AFE.quote(job.lifecycle, job.code, c.rev, c.res, c.user, afNow()) }; }, 'Quotation issued');
+    el.querySelectorAll('[data-acc]').forEach((b) => b.onclick = () => act(() => ({ lifecycle: AFE.accept(job.lifecycle, job.code, b.dataset.acc, c.rev, c.res, c.an, c.user, afNow()) }), 'Acceptance recorded'));
+  }
+  function tabRel(el, c) {
+    if (!c.rev) { el.innerHTML = '<section class="card"><p>Save a revision first.</p></section>'; return; }
+    const chk = AFE.releaseChecks(job.lifecycle, c.rev, c.res, c.an, c.user), rel = job.lifecycle.releases.find((x) => x.revision === c.rev.revision);
+    el.innerHTML = `<section class="card"><h3>Release Rev ${esc(c.rev.revision)} to production</h3><table>${chk.checks.map((x) => `<tr><td>${x.ok ? '✓' : '✗'}</td><td>${esc(x.label)}</td><td class="small muted">${esc(x.detail)}</td></tr>`).join('')}</table>
+      <div class="tools" style="margin-top:10px">${rel ? `<span class="small">Released by ${esc(rel.releasedBy)} ${when(rel.releasedAt)} · work order ${esc(job.work_order ? job.work_order.workOrder : '')}</span>` : `<button class="btn" type="button" id="afrel" ${chk.allowed ? '' : 'disabled'}>Release and open the work order</button>`}</div></section>`;
+    const b = $('#afrel', el); if (b) b.onclick = () => act(() => {
+      const lc = AFE.release(job.lifecycle, c.rev, c.res, c.an, c.user, afNow()), rl = lc.releases[lc.releases.length - 1], pk = AFE.production(AFE.evaluate(c.rev.input));
+      return { lifecycle: lc, work_order: AFE.workOrder(job.code, { revision: rl.revision, snapshotHash: rl.snapshotHash }, pk.sequence, afNow()), stage: 'released' };
+    }, 'Released to production');
+  }
+  function tabProd(el, c) {
+    const base = c.rev ? AFE.evaluate(c.rev.input) : c.res; if (base.status === 'RED') { el.innerHTML = '<section class="card"><p>The configuration is RED. There is no production package.</p></section>'; return; }
+    const pk = AFE.production(base), wo = job.work_order, seq = pk.sequence, prog = wo ? AFE.progress(wo, seq) : null;
+    const bomRow = (n, lvl) => `<tr><td class="mono small">${esc(n.ref)}</td><td style="padding-left:${lvl * 14}px">${esc(n.description)}</td><td class="n">${fmt(n.qty)} ${esc(n.unit)}</td><td class="n">${kes(n.cost)}</td></tr>` + (lvl < 2 && n.children ? n.children.map((x) => bomRow(x, lvl + 1)).join('') : '');
+    el.innerHTML = `${wo ? `<section class="card"><h3>Work order ${esc(wo.workOrder)} · serial ${esc(wo.serial)}</h3><p class="small muted">${prog.done} of ${prog.total} operations done · ${afPct(prog.pctByHours)} by hours${prog.blocked ? ` · <b>${prog.blocked} blocked</b>` : ''}${prog.dispatched ? ' · dispatched' : ''} · snapshot ${esc(String(wo.snapshotHash).slice(0, 10))}…</p>
+      <div class="tablewrap"><table><thead><tr><th>Op</th><th>Operation</th><th>Work centre</th><th class="n">Hours</th><th>State</th><th></th></tr></thead><tbody>${seq.map((s) => { const st = AFE.opState(wo, seq, s.step), op = wo.ops[String(s.step)] || { qc: [] }; return `<tr><td class="mono">${s.step}</td><td>${esc(s.title)}<br>${s.qc.map((q) => { const last = [...op.qc].reverse().find((x) => x.specId === q.id); return `<span class="small ${last ? (last.result === 'PASS' ? '' : 'muted') : 'muted'}">${last ? (last.result === 'PASS' ? '✓' : '✗') : '○'} ${esc(q.label)}${q.kind === 'measure' ? ` (±${q.tolerance} ${esc(q.unit || '')})` : ''}</span>${st === 'IN_PROGRESS' || st === 'BLOCKED' ? ` <button class="btn sm line" type="button" data-qc="${s.step}|${q.id}|${q.kind}">Record</button>` : ''}<br>`; }).join('')}</td><td class="small">${esc(s.workCenter)}</td><td class="n">${s.estHours}</td><td>${pill(st.toLowerCase())}</td><td>${st === 'READY' ? `<button class="btn sm" type="button" data-start="${s.step}">Start</button>` : st === 'IN_PROGRESS' ? `<button class="btn sm" type="button" data-done="${s.step}">Complete</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+      <form id="afqc" class="f" hidden><input type="hidden" name="k"><label class="fl" id="afqc-m">Measured deviation<input name="measured" type="number" step="any"></label><label class="fl" id="afqc-c">Result<select name="checked"><option value="1">Pass</option><option value="0">Fail</option></select></label><label class="fl wide">Comment (required on a fail)<input name="comment"></label><label class="fl wide">Corrective action (on a re-inspection)<input name="ca"></label><div class="wide tools"><button class="btn" type="submit">Save QC result</button></div></form></section>`
+      : `<section class="card"><p class="small">${pk.release && !pk.release.allowed ? esc(pk.release.reason) : ''} Preview of the production package for ${c.rev ? 'Rev ' + esc(c.rev.revision) : 'the current configuration'}. Operations open once the revision is released.</p></section>`}
+      <section class="card"><h3>Totals</h3><p class="small">${fmt(pk.totals.pieces)} pieces · ${fmt(pk.totals.steelBars)} stock bars · ${fmt(pk.totals.steelKg)} kg steel (${kes(pk.totals.steelPurchase)}) · BOM materials ${kes(pk.totals.bomMaterial)} · ${fmt(pk.totals.labourHours)} labour hours</p></section>
+      <section class="card"><h3>Cut list</h3><div class="tablewrap"><table><thead><tr><th>Part</th><th>Section</th><th class="n">Length</th><th class="n">Qty</th><th class="n">Cuts</th><th>Drawing</th></tr></thead><tbody>${pk.cutList.map((x) => `<tr><td class="mono small">${esc(x.partNo)}</td><td class="mono small">${esc(x.section)}</td><td class="n">${fmt(x.lengthMm)} mm</td><td class="n">${x.qty}</td><td class="n">${x.cutADeg}° / ${x.cutBDeg}°</td><td class="small">${esc(x.drawingRef || '')}</td></tr>`).join('')}</tbody></table></div></section>
+      <section class="card"><h3>Nesting</h3><table>${pk.nesting.map((n) => { const bars = n.result.bars, off = bars.reduce((a, b) => a + b.offcutMm, 0), used = bars.reduce((a, b) => a + b.usedMm, 0); return `<tr><td class="mono small">${esc(n.section)}</td><td>${bars.length} bars</td><td class="small">offcut ${fmt(off)} mm · yield ${afPct(used / Math.max(1, used + off))}</td></tr>`; }).join('')}</table></section>
+      <section class="card"><h3>Bill of materials</h3><div class="tablewrap"><table>${bomRow(pk.bom, 0)}</table></div></section>`;
+    el.querySelectorAll('[data-start]').forEach((b) => b.onclick = () => act(() => ({ work_order: AFE.startOp(wo, seq, +b.dataset.start, c.user, afNow()), stage: 'production' }), 'Operation started'));
+    el.querySelectorAll('[data-done]').forEach((b) => b.onclick = () => act(() => { const w2 = AFE.completeOp(wo, seq, +b.dataset.done, c.user, afNow()); return { work_order: w2, stage: AFE.progress(w2, seq).dispatched ? 'dispatched' : 'production' }; }, 'Operation completed'));
+    const qf = $('#afqc', el);
+    el.querySelectorAll('[data-qc]').forEach((b) => b.onclick = () => { const [st, id, kind] = b.dataset.qc.split('|'); qf.hidden = false; qf.k.value = b.dataset.qc; $('#afqc-m', el).hidden = kind !== 'measure'; $('#afqc-c', el).hidden = kind === 'measure'; qf.scrollIntoView({ block: 'nearest' }); });
+    if (qf) qf.onsubmit = (e) => { e.preventDefault(); const [st, id, kind] = qf.k.value.split('|'); act(() => ({ work_order: AFE.recordQC(wo, seq, +st, id, kind === 'measure' ? { measured: qf.measured.value === '' ? undefined : +qf.measured.value, comment: qf.comment.value, correctiveAction: qf.ca.value } : { checked: qf.checked.value === '1', comment: qf.comment.value, correctiveAction: qf.ca.value }, c.user, afNow()) }), 'QC recorded'); };
+  }
+  draw();
+}
 const ORDER_ST = ['pending', 'confirmed', 'paid', 'dispatched', 'delivered', 'cancelled'];
 VIEWS.orders = (m) => listView(m, {
   table: 'store_orders', title: 'Atelier orders', eyebrow: 'Store', search: ['name', 'email', 'phone', 'code'], filter: { col: 'status', options: ORDER_ST },
