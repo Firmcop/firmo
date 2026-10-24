@@ -49,7 +49,7 @@ dialog.lb button{min-height:44px;min-width:44px;background:transparent;color:#F2
   'use strict';
   const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc, fmt = FC.fmt;
   FC.header($('#fc-head'), 'Projects.dc.html');
-  const slug = new URLSearchParams(location.search).get('w') || '';
+  const slug = FC.routeSlug('w');
   const FAMILY = { Container: 'containers', 'A-frame': 'aframes', Cabin: 'cabins', Steel: 'steel', Other: 'steel' };
   const paras = (t) => (t || '').split(/\n{2,}/).map((x) => x.trim()).filter(Boolean).map((x) => `<p>${esc(x)}</p>`).join('');
   const fail = (m) => { $('#main').innerHTML = `<div class="wrap" style="padding:60px 32px"><div class="empty">${m} <a href="Projects.dc.html">See all our works</a>.</div></div>`; };
@@ -63,7 +63,7 @@ dialog.lb button{min-height:44px;min-width:44px;background:transparent;color:#F2
     const i = all.findIndex((x) => x.slug === w.slug), prev = all[(i - 1 + all.length) % all.length], next = all[(i + 1) % all.length];
     const specs = [['Type', w.type], ['Category', w.category], ['Location', w.location], ['Client', w.client], ['Floor area', w.area_m2 ? fmt(w.area_m2) + ' m²' : ''], ['Build time', w.weeks ? w.weeks + ' weeks, yard to handover' : ''], ['Design', w.design], ['Key finishes', w.finishes]].filter((x) => x[1]);
     $('#main').innerHTML = `
-      <section class="whero" style="background-image:url('${esc(hero)}')"><div class="wrap">
+      <section class="whero" style="background-image:url('${esc(FC.img(hero, 1800))}')"><div class="wrap">
         <nav class="crumbs" aria-label="Breadcrumb" style="color:#C9BFAF"><a href="Projects.dc.html" style="color:#C9BFAF">Works</a><span aria-hidden="true">›</span><span>${esc(w.type)}</span></nav>
         <p class="eyebrow" style="color:#E3C48F">${esc([w.type, w.location].filter(Boolean).join(' · '))}</p>
         <h1>${esc(w.title)}</h1></div></section>
@@ -73,7 +73,7 @@ dialog.lb button{min-height:44px;min-width:44px;background:transparent;color:#F2
           ${w.story ? `<section><h2>${w.brief ? 'What we built' : 'The project'}</h2>${paras(w.story)}</section>` : ''}
           ${w.outcome ? `<section><h2>The outcome</h2>${paras(w.outcome)}</section>` : ''}
           ${w.client_quote ? `<section><blockquote>“${esc(w.client_quote)}”${w.quote_by ? `<footer>${esc(w.quote_by)}</footer>` : ''}</blockquote></section>` : ''}
-          ${gal.length > 1 ? `<section><h2>Photos</h2><div class="gal">${gal.map((g, k) => `<figure><button type="button" data-k="${k}" aria-label="Open photo ${k + 1}${g.caption ? ': ' + esc(g.caption) : ''}" style="background-image:url('${esc(g.url)}')"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div></section>` : ''}
+          ${gal.length > 1 ? `<section><h2>Photos</h2><div class="gal">${gal.map((g, k) => `<figure><button type="button" data-k="${k}" aria-label="Open photo ${k + 1}${g.caption ? ': ' + esc(g.caption) : ''}" data-bg="${esc(FC.img(g.url, 600))}"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div></section>` : ''}
           ${w.video_url ? `<section><h2>Video</h2><p><a href="${esc(w.video_url)}" target="_blank" rel="noopener">Watch the project video</a></p></section>` : ''}
         </div>
         <aside class="aside" aria-label="Project details">
@@ -85,14 +85,14 @@ dialog.lb button{min-height:44px;min-width:44px;background:transparent;color:#F2
           </div>
         </aside>
       </div>
-      ${products.length ? `<section class="sec" style="padding-top:0"><h2>Used in this project</h2><div class="grid">${products.map((p) => `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(p.cover_url || FC.FAMILY_IMG[FAMILY[w.type]] || '')}')"></div><div class="bd"><h3>${esc(p.name)}</h3><div class="meta"><span class="price">${esc(FC.priceText(p))}</span></div></div></a>`).join('')}</div></section>` : ''}
-      ${all.length > 1 ? `<nav class="nextprev" aria-label="More works"><a href="work.html?w=${encodeURIComponent(prev.slug)}"><small>Previous</small>${esc(prev.title)}</a><a href="work.html?w=${encodeURIComponent(next.slug)}" style="text-align:right"><small>Next</small>${esc(next.title)}</a></nav>` : ''}
+      ${products.length ? `<section class="sec" style="padding-top:0"><h2>Used in this project</h2><div class="grid">${products.map((p) => `<a class="card" href="${FC.link.product(p)}"><div class="ph" data-bg="${esc(FC.img(p.cover_url || FC.FAMILY_IMG[FAMILY[w.type]] || '', 640))}"></div><div class="bd"><h3>${esc(p.name)}</h3><div class="meta"><span class="price">${esc(FC.priceText(p))}</span></div></div></a>`).join('')}</div></section>` : ''}
+      ${all.length > 1 ? `<nav class="nextprev" aria-label="More works"><a href="${FC.link.work(prev.slug)}"><small>Previous</small>${esc(prev.title)}</a><a href="${FC.link.work(next.slug)}" style="text-align:right"><small>Next</small>${esc(next.title)}</a></nav>` : ''}
       </div>`;
     $('#wq').onclick = () => FC.lead('contact', { title: 'Get a quote', eyebrow: 'Like ' + w.title, intro: 'Tell us about your plot and what you need. We reply with a quote, usually within one working day.', location: true, context: { work: w.slug, title: w.title } });
     $('#wv').onclick = () => FC.lead('visit', { context: { work: w.slug, title: w.title } });
     // lightbox
     const lb = $('#lb'); let at = 0;
-    const show = (k) => { at = (k + gal.length) % gal.length; $('#lbimg').src = gal[at].url; $('#lbimg').alt = gal[at].caption || w.title; $('#lbcap').textContent = (gal[at].caption || '') + '  ' + (at + 1) + ' / ' + gal.length; };
+    const show = (k) => { at = (k + gal.length) % gal.length; $('#lbimg').src = FC.img(gal[at].url, 1800); $('#lbimg').alt = gal[at].caption || w.title; $('#lbcap').textContent = (gal[at].caption || '') + '  ' + (at + 1) + ' / ' + gal.length; };
     $('#main').querySelectorAll('.gal button').forEach((b) => b.onclick = () => { show(+b.dataset.k); if (lb.showModal) lb.showModal(); else window.open(gal[+b.dataset.k].url, '_blank'); });
     $('#lbprev').onclick = () => show(at - 1); $('#lbnext').onclick = () => show(at + 1); $('#lbx').onclick = () => lb.close();
     lb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') show(at - 1); if (e.key === 'ArrowRight') show(at + 1); });

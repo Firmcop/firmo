@@ -82,7 +82,7 @@ for bid, fn in BLOBS.items():
 for fn in os.listdir(os.path.join(f3d, 'img')):
     shutil.copy(os.path.join(f3d, 'img', fn), os.path.join(out, 'img', fn))
 # 3D tools and data
-for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'ds-core.js', 'af-engine.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
+for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'blog.html', '404.html', 'ds-core.js', 'af-engine.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
 # the Studio as a page of the site: site header on top, Studio framed beneath
 shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))
@@ -100,18 +100,42 @@ x = open(os.path.join(out, '2x4.html')).read().replace('<a href="index.html" sty
 open(os.path.join(out, '2x4.html'), 'w').write(x)
 # collection.html is the Collection page (families, categories, filters); product.html and work.html are detail pages
 
+# server functions: clean addresses with their own meta, sitemap, robots, old-address redirects
+import re as _re
+os.makedirs(os.path.join(out, 'api'), exist_ok=True)
+for fn in os.listdir(os.path.join(f3d, 'api')):
+    if fn.endswith('.js'): shutil.copy(os.path.join(f3d, 'api', fn), os.path.join(out, 'api', fn))
+_cfg = open(os.path.join(f3d, 'ds-config.js')).read()
+_url = _re.search(r"url:\s*'([^']+)'", _cfg).group(1); _key = _re.search(r"key:\s*'([^']+)'", _cfg).group(1)
+open(os.path.join(out, 'api', '_cfg.js'), 'w').write("// written by build_site.py from ds-config.js\nmodule.exports = { url: %s, key: %s };\n" % (json.dumps(_url), json.dumps(_key)))
 vercel = {
   "cleanUrls": False,
-  "rewrites": [{"source": "/", "destination": "/Main.dc.html"}],
+  "rewrites": [
+    {"source": "/", "destination": "/Main.dc.html"},
+    {"source": "/collection", "destination": "/collection.html"},
+    {"source": "/atelier", "destination": "/atelier.html"},
+    {"source": "/works", "destination": "/Projects.dc.html"},
+    {"source": "/3d-studio", "destination": "/3d-studio.html"},
+    {"source": "/collection/:slug", "destination": "/api/page?kind=product&scope=collection&slug=:slug"},
+    {"source": "/atelier/:slug", "destination": "/api/page?kind=product&scope=atelier&slug=:slug"},
+    {"source": "/works/:slug", "destination": "/api/page?kind=work&slug=:slug"},
+    {"source": "/blog", "destination": "/api/page?kind=blog"},
+    {"source": "/blog/category/:cat", "destination": "/api/page?kind=blog&cat=:cat"},
+    {"source": "/blog/:slug", "destination": "/api/page?kind=post&slug=:slug"},
+    {"source": "/sitemap.xml", "destination": "/api/sitemap"},
+    {"source": "/robots.txt", "destination": "/api/robots"},
+    # anything that is not a file: old firmcop.com addresses, or the 404 page
+    {"source": "/:path*", "destination": "/api/go?path=:path*"},
+  ],
+  "functions": {
+    "api/page.js": {"includeFiles": "{product,work,blog,404}.html"},
+    "api/go.js": {"includeFiles": "404.html"},
+  },
   "redirects": [
-    {"source": "/collection", "destination": "/collection.html", "permanent": False},
-    {"source": "/atelier", "destination": "/atelier.html", "permanent": False},
     {"source": "/configure", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/Configurator.dc.html", "destination": "/3d-studio.html", "permanent": True},
     {"source": "/store", "destination": "/atelier.html", "permanent": False},
-    {"source": "/works", "destination": "/Projects.dc.html", "permanent": False},
     {"source": "/design-studio", "destination": "/3d-studio.html", "permanent": False},
-    {"source": "/3d-studio", "destination": "/3d-studio.html", "permanent": False},
     {"source": "/admin", "destination": "/admin.html", "permanent": False},
     {"source": "/my-builds", "destination": "/Portal.dc.html", "permanent": False},
     {"source": "/design-manager", "destination": "/design-manager.html", "permanent": False},

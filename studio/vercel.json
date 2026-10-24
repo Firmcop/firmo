@@ -4,19 +4,69 @@
     {
       "source": "/",
       "destination": "/Main.dc.html"
-    }
-  ],
-  "redirects": [
+    },
     {
       "source": "/collection",
-      "destination": "/collection.html",
-      "permanent": false
+      "destination": "/collection.html"
     },
     {
       "source": "/atelier",
-      "destination": "/atelier.html",
-      "permanent": false
+      "destination": "/atelier.html"
     },
+    {
+      "source": "/works",
+      "destination": "/Projects.dc.html"
+    },
+    {
+      "source": "/3d-studio",
+      "destination": "/3d-studio.html"
+    },
+    {
+      "source": "/collection/:slug",
+      "destination": "/api/page?kind=product&scope=collection&slug=:slug"
+    },
+    {
+      "source": "/atelier/:slug",
+      "destination": "/api/page?kind=product&scope=atelier&slug=:slug"
+    },
+    {
+      "source": "/works/:slug",
+      "destination": "/api/page?kind=work&slug=:slug"
+    },
+    {
+      "source": "/blog",
+      "destination": "/api/page?kind=blog"
+    },
+    {
+      "source": "/blog/category/:cat",
+      "destination": "/api/page?kind=blog&cat=:cat"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/page?kind=post&slug=:slug"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/api/go?path=:path*"
+    }
+  ],
+  "functions": {
+    "api/page.js": {
+      "includeFiles": "{product,work,blog,404}.html"
+    },
+    "api/go.js": {
+      "includeFiles": "404.html"
+    }
+  },
+  "redirects": [
     {
       "source": "/configure",
       "destination": "/3d-studio.html",
@@ -33,17 +83,7 @@
       "permanent": false
     },
     {
-      "source": "/works",
-      "destination": "/Projects.dc.html",
-      "permanent": false
-    },
-    {
       "source": "/design-studio",
-      "destination": "/3d-studio.html",
-      "permanent": false
-    },
-    {
-      "source": "/3d-studio",
       "destination": "/3d-studio.html",
       "permanent": false
     },

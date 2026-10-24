@@ -41,6 +41,10 @@ def staff_links(s):
     s = s.replace('<a href="Configurator.dc.html" aria-current="page" style="color:#C9A46A;box-shadow:inset 0 -1px 0 #C9A46A">Configure</a>\n', '')
     s = s.replace('>Configurator</a>', '>3D Studio</a>').replace('>Configure this design</a>', '>Design it in 3D</a>').replace('>Configure a unit</a>', '>Design a unit in 3D</a>').replace('>Begin configuring</a>', '>Open the 3D Studio</a>')
     s = s.replace('href="Configurator.dc.html"', 'href="3d-studio.html"')
+    # the blog sits after Works in every menu
+    s = s.replace('<a href="Projects.dc.html">Works</a>', '<a href="Projects.dc.html">Works</a>\n<a href="/blog">Blog</a>')
+    s = s.replace('box-shadow:inset 0 -2px 0 #C9A46A">Works</a>', 'box-shadow:inset 0 -2px 0 #C9A46A">Works</a>\n<a href="/blog">Blog</a>')
+    s = s.replace('<a href="Projects.dc.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Works</a>', '<a href="Projects.dc.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Works</a><a href="/blog" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Blog</a>')
     s = s.replace('<a href="admin.html">Team portal</a>\n</nav>', '</nav>')          # header menus
     s = s.replace(' · <a href="admin.html">Team portal</a>', ' · ' + STAFF)             # Catalog, DesignDetail footers
     s = s.replace('<a href="admin.html" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Team portal</a>', '')  # Main resources column
@@ -70,7 +74,7 @@ def projects(s):
                '<p style="margin:0;font-size:15px;line-height:1.55;color:#3D3A34">{{sel.story}}</p>\n<sc-if value="{{sel.hasPage}}" hint-placeholder-val="{{false}}"><p style="margin:10px 0 0"><a href="{{sel.href}}" style="font-weight:600">See the full project, photos and specs →</a></p></sc-if>', p)
     js = array_list(js, p, 'works', 'all0')
     js = rep(js, "    const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];",
-             "    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request', hasQuote: !!p.quote, quote: p.quote || '', hasPage: !!p.slug, href: p.slug ? 'work.html?w=' + encodeURIComponent(p.slug) : '' }));\n"
+             "    const all = all0.map((p) => Object.assign({}, p, { meta: [p.area ? p.area + ' m²' : '', p.weeks ? p.weeks + ' weeks' : '', p.client].filter(Boolean).join(' · '), areaText: p.area ? p.area + ' m²' : 'On request', weeksText: p.weeks ? p.weeks + ' weeks, yard to handover' : 'On request', hasQuote: !!p.quote, quote: p.quote || '', hasPage: !!p.slug, href: p.slug ? '/works/' + encodeURIComponent(p.slug) : '' }));\n"
              "    const labels = ['All', 'Container', 'A-frame', 'Cabin', 'Steel'];", p)
     js = rep(js, 'const imgFor = (p) => IMG[p.name]', 'const imgFor = (p) => (p && p.img) || IMG[p.name]', p)
     js = rep(js, '    const s0 = all[this.state.sel];', '    const s0 = all[this.state.sel] || all[0];', p)

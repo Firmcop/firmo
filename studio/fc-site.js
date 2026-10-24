@@ -275,23 +275,57 @@
     return { unit_price: Math.round(price * mult + adds), area_m2: area, choices: picked, quote_only: p.price_mode === 'quote' };
   };
 
+  // ---------- clean addresses: /collection/<slug>, /atelier/<slug>, /works/<slug>, /blog/<slug> ----------
+  const BUILDING_KINDS = { building: 1, design: 1 };
+  FC.link = {
+    product: (p) => (p && BUILDING_KINDS[p.kind] ? '/collection/' : '/atelier/') + encodeURIComponent((p && p.slug) || ''),
+    work: (slug) => '/works/' + encodeURIComponent(slug || ''),
+    post: (slug) => '/blog/' + encodeURIComponent(slug || ''),
+  };
+  // the slug of the page being shown, whether it came as /collection/<slug> or as product.html?p=<slug>
+  FC.routeSlug = (param) => (window.FC_ROUTE && window.FC_ROUTE.slug) || new URLSearchParams(location.search).get(param) || '';
+
+  // ---------- photos: the right size for each place, loaded as they scroll into view ----------
+  /* FC.img(url, width): a photo in our storage comes back resized and as WebP by Supabase's image service
+     (cached by its CDN); Unsplash photos use Unsplash's own sizing; anything else is returned as it is. */
+  FC.img = function (u, w, q) {
+    if (!u || typeof u !== 'string') return u || '';
+    w = Math.max(40, Math.min(2500, Math.round(w || 900))); q = q || 72;
+    const pre = (CFG.url || '') + '/storage/v1/object/public/';
+    if (CFG.url && u.indexOf(pre) === 0) return CFG.url + '/storage/v1/render/image/public/' + u.slice(pre.length).split('?')[0] + '?width=' + w + '&quality=' + q;
+    if (/^https:\/\/images\.unsplash\.com\//.test(u)) { try { const x = new URL(u); x.searchParams.set('w', String(w)); x.searchParams.set('q', String(q)); x.searchParams.set('auto', 'format'); if (!x.searchParams.get('fit')) x.searchParams.set('fit', 'crop'); return x.toString(); } catch (e) { return u; } }
+    return u;
+  };
+  /* <div data-bg="url"> gets its background only when it nears the screen; <img> without loading= becomes lazy. */
+  (function () {
+    const show = (el) => { el.style.backgroundImage = "url('" + el.getAttribute('data-bg').replace(/'/g, '%27') + "')"; el.removeAttribute('data-bg'); };
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { io.unobserve(e.target); show(e.target); } }), { rootMargin: '400px 0px' }) : null;
+    FC.lazy = function (root) {
+      root = root || document;
+      root.querySelectorAll('[data-bg]').forEach((el) => { if (!el.getAttribute('data-bg')) return el.removeAttribute('data-bg'); io ? io.observe(el) : show(el); });
+      root.querySelectorAll('img:not([loading])').forEach((im) => { im.loading = 'lazy'; im.decoding = 'async'; });
+    };
+    let t = 0; const run = () => { clearTimeout(t); t = setTimeout(() => FC.lazy(document), 60); };
+    if (window.MutationObserver) { const mo = new MutationObserver(run); const go = () => { mo.observe(document.body, { childList: true, subtree: true }); run(); }; document.body ? go() : document.addEventListener('DOMContentLoaded', go); }
+  })();
+
   // ---------- live lists for the DC pages ----------
   const TYPE_IMG = { 'A-frame': '/_blob/6bbd5d303917960ea2a0c0ac7ba546a7', Cabin: '/_blob/934cee1933bb4f74580e99cf52bfbbdc', Steel: '/_blob/ad198461426af454fde500cf62dc0e6d', Container: '/_blob/e25e7e96e47c5616c4fdc8c27059a5ac', Other: '/_blob/ad198461426af454fde500cf62dc0e6d' };
   const LOADERS = {
     works: () => FC.rest('works?select=*&published=eq.true&order=featured.desc,sort.asc').then((rows) => rows.map((w) => ({
       name: w.title, type: w.type === 'Other' ? 'Steel' : w.type, place: w.location || 'Kenya', area: w.area_m2 ? Math.round(w.area_m2) : '', weeks: w.weeks || '',
-      client: w.client || w.category || '', design: w.design || w.category || '', finishes: w.finishes || 'On request', story: w.story || '', img: (w.images && w.images[0]) || TYPE_IMG[w.type], images: w.images || [], slug: w.slug, quote: w.client_quote ? '“' + w.client_quote + '”' + (w.quote_by ? ' ' + w.quote_by : '') : ''
+      client: w.client || w.category || '', design: w.design || w.category || '', finishes: w.finishes || 'On request', story: w.story || '', img: FC.img((w.images && w.images[0]) || TYPE_IMG[w.type], 900), images: (w.images || []).map((u) => FC.img(u, 1600)), slug: w.slug, quote: w.client_quote ? '“' + w.client_quote + '”' + (w.quote_by ? ' ' + w.quote_by : '') : ''
     }))),
     store: () => FC.rest('catalog_products?select=id,slug,sku,name,kind,unit,price_mode,base_price,rate,stock,summary,specs,shape,cover_url,model_url,category:catalog_categories!inner(name,slug,scopes),params:product_params(key,label,kind,unit,min,max,step,default_value,geometry,options,sort)'
       + '&published=eq.true&kind=in.(material,fitting,furniture)&category.scopes=cs.{atelier}&price_mode=neq.quote&order=sort.asc,name.asc').then((rows) => rows.map((x) => {
       const pat = { plank: 'boards', vplank: 'boards', tile: 'grid', none: 'none' };
       return { sku: x.sku || x.slug, slug: x.slug, name: x.name, cat: x.category.name, catSlug: x.category.slug, unit: x.unit, price: FC.price(x, x.params).unit_price,
         stock: x.stock == null ? 9999 : Number(x.stock), fits: x.summary || '', bg: (x.specs && x.specs.swatch) || (x.shape && x.shape.color) || '#8F8A80',
-        tex: (x.specs && (x.specs.texture || pat[x.specs.pat])) || 'none', img: x.cover_url || '', params: x.params || [], product: x };
+        tex: (x.specs && (x.specs.texture || pat[x.specs.pat])) || 'none', img: FC.img(x.cover_url || '', 480), params: x.params || [], product: x };
     })),
     opps: () => FC.rest('investment_opportunities?select=*&published=eq.true&order=sort.asc').then((rows) => rows.map((o) => ({
       name: o.name, sector: o.sector, place: o.place || '', spec: o.spec || '', units: o.units, taken: Math.min(o.taken, o.units), price: Number(o.price),
-      yLo: Number(o.yield_lo) || 0, yHi: Number(o.yield_hi) || 0, opens: o.opens || '', status: o.status_label || '', own: o.own_terms || '', operator: o.operator || '', split: o.split || '', story: o.story || '', img: o.image_url || '', pack: o.pack_url || '', slug: o.slug
+      yLo: Number(o.yield_lo) || 0, yHi: Number(o.yield_hi) || 0, opens: o.opens || '', status: o.status_label || '', own: o.own_terms || '', operator: o.operator || '', split: o.split || '', story: o.story || '', img: FC.img(o.image_url || '', 900), pack: o.pack_url || '', slug: o.slug
     })))
   };
   /* Use inside a DC renderVals: const all = FC.list(this, 'works', [ ...static fallback ]); */
@@ -320,7 +354,7 @@
 
 
   // ---------- shared header for pages outside the canvas prototype ----------
-  const NAV = [['collection.html', 'Collection'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['atelier.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
+  const NAV = [['collection.html', 'Collection'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['/blog', 'Blog'], ['atelier.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
   FC.header = function (el, active) {
     if (!el) return;
     el.className = 'fc-head';
@@ -370,7 +404,7 @@
       panel.innerHTML = '<div class="in">' + roots.map((r) => {
         const kids = cats.filter((c) => c.parent_id === r.id && (count[c.id] || 0) > 0);
         const img = r.image_url || cover(r.id) || FC.FAMILY_IMG[r.slug] || '';
-        return '<div class="fam">' + (img ? '<a class="img" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '" tabindex="-1" aria-hidden="true" style="background-image:url(\'' + esc(img) + '\')"></a>' : '')
+        return '<div class="fam">' + (img ? '<a class="img" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '" tabindex="-1" aria-hidden="true" data-bg="' + esc(FC.img(img, 480)) + '"></a>' : '')
           + '<a class="t" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">' + esc(r.name) + '</a><ul>'
           + kids.map((k) => '<li><a href="' + o.page + '?c=' + encodeURIComponent(k.slug) + '"><span>' + esc(k.name) + '</span><small>' + count[k.id] + '</small></a></li>').join('')
           + '</ul><a class="all" href="' + o.page + '?c=' + encodeURIComponent(r.slug) + '">All ' + famCount(r.id) + ' →</a></div>';
@@ -457,7 +491,7 @@ dialog.fc-cart::backdrop{background:rgba(13,12,10,.55)}
   function drawCart() {
     const l = readCart();
     cartDlg.innerHTML = '<div style="display:flex;flex-direction:column;min-height:100%"><div class="hd"><h2 id="fc-cart-h">Your cart</h2><button type="button" class="x" data-x aria-label="Close cart">×</button></div>'
-      + (l.length ? '<ul>' + l.map((x) => '<li data-id="' + esc(x.id) + '"><span class="im" style="background-image:url(\'' + esc(x.img || '') + '\')">' + (!x.img && x.draw && /^<svg[\s\S]*<\/svg>$/.test(x.draw) ? x.draw : '') + '</span><div><h3><a href="product.html?p=' + encodeURIComponent(x.slug) + '" style="color:inherit">' + esc(x.name) + '</a></h3>'
+      + (l.length ? '<ul>' + l.map((x) => '<li data-id="' + esc(x.id) + '"><span class="im" style="background-image:url(\'' + esc(FC.img(x.img || '', 160)) + '\')">' + (!x.img && x.draw && /^<svg[\s\S]*<\/svg>$/.test(x.draw) ? x.draw : '') + '</span><div><h3><a href="' + FC.link.product({ slug: x.slug, kind: x.kind || 'material' }) + '" style="color:inherit">' + esc(x.name) + '</a></h3>'
         + (x.desc ? '<p>' + esc(x.desc) + '</p>' : '') + '<p>KES ' + fmt(x.price) + (x.unit && !/^(no\.|unit|per unit)$/i.test(x.unit) ? ' ' + esc(x.unit) : ' each') + '</p>'
         + '<div class="row"><span class="qty"><button type="button" data-d="-1" aria-label="One less">−</button><input type="number" min="0" inputmode="numeric" value="' + esc(x.qty) + '" aria-label="Quantity of ' + esc(x.name) + '"><button type="button" data-d="1" aria-label="One more">+</button></span>'
         + '<b>KES ' + fmt(x.qty * x.price) + '</b></div><button type="button" class="rm" data-rm>Remove</button></div></li>').join('') + '</ul>'

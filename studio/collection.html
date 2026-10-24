@@ -49,7 +49,7 @@
   const card = (p) => {
     const cat = CATS.find((c) => c.id === p.category_id), fam = famOf(cat);
     const img = p.cover_url || (p.images && p.images[0]) || (fam && (fam.image_url || FC.FAMILY_IMG[fam.slug])) || '';
-    return `<a class="card" href="product.html?p=${encodeURIComponent(p.slug)}"><div class="ph" style="background-image:url('${esc(img)}')">${!img && p.shape && p.shape.kind ? shapeOf(p) : ''}${p.kind === 'design' ? '<span class="tag">Design it in 3D</span>' : p.params && p.params.length ? '<span class="tag">Made to size</span>' : ''}</div>
+    return `<a class="card" href="${FC.link.product(p)}"><div class="ph" data-bg="${esc(FC.img(img, 640))}">${!img && p.shape && p.shape.kind ? shapeOf(p) : ''}${p.kind === 'design' ? '<span class="tag">Design it in 3D</span>' : p.params && p.params.length ? '<span class="tag">Made to size</span>' : ''}</div>
       <div class="bd"><span class="eyebrow" style="font-size:10px">${esc(cat ? cat.name : '')}</span><h3>${esc(p.name)}</h3>${p.summary ? `<p class="sum">${esc(p.summary)}</p>` : ''}
       <div class="meta"><span class="price">${esc(FC.priceText(p))}</span>${p.lead_time_weeks ? `<small class="muted">${p.lead_time_weeks} weeks</small>` : ''}</div></div></a>`;
   };

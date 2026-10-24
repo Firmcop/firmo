@@ -201,7 +201,7 @@ where email = '${esc(ME.email)}';</pre>
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
   ['builds', 'Client builds', 'variations_pending'], ['collection', 'Collection'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
-  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['subscribers', 'Subscribers'], ['settings', 'Site settings'], ['team', 'Team']
+  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['blog', 'Blog'], ['seo', 'SEO'], ['subscribers', 'Subscribers'], ['media', 'Photos'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
   root.innerHTML = `<div class="app"><aside><a class="brand" href="Main.dc.html" title="Open the website"><b>FIRMCOP</b><small>Admin</small></a>
@@ -217,15 +217,16 @@ async function refreshCounts() {
   root.querySelectorAll('[data-c]').forEach((b) => { const n = COUNTS[b.dataset.c] || 0; b.textContent = n; b.hidden = !n; });
 }
 function go(v, first) {
+  v = String(v || '').split('/')[0];
   VIEW = NAV.some((n) => n[0] === v) ? v : 'dashboard';
-  if (location.hash.slice(1) !== VIEW) history.replaceState(null, '', '#' + VIEW);
+  if (location.hash.slice(1).split('/')[0] !== VIEW) history.replaceState(null, '', '#' + VIEW);
   root.querySelectorAll('nav.side button').forEach((b) => { if (b.dataset.v === VIEW) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   refreshCounts();
   const m = $('#main'); m.innerHTML = '<p class="muted">Loading…</p>';
   (VIEWS[VIEW] || VIEWS.dashboard)(m).catch((e) => { m.innerHTML = `<div class="card"><h2>Could not load</h2><p>${esc(e.message)}</p></div>`; });
   if (!first) m.focus({ preventScroll: true });
 }
-window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && v !== VIEW && $('#main')) go(v); });
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && $('#main') && (v.split('/')[0] !== VIEW || v.includes('/'))) go(v); });
 
 // ---------- drawer ----------
 function drawer(title, eyebrow, bodyHtml, onMount) {
@@ -600,6 +601,335 @@ function afJob(r0, d, reload) {
   }
   draw();
 }
+// ---------- Photos: the media-optimize tool ----------
+async function mediaFn(body) {
+  const cfg = window.FC_SUPA, t = await FC.auth.token();
+  const r = await fetch(cfg.url + '/functions/v1/media-optimize', { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'The photo tool did not answer (' + r.status + ')'); return j;
+}
+const mb = (b) => b == null ? '' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+VIEWS.media = async (m) => {
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Photos</h1></div><div class="tools"><button class="btn" type="button" id="mimp">Bring in photos from the old site</button><button class="btn line" type="button" id="mall">Check every photo again</button></div></div>
+    <p class="muted" style="margin-top:0">Every photo uploaded here is shrunk automatically to at most 2000 px, saved as WebP and cached by browsers for a year. Cards and lists ask for small copies, and photos load as visitors scroll.</p>
+    <div class="tiles" id="mst"><p class="muted">Loading…</p></div><p class="small muted" id="mrun" role="status"></p>
+    <div class="tablewrap"><table><thead><tr><th>Photo</th><th class="n">Before</th><th class="n">After</th><th class="n">Size</th><th>Status</th><th>When</th></tr></thead><tbody id="mtb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div>`;
+  const load = async () => {
+    const rows = await api('media_assets?select=*&order=updated_at.desc&limit=200');
+    const done = rows.filter((r) => r.status === 'done'), before = done.reduce((a, r) => a + (r.original_bytes || 0), 0), after = done.reduce((a, r) => a + (r.bytes || 0), 0);
+    $('#mst', m).innerHTML = [[rows.length, 'Photos handled'], [done.length ? Math.round(100 - after / Math.max(1, before) * 100) + '%' : '—', 'Smaller on average'], [mb(before - after) || '0 KB', 'Saved in total'], [rows.length - done.length, 'Need attention']].map(([n, l]) => `<div class="tile" style="cursor:default"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    $('#mtb', m).innerHTML = rows.map((r) => { const url = window.FC_SUPA.url + '/storage/v1/object/public/media/' + r.path; return `<tr><td><a href="${esc(url)}" target="_blank" rel="noopener" class="small">${esc(r.path.split('/').pop())}</a><br><span class="small muted mono">${esc(r.path.split('/').slice(0, -1).join('/'))}</span></td><td class="n">${mb(r.original_bytes)}</td><td class="n">${mb(r.bytes)}</td><td class="n small">${r.width ? r.width + ' × ' + r.height : ''}</td><td>${r.status === 'done' ? '<span class="pill yes">done</span>' : `<span class="pill lost">${esc(r.status)}</span><br><span class="small muted">${esc(r.error || '')}</span>`}</td><td class="small">${when(r.updated_at)}</td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">No photos yet.</td></tr>';
+  };
+  $('#mimp', m).onclick = async (e) => {
+    const b = e.target; b.disabled = true; let total = 0, left = 1, fails = 0;
+    try { while (left > 0) { $('#mrun', m).textContent = 'Bringing photos in… ' + total + ' so far'; const r = await mediaFn({ action: 'import', limit: 10 }); total += r.imported.length; fails += r.imported.filter((x) => x.error).length; left = r.imported.length ? r.remaining : 0; await load(); }
+      $('#mrun', m).textContent = total ? `Done: ${total} photo${total === 1 ? '' : 's'} brought in and shrunk${fails ? `, ${fails} could not be fetched` : ''}. Pages now load them from here.` : 'Nothing left to bring in: every photo is already stored here.';
+    } catch (ex) { $('#mrun', m).textContent = ex.message; toast(ex.message, true); }
+    b.disabled = false;
+  };
+  $('#mall', m).onclick = async (e) => { const b = e.target; b.disabled = true; try { for (const prefix of ['', 'imported', 'catalog', 'works', 'categories']) { $('#mrun', m).textContent = 'Checking ' + (prefix || 'top folder') + '…'; await mediaFn({ action: 'optimize-all', prefix }); } $('#mrun', m).textContent = 'All photos checked.'; await load(); } catch (ex) { toast(ex.message, true); } b.disabled = false; };
+  await load();
+};
+// ---------- Blog: ideas, drafts, AI drafts, review, publishing ----------
+const BLOG_ST = [['idea', 'Ideas'], ['draft', 'Drafts'], ['review', 'In review'], ['scheduled', 'Scheduled'], ['published', 'Published'], ['archived', 'Archived']];
+const BLOG_ST_LABEL = Object.fromEntries(BLOG_ST.map(([k, l]) => [k, l.replace(/s$/, '').replace('Idea', 'Idea').replace('In review', 'In review')]));
+let BLOG_CATS = [];
+const words = (html) => (String(html || '').replace(/<[^>]+>/g, ' ').match(/[A-Za-z0-9À-ɏ'’-]+/g) || []).length;
+const stripTags = (html) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+// what makes a post rank and convert: each check is [ok, label, hint]
+function blogChecks(p) {
+  const html = p.body_html || '', w = words(html), phrase = (p.search_phrase || '').trim().toLowerCase(), plain = stripTags(html).toLowerCase();
+  const first = stripTags((html.match(/<p[^>]*>[\s\S]*?<\/p>/i) || [''])[0]).toLowerCase(), h2s = (html.match(/<h2[\s\S]*?<\/h2>/gi) || []).map((h) => stripTags(h).toLowerCase());
+  const imgs = html.match(/<img\b[^>]*>/gi) || [], noAlt = imgs.filter((t) => !/\balt="[^"]+"/i.test(t)).length;
+  const links = html.match(/<a\b[^>]*href="([^"]+)"/gi) || [], internal = links.filter((a) => /href="(\/|https?:\/\/[^"]*firmcop)/i.test(a)).length;
+  const sd = (p.seo_description || p.excerpt || '').trim().length, phraseWords = phrase.split(/\s+/).filter((x) => x.length > 2);
+  const has = (t) => phraseWords.length && phraseWords.every((x) => t.includes(x));
+  return [
+    [w >= 1000, `${w.toLocaleString('en-GB')} words`, w < 600 ? 'Too short to rank. Aim for 1,000 to 2,000 words that fully answer the question.' : w < 1000 ? 'Getting there. Aim for at least 1,000 words.' : 'Good length.'],
+    [!!phrase, 'Search phrase set', phrase ? `“${p.search_phrase}”` : 'Write the words people type into Google that this post answers.'],
+    [!phrase || has((p.title || '').toLowerCase()), 'Search phrase in the title', 'Use the main words of the phrase in the title.'],
+    [!phrase || has(first), 'Search phrase in the first paragraph', 'Say what the post answers in the first two sentences.'],
+    [!phrase || h2s.some(has), 'Search phrase in a heading', 'Use the phrase, or a close variant, in at least one section heading.'],
+    [h2s.length >= 3, `${h2s.length} section headings`, 'Break the post into at least three sections with headings (H2).'],
+    [sd >= 120 && sd <= 165, `Search description ${sd} characters`, 'Write 120 to 160 characters: what the reader gets, with the phrase in it.'],
+    [!!p.cover_url, 'Cover photo', 'Add a real photo. Posts with a photo get more clicks and better link previews.'],
+    [!p.cover_url || !!(p.cover_alt || '').trim(), 'Cover photo described', 'Describe the cover photo in a few words (for screen readers and Google Images).'],
+    [!noAlt, imgs.length ? `${imgs.length - noAlt} of ${imgs.length} photos described` : 'Photos in the text', noAlt ? 'Describe every photo in the text.' : 'Optional: add one or two real photos in the text.'],
+    [(p.related_products || []).length > 0 || internal > 0, 'Links to products or pages', 'Link to at least one product, or add Featured products, so readers can act.'],
+    [!/\[CHECK/i.test(html), (html.match(/\[CHECK/gi) || []).length ? (html.match(/\[CHECK/gi) || []).length + ' [CHECK] notes left' : 'No [CHECK] notes left', 'The AI marks facts it could not know as [CHECK: …]. Verify each one, fix the text and delete the note.'],
+    [!p.needs_expansion, 'Checked and expanded', 'This post came from the old site or an AI draft: check every figure, client and price, then untick “Needs checking”.'],
+  ];
+}
+function snippet(title, url, desc) {
+  return `<div style="border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:#fff;font-family:Arial,sans-serif"><div style="font-size:12px;color:#4d5156">${esc(url)}</div><div style="color:#1a0dab;font-size:19px;line-height:1.3;margin:2px 0">${esc((title || '').slice(0, 64))}${(title || '').length > 64 ? '…' : ''}</div><div style="color:#4d5156;font-size:13.5px;line-height:1.45">${esc((desc || '').slice(0, 160))}${(desc || '').length > 160 ? '…' : ''}</div></div>`;
+}
+async function aiFn(body) {
+  const cfg = window.FC_SUPA, t = await FC.auth.token();
+  const r = await fetch(cfg.url + '/functions/v1/blog-ai-draft', { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'The AI helper did not answer (' + r.status + ')'); return j;
+}
+VIEWS.blog = async (m) => {
+  BLOG_CATS = await api('blog_categories?select=*&order=sort.asc').catch(() => []);
+  const st = { s: location.hash.split('/')[1] || '', q: '' };
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Blog</h1></div><div class="tools"><input class="q" type="search" placeholder="Search posts" aria-label="Search posts"><button class="btn line" type="button" id="bidea">New idea</button><button class="btn" type="button" id="bnew">New post</button><a class="btn line" href="/blog" target="_blank" rel="noopener">See the blog</a></div></div>
+    <p class="muted" style="margin-top:0">Start from an idea, let the AI helper write a first draft, then edit, check and publish. Posts answer what buyers search for, and link to the products and projects that answer it.</p>
+    <div class="tabs" role="tablist" style="margin-bottom:12px"><button type="button" role="tab" data-bs="" aria-selected="${!st.s}">All</button>${BLOG_ST.map(([k, l]) => `<button type="button" role="tab" data-bs="${k}" aria-selected="${st.s === k}">${l} <span class="badge" data-n="${k}"></span></button>`).join('')}</div>
+    <div class="tablewrap"><table><thead><tr><th>Post</th><th>Category</th><th>Status</th><th class="n">Words</th><th>Checks</th><th>Updated</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div>`;
+  const tb = $('tbody', m); let rows = [];
+  async function load() {
+    rows = await api('blog_posts?select=id,slug,title,category,status,published_at,search_phrase,needs_expansion,source,body_html,seo_description,excerpt,cover_url,cover_alt,related_products,updated_at&order=updated_at.desc&limit=500');
+    m.querySelectorAll('[data-n]').forEach((b) => { const n = rows.filter((r) => r.status === b.dataset.n).length; b.textContent = n || ''; b.hidden = !n; });
+    let list = st.s ? rows.filter((r) => r.status === st.s) : rows;
+    if (st.q) { const q = st.q.toLowerCase(); list = list.filter((r) => (r.title + ' ' + (r.search_phrase || '')).toLowerCase().includes(q)); }
+    tb.innerHTML = list.map((r) => { const ck = blogChecks(r), okn = ck.filter((c) => c[0]).length, cat = BLOG_CATS.find((c) => c.slug === r.category);
+      return `<tr class="row" tabindex="0" data-id="${r.id}"><td><b style="font-weight:600">${esc(r.title)}</b>${r.search_phrase ? `<br><span class="small muted">Answers: “${esc(r.search_phrase)}”</span>` : ''}${r.source === 'firmcop.com' ? ' <span class="pill">from old site</span>' : ''}${r.needs_expansion ? ' <span class="pill due">needs checking</span>' : ''}</td><td class="small">${esc(cat ? cat.name : '')}</td><td>${pill(r.status)}${r.status === 'scheduled' && r.published_at ? `<br><span class="small muted">${when(r.published_at)}</span>` : ''}</td><td class="n">${fmt(words(r.body_html))}</td><td><span class="pill ${okn === ck.length ? 'yes' : okn >= ck.length - 3 ? 'due' : ''}">${okn}/${ck.length}</span></td><td class="small">${when(r.updated_at)}</td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">Nothing here.</td></tr>';
+    tb.querySelectorAll('tr.row').forEach((tr) => { const o = () => editPost(tr.dataset.id, load); tr.onclick = o; tr.onkeydown = (e) => { if (e.key === 'Enter') o(); }; });
+  }
+  m.querySelectorAll('[data-bs]').forEach((b) => b.onclick = () => { st.s = b.dataset.bs; history.replaceState(null, '', '#blog' + (st.s ? '/' + st.s : '')); m.querySelectorAll('[data-bs]').forEach((x) => x.setAttribute('aria-selected', x === b)); load(); });
+  let t; $('.q', m).oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 200); };
+  const create = async (status) => { const title = status === 'idea' ? 'New idea' : 'Untitled post'; const r = await guard(api('blog_posts', { method: 'POST', body: { title, slug: 'post-' + Date.now().toString(36), status, author_name: 'Firmcop Team', category: 'guides' }, headers: { Prefer: 'return=representation' } })); await load(); editPost(r[0].id, load); };
+  $('#bnew', m).onclick = () => create('draft');
+  $('#bidea', m).onclick = () => create('idea');
+  await load();
+};
+const EDITOR_CSS = `.ed-bar{display:flex;flex-wrap:wrap;gap:4px;position:sticky;top:0;background:var(--paper);padding:6px 0;z-index:1}.ed-bar button{min-height:36px;min-width:36px;padding:0 10px;border:1px solid #CFC6B5;border-radius:4px;background:#fff;cursor:pointer;font-size:13px}.ed-bar button:hover{border-color:var(--ink)}
+.ed{min-height:420px;background:#fff;border:1.5px solid #BDB29C;border-radius:6px;padding:18px 22px;font-size:17px;line-height:1.65;outline:none}.ed:focus{border-color:var(--brass)}.ed h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30px;margin:26px 0 8px}.ed h3{font-size:19px;margin:20px 0 6px}.ed p{margin:0 0 14px}.ed img{max-width:100%;border-radius:4px}.ed blockquote{border-left:3px solid var(--gold);margin:14px 0;padding:4px 0 4px 16px;font-style:italic}.ed table{border-collapse:collapse;width:100%}.ed td,.ed th{border:1px solid var(--line);padding:6px 8px}
+.bgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}@media(max-width:980px){.bgrid{grid-template-columns:1fr}}.bside{display:grid;gap:12px;position:sticky;top:70px}.bckl{display:grid;gap:6px;font-size:13px}.bckl div{display:grid;grid-template-columns:18px 1fr;gap:6px}.bckl i{font-style:normal;font-weight:700}.bckl .ok i{color:var(--ok)}.bckl .no i{color:var(--warn)}.bckl small{grid-column:2;color:var(--muted)}.pill.published,.pill.scheduled{background:var(--okbg);color:var(--ok)}.pill.idea,.pill.draft{background:#ECE8E0}
+.drawer.xl{width:min(1240px,100%)}.chipset{display:flex;flex-wrap:wrap;gap:6px}.chipset span{display:inline-flex;gap:6px;align-items:center;background:#ECE8E0;border-radius:999px;padding:3px 4px 3px 10px;font-size:13px}.chipset button{border:0;background:transparent;cursor:pointer;font-size:15px;line-height:1}`;
+// paste: keep headings, lists, links, bold and italics; drop styles, classes and scripts
+function cleanPaste(html) {
+  const box = document.createElement('div'); box.innerHTML = html;
+  box.querySelectorAll('script,style,meta,link,iframe,object,svg').forEach((n) => n.remove());
+  const ok = { P: 1, H2: 1, H3: 1, H4: 1, UL: 1, OL: 1, LI: 1, A: 1, STRONG: 1, B: 1, EM: 1, I: 1, BLOCKQUOTE: 1, BR: 1, IMG: 1, TABLE: 1, THEAD: 1, TBODY: 1, TR: 1, TD: 1, TH: 1 };
+  const walk = (n) => { [...n.children].forEach((c) => { walk(c); if (c.tagName === 'H1') { const h = document.createElement('h2'); h.innerHTML = c.innerHTML; c.replaceWith(h); return; } if (!ok[c.tagName]) { c.replaceWith(...c.childNodes); return; } [...c.attributes].forEach((a) => { if (!(c.tagName === 'A' && a.name === 'href') && !(c.tagName === 'IMG' && (a.name === 'src' || a.name === 'alt'))) c.removeAttribute(a.name); }); }); };
+  walk(box); return box.innerHTML;
+}
+async function editPost(id, reload) {
+  let p = (await api('blog_posts?select=*&id=eq.' + id))[0]; if (!p) return toast('That post is gone', true);
+  const prods = await api('catalog_products?select=slug,name,kind&published=eq.true&order=name.asc&limit=1000').catch(() => []);
+  const wks = await api('works?select=slug,title&published=eq.true&order=title.asc').catch(() => []);
+  drawer(p.title, 'Blog · ' + (BLOG_ST_LABEL[p.status] || p.status), '', (d) => {
+    d.el.closest('.drawer').classList.add('xl');
+    let dirty = false; const mark = () => { dirty = true; $('#bsave', d.el).textContent = 'Save changes'; renderSide(); };
+    d.el.innerHTML = `<style>${EDITOR_CSS}</style>
+      ${p.source === 'firmcop.com' || p.needs_expansion ? `<div class="card" style="background:#FFF6E5;border-color:#E9C98A"><b>Check before publishing.</b> <span class="small">${esc(p.brief || 'This post needs checking and expanding.')}</span></div>` : ''}
+      <div class="bgrid"><div style="display:grid;gap:12px">
+        <form class="f" id="bf" onsubmit="return false">
+          <label class="fl wide">Title<input name="title" value="${esc(p.title)}" required></label>
+          <label class="fl">Web address <span class="hint">/blog/…</span><input name="slug" value="${esc(p.slug)}"></label>
+          <label class="fl">Category<select name="category">${BLOG_CATS.map((c) => `<option value="${esc(c.slug)}" ${c.slug === p.category ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+          <label class="fl wide">Search phrase <span class="hint">what people type into Google that this post answers</span><input name="search_phrase" value="${esc(p.search_phrase || '')}" placeholder="e.g. container house price in Kenya"></label>
+          <label class="fl wide">Brief <span class="hint">what the post should cover; the AI helper uses it</span><textarea name="brief" rows="3">${esc(p.brief || '')}</textarea></label>
+          <label class="fl wide">Summary <span class="hint">shown on the blog list and under the title</span><textarea name="excerpt" rows="2">${esc(p.excerpt || '')}</textarea></label>
+        </form>
+        <div class="tools" style="align-items:center"><button class="btn" type="button" id="bai">Write a first draft with AI</button><span class="small muted" id="baist">${p.ai && p.ai.at ? 'Last AI draft ' + when(p.ai.at) + '.' : 'Uses the title, search phrase, brief and Firmcop products and prices.'}</span></div>
+        <div class="ed-bar" role="toolbar" aria-label="Formatting">${[['h2', 'Heading'], ['h3', 'Subheading'], ['p', 'Text'], ['bold', 'B'], ['italic', 'I'], ['ul', '• List'], ['ol', '1. List'], ['quote', '“ Quote'], ['link', 'Link'], ['product', 'Product link'], ['image', 'Photo'], ['table', 'Table'], ['clear', 'Clear']].map(([k, l]) => `<button type="button" data-ed="${k}" title="${l}">${l}</button>`).join('')}<input type="file" id="edimg" accept="image/*" style="position:absolute;left:-9999px"></div>
+        <div class="ed" id="ed" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Post text">${p.body_html || '<p></p>'}</div>
+        <section class="card"><h3>Featured products and projects</h3><p class="small muted" style="margin-top:0">Shown under the post, so readers can go straight to the right product or a real build.</p>
+          <div class="chipset" id="rp"></div><div class="tools" style="margin-top:8px"><select id="rpadd" aria-label="Add a product" style="max-width:420px"><option value="">Add a product…</option>${prods.map((x) => `<option value="${esc(x.slug)}">${esc(x.name)}</option>`).join('')}</select></div>
+          <div class="chipset" id="rw" style="margin-top:10px"></div><div class="tools" style="margin-top:8px"><select id="rwadd" aria-label="Add a project" style="max-width:420px"><option value="">Add a project from Works…</option>${wks.map((x) => `<option value="${esc(x.slug)}">${esc(x.title)}</option>`).join('')}</select></div></section>
+        <section class="card"><h3>Search and sharing</h3><form class="f" id="bs" onsubmit="return false">
+          <label class="fl wide">Search title <span class="hint" id="stc"></span><input name="seo_title" value="${esc(p.seo_title || '')}" placeholder="Leave empty to use the title"></label>
+          <label class="fl wide">Search description <span class="hint" id="sdc"></span><textarea name="seo_description" rows="2" placeholder="120 to 160 characters">${esc(p.seo_description || '')}</textarea></label>
+          <label class="ck wide"><input type="checkbox" name="noindex" ${p.noindex ? 'checked' : ''}>Hide from search engines</label></form><div id="snip" style="margin-top:8px"></div></section>
+      </div>
+      <aside class="bside">
+        <section class="card"><h3 style="margin-top:0">Publish</h3><form class="f" id="bp" onsubmit="return false" style="grid-template-columns:1fr">
+          <label class="fl">Status<select name="status">${BLOG_ST.map(([k]) => `<option value="${k}" ${k === p.status ? 'selected' : ''}>${esc(BLOG_ST_LABEL[k])}</option>`).join('')}</select></label>
+          <label class="fl">Publish on <span class="hint">a future date schedules it</span><input name="published_at" type="datetime-local" value="${p.published_at ? new Date(new Date(p.published_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}"></label>
+          <label class="fl">Author<input name="author_name" value="${esc(p.author_name || '')}"></label>
+          <label class="ck"><input type="checkbox" name="needs_expansion" ${p.needs_expansion ? 'checked' : ''}>Needs checking</label></form>
+          <div class="tools" style="margin-top:10px"><button class="btn" type="button" id="bsave">Save</button><button class="btn line" type="button" id="bpub">${p.status === 'published' ? 'Update live post' : 'Publish'}</button></div>
+          <div class="tools" style="margin-top:8px"><a class="btn sm line" id="bprev" href="/blog.html?post=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Preview</a>${p.status === 'published' ? `<a class="btn sm line" href="/blog/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Open live</a>` : ''}<button class="btn sm danger" type="button" id="bdel">Delete</button></div></section>
+        <section class="card"><h3 style="margin-top:0">Cover photo</h3><div id="cov"></div><div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload<input type="file" id="cf" accept="image/*" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="cclr">Remove</button></div>
+          <label class="fl" style="margin-top:8px">Describe the photo<input id="calt" value="${esc(p.cover_alt || '')}" placeholder="e.g. 40 ft container home on a hillside in Naivasha"></label></section>
+        <section class="card"><h3 style="margin-top:0">Checks</h3><div class="bckl" id="bck"></div></section>
+      </aside></div>`;
+    const ed = $('#ed', d.el), bf = $('#bf', d.el), bs = $('#bs', d.el), bp = $('#bp', d.el);
+    const state = { related_products: (p.related_products || []).slice(), related_works: (p.related_works || []).slice(), cover_url: p.cover_url || '' };
+    const current = () => ({ ...p, title: bf.title.value.trim(), slug: slugify(/^post-[a-z0-9]+$/.test(bf.slug.value) && p.status !== 'published' ? bf.title.value : (bf.slug.value || bf.title.value)), category: bf.category.value, search_phrase: bf.search_phrase.value.trim() || null, brief: bf.brief.value.trim() || null, excerpt: bf.excerpt.value.trim() || null,
+      body_html: ed.innerHTML.replace(/<p><br><\/p>/g, '').trim(), seo_title: bs.seo_title.value.trim() || null, seo_description: bs.seo_description.value.trim() || null, noindex: bs.noindex.checked,
+      status: bp.status.value, published_at: bp.published_at.value ? new Date(bp.published_at.value).toISOString() : null, author_name: bp.author_name.value.trim() || null, needs_expansion: bp.needs_expansion.checked,
+      cover_url: state.cover_url || null, cover_alt: $('#calt', d.el).value.trim() || null, related_products: state.related_products, related_works: state.related_works });
+    function renderSide() {
+      const c = current(), ck = blogChecks(c);
+      $('#bck', d.el).innerHTML = ck.map(([ok, l, h]) => `<div class="${ok ? 'ok' : 'no'}"><i>${ok ? '✓' : '!'}</i><span>${esc(l)}</span>${ok ? '' : `<small>${esc(h)}</small>`}</div>`).join('');
+      $('#cov', d.el).innerHTML = state.cover_url ? `<img src="${esc(FC.img ? FC.img(state.cover_url, 640) : state.cover_url)}" alt="" style="width:100%;border-radius:4px">` : '<p class="small muted" style="margin:0">No cover photo yet.</p>';
+      const tt = c.seo_title || c.title + ' · Firmcop', dd = c.seo_description || c.excerpt || stripTags(c.body_html).slice(0, 160);
+      $('#stc', d.el).textContent = (c.seo_title || '').length ? c.seo_title.length + ' characters (up to 60 shows in full)' : ''; $('#sdc', d.el).textContent = (c.seo_description || '').length + ' characters';
+      $('#snip', d.el).innerHTML = '<p class="small muted" style="margin:0 0 4px">How it can look in Google</p>' + snippet(tt, location.origin + '/blog/' + c.slug, dd);
+      const chip = (arr, list, key, box) => { $(box, d.el).innerHTML = arr.map((s) => { const x = list.find((y) => y.slug === s); return `<span>${esc(x ? (x.name || x.title) : s)}<button type="button" data-rm="${key}:${esc(s)}" aria-label="Remove">×</button></span>`; }).join('') || '<span class="small muted" style="background:none;padding:0">None yet.</span>'; };
+      chip(state.related_products, prods, 'p', '#rp'); chip(state.related_works, wks, 'w', '#rw');
+      d.el.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { const [k, s] = b.dataset.rm.split(':'); const a = k === 'p' ? state.related_products : state.related_works; a.splice(a.indexOf(s), 1); mark(); });
+    }
+    [bf, bs, bp].forEach((f) => f.addEventListener('input', mark)); ed.addEventListener('input', mark); $('#calt', d.el).addEventListener('input', mark);
+    $('#rpadd', d.el).onchange = (e) => { if (e.target.value && !state.related_products.includes(e.target.value)) state.related_products.push(e.target.value); e.target.value = ''; mark(); };
+    $('#rwadd', d.el).onchange = (e) => { if (e.target.value && !state.related_works.includes(e.target.value)) state.related_works.push(e.target.value); e.target.value = ''; mark(); };
+    ed.addEventListener('paste', (e) => { const h = e.clipboardData && e.clipboardData.getData('text/html'); if (!h) return; e.preventDefault(); document.execCommand('insertHTML', false, cleanPaste(h)); });
+    const cmd = (c, v) => { ed.focus(); document.execCommand(c, false, v); mark(); };
+    d.el.querySelectorAll('[data-ed]').forEach((b) => b.onmousedown = (e) => e.preventDefault());
+    d.el.querySelectorAll('[data-ed]').forEach((b) => b.onclick = () => {
+      const k = b.dataset.ed;
+      if (k === 'h2' || k === 'h3' || k === 'p') return cmd('formatBlock', k.toUpperCase());
+      if (k === 'quote') return cmd('formatBlock', 'BLOCKQUOTE');
+      if (k === 'bold' || k === 'italic') return cmd(k);
+      if (k === 'ul') return cmd('insertUnorderedList'); if (k === 'ol') return cmd('insertOrderedList');
+      if (k === 'clear') { cmd('removeFormat'); return cmd('formatBlock', 'P'); }
+      if (k === 'link') { const u = prompt('Link to (a full address, or a page like /collection)'); if (u) cmd('createLink', u); return; }
+      if (k === 'product') { const nm = prompt('Product name, or part of it'); if (!nm) return; const x = prods.find((y) => y.name.toLowerCase().includes(nm.toLowerCase())); if (!x) return toast('No product matches that name', true); const sel = window.getSelection(); const href = FC.link ? FC.link.product(x) : '/collection/' + x.slug; if (sel && String(sel).trim()) cmd('createLink', href); else cmd('insertHTML', `<a href="${href}">${esc(x.name)}</a>&nbsp;`); if (!state.related_products.includes(x.slug)) state.related_products.push(x.slug); return mark(); }
+      if (k === 'image') return $('#edimg', d.el).click();
+      if (k === 'table') return cmd('insertHTML', '<table><thead><tr><th>Option</th><th>Size</th><th>Price (KES)</th></tr></thead><tbody><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></tbody></table><p></p>');
+    });
+    $('#edimg', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const url = await guard(uploadFile(f, 'blog/' + (p.slug || 'post')), 'Photo added'); const alt = prompt('Describe this photo in a few words') || ''; cmd('insertHTML', `<img src="${esc(url)}" alt="${esc(alt)}"><p></p>`); e.target.value = ''; };
+    $('#cf', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; state.cover_url = await guard(uploadFile(f, 'blog/' + (p.slug || 'post')), 'Cover uploaded'); mark(); };
+    $('#cclr', d.el).onclick = () => { state.cover_url = ''; mark(); };
+    async function save(extra, msg) {
+      const v = Object.assign(current(), extra || {});
+      if (!v.title) return toast('Give the post a title', true);
+      if (v.status === 'published' && v.published_at && new Date(v.published_at) > new Date()) v.status = 'scheduled';
+      const body = {}; ['title', 'slug', 'category', 'search_phrase', 'brief', 'excerpt', 'body_html', 'seo_title', 'seo_description', 'noindex', 'status', 'published_at', 'author_name', 'needs_expansion', 'cover_url', 'cover_alt', 'related_products', 'related_works'].forEach((k) => { body[k] = v[k]; });
+      const r = await guard(api('blog_posts?id=eq.' + p.id, { method: 'PATCH', body, headers: { Prefer: 'return=representation' } }), msg || 'Saved');
+      p = r[0]; dirty = false; $('#bsave', d.el).textContent = 'Saved'; d.setTitle(p.title); bp.status.value = p.status; $('#bprev', d.el).href = '/blog.html?post=' + encodeURIComponent(p.slug); reload(); renderSide();
+      if (p.status === 'published' && msg) pingNew('/blog/' + p.slug);
+      return p;
+    }
+    $('#bsave', d.el).onclick = () => save();
+    $('#bpub', d.el).onclick = async (e) => {
+      const ck = blogChecks(current()), bad = ck.filter((c) => !c[0]);
+      if (bad.length && !confirmInline(e.target, bad.length + ' checks open. Publish anyway?')) return;
+      await save({ status: 'published', published_at: bp.published_at.value ? new Date(bp.published_at.value).toISOString() : new Date().toISOString() }, 'Published');
+    };
+    $('#bdel', d.el).onclick = async (e) => { if (!confirmInline(e.target, 'Delete for good?')) return; await guard(api('blog_posts?id=eq.' + p.id, { method: 'DELETE' }), 'Deleted'); d.close(); reload(); };
+    $('#bai', d.el).onclick = async (e) => {
+      const b = e.target, hasText = words(ed.innerHTML) > 40;
+      if (hasText && !confirmInline(b, 'Replace the text with a new AI draft?')) return;
+      if (dirty) await save(null, 'Saved before drafting');
+      b.disabled = true; const stx = $('#baist', d.el); stx.textContent = 'Writing a first draft… this takes about a minute.';
+      try {
+        const r = await aiFn({ post_id: p.id });
+        ed.innerHTML = r.body_html; if (!bf.excerpt.value && r.excerpt) bf.excerpt.value = r.excerpt; if (!bs.seo_description.value && r.seo_description) bs.seo_description.value = r.seo_description; if (!bs.seo_title.value && r.seo_title) bs.seo_title.value = r.seo_title;
+        if (r.related_products) r.related_products.forEach((s) => { if (!state.related_products.includes(s) && prods.some((x) => x.slug === s)) state.related_products.push(s); });
+        bp.needs_expansion.checked = true; if (bp.status.value === 'idea') bp.status.value = 'draft';
+        mark(); await save(null, 'AI draft saved. Check every fact and price before publishing');
+        stx.textContent = 'AI draft written ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '. Edit it, check the facts, then untick “Needs checking”.';
+      } catch (ex) { stx.textContent = ex.message; toast(ex.message, true); }
+      b.disabled = false;
+    };
+    renderSide();
+  });
+}
+// tell Bing and others (IndexNow) that a page changed; quiet if no key is set
+async function pingNew(path) {
+  try { const s = await api('site_settings?select=key,value&key=in.(seo_indexnow_key,seo_allow_index,seo_new_site_url)'); const k = Object.fromEntries(s.map((x) => [x.key, x.value]));
+    if (!k.seo_indexnow_key || k.seo_allow_index !== 'true') return;
+    const host = (k.seo_new_site_url || location.origin).replace(/\/+$/, '');
+    await fetch('https://api.indexnow.org/indexnow?url=' + encodeURIComponent(host + path) + '&key=' + encodeURIComponent(k.seo_indexnow_key), { mode: 'no-cors' }).catch(() => {});
+  } catch (e) { /* optional */ }
+}
+
+// ---------- SEO: page settings, redirects, indexing, checks ----------
+VIEWS.seo = async (m, tab) => {
+  tab = tab || location.hash.split('/')[1] || 'checks';
+  const tabs = [['checks', 'Checks'], ['pages', 'Page settings'], ['redirects', 'Redirects'], ['indexing', 'Sitemap and indexing']];
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>SEO</h1></div><div class="tools"><a class="btn line" href="/sitemap.xml" target="_blank" rel="noopener">Sitemap</a></div></div>
+    <div class="tabs" role="tablist" style="margin-bottom:14px">${tabs.map(([k, l]) => `<button type="button" role="tab" data-st="${k}" aria-selected="${k === tab}">${l}</button>`).join('')}</div><div id="sbox"><p class="muted">Loading…</p></div>`;
+  m.querySelectorAll('[data-st]').forEach((b) => b.onclick = () => { history.replaceState(null, '', '#seo/' + b.dataset.st); VIEWS.seo(m, b.dataset.st); });
+  const box = $('#sbox', m);
+  if (tab === 'checks') return seoChecks(box);
+  if (tab === 'pages') return seoPages(box);
+  if (tab === 'redirects') return seoRedirects(box);
+  return seoIndexing(box);
+};
+async function seoChecks(box) {
+  const [prods, works, posts, cats] = await Promise.all([
+    api('catalog_products?select=id,slug,name,kind,summary,description,seo_title,seo_description,cover_url,published&published=eq.true&kind=in.(building,design)'),
+    api('works?select=id,slug,title,brief,story,seo_title,seo_description,images,published&published=eq.true'),
+    api('blog_posts?select=id,slug,title,status,seo_description,excerpt,body_html,cover_url,cover_alt,search_phrase,needs_expansion,related_products,noindex&status=eq.published'),
+    api('catalog_categories?select=id,slug,name,description,seo_description,scopes&published=eq.true'),
+  ]);
+  const issues = [], add = (sev, what, page, fix, open) => issues.push({ sev, what, page, fix, open });
+  const titles = {};
+  prods.forEach((p) => { const t = p.seo_title || p.name + ' · Firmcop'; (titles[t] = titles[t] || []).push('/collection/' + p.slug);
+    if (!p.cover_url) add('high', 'No photo', p.name, 'Add a photo: it shows on the page, in Google Images and in link previews', ['collection', p]);
+    if (!(p.seo_description || p.summary || '').trim()) add('high', 'No description for search', p.name, 'Write a short description (Details tab, Short description, or the Search description)', ['collection', p]);
+    else if ((p.seo_description || p.summary).length > 170) add('low', 'Search description too long', p.name, 'Keep it to 160 characters so Google shows all of it', ['collection', p]);
+    if ((p.seo_title || '').length > 65) add('low', 'Search title too long', p.name, 'Keep it to about 60 characters', ['collection', p]); });
+  works.forEach((w) => { if (!(w.images || []).length) add('high', 'No photos', w.title, 'Projects with photos earn trust and links', ['works', w]); if (!(w.seo_description || w.brief || '').trim()) add('med', 'No description for search', w.title, 'Add the brief or a search description in Works', ['works', w]); });
+  posts.forEach((p) => { const bad = blogChecks(p).filter((c) => !c[0]); if (bad.length) add(bad.length > 4 ? 'high' : 'med', bad.length + ' blog checks open', p.title, bad.slice(0, 3).map((c) => c[2]).join(' '), ['blog', p]); });
+  cats.filter((c) => (c.scopes || []).includes('collection') && !(c.seo_description || c.description || '').trim()).forEach((c) => add('low', 'Category with no description', c.name, 'Category pages rank for broad searches like “container homes Kenya”: add two or three sentences', ['catalogue', c]));
+  Object.entries(titles).filter(([, l]) => l.length > 1).forEach(([t, l]) => add('med', 'Same search title on ' + l.length + ' pages', t, 'Each page needs its own title', null));
+  const pubPosts = posts.length, sev = { high: 0, med: 1, low: 2 }; issues.sort((a, b) => sev[a.sev] - sev[b.sev]);
+  box.innerHTML = `<div class="tiles">${[[prods.length, 'Collection pages'], [works.length, 'Works pages'], [pubPosts, 'Published posts'], [issues.filter((i) => i.sev === 'high').length, 'Important fixes'], [issues.length, 'Things to improve']].map(([n, l]) => `<div class="tile" style="cursor:default"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('')}</div>
+    ${pubPosts < 4 ? `<div class="card" style="background:#FFF6E5;border-color:#E9C98A"><b>The biggest gain is content.</b> <span class="small">Only ${pubPosts} published post${pubPosts === 1 ? '' : 's'}. One or two good posts a week for six months is what grows search traffic. Start from the ideas in <a href="#blog/idea">Blog › Ideas</a>.</span></div>` : ''}
+    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Priority</th><th>What</th><th>Page</th><th>How to fix</th><th></th></tr></thead><tbody>${issues.map((i, k) => `<tr><td>${i.sev === 'high' ? '<span class="pill lost">important</span>' : i.sev === 'med' ? '<span class="pill due">worth doing</span>' : '<span class="pill">nice to have</span>'}</td><td>${esc(i.what)}</td><td>${esc(i.page)}</td><td class="small">${esc(i.fix)}</td><td>${i.open ? `<button class="btn sm line" type="button" data-io="${k}">Fix</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nothing to fix. Keep publishing.</td></tr>'}</tbody></table></div>`;
+  box.querySelectorAll('[data-io]').forEach((b) => b.onclick = async () => { const [where, x] = issues[+b.dataset.io].open;
+    if (where === 'blog') return editPost(x.id, () => seoChecks(box));
+    if (where === 'collection') { await loadCats(); return editProduct(x, () => seoChecks(box), 'details'); }
+    if (where === 'works') { location.hash = 'works'; return; }
+    if (where === 'catalogue') { location.hash = 'catalogue/categories'; } });
+}
+async function seoPages(box) {
+  const rows = await api('seo_overrides?select=*&order=path.asc');
+  box.innerHTML = `<p class="muted" style="margin-top:0">Set the search title, description, share image or hide a page from search engines. Products, Works and blog posts take their own text by default; use this for the home page, list pages and special cases.</p>
+    <div class="tools" style="margin-bottom:10px"><button class="btn" type="button" id="onew">Add a page</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Page</th><th>Search title</th><th>Description</th><th>Hidden</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="row" tabindex="0" data-i="${i}"><td class="mono small">${esc(r.path)}</td><td>${esc(r.title || '')}</td><td class="small">${esc((r.description || '').slice(0, 90))}</td><td>${r.noindex ? pill('yes') : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No page settings yet.</td></tr>'}</tbody></table></div>`;
+  const open = (r) => { const isNew = !r; r = r || { path: '/', noindex: false };
+    drawer(isNew ? 'Page settings' : r.path, 'SEO · page', '', (d) => {
+      d.el.innerHTML = `<form class="f" id="of"><label class="fl wide">Page address <span class="hint">e.g. / or /collection or /blog</span><input name="path" value="${esc(r.path)}" ${isNew ? '' : 'readonly'} required></label>
+        <label class="fl wide">Search title <span class="hint">about 60 characters</span><input name="title" value="${esc(r.title || '')}"></label>
+        <label class="fl wide">Search description <span class="hint">120 to 160 characters</span><textarea name="description" rows="3">${esc(r.description || '')}</textarea></label>
+        <label class="fl wide">Share image <span class="hint">shown in WhatsApp, Facebook and LinkedIn previews</span><input name="og_image_url" value="${esc(r.og_image_url || '')}"></label>
+        <label class="fl"><span>Upload a share image</span><input type="file" id="oimg" accept="image/*"></label>
+        <label class="fl">Canonical address <span class="hint">only if this page copies another</span><input name="canonical_url" value="${esc(r.canonical_url || '')}"></label>
+        <label class="ck wide"><input type="checkbox" name="noindex" ${r.noindex ? 'checked' : ''}>Hide this page from search engines</label>
+        <label class="fl wide">Notes<textarea name="notes" rows="2">${esc(r.notes || '')}</textarea></label>
+        <div class="wide" id="opv"></div>
+        <div class="wide tools"><button class="btn" type="submit">Save</button>${isNew ? '' : '<button class="btn danger" type="button" id="odel">Remove</button>'}</div></form>`;
+      const f = $('#of', d.el), pv = () => { $('#opv', d.el).innerHTML = snippet(f.title.value || 'Firmcop Modular', location.origin + f.path.value, f.description.value); };
+      f.addEventListener('input', pv); pv();
+      $('#oimg', d.el).onchange = async (e) => { const file = e.target.files[0]; if (file) f.og_image_url.value = await guard(uploadFile(file, 'seo'), 'Image uploaded'); };
+      f.onsubmit = async (e) => { e.preventDefault(); const v = { path: '/' + f.path.value.trim().replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, ''), title: f.title.value.trim() || null, description: f.description.value.trim() || null, og_image_url: f.og_image_url.value.trim() || null, canonical_url: f.canonical_url.value.trim() || null, noindex: f.noindex.checked, notes: f.notes.value.trim() || null, updated_at: new Date().toISOString() };
+        await guard(api('seo_overrides?on_conflict=path', { method: 'POST', body: v, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } }), 'Saved'); d.close(); seoPages(box); };
+      const del = $('#odel', d.el); if (del) del.onclick = async () => { if (!confirmInline(del, 'Remove?')) return; await guard(api('seo_overrides?path=eq.' + encodeURIComponent(r.path), { method: 'DELETE' }), 'Removed'); d.close(); seoPages(box); };
+    }); };
+  box.querySelectorAll('tr.row').forEach((tr) => tr.onclick = () => open(rows[+tr.dataset.i]));
+  $('#onew', box).onclick = () => open(null);
+}
+async function seoRedirects(box) {
+  const rows = await api('seo_redirects?select=*&order=source_path.asc');
+  box.innerHTML = `<p class="muted" style="margin-top:0">Old addresses that send visitors and Google to their new page, so links and rankings from firmcop.com carry over when this site replaces it. ${rows.length} set up; the hit count shows which old links people still use.</p>
+    <div class="tools" style="margin-bottom:10px"><button class="btn" type="button" id="rnew">Add a redirect</button><input class="q" type="search" id="rq" placeholder="Filter" aria-label="Filter redirects"></div>
+    <div class="tablewrap"><table><thead><tr><th>Old address</th><th>Goes to</th><th class="n">Hits</th><th>Last used</th><th>On</th></tr></thead><tbody id="rtb"></tbody></table></div>`;
+  const draw = (q) => { $('#rtb', box).innerHTML = rows.map((r, i) => [r, i]).filter(([r]) => !q || (r.source_path + r.destination_path).toLowerCase().includes(q)).map(([r, i]) => `<tr class="row" tabindex="0" data-i="${i}"><td class="mono small">${esc(r.source_path)}</td><td class="mono small">${esc(r.destination_path)}</td><td class="n">${r.hit_count || ''}</td><td class="small">${when(r.last_hit_at)}</td><td>${r.active ? pill('yes') : pill('no')}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">None.</td></tr>';
+    box.querySelectorAll('#rtb tr.row').forEach((tr) => tr.onclick = () => open(rows[+tr.dataset.i])); };
+  const open = (r) => { const isNew = !r; r = r || { source_path: '/', destination_path: '/', status_code: 301, active: true };
+    drawer(isNew ? 'New redirect' : r.source_path, 'SEO · redirect', '', (d) => {
+      d.el.innerHTML = `<form class="f" id="rf"><label class="fl wide">Old address <span class="hint">the path only, e.g. /products/glamping-pod</span><input name="source_path" value="${esc(r.source_path)}" required></label>
+        <label class="fl wide">Goes to <span class="hint">a page on this site, e.g. /collection/firmcop-glamping-pod</span><input name="destination_path" value="${esc(r.destination_path)}" required></label>
+        <label class="fl">Type<select name="status_code"><option value="301" ${r.status_code === 301 ? 'selected' : ''}>Moved for good (301)</option><option value="302" ${r.status_code === 302 ? 'selected' : ''}>For now (302)</option></select></label>
+        <label class="ck"><input type="checkbox" name="active" ${r.active ? 'checked' : ''}>On</label><label class="fl wide">Notes<input name="notes" value="${esc(r.notes || '')}"></label>
+        <div class="wide tools"><button class="btn" type="submit">Save</button>${isNew ? '' : '<button class="btn danger" type="button" id="rdel">Delete</button>'}<a class="btn line" href="${esc(r.source_path)}" target="_blank" rel="noopener">Try it</a></div></form>`;
+      const f = $('#rf', d.el);
+      f.onsubmit = async (e) => { e.preventDefault(); const v = { source_path: '/' + f.source_path.value.trim().replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, ''), destination_path: f.destination_path.value.trim(), status_code: +f.status_code.value, active: f.active.checked, notes: f.notes.value.trim() || null, updated_at: new Date().toISOString() };
+        if (isNew) await guard(api('seo_redirects', { method: 'POST', body: v }), 'Added'); else await guard(api('seo_redirects?id=eq.' + r.id, { method: 'PATCH', body: v }), 'Saved'); d.close(); seoRedirects(box); };
+      const del = $('#rdel', d.el); if (del) del.onclick = async () => { if (!confirmInline(del, 'Delete?')) return; await guard(api('seo_redirects?id=eq.' + r.id, { method: 'DELETE' }), 'Deleted'); d.close(); seoRedirects(box); };
+    }); };
+  $('#rnew', box).onclick = () => open(null); $('#rq', box).oninput = (e) => draw(e.target.value.trim().toLowerCase()); draw('');
+}
+async function seoIndexing(box) {
+  const s = Object.fromEntries((await api('site_settings?select=key,value&key=in.(seo_allow_index,seo_new_site_url,seo_indexnow_key)')).map((x) => [x.key, x.value]));
+  const on = s.seo_allow_index === 'true';
+  box.innerHTML = `<section class="card"><h3>Search engines</h3><p class="small" style="margin-top:0">${on ? '<span class="pill yes">open</span> Search engines may index this site.' : '<span class="pill due">closed</span> This site tells search engines not to index it, so the preview address does not compete with firmcop.com. Open it on the day this site replaces firmcop.com.'}</p>
+      <form class="f" id="ix"><label class="fl wide">Address of the live site <span class="hint">e.g. https://firmcop.com once it points here. Used for canonical links and the sitemap.</span><input name="url" value="${esc(s.seo_new_site_url || '')}" placeholder="Empty: the address the site is served from"></label>
+      <label class="ck wide"><input type="checkbox" name="allow" ${on ? 'checked' : ''}>Let search engines index this site</label>
+      <label class="fl wide">IndexNow key <span class="hint">optional: tells Bing and others the moment a page changes</span><input name="key" value="${esc(s.seo_indexnow_key || '')}" placeholder="e.g. 32 letters and numbers"></label>
+      <div class="wide tools"><button class="btn" type="submit">Save</button></div></form></section>
+    <section class="card"><h3>On launch day</h3><ol class="small" style="margin:0;padding-left:18px;display:grid;gap:6px"><li>Point firmcop.com at this site, then put https://firmcop.com above and tick “Let search engines index this site”.</li><li>In Google Search Console, verify firmcop.com and submit <span class="mono">https://firmcop.com/sitemap.xml</span>.</li><li>Check Redirects after a week: old links with hits are working; add any old address that shows up as “not found”.</li><li>Keep publishing: one or two good posts a week.</li></ol></section>
+    <section class="card"><h3>Files</h3><p class="small" style="margin:0"><a href="/sitemap.xml" target="_blank" rel="noopener">sitemap.xml</a> lists every public page, built live. <a href="/robots.txt" target="_blank" rel="noopener">robots.txt</a> follows the switch above.</p></section>`;
+  $('#ix', box).onsubmit = async (e) => { e.preventDefault(); const f = e.target;
+    const up = (key, value) => api('site_settings?on_conflict=key', { method: 'POST', body: { key, value, updated_at: new Date().toISOString() }, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
+    await guard(Promise.all([up('seo_new_site_url', f.url.value.trim().replace(/\/+$/, '')), up('seo_allow_index', f.allow.checked ? 'true' : 'false'), up('seo_indexnow_key', f.key.value.trim())]), 'Saved'); seoIndexing(box); };
+}
+
 const ORDER_ST = ['pending', 'confirmed', 'paid', 'dispatched', 'delivered', 'cancelled'];
 VIEWS.orders = (m) => listView(m, {
   table: 'store_orders', title: 'Atelier orders', eyebrow: 'Store', search: ['name', 'email', 'phone', 'code'], filter: { col: 'status', options: ORDER_ST },
@@ -647,7 +977,7 @@ VIEWS.works = (m) => listView(m, {
 async function workDetail(r, d, reload, tab) {
   tab = tab || 'details';
   r = (await api('works?id=eq.' + r.id))[0];
-  d.el.innerHTML = `<div class="tools"><a class="btn sm line" href="work.html?w=${encodeURIComponent(r.slug)}" target="_blank" rel="noopener">Open the project page</a></div>
+  d.el.innerHTML = `<div class="tools"><a class="btn sm line" href="/works/${encodeURIComponent(r.slug)}" target="_blank" rel="noopener">Open the project page</a></div>
     <div class="tabs" role="tablist">${[['details', 'Details and story'], ['photos', 'Photos']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-wt="${k}">${l}</button>`).join('')}</div><div id="wb"></div>`;
   d.el.querySelectorAll('[data-wt]').forEach((b) => b.onclick = () => workDetail(r, d, reload, b.dataset.wt));
   const box = $('#wb', d.el);
@@ -827,7 +1157,7 @@ async function uploadFile(file, folder) {
   const cfg = window.FC_SUPA, t = await FC.auth.token();
   const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
   const path = folder + '/' + Date.now() + '-' + safe;
-  const r = await fetch(cfg.url + '/storage/v1/object/media/' + path, { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }, body: file });
+  const r = await fetch(cfg.url + '/storage/v1/object/media/' + path, { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true', 'cache-control': 'public, max-age=31536000, immutable' }, body: file });
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Upload failed: ' + (j.message || j.error || r.status)); }
   return cfg.url + '/storage/v1/object/public/media/' + path;
 }

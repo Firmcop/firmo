@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog · Firmcop Modular</title>
+<meta name="description" content="Guides, prices and project stories on container homes, A-frames, cabins and steel structures in Kenya, from the Firmcop team in Nairobi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&amp;family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="fc-pages.css">
+<meta name="fc-footer" content="auto">
+<style>
+.bhero{padding:44px 0 18px}
+.bhero h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clamp(40px,5vw,64px);line-height:1;margin:6px 0 10px}
+.bhero p{max-width:62ch;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 6px}
+.chips a{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1.5px solid #CFC6B5;border-radius:999px;text-decoration:none;color:var(--ink);font-size:14px;background:#fff}
+.chips a[aria-current=page]{background:var(--ink);border-color:var(--ink);color:#fff}
+.posts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:18px 0 56px}
+@media (max-width:1000px){.posts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.posts{grid-template-columns:1fr}}
+.post{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;text-decoration:none;color:inherit}
+.post:hover{border-color:#BDB29C}
+.post .ph{aspect-ratio:16/10;background:#E7E1D6 center/cover no-repeat}
+.post .bd{padding:16px 18px 20px;display:flex;flex-direction:column;gap:8px}
+.post h2,.post h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:26px;line-height:1.1;margin:0}
+.post p{margin:0;color:var(--muted);font-size:15px}
+.post .meta,.art .meta{font:500 11px/1.4 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+.post.lead{grid-column:1/-1;flex-direction:row}
+.post.lead .ph{flex:1 1 55%;aspect-ratio:auto;min-height:340px}
+.post.lead .bd{flex:1 1 45%;justify-content:center;padding:28px 32px}
+.post.lead h2{font-size:clamp(30px,3.4vw,44px)}
+@media (max-width:900px){.post.lead{flex-direction:column}.post.lead .ph{min-height:220px}}
+.art{max-width:760px;margin:0 auto;padding:36px 0 20px}
+.art h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clamp(38px,5vw,60px);line-height:1.02;margin:10px 0 12px}
+.art .lede{font-size:19px;color:#3B3832;margin:0 0 18px}
+.art .cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:#E7E1D6;margin:10px 0 24px}
+.body{font-size:18px;line-height:1.7}
+.body h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px;line-height:1.1;margin:38px 0 10px}
+.body h3{font-size:20px;margin:28px 0 6px}
+.body p{margin:0 0 18px}
+.body ul,.body ol{margin:0 0 18px;padding-left:24px}
+.body li{margin:4px 0}
+.body img{width:100%;height:auto;border-radius:6px;margin:18px 0}
+.body blockquote{margin:22px 0;padding:6px 0 6px 20px;border-left:3px solid var(--gold);font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;line-height:1.3}
+.body table{width:100%;border-collapse:collapse;margin:18px 0;font-size:16px;display:block;overflow-x:auto}
+.body th,.body td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.body th{background:#F0EBE2}
+.cta{margin:34px 0;padding:24px;border-radius:6px;background:var(--night);color:#F2EBDF;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between}
+.cta h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30px;margin:0;color:#F2EBDF}
+.cta p{margin:4px 0 0;color:#C9BFAE;font-size:15px}
+.cta .btns{display:flex;flex-wrap:wrap;gap:10px}
+.cta .btn.line{color:#F2EBDF;border-color:#F2EBDF}
+.share{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 0;font-size:14px}
+.rel{padding:10px 0 56px}
+.rel h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:34px;margin:0 0 14px}
+.empty{padding:40px 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<header id="fc-head" class="fc-head"></header>
+<main class="wrap" id="main" tabindex="-1"><!--SSR--></main>
+<script src="ds-config.js"></script>
+<script src="fc-site.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s), esc = FC.esc;
+  const R = window.FC_ROUTE || {}, qp = new URLSearchParams(location.search);
+  if (!window.FC_ROUTE) { const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m); }
+  const kind = R.kind || (qp.get('post') ? 'post' : 'blog'), slug = R.slug || qp.get('post') || '', cat = R.cat || qp.get('c') || '';
+  FC.header($('#fc-head'), '/blog');
+  const day = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const card = (p, lead) => `<a class="post${lead ? ' lead' : ''}" href="${FC.link.post(p.slug)}"><div class="ph" data-bg="${esc(FC.img(p.cover_url || '', lead ? 1200 : 640))}"></div><div class="bd"><span class="meta">${esc(p.cat_name || '')}${p.reading_minutes ? ' · ' + p.reading_minutes + ' min read' : ''}</span>${lead ? '<h2>' : '<h3>'}${esc(p.title)}${lead ? '</h2>' : '</h3>'}${p.excerpt ? `<p>${esc(p.excerpt)}</p>` : ''}</div></a>`;
+  const cols = 'slug,title,excerpt,cover_url,category,published_at,reading_minutes';
+  let CATS = [];
+  const withCat = (rows) => rows.map((p) => Object.assign(p, { cat_name: (CATS.find((c) => c.slug === p.category) || {}).name || '' }));
+
+  function index() {
+    Promise.all([FC.rest('blog_categories?select=slug,name,description&order=sort.asc'), FC.rest('blog_posts?select=' + cols + '&order=published_at.desc&limit=200')]).then(([cats, posts]) => {
+      CATS = cats; withCat(posts);
+      const used = cats.filter((c) => posts.some((p) => p.category === c.slug)), cur = cats.find((c) => c.slug === cat), list = cat ? posts.filter((p) => p.category === cat) : posts;
+      document.title = (cur ? cur.name + ' · ' : '') + 'Blog · Firmcop Modular';
+      $('#main').innerHTML = `<section class="bhero"><p class="eyebrow">Firmcop journal</p><h1>${cur ? esc(cur.name) : 'Guides, prices and builds'}</h1><p>${cur && cur.description ? esc(cur.description) : 'Straight answers on container homes, A-frames, cabins and steel structures in Kenya: what they cost, how they are built and what our clients learned.'}</p>
+        ${used.length > 1 ? `<nav class="chips" aria-label="Topics"><a href="/blog"${!cat ? ' aria-current="page"' : ''}>All</a>${used.map((c) => `<a href="/blog/category/${esc(c.slug)}"${c.slug === cat ? ' aria-current="page"' : ''}>${esc(c.name)}</a>`).join('')}</nav>` : ''}</section>
+        ${list.length ? `<section class="posts">${list.map((p, i) => card(p, i === 0 && !cat)).join('')}</section>` : '<p class="empty">New articles are on the way. Meanwhile, <a href="/collection">browse the Collection</a> or <a href="/3d-studio">design a home in 3D</a>.</p>'}`;
+    }).catch(() => { $('#main').innerHTML = '<p class="empty">The blog could not load just now. Please refresh.</p>'; });
+  }
+
+  function post() {
+    const ssr = $('#main article.art');
+    const got = window.FC_POST ? Promise.resolve([window.FC_POST]) : FC.rest('blog_posts?select=*&slug=eq.' + encodeURIComponent(slug));
+    Promise.all([got, FC.rest('blog_categories?select=slug,name')]).then(([rows, cats]) => {
+      CATS = cats; const p = rows[0];
+      if (!p) { $('#main').innerHTML = '<p class="empty">That article is not available. <a href="/blog">See all articles</a>.</p>'; return; }
+      const c = CATS.find((x) => x.slug === p.category);
+      if (!ssr) {
+        $('#main').innerHTML = `<article class="art"><p class="meta"><a href="/blog${c ? '/category/' + esc(c.slug) : ''}" style="color:inherit;text-decoration:none">${esc(c ? c.name : 'Blog')}</a> · ${day(p.published_at)}${p.reading_minutes ? ' · ' + p.reading_minutes + ' min read' : ''}</p><h1>${esc(p.title)}</h1>${p.excerpt ? `<p class="lede">${esc(p.excerpt)}</p>` : ''}
+          ${p.cover_url ? `<img class="cover" src="${esc(FC.img(p.cover_url, 1600))}" alt="${esc(p.cover_alt || '')}">` : ''}<div class="body">${p.body_html || ''}</div></article>`;
+        document.title = (p.seo_title || p.title) + ' · Firmcop';
+      }
+      const art = $('#main article.art');
+      if (p.status && p.status !== 'published') art.insertAdjacentHTML('afterbegin', `<p class="meta" role="status" style="background:#FFF1D6;color:#6B4A00;padding:10px 12px;border-radius:4px">Preview: this post is ${esc(p.status)} and not on the public blog yet.</p>`);
+      // sized photos inside the article
+      art.querySelectorAll('.body img').forEach((im) => { const s = im.getAttribute('src'); if (s) im.src = FC.img(s, 1400); im.loading = 'lazy'; im.decoding = 'async'; });
+      const url = location.origin + location.pathname, wa = 'https://wa.me/?text=' + encodeURIComponent(p.title + ' ' + url);
+      art.insertAdjacentHTML('beforeend', `<div class="share"><span class="meta">Share</span><a href="${wa}" target="_blank" rel="noopener">WhatsApp</a><a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" rel="noopener">Facebook</a><a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}" target="_blank" rel="noopener">LinkedIn</a></div>
+        <aside class="cta" aria-label="Next steps"><div><h2>Planning something like this?</h2><p>Design it in the 3D Studio with live KES prices, or send us your plot and plans for a quote.</p></div><div class="btns"><a class="btn" href="/3d-studio">Design it in 3D</a><button type="button" class="btn line" id="bq">Get a quote</button></div></aside>`);
+      $('#bq').onclick = () => FC.lead('contact', { title: 'Get a quote', eyebrow: p.title, intro: 'Tell us what you are planning and where. We reply with a quote, usually within one working day.', context: { blog: p.slug } });
+      const prods = (p.related_products || []).filter(Boolean), works = (p.related_works || []).filter(Boolean);
+      Promise.all([
+        prods.length ? FC.rest('catalog_products?select=slug,name,kind,summary,cover_url,price_mode,base_price,rate,unit&published=eq.true&slug=in.(' + prods.map(encodeURIComponent).join(',') + ')') : [],
+        works.length ? FC.rest('works?select=slug,title,type,location,images&published=eq.true&slug=in.(' + works.map(encodeURIComponent).join(',') + ')') : [],
+        FC.rest('blog_posts?select=' + cols + '&slug=neq.' + encodeURIComponent(p.slug) + (p.category ? '&category=eq.' + encodeURIComponent(p.category) : '') + '&order=published_at.desc&limit=3'),
+      ]).then(([pr, wk, more]) => {
+        let h = '';
+        if (pr.length) h += `<section class="rel"><h2>Featured in this article</h2><div class="grid">${pr.map((r) => `<a class="card" href="${FC.link.product(r)}"><div class="ph" data-bg="${esc(FC.img(r.cover_url || '', 640))}"></div><div class="bd"><h3>${esc(r.name)}</h3>${r.summary ? `<p class="sum">${esc(r.summary)}</p>` : ''}<div class="meta"><span class="price">${esc(FC.priceText(r))}</span></div></div></a>`).join('')}</div></section>`;
+        if (wk.length) h += `<section class="rel"><h2>Built for clients</h2><div class="grid">${wk.map((w) => `<a class="card" href="${FC.link.work(w.slug)}"><div class="ph" data-bg="${esc(FC.img((w.images || [])[0] || '', 640))}"></div><div class="bd"><span class="eyebrow" style="font-size:10px">${esc(w.type || '')} · ${esc(w.location || '')}</span><h3>${esc(w.title)}</h3></div></a>`).join('')}</div></section>`;
+        if (more.length) h += `<section class="rel"><h2>Keep reading</h2><div class="posts" style="padding:0">${withCat(more).map((x) => card(x)).join('')}</div></section>`;
+        $('#main').insertAdjacentHTML('beforeend', h);
+      }).catch(() => {});
+    }).catch(() => { if (!ssr) $('#main').innerHTML = '<p class="empty">This article could not load just now. Please refresh.</p>'; });
+  }
+  kind === 'post' ? post() : index();
+})();
+</script>
+</body>
+</html>
