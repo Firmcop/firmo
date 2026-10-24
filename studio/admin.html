@@ -200,8 +200,8 @@ where email = '${esc(ME.email)}';</pre>
 // ---------- shell ----------
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
-  ['builds', 'Client builds', 'variations_pending'], ['collection', 'Collection'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Investments'],
-  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['blog', 'Blog'], ['seo', 'SEO'], ['subscribers', 'Subscribers'], ['media', 'Photos'], ['settings', 'Site settings'], ['team', 'Team']
+  ['builds', 'Client builds', 'variations_pending'], ['collection', 'Collection'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Invest'],
+  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['blog', 'Blog'], ['seo', 'SEO'], ['subscribers', 'Subscribers'], ['media', 'Photos'], ['ai', 'AI helper'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
   root.innerHTML = `<div class="app"><aside><a class="brand" href="Main.dc.html" title="Open the website"><b>FIRMCOP</b><small>Admin</small></a>
@@ -629,6 +629,42 @@ VIEWS.media = async (m) => {
   $('#mall', m).onclick = async (e) => { const b = e.target; b.disabled = true; try { for (const prefix of ['', 'imported', 'catalog', 'works', 'categories']) { $('#mrun', m).textContent = 'Checking ' + (prefix || 'top folder') + '…'; await mediaFn({ action: 'optimize-all', prefix }); } $('#mrun', m).textContent = 'All photos checked.'; await load(); } catch (ex) { toast(ex.message, true); } b.disabled = false; };
   await load();
 };
+// ---------- AI helper: Firmcop's own AI service (one function, any provider) ----------
+async function aiCall(body) {
+  const cfg = window.FC_SUPA, t = await FC.auth.token();
+  const r = await fetch(cfg.url + '/functions/v1/ai', { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'The AI helper did not answer (' + r.status + ')'); return j;
+}
+const AI_PROVIDERS = [['gemini', 'Google Gemini', 'GEMINI_API_KEY', 'aistudio.google.com › Get API key. Same family of models the old site used; a free tier is available with limits.'],
+  ['anthropic', 'Claude (Anthropic)', 'ANTHROPIC_API_KEY', 'console.anthropic.com › API keys. Pay as you go.'],
+  ['openai', 'OpenAI', 'OPENAI_API_KEY', 'platform.openai.com › API keys. Pay as you go.'],
+  ['openrouter', 'OpenRouter', 'AI_API_KEY', 'openrouter.ai › Keys. One key for many models.']];
+VIEWS.ai = async (m) => {
+  m.innerHTML = '<p class="muted">Loading…</p>';
+  const [st, rows, sets] = await Promise.all([aiCall({ task: 'status' }).catch((e) => ({ error: e.message })), api('ai_usage?select=*&order=at.desc&limit=60').catch(() => []), api('site_settings?select=key,value&key=in.(ai_provider,ai_model,ai_monthly_cap)').catch(() => [])]);
+  const s = Object.fromEntries(sets.map((x) => [x.key, x.value])), on = !!st.provider;
+  const byTask = {}; rows.filter((r) => r.ok).forEach((r) => { byTask[r.task] = (byTask[r.task] || 0) + 1; });
+  const TASK_L = { blog_draft: 'Blog drafts', invest_description: 'Invest descriptions', product_description: 'Product descriptions', test: 'Tests' };
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>AI helper</h1></div></div>
+    <p class="muted" style="margin-top:0">Firmcop's own AI service. Blog drafts, Invest descriptions and product descriptions all go through it, so the provider, the monthly limit and the usage record are in one place.</p>
+    <div class="tiles">${[[on ? 'On' : 'Off', on ? (AI_PROVIDERS.find((p) => p[0] === st.provider) || [])[1] : 'No AI key yet'], [st.used == null ? '–' : st.used, 'Requests this month'], [st.cap || s.ai_monthly_cap || 300, 'Monthly limit'], [esc(st.model || '–'), 'Model']].map(([n, l]) => `<div class="tile" style="cursor:default"><div class="n" style="font-size:${String(n).length > 8 ? 22 : 40}px">${n}</div><div class="l">${l}</div></div>`).join('')}</div>
+    ${on ? '' : `<section class="card" style="background:#FFF6E5;border-color:#E9C98A"><h3 style="margin-top:0">Switch it on</h3><ol class="small" style="margin:0;padding-left:18px;display:grid;gap:6px"><li>Create a key with one of the services below.</li><li>In Supabase, open the <b>firmo</b> project › Edge Functions › Secrets › Add new secret.</li><li>Use the name shown for that service, paste the key as the value, and save. Never paste keys into chats or emails.</li><li>Come back here and press <b>Test</b>.</li></ol></section>`}
+    <section class="card" style="margin-top:12px"><h3 style="margin-top:0">Services</h3><div class="tablewrap"><table><thead><tr><th>Service</th><th>Secret name</th><th>Key</th><th>Where to get one</th></tr></thead><tbody>
+      ${AI_PROVIDERS.map(([k, l, n, w]) => `<tr><td>${esc(l)}${st.provider === k ? ' <span class="pill yes">in use</span>' : ''}</td><td class="mono small">${n}</td><td>${st.keys && st.keys[k] ? pill('yes') : '<span class="small muted">not set</span>'}</td><td class="small">${esc(w)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card" style="margin-top:12px"><h3 style="margin-top:0">Settings</h3><form class="f" id="aif">
+      <label class="fl">Service<select name="ai_provider">${[['auto', 'Automatic (whichever key is set)']].concat(AI_PROVIDERS.map((p) => [p[0], p[1]])).map(([k, l]) => `<option value="${k}" ${(s.ai_provider || 'auto') === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      <label class="fl">Model <span class="hint">empty = ${esc(st.defaults && st.provider ? st.defaults[st.provider] : 'the service default')}</span><input name="ai_model" value="${esc(s.ai_model || '')}"></label>
+      <label class="fl">Monthly limit (requests)<input name="ai_monthly_cap" type="number" min="1" value="${esc(s.ai_monthly_cap || 300)}"></label>
+      <div class="wide tools"><button class="btn" type="submit">Save</button><button class="btn line" type="button" id="aitest">Test</button><span class="small" id="aitst" role="status"></span></div></form></section>
+    <section class="card" style="margin-top:12px"><h3 style="margin-top:0">Recent use</h3><p class="small muted" style="margin-top:0">${Object.entries(byTask).map(([k, n]) => esc(TASK_L[k] || k) + ': ' + n).join(' · ') || 'Nothing yet.'}</p>
+      <div class="tablewrap"><table><thead><tr><th>When</th><th>What</th><th>Service</th><th class="n">Words in / out</th><th class="n">Seconds</th><th>Result</th></tr></thead><tbody>${rows.map((r) => `<tr><td class="small">${when(r.at)}</td><td>${esc(TASK_L[r.task] || r.task)}</td><td class="small">${esc(r.provider || '')} <span class="muted">${esc(r.model || '')}</span></td><td class="n small">${r.input_tokens ? fmt(Math.round(r.input_tokens * 0.75)) + ' / ' + fmt(Math.round((r.output_tokens || 0) * 0.75)) : ''}</td><td class="n small">${r.ms ? (r.ms / 1000).toFixed(1) : ''}</td><td>${r.ok ? pill('done') : `<span class="pill lost">failed</span> <span class="small muted">${esc(r.error || '')}</span>`}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No AI requests yet.</td></tr>'}</tbody></table></div></section>`;
+  $('#aif', m).onsubmit = async (e) => { e.preventDefault(); const f = e.target;
+    await guard(Promise.all(['ai_provider', 'ai_model', 'ai_monthly_cap'].map((k) => api('site_settings?on_conflict=key', { method: 'POST', body: { key: k, value: String(f.elements[k].value).trim(), updated_at: new Date().toISOString() }, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } }))), 'Saved'); VIEWS.ai(m); };
+  $('#aitest', m).onclick = async (e) => { const b = e.target, o = $('#aitst', m); b.disabled = true; o.textContent = 'Testing…';
+    try { const r = await aiCall({ task: 'test' }); o.textContent = 'Working: ' + (r.hello || 'reply received') + ' (' + r.provider + ', ' + r.model + ')'; } catch (ex) { o.textContent = ex.message; }
+    b.disabled = false; };
+};
+
 // ---------- Blog: ideas, drafts, AI drafts, review, publishing ----------
 const BLOG_ST = [['idea', 'Ideas'], ['draft', 'Drafts'], ['review', 'In review'], ['scheduled', 'Scheduled'], ['published', 'Published'], ['archived', 'Archived']];
 const BLOG_ST_LABEL = Object.fromEntries(BLOG_ST.map(([k, l]) => [k, l.replace(/s$/, '').replace('Idea', 'Idea').replace('In review', 'In review')]));
@@ -661,11 +697,6 @@ function blogChecks(p) {
 }
 function snippet(title, url, desc) {
   return `<div style="border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:#fff;font-family:Arial,sans-serif"><div style="font-size:12px;color:#4d5156">${esc(url)}</div><div style="color:#1a0dab;font-size:19px;line-height:1.3;margin:2px 0">${esc((title || '').slice(0, 64))}${(title || '').length > 64 ? '…' : ''}</div><div style="color:#4d5156;font-size:13.5px;line-height:1.45">${esc((desc || '').slice(0, 160))}${(desc || '').length > 160 ? '…' : ''}</div></div>`;
-}
-async function aiFn(body) {
-  const cfg = window.FC_SUPA, t = await FC.auth.token();
-  const r = await fetch(cfg.url + '/functions/v1/blog-ai-draft', { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
-  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'The AI helper did not answer (' + r.status + ')'); return j;
 }
 VIEWS.blog = async (m) => {
   BLOG_CATS = await api('blog_categories?select=*&order=sort.asc').catch(() => []);
@@ -805,7 +836,7 @@ async function editPost(id, reload) {
       if (dirty) await save(null, 'Saved before drafting');
       b.disabled = true; const stx = $('#baist', d.el); stx.textContent = 'Writing a first draft… this takes about a minute.';
       try {
-        const r = await aiFn({ post_id: p.id });
+        const r = await aiCall({ task: 'blog_draft', post_id: p.id });
         ed.innerHTML = r.body_html; if (!bf.excerpt.value && r.excerpt) bf.excerpt.value = r.excerpt; if (!bs.seo_description.value && r.seo_description) bs.seo_description.value = r.seo_description; if (!bs.seo_title.value && r.seo_title) bs.seo_title.value = r.seo_title;
         if (r.related_products) r.related_products.forEach((s) => { if (!state.related_products.includes(s) && prods.some((x) => x.slug === s)) state.related_products.push(s); });
         bp.needs_expansion.checked = true; if (bp.status.value === 'idea') bp.status.value = 'draft';
@@ -1009,15 +1040,256 @@ async function workDetail(r, d, reload, tab) {
   box.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { if (!confirmInline(b, 'Sure?')) return; const i = +b.closest('[data-i]').dataset.i, l = caps(); l.splice(i, 1); save(l, 'Removed'); });
 }
 
-VIEWS.opps = (m) => listView(m, {
-  table: 'investment_opportunities', title: 'Investments', eyebrow: 'Invest', order: 'sort.asc', search: ['name', 'place', 'sector'],
-  cols: [{ k: 'name', label: 'Opportunity' }, { k: 'sector', label: 'Sector' }, { k: 'place', label: 'Place' }, { k: 'units', label: 'Reserved', n: true, fmt: (v, r) => r.taken + ' / ' + v }, { k: 'price', label: 'Per unit', n: true, fmt: kes }, { k: 'yield_lo', label: 'Yield', fmt: (v, r) => v != null ? esc(v + '–' + r.yield_hi + '%') : '' }, { k: 'published', label: 'On website', fmt: yes }],
-  fields: [{ k: 'name', label: 'Name', req: true, wide: true }, { k: 'slug', label: 'Web address' }, { k: 'sector', label: 'Sector', type: 'select', options: ['Hospitality', 'Retail', 'Residential', 'Commercial', 'Industrial'] }, { k: 'place', label: 'Place' }, { k: 'spec', label: 'What it is', wide: true },
-    { k: 'units', label: 'Units', type: 'number', req: true }, { k: 'taken', label: 'Units reserved', type: 'number' }, { k: 'price', label: 'Price per unit (KES)', type: 'money' }, { k: 'opens', label: 'Opens', hint: 'e.g. Q2 2027' },
-    { k: 'yield_lo', label: 'Yield from (%)', type: 'number' }, { k: 'yield_hi', label: 'Yield to (%)', type: 'number' }, { k: 'status_label', label: 'Status label', hint: 'e.g. Building now' }, { k: 'own_terms', label: 'What you own' },
-    { k: 'operator', label: 'Operator' }, { k: 'split', label: 'Income split' }, { k: 'story', label: 'Story', type: 'textarea' }, { k: 'image_url', label: 'Image URL', type: 'url' }, { k: 'pack_url', label: 'Information pack URL (PDF)', type: 'url' }, { k: 'sort', label: 'Order', type: 'number' }, { k: 'published', label: 'Show on the website', type: 'bool' }],
-  defaults: { sector: 'Hospitality', units: 10, taken: 0, published: false, sort: 100 }, newLabel: 'Add an opportunity', canDelete: true, slugFrom: 'name'
-});
+// ---------- Invest: investment models (plans or real builds, off-plan to completed) ----------
+const INV_STAGE = [['offplan', 'Off-plan'], ['building', 'Building now'], ['ready', 'Ready to buy'], ['completed', 'Completed and earning']];
+const INV_STAGE_LABEL = Object.fromEntries(INV_STAGE);
+const INV_MIN_PHOTOS = 6, INV_MIN_VIDEOS = 1;
+const ytId = (u) => { const m = String(u || '').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/); return m ? m[1] : ''; };
+const vimeoId = (u) => { const m = String(u || '').match(/vimeo\.com\/(?:video\/)?(\d+)/); return m ? m[1] : ''; };
+const isVideoFile = (u) => /\.(mp4|webm|mov)(\?|$)/i.test(String(u || ''));
+function mediaThumb(x) {
+  if (x.type === 'video') {
+    const y = ytId(x.url);
+    if (x.poster) return `<img src="${esc(FC.img ? FC.img(x.poster, 200) : x.poster)}" alt="">`;
+    if (y) return `<img src="https://img.youtube.com/vi/${y}/mqdefault.jpg" alt="">`;
+    if (isVideoFile(x.url)) return `<video src="${esc(x.url)}#t=1" muted preload="metadata"></video>`;
+    return '<span class="pill">video</span>';
+  }
+  return `<img src="${esc(FC.img ? FC.img(x.url, 200) : x.url)}" alt="">`;
+}
+function invChecks(o, units) {
+  const media = o.media || [], ph = media.filter((x) => x.type !== 'video').length, vd = media.filter((x) => x.type === 'video').length;
+  const plan = o.payment_plan || [], sum = plan.reduce((a, x) => a + (Number(x.pct) || 0), 0);
+  const avail = units.length ? units.filter((u) => u.status === 'available').length : Math.max(0, (o.units || 0) - (o.taken || 0));
+  return [
+    [ph >= INV_MIN_PHOTOS, `${ph} photo${ph === 1 ? '' : 's'}`, `Add at least ${INV_MIN_PHOTOS} photos: outside, inside, the view, the site, and finishes. Investors buy from pictures.`],
+    [vd >= INV_MIN_VIDEOS, `${vd} video${vd === 1 ? '' : 's'}`, 'Add a walk-through or site video: upload a short clip (up to 50 MB) or paste a YouTube or Vimeo link.'],
+    [!!(o.basis === 'work' ? o.work_slug : (o.design_slug || o.product_slug)), o.basis === 'work' ? 'Linked to a real build' : 'Linked to a detailed plan', o.basis === 'work' ? 'Pick the build from Works this model is based on.' : 'Pick the Studio design or Collection product this model follows.'],
+    [!!(o.summary || '').trim() && (o.summary || '').length <= 220, 'Short summary', 'One or two sentences: what it is, where, and why it earns.'],
+    [(o.story || '').trim().length >= 300, 'Full description', 'Describe the location, the unit, who rents it and how it is run (300 characters or more).'],
+    [(o.highlights || []).length >= 3, `${(o.highlights || []).length} highlights`, 'List at least three highlights, e.g. "10 minutes from Naivasha town", "Managed by Firmcop Stays".'],
+    [Number(o.price) > 0, 'Price per unit', 'Set the price per unit in KES.'],
+    [!plan.length || Math.round(sum) === 100, plan.length ? `Payment plan adds to ${Math.round(sum)}%` : 'Payment plan (optional)', 'The payment milestones must add up to 100%.'],
+    [o.stage === 'completed' || o.stage === 'ready' || !!o.completion_date, 'Completion date', 'Off-plan and building models need an expected completion date.'],
+    [avail > 0, `${avail} unit${avail === 1 ? '' : 's'} available`, 'No units are available: add units or show it as sold out.'],
+    [!o.is_sample, 'Real model', 'This is a sample from the prototype. Replace its details with a real model, or hide it.'],
+  ];
+}
+VIEWS.opps = async (m) => {
+  const st = { s: location.hash.split('/')[1] || '', q: '' };
+  m.innerHTML = `<div class="top"><div><p class="eb">Invest</p><h1>Investment models</h1></div><div class="tools"><input class="q" type="search" placeholder="Search" aria-label="Search models"><button class="btn" type="button" id="inew">New model</button><a class="btn line" href="/invest" target="_blank" rel="noopener">See the Invest page</a></div></div>
+    <p class="muted" style="margin-top:0">Each model is a detailed plan or a real build that investors can buy into: off-plan, while building, ready, or completed and already earning. Give each one its own photos, video, units, prices and payment plan.</p>
+    <div class="tabs" role="tablist" style="margin-bottom:12px"><button type="button" role="tab" data-is="" aria-selected="${!st.s}">All</button>${INV_STAGE.map(([k, l]) => `<button type="button" role="tab" data-is="${k}" aria-selected="${st.s === k}">${l} <span class="badge" data-n="${k}"></span></button>`).join('')}</div>
+    <div class="tablewrap"><table><thead><tr><th>Model</th><th>Stage</th><th>Place</th><th class="n">Available</th><th class="n">Per unit</th><th>Photos · video</th><th>Checks</th><th>On website</th></tr></thead><tbody><tr><td colspan="8" class="empty">Loading…</td></tr></tbody></table></div>`;
+  const tb = $('tbody', m); let rows = [], units = [];
+  async function load() {
+    [rows, units] = await Promise.all([api('investment_opportunities?select=*&order=sort.asc,name.asc'), api('investment_units?select=opportunity_id,status')]);
+    m.querySelectorAll('[data-n]').forEach((b) => { const n = rows.filter((r) => r.stage === b.dataset.n).length; b.textContent = n || ''; b.hidden = !n; });
+    let list = st.s ? rows.filter((r) => r.stage === st.s) : rows;
+    if (st.q) { const q = st.q.toLowerCase(); list = list.filter((r) => (r.name + ' ' + (r.place || '') + ' ' + (r.sector || '')).toLowerCase().includes(q)); }
+    tb.innerHTML = list.map((r) => { const u = units.filter((x) => x.opportunity_id === r.id), ck = invChecks(r, u), ok = ck.filter((c) => c[0]).length;
+      const ph = (r.media || []).filter((x) => x.type !== 'video').length, vd = (r.media || []).filter((x) => x.type === 'video').length;
+      const avail = u.length ? u.filter((x) => x.status === 'available').length : Math.max(0, r.units - r.taken), total = u.length || r.units;
+      return `<tr class="row" tabindex="0" data-id="${r.id}"><td><b style="font-weight:600">${esc(r.name)}</b>${r.is_sample ? ' <span class="pill due">sample</span>' : ''}<br><span class="small muted">${r.basis === 'work' ? 'Real build' : 'Plan'}${r.unit_type ? ' · ' + esc(r.unit_type) : ''}</span></td>
+        <td><span class="pill inv-${esc(r.stage)}">${esc(INV_STAGE_LABEL[r.stage] || r.stage)}</span></td><td class="small">${esc(r.place || '')}</td><td class="n">${avail} / ${total}</td><td class="n">${kes(r.price)}</td>
+        <td class="small">${ph} · ${vd}${ph < INV_MIN_PHOTOS || vd < INV_MIN_VIDEOS ? ' <span class="pill due">add more</span>' : ''}</td><td><span class="pill ${ok === ck.length ? 'yes' : ok >= ck.length - 3 ? 'due' : ''}">${ok}/${ck.length}</span></td><td>${r.published ? pill('yes') : pill('no')}</td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">No models here yet.</td></tr>';
+    tb.querySelectorAll('tr.row').forEach((tr) => { const o = () => editModel(tr.dataset.id, load); tr.onclick = o; tr.onkeydown = (e) => { if (e.key === 'Enter') o(); }; });
+  }
+  m.querySelectorAll('[data-is]').forEach((b) => b.onclick = () => { st.s = b.dataset.is; history.replaceState(null, '', '#opps' + (st.s ? '/' + st.s : '')); m.querySelectorAll('[data-is]').forEach((x) => x.setAttribute('aria-selected', x === b)); load(); });
+  let t; $('.q', m).oninput = (e) => { clearTimeout(t); t = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 200); };
+  $('#inew', m).onclick = async () => {
+    const r = await guard(api('investment_opportunities', { method: 'POST', body: { name: 'New investment model', slug: 'model-' + Date.now().toString(36), stage: st.s || 'offplan', basis: 'plan', sector: 'Hospitality', units: 1, taken: 0, published: false, sort: 100 }, headers: { Prefer: 'return=representation' } }));
+    await load(); editModel(r[0].id, load);
+  };
+  await load();
+};
+const INV_CSS = `.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mtile{border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;display:flex;flex-direction:column}.mtile .th{aspect-ratio:4/3;background:#E7E1D6;display:grid;place-items:center;overflow:hidden;position:relative}.mtile .th img,.mtile .th video{width:100%;height:100%;object-fit:cover;display:block}.mtile .th b{position:absolute;left:6px;top:6px;background:rgba(13,12,10,.75);color:#fff;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px}.mtile input{border:0;border-top:1px solid var(--line);padding:6px 8px;font:inherit;font-size:12.5px;min-height:34px}.mtile .ac{display:flex;border-top:1px solid var(--line)}.mtile .ac button{flex:1;min-height:32px;border:0;background:#fff;cursor:pointer;font-size:13px}.mtile .ac button:hover{background:#F4F1EB}
+.pill.inv-offplan{background:#E7F1FB;color:#1D4E7A}.pill.inv-building{background:var(--warnbg);color:var(--warn)}.pill.inv-ready,.pill.inv-completed{background:var(--okbg);color:var(--ok)}
+.rowsx{display:grid;gap:6px}.rowsx .r{display:grid;grid-template-columns:minmax(0,2fr) 90px minmax(0,1.4fr) 36px;gap:6px}.rowsx .r.u{grid-template-columns:90px 80px 90px 130px 120px minmax(0,1fr) 36px}.rowsx input,.rowsx select{min-height:38px;border:1.5px solid #CFC6B5;border-radius:4px;padding:0 8px;font:inherit;font-size:14px;background:#fff;min-width:0}.rowsx .x{border:1px solid #CFC6B5;border-radius:4px;background:#fff;cursor:pointer}
+@media(max-width:760px){.rowsx .r,.rowsx .r.u{grid-template-columns:1fr 1fr}}`;
+async function editModel(id, reload) {
+  let o = (await api('investment_opportunities?select=*&id=eq.' + id))[0]; if (!o) return toast('That model is gone', true);
+  let units = await api('investment_units?select=*&opportunity_id=eq.' + id + '&order=sort.asc,code.asc');
+  const [designs, prods, wks] = await Promise.all([
+    api('ds_designs?select=slug,name,system,status&order=name.asc').catch(() => []),
+    api('catalog_products?select=slug,name,kind,cover_url,images,base_price&kind=in.(building,design)&order=name.asc&limit=1000').catch(() => []),
+    api('works?select=slug,title,location,images,gallery,video_url,area_m2,story,brief&order=title.asc').catch(() => []),
+  ]);
+  drawer(o.name, 'Invest · ' + (INV_STAGE_LABEL[o.stage] || ''), '', (d) => {
+    d.el.closest('.drawer').classList.add('xl');
+    const S = { media: (o.media || []).slice(), plan: (o.payment_plan || []).slice(), docs: (o.documents || []).slice() };
+    if (o.pack_url && !S.docs.some((x) => x.url === o.pack_url)) S.docs.unshift({ label: 'Information pack', url: o.pack_url });
+    const v = (k) => esc(o[k] == null ? '' : o[k]);
+    d.el.innerHTML = `<style>${EDITOR_CSS}${INV_CSS}</style>
+      ${o.is_sample ? '<div class="card" style="background:#FFF6E5;border-color:#E9C98A"><b>Sample from the prototype.</b> <span class="small">Replace the name, photos and figures with a real model, then untick “Sample” in Publish. Or hide it from the website.</span></div>' : ''}
+      <div class="bgrid"><div style="display:grid;gap:12px">
+        <section class="card"><h3 style="margin-top:0">The model</h3><form class="f" id="mf1" onsubmit="return false">
+          <label class="fl wide">Name<input name="name" value="${v('name')}" required></label>
+          <label class="fl">Web address <span class="hint">/invest/…</span><input name="slug" value="${v('slug')}"></label>
+          <label class="fl">Stage<select name="stage">${INV_STAGE.map(([k, l]) => `<option value="${k}" ${k === o.stage ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+          <label class="fl">Sector<select name="sector">${['Hospitality', 'Residential', 'Retail', 'Commercial', 'Industrial', 'Student housing'].map((x) => `<option ${x === o.sector ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+          <label class="fl">Unit type <span class="hint">e.g. 1-bed A-frame chalet</span><input name="unit_type" value="${v('unit_type')}"></label>
+          <label class="fl">Place<input name="place" value="${v('place')}" placeholder="e.g. Naivasha"></label>
+          <label class="fl">County<input name="county" value="${v('county')}" placeholder="e.g. Nakuru"></label>
+          <label class="fl wide">Map link <span class="hint">Google Maps share link (optional)</span><input name="map_url" value="${v('map_url')}"></label>
+          <label class="fl">Size per unit (m²)<input name="size_m2" type="number" step="0.1" value="${v('size_m2')}"></label>
+          <label class="fl">Bedrooms<input name="bedrooms" type="number" value="${v('bedrooms')}"></label>
+          <label class="fl">Bathrooms<input name="bathrooms" type="number" value="${v('bathrooms')}"></label>
+          <label class="fl">Expected completion<input name="completion_date" type="date" value="${v('completion_date')}"></label>
+          <label class="fl">Status line <span class="hint">e.g. Foundations done</span><input name="status_label" value="${v('status_label')}"></label>
+          <label class="fl">Handover <span class="hint">e.g. Furnished, ready to let</span><input name="handover" value="${v('handover')}"></label>
+          <label class="fl wide">Summary <span class="hint">one or two sentences, shown on cards</span><textarea name="summary" rows="2">${v('summary')}</textarea></label>
+          <label class="fl wide">Full description<textarea name="story" rows="7">${v('story')}</textarea></label>
+          <label class="fl wide">Highlights <span class="hint">one per line</span><textarea name="highlights" rows="4">${esc((o.highlights || []).join('\n'))}</textarea></label>
+        </form><div class="tools" style="margin-top:8px"><button class="btn line sm" type="button" id="mai">Draft the description with AI</button><span class="small muted" id="maist"></span></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Based on</h3>
+          <div class="tools" role="radiogroup" aria-label="Based on"><label class="ck"><input type="radio" name="basis" value="plan" ${o.basis !== 'work' ? 'checked' : ''}>A detailed plan</label><label class="ck"><input type="radio" name="basis" value="work" ${o.basis === 'work' ? 'checked' : ''}>A real build from Works</label></div>
+          <div id="bplan" ${o.basis === 'work' ? 'hidden' : ''}><form class="f" onsubmit="return false" id="mfb"><label class="fl">Studio design<select name="design_slug"><option value="">None</option>${designs.map((x) => `<option value="${esc(x.slug)}" ${x.slug === o.design_slug ? 'selected' : ''}>${esc(x.name)}${x.status !== 'published' ? ' (' + esc(x.status) + ')' : ''}</option>`).join('')}</select></label>
+            <label class="fl">Collection product<select name="product_slug"><option value="">None</option>${prods.map((x) => `<option value="${esc(x.slug)}" ${x.slug === o.product_slug ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label></form>
+            <p class="small muted" style="margin:6px 0 0">Investors can open the plan in the 3D Studio from the model page.</p><div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="fromprod">Copy photos from the product</button></div></div>
+          <div id="bwork" ${o.basis === 'work' ? '' : 'hidden'}><form class="f" onsubmit="return false" id="mfw"><label class="fl wide">Build from Works<select name="work_slug"><option value="">Choose a build</option>${wks.map((x) => `<option value="${esc(x.slug)}" ${x.slug === o.work_slug ? 'selected' : ''}>${esc(x.title)}${x.location ? ' · ' + esc(x.location) : ''}</option>`).join('')}</select></label></form>
+            <div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="fromwork">Copy photos and video from the build</button></div></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Photos and video</h3><p class="small muted" style="margin-top:0">At least ${INV_MIN_PHOTOS} photos and ${INV_MIN_VIDEOS} video. The first photo is the cover. Photos are shrunk automatically; video clips up to 50 MB, or paste a YouTube or Vimeo link for longer films.</p>
+          <div class="tools"><label class="btn line" style="cursor:pointer">Upload photos or video<input type="file" id="mup" multiple accept="image/*,video/mp4,video/webm,video/quicktime" style="position:absolute;left:-9999px"></label><input id="mlink" placeholder="YouTube or Vimeo link" style="min-height:44px;border:1.5px solid #BDB29C;border-radius:4px;padding:0 10px;min-width:220px;flex:1"><button class="btn line" type="button" id="maddlink">Add video link</button><span class="small muted" id="mstat"></span></div>
+          <div class="mgrid" id="mg" style="margin-top:12px"></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Units</h3><p class="small muted" style="margin-top:0">List each unit investors can buy. Available, reserved and sold counts update the website. Without a list, the totals below are used.</p>
+          <div id="unoun" ${units.length ? 'hidden' : ''}><form class="f" onsubmit="return false" id="mfu"><label class="fl">Units in total<input name="units" type="number" min="1" value="${v('units')}"></label><label class="fl">Units reserved or sold<input name="taken" type="number" min="0" value="${v('taken')}"></label></form></div>
+          <div class="rowsx" id="ul" style="margin-top:8px"></div>
+          <div class="tools" style="margin-top:10px"><button class="btn sm line" type="button" id="uadd">Add a unit</button><span class="small muted">or add</span><input id="ugn" type="number" min="1" max="200" value="10" aria-label="How many units" style="width:70px;min-height:36px;border:1.5px solid #CFC6B5;border-radius:4px;padding:0 8px"><input id="ugp" placeholder="Prefix, e.g. A" aria-label="Unit code prefix" style="width:120px;min-height:36px;border:1.5px solid #CFC6B5;border-radius:4px;padding:0 8px"><button class="btn sm line" type="button" id="ugen">Add units</button></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Price, payments and returns</h3><form class="f" onsubmit="return false" id="mfp">
+          <label class="fl">Price per unit (KES)<input name="price" type="number" step="1000" value="${v('price')}"></label>
+          <label class="fl">Deposit (%)<input name="deposit_pct" type="number" step="1" value="${v('deposit_pct')}"></label>
+          <label class="fl">Projected yield from (%)<input name="yield_lo" type="number" step="0.1" value="${v('yield_lo')}"></label>
+          <label class="fl">Projected yield to (%)<input name="yield_hi" type="number" step="0.1" value="${v('yield_hi')}"></label>
+          <label class="fl">Nightly rate (KES) <span class="hint">short stay</span><input name="rent_night" type="number" value="${v('rent_night')}"></label>
+          <label class="fl">Monthly rent (KES) <span class="hint">long let</span><input name="rent_month" type="number" value="${v('rent_month')}"></label>
+          <label class="fl">Occupancy assumed (%)<input name="occupancy_pct" type="number" value="${v('occupancy_pct')}"></label>
+          <label class="fl">Management fee (%)<input name="mgmt_fee_pct" type="number" value="${v('mgmt_fee_pct')}"></label>
+          <label class="fl">What you own<input name="own_terms" value="${v('own_terms')}" placeholder="e.g. Unit title, 99-year lease"></label>
+          <label class="fl">Operator<input name="operator" value="${v('operator')}" placeholder="e.g. Firmcop Stays"></label>
+          <label class="fl wide">Income split<input name="split" value="${v('split')}" placeholder="e.g. 70% owner, 30% operator"></label></form>
+          <h4 style="margin:14px 0 6px">Payment plan</h4><div class="rowsx" id="pl"></div><div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="pladd">Add a milestone</button><button class="btn sm line" type="button" id="plstd">Use 20 / 40 / 40</button><span class="small muted" id="plsum"></span></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Documents</h3><p class="small muted" style="margin-top:0">Information pack, title, approvals, sample agreement (PDF).</p><div class="rowsx" id="dl"></div>
+          <div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload a PDF<input type="file" id="dup" accept="application/pdf" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="dadd">Add a link</button></div></section>
+
+        <section class="card"><h3 style="margin-top:0">Search and sharing</h3><form class="f" onsubmit="return false" id="mfs"><label class="fl wide">Search title<input name="seo_title" value="${v('seo_title')}" placeholder="Leave empty to use the name"></label><label class="fl wide">Search description<textarea name="seo_description" rows="2" placeholder="Leave empty to use the summary">${v('seo_description')}</textarea></label></form><div id="msnip" style="margin-top:8px"></div></section>
+      </div>
+      <aside class="bside"><section class="card"><h3 style="margin-top:0">Publish</h3><form class="f" onsubmit="return false" id="mfx" style="grid-template-columns:1fr">
+          <label class="ck"><input type="checkbox" name="published" ${o.published ? 'checked' : ''}>Show on the website</label>
+          <label class="ck"><input type="checkbox" name="is_sample" ${o.is_sample ? 'checked' : ''}>Sample (not a real model)</label>
+          <label class="fl">Order on the page<input name="sort" type="number" value="${v('sort')}"></label></form>
+          <div class="tools" style="margin-top:10px"><button class="btn" type="button" id="msave">Save</button><button class="btn line" type="button" id="mpub">${o.published ? 'Save and update' : 'Publish'}</button></div>
+          <div class="tools" style="margin-top:8px"><a class="btn sm line" id="mprev" href="/invest/${encodeURIComponent(o.slug)}" target="_blank" rel="noopener">Open the page</a><button class="btn sm danger" type="button" id="mdel">Delete</button></div></section>
+        <section class="card"><h3 style="margin-top:0">Checks</h3><div class="bckl" id="mck"></div></section></aside></div>`;
+    const forms = ['#mf1', '#mfb', '#mfw', '#mfu', '#mfp', '#mfs', '#mfx'].map((s) => $(s, d.el));
+    const F = (n) => { for (const f of forms) if (f.elements[n]) return f.elements[n]; return null; };
+    const num = (n) => { const x = F(n); return x && x.value !== '' ? Number(x.value) : null; };
+    const txt = (n) => { const x = F(n); return x ? (x.value.trim() || null) : null; };
+    const basis = () => d.el.querySelector('input[name=basis]:checked').value;
+    const current = () => ({ ...o, name: txt('name') || 'Untitled model', slug: slugify(/^model-[a-z0-9]+$/.test(F('slug').value) && !o.published ? F('name').value : (F('slug').value || F('name').value)), stage: F('stage').value, sector: F('sector').value, unit_type: txt('unit_type'), place: txt('place'), county: txt('county'), map_url: txt('map_url'),
+      size_m2: num('size_m2'), bedrooms: num('bedrooms'), bathrooms: num('bathrooms'), completion_date: txt('completion_date'), status_label: txt('status_label'), handover: txt('handover'), summary: txt('summary'), story: txt('story'),
+      highlights: F('highlights').value.split('\n').map((x) => x.trim()).filter(Boolean), basis: basis(), design_slug: basis() === 'plan' ? txt('design_slug') : null, product_slug: basis() === 'plan' ? txt('product_slug') : null, work_slug: basis() === 'work' ? txt('work_slug') : null,
+      units: units.length ? o.units : Math.max(1, num('units') || 1), taken: units.length ? o.taken : Math.max(0, num('taken') || 0), price: num('price'), deposit_pct: num('deposit_pct'), yield_lo: num('yield_lo'), yield_hi: num('yield_hi'), rent_night: num('rent_night'), rent_month: num('rent_month'),
+      occupancy_pct: num('occupancy_pct'), mgmt_fee_pct: num('mgmt_fee_pct'), own_terms: txt('own_terms'), operator: txt('operator'), split: txt('split'), seo_title: txt('seo_title'), seo_description: txt('seo_description'),
+      published: F('published').checked, is_sample: F('is_sample').checked, sort: num('sort') == null ? 100 : num('sort'),
+      media: S.media, payment_plan: S.plan.filter((x) => x.label || x.pct), documents: S.docs.filter((x) => x.url),
+      image_url: (S.media.find((x) => x.type !== 'video') || {}).url || null, pack_url: (S.docs.find((x) => /pack/i.test(x.label || '')) || S.docs[0] || {}).url || null });
+    let dirty = false; const mark = () => { dirty = true; $('#msave', d.el).textContent = 'Save changes'; side(); };
+    function side() {
+      const c = current();
+      $('#mck', d.el).innerHTML = invChecks(c, units).map(([ok, l, h]) => `<div class="${ok ? 'ok' : 'no'}"><i>${ok ? '✓' : '!'}</i><span>${esc(l)}</span>${ok ? '' : `<small>${esc(h)}</small>`}</div>`).join('');
+      const sum = S.plan.reduce((a, x) => a + (Number(x.pct) || 0), 0); $('#plsum', d.el).textContent = S.plan.length ? 'Adds to ' + Math.round(sum) + '%' : '';
+      $('#msnip', d.el).innerHTML = snippet((c.seo_title || c.name) + ' · Invest · Firmcop', location.origin + '/invest/' + c.slug, c.seo_description || c.summary || '');
+    }
+    function drawMedia() {
+      $('#mg', d.el).innerHTML = S.media.map((x, i) => `<div class="mtile" data-i="${i}"><div class="th">${mediaThumb(x)}<b>${i === S.media.findIndex((y) => y.type !== 'video') ? 'cover' : x.type === 'video' ? 'video' : ''}</b></div>
+        <input data-cap value="${esc(x.caption || '')}" placeholder="Caption" aria-label="Caption">${x.type === 'video' && !ytId(x.url) && !vimeoId(x.url) ? `<input data-poster value="${esc(x.poster || '')}" placeholder="Poster photo link (optional)" aria-label="Poster photo">` : ''}
+        <div class="ac"><button type="button" data-mv="-1" aria-label="Move earlier">←</button><button type="button" data-mv="1" aria-label="Move later">→</button><button type="button" data-rm aria-label="Remove">✕</button></div></div>`).join('') || '<p class="small muted" style="margin:0">No photos or video yet.</p>';
+      d.el.querySelectorAll('.mtile').forEach((t) => { const i = +t.dataset.i;
+        t.querySelector('[data-cap]').oninput = (e) => { S.media[i].caption = e.target.value; mark(); };
+        const po = t.querySelector('[data-poster]'); if (po) po.oninput = (e) => { S.media[i].poster = e.target.value.trim(); mark(); };
+        t.querySelectorAll('[data-mv]').forEach((b) => b.onclick = () => { const j = i + Number(b.dataset.mv); if (j < 0 || j >= S.media.length) return; [S.media[i], S.media[j]] = [S.media[j], S.media[i]]; drawMedia(); mark(); });
+        t.querySelector('[data-rm]').onclick = () => { S.media.splice(i, 1); drawMedia(); mark(); }; });
+    }
+    function drawPlan() {
+      $('#pl', d.el).innerHTML = S.plan.map((x, i) => `<div class="r" data-i="${i}"><input data-k="label" value="${esc(x.label || '')}" placeholder="Milestone, e.g. Deposit" aria-label="Milestone"><input data-k="pct" type="number" value="${esc(x.pct == null ? '' : x.pct)}" placeholder="%" aria-label="Percent"><input data-k="when" value="${esc(x.when || '')}" placeholder="When, e.g. On signing" aria-label="When"><button class="x" type="button" data-rm aria-label="Remove">✕</button></div>`).join('');
+      d.el.querySelectorAll('#pl .r').forEach((r) => { const i = +r.dataset.i;
+        r.querySelectorAll('[data-k]').forEach((el) => el.oninput = () => { S.plan[i][el.dataset.k] = el.dataset.k === 'pct' ? Number(el.value) : el.value; mark(); });
+        r.querySelector('[data-rm]').onclick = () => { S.plan.splice(i, 1); drawPlan(); mark(); }; });
+    }
+    function drawDocs() {
+      $('#dl', d.el).innerHTML = S.docs.map((x, i) => `<div class="r" data-i="${i}" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr) 36px"><input data-k="label" value="${esc(x.label || '')}" placeholder="Name, e.g. Information pack" aria-label="Document name"><input data-k="url" value="${esc(x.url || '')}" placeholder="Link" aria-label="Document link"><button class="x" type="button" data-rm aria-label="Remove">✕</button></div>`).join('') || '<p class="small muted" style="margin:0">No documents yet.</p>';
+      d.el.querySelectorAll('#dl .r').forEach((r) => { const i = +r.dataset.i;
+        r.querySelectorAll('[data-k]').forEach((el) => el.oninput = () => { S.docs[i][el.dataset.k] = el.value.trim(); mark(); });
+        r.querySelector('[data-rm]').onclick = () => { S.docs.splice(i, 1); drawDocs(); mark(); }; });
+    }
+    function drawUnits() {
+      $('#unoun', d.el).hidden = !!units.length;
+      $('#ul', d.el).innerHTML = units.length ? `<div class="r u small muted" aria-hidden="true"><span>Unit</span><span>Floor</span><span>m²</span><span>Price (KES)</span><span>Status</span><span>Note on the website</span><span></span></div>` + units.map((u) => `<div class="r u" data-id="${u.id}"><input data-k="code" value="${esc(u.code)}" aria-label="Unit code"><input data-k="floor" value="${esc(u.floor || '')}" aria-label="Floor"><input data-k="size_m2" type="number" step="0.1" value="${esc(u.size_m2 == null ? '' : u.size_m2)}" aria-label="Size"><input data-k="price" type="number" value="${esc(u.price == null ? '' : u.price)}" placeholder="${esc(o.price || '')}" aria-label="Price"><select data-k="status" aria-label="Status">${['available', 'reserved', 'sold', 'held'].map((s) => `<option ${s === u.status ? 'selected' : ''}>${s}</option>`).join('')}</select><input data-k="note" value="${esc(u.note || '')}" placeholder="e.g. Corner, garden" aria-label="Note"><button class="x" type="button" data-rm aria-label="Remove unit">✕</button></div>`).join('') : '';
+      d.el.querySelectorAll('#ul .r[data-id]').forEach((r) => {
+        r.querySelectorAll('[data-k]').forEach((el) => el.onchange = async () => { const k = el.dataset.k, val = el.type === 'number' ? (el.value === '' ? null : Number(el.value)) : (el.value.trim() || (k === 'code' ? 'U' : null));
+          await guard(api('investment_units?id=eq.' + r.dataset.id, { method: 'PATCH', body: { [k]: val, updated_at: new Date().toISOString() } }), 'Unit saved'); const u = units.find((x) => x.id === r.dataset.id); u[k] = val; await refreshCounts2(); });
+        r.querySelector('[data-rm]').onclick = async (e) => { if (!confirmInline(e.target, '?')) return; await guard(api('investment_units?id=eq.' + r.dataset.id, { method: 'DELETE' }), 'Unit removed'); units = units.filter((x) => x.id !== r.dataset.id); drawUnits(); await refreshCounts2(); };
+      });
+      side();
+    }
+    async function refreshCounts2() { const r = await api('investment_opportunities?select=units,taken&id=eq.' + o.id); if (r[0]) { o.units = r[0].units; o.taken = r[0].taken; } side(); reload(); }
+    async function addUnits(n, prefix) {
+      const used = new Set(units.map((u) => u.code)); const rows = []; let k = 1;
+      while (rows.length < n) { const code = (prefix || '') + String(k).padStart(2, '0'); if (!used.has(code)) rows.push({ opportunity_id: o.id, code, status: 'available', size_m2: num('size_m2'), sort: units.length + rows.length }); k++; }
+      const r = await guard(api('investment_units', { method: 'POST', body: rows, headers: { Prefer: 'return=representation' } }), n + ' unit' + (n === 1 ? '' : 's') + ' added'); units = units.concat(r); drawUnits(); await refreshCounts2();
+    }
+    forms.forEach((f) => f.addEventListener('input', mark));
+    d.el.querySelectorAll('input[name=basis]').forEach((r) => r.onchange = () => { $('#bplan', d.el).hidden = basis() === 'work'; $('#bwork', d.el).hidden = basis() !== 'work'; mark(); });
+    $('#mup', d.el).onchange = async (e) => { const files = [...e.target.files], stat = $('#mstat', d.el);
+      for (let i = 0; i < files.length; i++) { const f = files[i]; stat.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + '…';
+        if (/^video\//.test(f.type) && f.size > 50 * 1048576) { toast(f.name + ' is over 50 MB: put it on YouTube or Vimeo and paste the link', true); continue; }
+        try { const url = await uploadFile(f, 'invest/' + (o.slug || 'model')); S.media.push({ type: /^video\//.test(f.type) ? 'video' : 'photo', url, caption: '' }); } catch (ex) { toast(ex.message, true); } }
+      stat.textContent = ''; e.target.value = ''; drawMedia(); mark(); };
+    $('#maddlink', d.el).onclick = () => { const u = $('#mlink', d.el).value.trim(); if (!ytId(u) && !vimeoId(u) && !isVideoFile(u)) return toast('Paste a YouTube or Vimeo link', true); S.media.push({ type: 'video', url: u, caption: '' }); $('#mlink', d.el).value = ''; drawMedia(); mark(); };
+    const addPhotos = (urls) => { let n = 0; urls.filter(Boolean).forEach((u) => { if (!S.media.some((x) => x.url === u)) { S.media.push({ type: isVideoFile(u) || ytId(u) || vimeoId(u) ? 'video' : 'photo', url: u, caption: '' }); n++; } }); drawMedia(); mark(); toast(n ? n + ' added' : 'Nothing new to add'); };
+    $('#fromwork', d.el).onclick = () => { const w = wks.find((x) => x.slug === F('work_slug').value); if (!w) return toast('Choose the build first', true);
+      addPhotos([...(w.images || []), ...((w.gallery || []).map((g) => g && g.url)), w.video_url]);
+      if (!F('story').value && (w.story || w.brief)) { F('story').value = w.story || w.brief; } if (!F('size_m2').value && w.area_m2) F('size_m2').value = w.area_m2; mark(); };
+    $('#fromprod', d.el).onclick = () => { const p = prods.find((x) => x.slug === F('product_slug').value); if (!p) return toast('Choose the product first', true); addPhotos([p.cover_url, ...(p.images || [])]); if (!F('price').value && p.base_price) { F('price').value = Math.round(p.base_price); mark(); } };
+    $('#pladd', d.el).onclick = () => { S.plan.push({ label: '', pct: null, when: '' }); drawPlan(); mark(); };
+    $('#plstd', d.el).onclick = () => { S.plan = [{ label: 'Deposit', pct: 20, when: 'On signing' }, { label: 'Structure complete', pct: 40, when: 'When the frame is up' }, { label: 'Handover', pct: 40, when: 'At completion' }]; drawPlan(); mark(); };
+    $('#dadd', d.el).onclick = () => { S.docs.push({ label: '', url: '' }); drawDocs(); mark(); };
+    $('#dup', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const url = await guard(uploadFile(f, 'invest/' + (o.slug || 'model') + '/docs'), 'Uploaded'); S.docs.push({ label: f.name.replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '), url }); e.target.value = ''; drawDocs(); mark(); };
+    $('#uadd', d.el).onclick = () => addUnits(1, $('#ugp', d.el).value.trim());
+    $('#ugen', d.el).onclick = () => { const n = Math.min(200, Math.max(1, Number($('#ugn', d.el).value) || 1)); addUnits(n, $('#ugp', d.el).value.trim()); };
+    async function save(extra, msg) {
+      const c = Object.assign(current(), extra || {}); const body = {};
+      ['name', 'slug', 'stage', 'sector', 'unit_type', 'place', 'county', 'map_url', 'size_m2', 'bedrooms', 'bathrooms', 'completion_date', 'status_label', 'handover', 'summary', 'story', 'highlights', 'basis', 'design_slug', 'product_slug', 'work_slug',
+        'price', 'deposit_pct', 'yield_lo', 'yield_hi', 'rent_night', 'rent_month', 'occupancy_pct', 'mgmt_fee_pct', 'own_terms', 'operator', 'split', 'seo_title', 'seo_description', 'published', 'is_sample', 'sort', 'media', 'payment_plan', 'documents', 'image_url', 'pack_url'].forEach((k) => { body[k] = c[k]; });
+      if (!units.length) { body.units = c.units; body.taken = Math.min(c.taken, c.units); }
+      if (c.completion_date && !c.opens) body.opens = new Date(c.completion_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      body.spec = [c.unit_type, c.size_m2 ? c.size_m2 + ' m²' : '', c.bedrooms ? c.bedrooms + ' bed' : ''].filter(Boolean).join(' · ') || o.spec || null;
+      body.updated_at = new Date().toISOString();
+      const r = await guard(api('investment_opportunities?id=eq.' + o.id, { method: 'PATCH', body, headers: { Prefer: 'return=representation' } }), msg || 'Saved');
+      o = r[0]; dirty = false; $('#msave', d.el).textContent = 'Saved'; d.setTitle(o.name); $('#mprev', d.el).href = '/invest/' + encodeURIComponent(o.slug); reload(); side(); return o;
+    }
+    $('#msave', d.el).onclick = () => save();
+    $('#mpub', d.el).onclick = async (e) => { const bad = invChecks(current(), units).filter((c) => !c[0]); if (bad.length && !confirmInline(e.target, bad.length + ' checks open. Publish anyway?')) return; F('published').checked = true; await save({ published: true }, 'Published'); if (typeof pingNew === 'function') pingNew('/invest/' + o.slug); };
+    $('#mdel', d.el).onclick = async (e) => { if (!confirmInline(e.target, 'Delete this model and its units?')) return; await guard(api('investment_opportunities?id=eq.' + o.id, { method: 'DELETE' }), 'Deleted'); d.close(); reload(); };
+    $('#mai', d.el).onclick = async (e) => {
+      if (dirty) await save(null, 'Saved before drafting');
+      const b = e.target, stx = $('#maist', d.el); b.disabled = true; stx.textContent = 'Writing…';
+      try { const r = await aiCall({ task: 'invest_description', id: o.id });
+        if (r.summary && !F('summary').value.trim()) F('summary').value = r.summary;
+        if (r.story) F('story').value = r.story; if (r.highlights && r.highlights.length && !F('highlights').value.trim()) F('highlights').value = r.highlights.join('\n');
+        mark(); stx.textContent = 'Draft written. Check every figure before publishing.';
+      } catch (ex) { stx.textContent = ex.message; }
+      b.disabled = false;
+    };
+    drawMedia(); drawPlan(); drawDocs(); drawUnits(); side();
+  });
+}
 
 VIEWS.subscribers = (m) => listView(m, {
   table: 'newsletter_subscribers', title: 'Subscribers', eyebrow: 'Marketing', search: ['email', 'source'],

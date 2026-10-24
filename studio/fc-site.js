@@ -354,7 +354,7 @@
 
 
   // ---------- shared header for pages outside the canvas prototype ----------
-  const NAV = [['collection.html', 'Collection'], ['Invest.dc.html', 'Invest'], ['Projects.dc.html', 'Works'], ['/blog', 'Blog'], ['atelier.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
+  const NAV = [['collection.html', 'Collection'], ['/invest', 'Invest'], ['Projects.dc.html', 'Works'], ['/blog', 'Blog'], ['atelier.html', 'Atelier'], ['3d-studio.html', '3D Studio'], ['Portal.dc.html', 'My builds']];
   FC.header = function (el, active) {
     if (!el) return;
     el.className = 'fc-head';

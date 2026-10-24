@@ -46,6 +46,14 @@
       "destination": "/api/page?kind=post&slug=:slug"
     },
     {
+      "source": "/invest",
+      "destination": "/api/page?kind=invest"
+    },
+    {
+      "source": "/invest/:slug",
+      "destination": "/api/page?kind=model&slug=:slug"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },
@@ -60,7 +68,7 @@
   ],
   "functions": {
     "api/page.js": {
-      "includeFiles": "{product,work,blog,404}.html"
+      "includeFiles": "{product,work,blog,invest,404}.html"
     },
     "api/go.js": {
       "includeFiles": "404.html"
@@ -110,6 +118,16 @@
     {
       "source": "/2x4",
       "destination": "/2x4.html",
+      "permanent": false
+    },
+    {
+      "source": "/Opportunities.dc.html",
+      "destination": "/invest",
+      "permanent": true
+    },
+    {
+      "source": "/Invest.dc.html",
+      "destination": "/invest",
       "permanent": false
     }
   ],

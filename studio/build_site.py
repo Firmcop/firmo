@@ -82,7 +82,7 @@ for bid, fn in BLOBS.items():
 for fn in os.listdir(os.path.join(f3d, 'img')):
     shutil.copy(os.path.join(f3d, 'img', fn), os.path.join(out, 'img', fn))
 # 3D tools and data
-for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'blog.html', '404.html', 'ds-core.js', 'af-engine.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
+for fn in ['fc-site.js', 'fc-pages.css', 'product.html', 'work.html', 'admin.html', 'design-studio.html', 'design-manager.html', 'collection.html', 'blog.html', 'invest.html', '404.html', 'ds-core.js', 'af-engine.js', 'ds-config.js', 'ds-package.json', 'studio.html', '2x4.html', 'three-d-stage.js', 'platform-rules.js', 'firmcop-bridge.js']:
     shutil.copy(os.path.join(f3d, fn), out)
 # the Studio as a page of the site: site header on top, Studio framed beneath
 shutil.copy(os.path.join(f3d, 'site-studio.html'), os.path.join(out, '3d-studio.html'))
@@ -122,13 +122,15 @@ vercel = {
     {"source": "/blog", "destination": "/api/page?kind=blog"},
     {"source": "/blog/category/:cat", "destination": "/api/page?kind=blog&cat=:cat"},
     {"source": "/blog/:slug", "destination": "/api/page?kind=post&slug=:slug"},
+    {"source": "/invest", "destination": "/api/page?kind=invest"},
+    {"source": "/invest/:slug", "destination": "/api/page?kind=model&slug=:slug"},
     {"source": "/sitemap.xml", "destination": "/api/sitemap"},
     {"source": "/robots.txt", "destination": "/api/robots"},
     # anything that is not a file: old firmcop.com addresses, or the 404 page
     {"source": "/:path*", "destination": "/api/go?path=:path*"},
   ],
   "functions": {
-    "api/page.js": {"includeFiles": "{product,work,blog,404}.html"},
+    "api/page.js": {"includeFiles": "{product,work,blog,invest,404}.html"},
     "api/go.js": {"includeFiles": "404.html"},
   },
   "redirects": [
@@ -141,6 +143,9 @@ vercel = {
     {"source": "/design-manager", "destination": "/design-manager.html", "permanent": False},
     {"source": "/studio", "destination": "/studio.html", "permanent": False},
     {"source": "/2x4", "destination": "/2x4.html", "permanent": False},
+    # Invest: the models page replaces the opportunities list; the plot planner is left out for now
+    {"source": "/Opportunities.dc.html", "destination": "/invest", "permanent": True},
+    {"source": "/Invest.dc.html", "destination": "/invest", "permanent": False},
   ],
   "headers": [
     {"source": "/(.*)", "headers": [
@@ -153,6 +158,15 @@ vercel = {
   ],
 }
 open(os.path.join(out, 'vercel.json'), 'w').write(json.dumps(vercel, indent=2) + '\n')
+# every Invest link goes to the models page (the plot planner is left out for now)
+for fn in os.listdir(out):
+    if fn.endswith('.html'):
+        fp = os.path.join(out, fn); t = open(fp).read()
+        t2 = t.replace('href="Invest.dc.html"', 'href="/invest"').replace('href="Opportunities.dc.html"', 'href="/invest"').replace('href="/invest" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Plot planner</a>', 'href="/invest" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Investment models</a>')
+        for a, b in [('href="/invest">Plan your plot</a>', 'href="/invest">See investment models</a>'), ('href="/invest">Current opportunities</a>', 'href="/invest?stage=ready">Ready and completed units</a>'),
+                     ('padding:4px 0">Plot planner and ROI</a>', 'padding:4px 0">Investment models</a>'), ('href="/invest" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Opportunities</a>', 'href="/invest?stage=offplan" style="color:#D8CFC0;text-decoration:none;padding:4px 0">Off-plan units</a>')]:
+            t2 = t2.replace(a, b)
+        if t2 != t: open(fp, 'w').write(t2)
 # the tools pages also open the Studio inside the site
 for fn in ['tools.html', 'collection.html', 'design-manager.html']:
     fp = os.path.join(out, fn); t = open(fp).read().replace("design-studio.html", "3d-studio.html")

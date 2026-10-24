@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
   const kind = q.get('kind'), slug = (q.get('slug') || '').trim(), cat = (q.get('cat') || '').trim();
   try {
     const set = await L.settings(), s = L.site(req, set);
-    const pathOf = { product: '/' + (q.get('scope') || 'collection') + '/' + slug, work: '/works/' + slug, post: '/blog/' + slug, blog: cat ? '/blog/category/' + cat : '/blog' }[kind];
+    const pathOf = { product: '/' + (q.get('scope') || 'collection') + '/' + slug, work: '/works/' + slug, post: '/blog/' + slug, blog: cat ? '/blog/category/' + cat : '/blog', invest: '/invest', model: '/invest/' + slug }[kind];
     if (!pathOf) return L.notFound(res, s);
     const ov = (await L.rest('seo_overrides?select=*&path=eq.' + enc(pathOf)).catch(() => []))[0] || {};
     const base = { canonical: ov.canonical_url || s.base + pathOf, noindex: !s.index || !!ov.noindex };
@@ -73,10 +73,35 @@ module.exports = async (req, res) => {
           L.crumbs(s, [['Home', '/'], ['Blog', '/blog'], ...(c ? [[c.name, '/blog/category/' + c.slug]] : []), [p.title, '/blog/' + p.slug]])],
       });
     }
+    if (kind === 'invest') {
+      const rows = await L.rest('investment_opportunities?select=slug,name,stage,place,summary,price,image_url,media&published=eq.true&order=sort.asc,name.asc');
+      const desc = 'Buy units in Firmcop modular buildings that earn: off-plan, building now, ready, or completed and already let. Photos, video, units and payment plans for each model.';
+      const cov = (o) => ((o.media || []).find((x) => x && x.type !== 'video' && x.url) || {}).url || o.image_url;
+      const body = `<section class="ihero"><p class="eyebrow">Invest with Firmcop</p><h1>Own units in modular buildings that earn</h1><p>${L.esc(desc)}</p></section><section class="models">${rows.map((o) => `<a class="model" href="/invest/${L.esc(o.slug)}"><div class="bd"><h2>${L.esc(o.name)}</h2>${o.summary ? `<p>${L.esc(o.summary)}</p>` : ''}<p>KES ${Math.round(Number(o.price) || 0).toLocaleString('en-GB')} per unit</p></div></a>`).join('')}</section>`;
+      return done('invest.html', { title: 'Invest in modular buildings · Firmcop', description: L.clip(desc, 158), image: L.img(cov(rows[0] || {}), 1200), route: { kind: 'invest' }, body,
+        jsonld: [{ '@context': 'https://schema.org', '@type': 'ItemList', name: 'Firmcop investment models', itemListElement: rows.map((o, i) => ({ '@type': 'ListItem', position: i + 1, url: s.base + '/invest/' + o.slug, name: o.name })) },
+          L.crumbs(s, [['Home', '/'], ['Invest', '/invest']])] });
+    }
+    if (kind === 'model') {
+      const o = (await L.rest('investment_opportunities?select=*&published=eq.true&slug=eq.' + enc(slug)))[0];
+      if (!o) return L.notFound(res, s);
+      const STAGE = { offplan: 'Off-plan', building: 'Building now', ready: 'Ready to buy', completed: 'Completed and earning' };
+      const ph = (o.media || []).filter((x) => x && x.type !== 'video' && x.url), vids = (o.media || []).filter((x) => x && x.type === 'video' && x.url);
+      const coverU = (ph[0] || {}).url || o.image_url;
+      const desc = o.seo_description || L.clip(o.summary || L.text(o.story) || `${o.name}: units from KES ${Math.round(Number(o.price) || 0).toLocaleString('en-GB')}.`, 158);
+      const image = L.img(coverU, 1200);
+      const body = `<div class="mhero"><div>${coverU ? `<img src="${L.esc(L.img(coverU, 1600))}" alt="${L.esc(o.name)}" style="width:100%;border-radius:6px" fetchpriority="high">` : ''}</div><aside class="facts"><span class="badge-st">${L.esc(STAGE[o.stage] || '')}</span><h1>${L.esc(o.name)}</h1>${o.summary ? `<p>${L.esc(o.summary)}</p>` : ''}<p class="price">KES ${Math.round(Number(o.price) || 0).toLocaleString('en-GB')} per unit</p></aside></div><div class="icols"><div>${(o.story || '').split(/\n{2,}/).filter(Boolean).map((t) => `<p>${L.esc(t)}</p>`).join('')}</div></div>`;
+      const offer = Number(o.price) > 0 ? { '@type': 'Offer', priceCurrency: 'KES', price: Math.round(Number(o.price)), url: base.canonical, availability: Math.max(0, (o.units || 0) - (o.taken || 0)) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut', seller: { '@type': 'Organization', name: 'Firmcop' } } : undefined;
+      const data = Object.assign({}, o);
+      return done('invest.html', { title: o.seo_title || `${o.name} · ${STAGE[o.stage] || 'Invest'} · Firmcop`, ogTitle: o.seo_title || o.name, description: desc, image, type: 'product', route: { kind: 'model', slug: o.slug }, body, data: ['FC_MODEL', data],
+        jsonld: [{ '@context': 'https://schema.org', '@type': 'Product', name: o.name, description: desc, image: ph.slice(0, 6).map((x) => L.img(x.url, 1200)), brand: { '@type': 'Brand', name: 'Firmcop' }, category: 'Investment property: ' + (o.sector || ''), offers: offer },
+          ...vids.slice(0, 1).map((v) => ({ '@context': 'https://schema.org', '@type': 'VideoObject', name: v.caption || o.name + ' video', description: desc, thumbnailUrl: [image || ''], uploadDate: o.updated_at, contentUrl: /\.(mp4|webm|mov)/i.test(v.url) ? v.url : undefined, embedUrl: /\.(mp4|webm|mov)/i.test(v.url) ? undefined : v.url })),
+          L.crumbs(s, [['Home', '/'], ['Invest', '/invest'], [o.name, '/invest/' + o.slug]])] });
+    }
     return L.notFound(res, s);
   } catch (e) {
     // never leave a visitor on an error: fall back to the plain page, which loads its own data
-    const tpl = { product: 'product.html', work: 'work.html', post: 'blog.html', blog: 'blog.html' }[kind];
+    const tpl = { product: 'product.html', work: 'work.html', post: 'blog.html', blog: 'blog.html', invest: 'invest.html', model: 'invest.html' }[kind];
     if (!tpl) { res.statusCode = 500; return res.end('Error'); }
     return L.send(res, 200, L.render(L.read(tpl), { title: 'Firmcop Modular', description: 'Firmcop modular buildings, Nairobi.', canonical: '', noindex: true, route: { kind, slug, cat, scope: q.get('scope') || undefined } }), { noindex: true, cache: 'no-store' });
   }
