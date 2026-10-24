@@ -108,7 +108,7 @@ async function ask1(cfg: { provider: string; model: string }, system: string, us
   }
   const headers: Record<string, string> = { Authorization: "Bearer " + key, "content-type": "application/json" };
   if (p === "openrouter") { headers["HTTP-Referer"] = "https://firmcop.com"; headers["X-Title"] = "Firmcop admin"; }
-  const r = await fetch(CHAT_URL[p], { method: "POST", headers, body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }) });
+  const r = await fetch(CHAT_URL[p], { method: "POST", headers, body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens + (p === "gemini" ? 4000 : 0), ...(p === "gemini" ? { reasoning_effort: "low" } : {}), response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }) });
   const j = await r.json().catch(() => ({}));
   const err = Array.isArray(j) ? j[0]?.error?.message : j.error?.message;
   if (!r.ok) throw new Error(friendly(r.status, err));
@@ -121,7 +121,7 @@ function friendly(status: number, msg?: string) {
   if (status === 404) return "The AI model was not found" + (msg ? " (" + String(msg).slice(0, 160) + ")" : "") + ". Clear the model name in Admin › AI helper to use the default.";
   return "AI service error " + status + (msg ? ": " + String(msg).slice(0, 200) : "");
 }
-const parseJSON = (t: string) => { const m = String(t).match(/\{[\s\S]*\}/); if (!m) throw new Error("The AI reply could not be read. Try again."); return JSON.parse(m[0]); };
+const parseJSON = (t: string) => { const m = String(t).replace(/```(?:json)?/g, "").match(/\{[\s\S]*\}/); if (!m) throw new Error("The AI reply could not be read (" + (String(t).trim() ? "no JSON in: " + String(t).slice(0, 80) : "empty reply") + "). Try again."); return JSON.parse(m[0]); };
 
 async function catalogue() {
   const prods = await rest("catalog_products?select=slug,name,kind,summary,price_mode,base_price,unit,lead_time_weeks,category:catalog_categories(name)&published=eq.true&order=name.asc&limit=400");
@@ -133,7 +133,7 @@ async function catalogue() {
 const VOICE = "Write for Kenyan buyers and investors: plain, warm, practical British English. Short paragraphs. No hype, no filler, no emojis. Never invent a Firmcop price, client, project, statistic, law, fee, return or date. Where a fact is needed that you are not given, write a sensible placeholder and mark it [CHECK: what to verify].";
 
 const TASKS: Record<string, (body: Record<string, any>) => Promise<{ system: string; user: string; max?: number; finish: (o: any) => Promise<unknown> | unknown }>> = {
-  test: async () => ({ system: "Reply with JSON only.", user: 'Reply with {"ok": true, "hello": "a one-line greeting for the Firmcop team in Nairobi"}', max: 200, finish: (o) => o }),
+  test: async () => ({ system: "Reply with JSON only.", user: 'Reply with {"ok": true, "hello": "a one-line greeting for the Firmcop team in Nairobi"}', max: 600, finish: (o) => o }),
   blog_draft: async (b) => {
     const id = String(b.post_id || b.id || ""); if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error("Which post?");
     const p = (await rest(`blog_posts?select=*&id=eq.${id}`))[0]; if (!p) throw new Error("That post is gone");
