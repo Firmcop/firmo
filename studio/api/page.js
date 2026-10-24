@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     const ov = (await L.rest('seo_overrides?select=*&path=eq.' + enc(pathOf)).catch(() => []))[0] || {};
     const base = { canonical: ov.canonical_url || s.base + pathOf, noindex: !s.index || !!ov.noindex };
     const done = (tpl, m, status) => L.send(res, status || 200, L.render(L.read(tpl), Object.assign({}, base, m, {
-      title: ov.title || m.title, ogTitle: ov.title || m.ogTitle || m.title, description: ov.description || m.description, image: ov.og_image_url ? L.img(ov.og_image_url, 1200) : m.image,
+      title: ov.title || m.title, ogTitle: ov.title || m.ogTitle || m.title, description: ov.description || m.description, image: ((u) => (u && u[0] === '/' ? s.base + u : u))(ov.og_image_url ? L.img(ov.og_image_url, 1200) : m.image),
       jsonld: ov.json_ld ? (m.jsonld || []).concat([ov.json_ld]) : m.jsonld,
     })), { noindex: base.noindex });
 
