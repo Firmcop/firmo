@@ -40,7 +40,9 @@ function clean(html) {
   h = h.replace(/(href|src)\s*=\s*(["'])\s*(javascript|data|vbscript):[^"']*\2/gi, '$1="#"');
   return h;
 }
-const read = (f) => fs.readFileSync(path.join(process.cwd(), f), 'utf8');
+// templates sit next to the api folder (the project root); cwd differs on Vercel when the project has a root directory
+const TPL = {};
+const read = (f) => TPL[f] || (TPL[f] = [path.join(__dirname, '..', f), path.join(process.cwd(), f)].map((x) => { try { return fs.readFileSync(x, 'utf8'); } catch (e) { return null; } }).find((x) => x != null) || (() => { throw new Error('template missing: ' + f); })());
 /* Put this page's meta into a page template: title, description, canonical, robots, Open Graph,
    Twitter card, structured data, and the route the page's own script reads. */
 function render(tpl, m) {
