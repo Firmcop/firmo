@@ -7,12 +7,30 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const env = (...names: string[]) => { for (const n of names) { const v = (Deno.env.get(n) || "").trim(); if (v) return v; } return ""; };
 const KEYS: Record<string, string> = {
-  gemini: Deno.env.get("GEMINI_API_KEY") || "",
-  anthropic: Deno.env.get("ANTHROPIC_API_KEY") || "",
-  openai: Deno.env.get("OPENAI_API_KEY") || "",
-  openrouter: Deno.env.get("AI_API_KEY") || "",
+  gemini: env("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_AI_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_KEY", "GOOGLE_AI_STUDIO_KEY"),
+  anthropic: env("ANTHROPIC_API_KEY", "CLAUDE_API_KEY", "ANTHROPIC_KEY"),
+  openai: env("OPENAI_API_KEY", "OPENAI_KEY"),
+  openrouter: env("AI_API_KEY", "OPENROUTER_API_KEY", "OPENROUTER_KEY"),
 };
+// a key pasted under an unexpected name: guess the service from the key itself
+if (!Object.values(KEYS).some(Boolean)) {
+  for (const [n, v] of Object.entries(Deno.env.toObject())) {
+    if (/^SUPABASE_|^SB_|^DENO_|^PATH$|^HOME$/.test(n) || !v) continue;
+    const t = v.trim().replace(/^["']|["']$/g, "");
+    if (/gemini|google/i.test(n) && t.length > 20) KEYS.gemini = KEYS.gemini || t;
+    else if (/anthropic|claude/i.test(n) && t.length > 20) KEYS.anthropic = KEYS.anthropic || t;
+    else if (/openrouter/i.test(n) && t.length > 20) KEYS.openrouter = KEYS.openrouter || t;
+    else if (/openai|chatgpt|gpt/i.test(n) && t.length > 20) KEYS.openai = KEYS.openai || t;
+    else if (/^AIza[\w-]{30,}$/.test(t)) KEYS.gemini = KEYS.gemini || t;
+    else if (/^sk-ant-/.test(t)) KEYS.anthropic = KEYS.anthropic || t;
+    else if (/^sk-or-/.test(t)) KEYS.openrouter = KEYS.openrouter || t;
+    else if (/^sk-(proj-)?[\w-]{20,}$/.test(t)) KEYS.openai = KEYS.openai || t;
+  }
+}
+// names (never values) of the secrets this project has, to help when a key is not picked up
+const SECRET_NAMES = Object.keys(Deno.env.toObject()).filter((n) => !/^SUPABASE_|^SB_|^DENO_|^(PATH|HOME|HOSTNAME|PWD|LANG|TZ|NO_COLOR|EDGE_RUNTIME.*|VERBOSE|WORKER_.*)$/.test(n)).sort();
 const DEFAULT_MODEL: Record<string, string> = { gemini: "gemini-2.5-flash", anthropic: "claude-sonnet-5-5", openai: "gpt-4.1-mini", openrouter: "google/gemini-2.5-flash" };
 const CHAT_URL: Record<string, string> = {
   gemini: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -26,6 +44,11 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 async function rest(path: string, init: RequestInit = {}) {
   const r = await fetch(`${URL_}/rest/v1/${path}`, { ...init, headers: { ...svc, "content-type": "application/json", ...(init.headers || {}) } });
   const t = await r.text(); if (!r.ok) throw new Error(`${path}: ${r.status} ${t.slice(0, 200)}`); return t ? JSON.parse(t) : null;
+}
+// internal checks from the database (pg_net) carry the same vault secret the photo optimiser uses
+async function trusted(secret: string | null) {
+  if (!secret || secret.length < 20) return false;
+  return (await fetch(`${URL_}/rest/v1/rpc/media_secret_ok`, { method: "POST", headers: { ...svc, "content-type": "application/json" }, body: JSON.stringify({ _s: secret }) }).then((r) => r.ok ? r.json() : false).catch(() => false)) === true;
 }
 async function staffUser(auth: string | null): Promise<string | null> {
   if (!auth) return null;
@@ -48,8 +71,33 @@ async function usedThisMonth() {
 }
 const tidy = (h: string) => String(h || "").replace(/<(?!\/?(p|h2|h3|ul|ol|li|strong|em|a|blockquote|table|thead|tbody|tr|th|td|br)\b)[^>]*>/gi, "").replace(/\son\w+="[^"]*"/gi, "").replace(/href="javascript:[^"]*"/gi, 'href="#"');
 
-// one call to the chosen provider; returns the reply text and token counts
-async function ask(cfg: { provider: string; model: string }, system: string, user: string, maxTokens = 6000) {
+// models this key can use (OpenAI-style list), newest first; used to recover when a default model is retired
+async function listModels(p: string): Promise<string[]> {
+  const base = p === "gemini" ? "https://generativelanguage.googleapis.com/v1beta/openai/models" : p === "openai" ? "https://api.openai.com/v1/models" : p === "openrouter" ? "https://openrouter.ai/api/v1/models" : "https://api.anthropic.com/v1/models";
+  const headers: Record<string, string> = p === "anthropic" ? { "x-api-key": KEYS[p], "anthropic-version": "2023-06-01" } : { Authorization: "Bearer " + KEYS[p] };
+  const r = await fetch(base, { headers }); const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(friendly(r.status, (Array.isArray(j) ? j[0]?.error?.message : j.error?.message) || ""));
+  return ((j.data || j.models || []) as Array<{ id?: string; name?: string }>).map((m) => String(m.id || m.name || "").replace(/^models\//, "")).filter(Boolean);
+}
+function bestModel(p: string, ids: string[]) {
+  const num = (id: string) => (id.match(/(\d+(?:\.\d+)?)/) || [])[1] ? Number((id.match(/(\d+(?:\.\d+)?)/) || [])[1]) : 0;
+  const pick = (re: RegExp) => ids.filter((id) => re.test(id) && !/(image|tts|audio|live|embedding|vision|thinking-exp|lite)/i.test(id)).sort((a, b) => num(b) - num(a) || a.length - b.length)[0];
+  if (p === "gemini") return pick(/^gemini-[\d.]+-flash$/) || pick(/^gemini-[\d.]+-flash/) || pick(/^gemini-[\d.]+-pro/) || "";
+  if (p === "anthropic") return pick(/sonnet/) || ids[0] || "";
+  if (p === "openai") return pick(/^gpt-[\d.]+-mini$/) || pick(/^gpt-/) || "";
+  return pick(/gemini.*flash/) || ids[0] || "";
+}
+// one call to the chosen provider; if the model has been retired, pick the newest suitable one, remember it, retry once
+async function ask(cfg: { provider: string; model: string }, system: string, user: string, maxTokens = 6000): Promise<{ text: string; inT?: number; outT?: number; model?: string }> {
+  try { const r = await ask1(cfg, system, user, maxTokens); return { ...r, model: cfg.model }; }
+  catch (e) {
+    if (!/model was not found/.test(String((e as Error).message))) throw e;
+    const m = bestModel(cfg.provider, await listModels(cfg.provider)); if (!m || m === cfg.model) throw e;
+    await rest("site_settings?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ key: "ai_model", value: m, updated_at: new Date().toISOString() }) }).catch(() => {});
+    const r = await ask1({ ...cfg, model: m }, system, user, maxTokens); return { ...r, model: m };
+  }
+}
+async function ask1(cfg: { provider: string; model: string }, system: string, user: string, maxTokens = 6000) {
   const p = cfg.provider, key = KEYS[p];
   if (p === "anthropic") {
     const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -68,9 +116,9 @@ async function ask(cfg: { provider: string; model: string }, system: string, use
 }
 function friendly(status: number, msg?: string) {
   if (status === 401 || status === 403) return "The AI key was refused. Check the key in Supabase (Edge Functions > Secrets).";
-  if (status === 429) return "The AI service is busy or the free limit is reached. Try again in a minute.";
-  if (status === 402) return "The AI account has run out of credit.";
-  if (status === 404) return "The AI model was not found. Clear the model name in Admin › AI helper to use the default.";
+  if (status === 429) return "The AI service is busy or the free limit is reached" + (msg ? " (" + String(msg).slice(0, 220) + ")" : "") + ". Try again in a minute.";
+  if (status === 402) return "The AI account needs billing or credit" + (msg ? " (" + String(msg).slice(0, 220) + ")" : "") + ".";
+  if (status === 404) return "The AI model was not found" + (msg ? " (" + String(msg).slice(0, 160) + ")" : "") + ". Clear the model name in Admin › AI helper to use the default.";
   return "AI service error " + status + (msg ? ": " + String(msg).slice(0, 200) : "");
 }
 const parseJSON = (t: string) => { const m = String(t).match(/\{[\s\S]*\}/); if (!m) throw new Error("The AI reply could not be read. Try again."); return JSON.parse(m[0]); };
@@ -148,25 +196,26 @@ Use only the facts given. Returns are projections, never promises: say "projecte
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-  const uid = await staffUser(req.headers.get("authorization"));
+  const uid = (await trusted(req.headers.get("x-media-secret"))) ? "system" : await staffUser(req.headers.get("authorization"));
   if (!uid) return json({ error: "Only Firmcop staff can use the AI helper" }, 403);
   let body: Record<string, any> = {}; try { body = await req.json(); } catch (_) { /* empty */ }
   const task = String(body.task || "status"), cfg = await config();
   if (task === "status") {
     const used = await usedThisMonth();
-    return json({ provider: cfg.provider, model: cfg.model, wanted: cfg.wanted, cap: cfg.cap, used, keys: Object.fromEntries(Object.entries(KEYS).map(([k, v]) => [k, !!v])), key_names: KEY_NAME, defaults: DEFAULT_MODEL });
+    return json({ provider: cfg.provider, model: cfg.model, wanted: cfg.wanted, cap: cfg.cap, used, keys: Object.fromEntries(Object.entries(KEYS).map(([k, v]) => [k, !!v])), key_names: KEY_NAME, defaults: DEFAULT_MODEL, secret_names: SECRET_NAMES, secret_shapes: Object.fromEntries(SECRET_NAMES.map((n) => { const t = (Deno.env.get(n) || '').trim(); return [n, { length: t.length, google_format: /^AIza[\w-]{30,}$/.test(t), spaces: /\s/.test(t) }]; })) });
   }
+  if (task === "models") { if (!cfg.provider) return json({ error: "No AI key" }, 503); try { const ids = await listModels(cfg.provider); return json({ provider: cfg.provider, models: ids, best: bestModel(cfg.provider, ids) }); } catch (e) { return json({ error: String((e as Error).message) }, 500); } }
   const make = TASKS[task]; if (!make) return json({ error: "Unknown task" }, 400);
   if (!cfg.provider) return json({ error: "The AI helper is not switched on yet. Add an AI key in Supabase (Edge Functions > Secrets): GEMINI_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY. See Admin › AI helper. You can still write it yourself." }, 503);
   if (task !== "test" && (await usedThisMonth()) >= cfg.cap) return json({ error: `This month's AI limit (${cfg.cap} requests) is used up. An admin can raise it in Admin › AI helper.` }, 429);
   const t0 = Date.now(); let log: Record<string, unknown> = { user_id: /^[0-9a-f-]{36}$/.test(uid) ? uid : null, task, provider: cfg.provider, model: cfg.model };
   try {
     const job = await make(body);
-    const r = await ask(cfg, job.system, job.user, job.max);
-    log = { ...log, input_tokens: r.inT ?? null, output_tokens: r.outT ?? null, ms: Date.now() - t0, ok: true };
+    const r = await ask(body.model && uid === "system" ? { ...cfg, model: String(body.model) } : cfg, job.system, job.user, job.max);
+    log = { ...log, model: r.model || cfg.model, input_tokens: r.inT ?? null, output_tokens: r.outT ?? null, ms: Date.now() - t0, ok: true };
     const out = await job.finish(parseJSON(r.text));
     await rest("ai_usage", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(log) }).catch(() => {});
-    return json({ ...(out as object), provider: cfg.provider, model: cfg.model });
+    return json({ ...(out as object), provider: cfg.provider, model: r.model || cfg.model });
   } catch (e) {
     const msg = String((e as Error).message || e);
     await rest("ai_usage", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ...log, ok: false, error: msg.slice(0, 300), ms: Date.now() - t0 }) }).catch(() => {});
