@@ -1,13 +1,34 @@
 // blog-ai-draft: writes a first draft of a blog post for Firmcop staff to edit.
 // Uses the post's title, search phrase and brief, plus the live Firmcop product list and prices,
 // so the draft only quotes real products and prices. Anything it cannot know is marked [CHECK: ...].
-// Needs the ANTHROPIC_API_KEY secret (Supabase dashboard > Edge Functions > Secrets).
+// Needs one AI key in Supabase (Edge Functions > Secrets):
+//  - AI_API_KEY: the same OpenRouter key the old firmcop.com site uses (optional AI_GATEWAY_URL, BLOG_AI_MODEL), or
+//  - ANTHROPIC_API_KEY: a Claude API key.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const MODEL = Deno.env.get("BLOG_AI_MODEL") || "claude-sonnet-5-5";
+const AKEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const OKEY = Deno.env.get("AI_API_KEY") || Deno.env.get("LOVABLE_API_KEY") || "";
+const GATEWAY = Deno.env.get("AI_GATEWAY_URL") || "https://openrouter.ai/api/v1/chat/completions";
+const KEY = AKEY || OKEY;
+const MODEL = Deno.env.get("BLOG_AI_MODEL") || (AKEY ? "claude-sonnet-5-5" : "google/gemini-3-flash-preview");
+// one call to whichever AI service has a key; returns the reply text
+async function ask(system: string, user: string): Promise<{ text: string; usage: unknown }> {
+  if (AKEY) {
+    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": AKEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, messages: [{ role: "user", content: user }] }) });
+    const j = await r.json(); if (!r.ok) throw new Error("AI service: " + (j.error && j.error.message || r.status));
+    return { text: (j.content || []).filter((c: { type: string }) => c.type === "text").map((c: { text: string }) => c.text).join(""), usage: j.usage || null };
+  }
+  const r = await fetch(GATEWAY, { method: "POST", headers: { Authorization: "Bearer " + OKEY, "content-type": "application/json", "HTTP-Referer": "https://firmcop.com", "X-Title": "Firmcop blog" },
+    body: JSON.stringify({ model: MODEL, max_tokens: 8000, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }) });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 429) throw new Error("The AI service is busy. Try again in a minute.");
+  if (r.status === 402) throw new Error("The AI account has run out of credit. Top it up at openrouter.ai.");
+  if (!r.ok) throw new Error("AI service: " + ((j.error && j.error.message) || r.status));
+  return { text: String((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || ""), usage: j.usage || null };
+}
 const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, apikey, content-type", "access-control-allow-methods": "POST, OPTIONS" };
 const svc = { apikey: SRK, Authorization: "Bearer " + SRK };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "content-type": "application/json" } });
@@ -25,7 +46,7 @@ const tidy = (h: string) => h.replace(/<(?!\/?(p|h2|h3|ul|ol|li|strong|em|a|bloc
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (!(await isStaff(req.headers.get("authorization")))) return json({ error: "Only Firmcop staff can use the AI helper" }, 403);
-  if (!KEY) return json({ error: "The AI helper is not switched on yet. An administrator needs to add the ANTHROPIC_API_KEY secret in Supabase (Edge Functions > Secrets). You can still write the post yourself." }, 503);
+  if (!KEY) return json({ error: "The AI helper is not switched on yet. An administrator needs to add the AI_API_KEY secret in Supabase (Edge Functions > Secrets), using the same OpenRouter key as the old firmcop.com site. You can still write the post yourself." }, 503);
   let body: Record<string, unknown> = {}; try { body = await req.json(); } catch (_) { /* empty */ }
   try {
     const id = String(body.post_id || ""); if (!/^[0-9a-f-]{36}$/.test(id)) return json({ error: "Which post?" }, 400);
@@ -59,16 +80,13 @@ ${p.body_html && String(p.body_html).length > 200 ? `Existing text to improve an
 
 Reply with one JSON object and nothing else:
 {"body_html": "...", "excerpt": "one or two sentences for the blog list", "seo_title": "up to 60 characters", "seo_description": "120 to 160 characters with the search phrase", "related_products": ["slug", "..."], "checks": ["each fact the editor must verify"]}`;
-    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, messages: [{ role: "user", content: user }] }) });
-    const j = await r.json(); if (!r.ok) throw new Error("AI service: " + (j.error && j.error.message || r.status));
-    const text = (j.content || []).filter((c: { type: string }) => c.type === "text").map((c: { text: string }) => c.text).join("");
+    const { text, usage } = await ask(system, user);
     const m = text.match(/\{[\s\S]*\}/); if (!m) throw new Error("The AI reply could not be read. Try again.");
     const out = JSON.parse(m[0]);
     const slugs = new Set(prods.map((x: { slug: string }) => x.slug));
     const res = { body_html: tidy(String(out.body_html || "")), excerpt: String(out.excerpt || "").slice(0, 300), seo_title: String(out.seo_title || "").slice(0, 70), seo_description: String(out.seo_description || "").slice(0, 170),
       related_products: (out.related_products || []).filter((s: string) => slugs.has(s)).slice(0, 6), checks: (out.checks || []).slice(0, 30) };
-    await rest(`blog_posts?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ai: { at: new Date().toISOString(), model: MODEL, checks: res.checks, usage: j.usage || null } }) });
+    await rest(`blog_posts?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ai: { at: new Date().toISOString(), model: MODEL, checks: res.checks, usage } }) });
     return json(res);
   } catch (e) { return json({ error: String((e as Error).message || e) }, 500); }
 });
