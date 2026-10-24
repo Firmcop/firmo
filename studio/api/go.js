@@ -5,7 +5,9 @@ const L = require('./_lib.js');
 const PATTERNS = [[/^\/products\/.+/, '/collection'], [/^\/gallery\/.+/, '/works'], [/^\/leasing\/.+/, '/collection?c=container-dry'], [/^\/industries\/.+/, '/collection'], [/^\/blog\/.+/, '/blog']];
 module.exports = async (req, res) => {
   const u = new URL(req.url, 'http://x');
-  let p = '/' + String(u.searchParams.get('path') || '').replace(/^\/+/, '');
+  // the rewrite passes the original path as ?path=; fall back to the request path itself
+  const qp = (req.query && req.query.path) || u.searchParams.get('path') || (u.pathname.indexOf('/api/') === 0 ? '' : u.pathname);
+  let p = '/' + String(Array.isArray(qp) ? qp.join('/') : qp).replace(/^\/+/, '');
   try { p = decodeURIComponent(p); } catch (e) { /* keep as is */ }
   const trimmed = p.length > 1 ? p.replace(/\/+$/, '') : p;
   // IndexNow key file: /<key>.txt proves to Bing and others that the site owns the key
@@ -23,5 +25,6 @@ module.exports = async (req, res) => {
   } catch (e) { /* fall through */ }
   const pat = PATTERNS.find(([re]) => re.test(trimmed));
   if (pat) { res.statusCode = 301; res.setHeader('Location', pat[1]); res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600'); return res.end(); }
+  res.setHeader('X-FC-Path', encodeURIComponent(p));
   return L.notFound(res);
 };
