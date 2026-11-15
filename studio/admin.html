@@ -622,7 +622,7 @@ const LIB_CSS = `.lib{display:grid;grid-template-columns:230px minmax(0,1fr);gap
 .lib-pick header,.lib-pick footer{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}.lib-pick footer{border-top:1px solid var(--line);border-bottom:0}.lib-pick .bd{overflow:auto;padding:16px 18px}`;
 const LIB_KIND = (type, name) => /^image\//.test(type || '') || /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(name || '') ? 'photo' : /^video\//.test(type || '') || /\.(mp4|webm|mov)$/i.test(name || '') ? 'video' : /pdf/.test(type || '') || /\.pdf$/i.test(name || '') ? 'document' : 'other';
 const libSlug = (s) => String(s || 'general').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
-const libThumb = (x) => x.kind === 'photo' ? `style="background-image:url('${esc(FC.img ? FC.img(x.url, 320) : x.url)}')"` : '';
+const libThumb = (x) => x.kind === 'photo' ? `data-bg="${esc(FC.img ? FC.img(x.url, 320) : x.url)}"` : '';
 async function libUpload(files, folder, onStep) {
   const out = [];
   for (let i = 0; i < files.length; i++) {
@@ -640,7 +640,7 @@ async function libUpload(files, folder, onStep) {
 // the library grid, used both as the admin page and inside the picker
 function libBrowser(el, opts) {
   opts = opts || {};
-  const st = { folder: opts.folder || 'all', q: '', sel: new Set(), folders: [], items: [], counts: {} };
+  const st = { folder: opts.folder || 'all', q: '', sel: new Set(), folders: [], items: [], counts: {}, show: 120 };
   el.innerHTML = `<style>${LIB_CSS}</style><div class="lib"><nav class="lib-f" aria-label="Folders"></nav><div>
     <div class="lib-drop" tabindex="0" role="button" aria-label="Upload files">Drop photos, videos or PDFs here, or <u>choose files</u>. They are shrunk and saved automatically.<input type="file" multiple accept="${esc(opts.accept || 'image/*,video/mp4,video/webm,video/quicktime,application/pdf')}" style="position:absolute;left:-9999px"></div>
     <div class="lib-bar"><input class="q" type="search" placeholder="Search by name or description" aria-label="Search the library"><span class="small muted" id="lst" role="status"></span></div>
@@ -660,11 +660,14 @@ function libBrowser(el, opts) {
     let list = st.folder === 'all' ? st.items : st.items.filter((x) => (x.folder_id || 'none') === st.folder);
     if (opts.kind) list = list.filter((x) => opts.kind.includes(x.kind));
     if (st.q) { const q = st.q.toLowerCase(); list = list.filter((x) => (x.name + ' ' + (x.alt || '')).toLowerCase().includes(q)); }
+    const total = list.length; list = list.slice(0, st.show);
     grid.innerHTML = list.map((x) => `<div class="lib-t" tabindex="0" role="option" data-id="${x.id}" aria-selected="${st.sel.has(x.id)}" title="${esc(x.name)}"><div class="th" ${libThumb(x)}>${x.kind === 'photo' ? '' : esc(x.kind)}</div><div class="nm">${esc(x.name)}</div><i class="ck" aria-hidden="true">✓</i></div>`).join('')
       || `<p class="muted" style="grid-column:1/-1">${st.q ? 'Nothing matches.' : 'This folder is empty. Drop files above to add some.'}</p>`;
-    $('#lst', el).textContent = list.length + ' file' + (list.length === 1 ? '' : 's');
+    if (total > list.length) grid.insertAdjacentHTML('beforeend', `<div style="grid-column:1/-1;text-align:center"><button class="btn line" type="button" id="lmore">Show more (${total - list.length} left)</button></div>`);
+    const mo = $('#lmore', el); if (mo) mo.onclick = () => { st.show += 120; draw(); };
+    $('#lst', el).textContent = total + ' file' + (total === 1 ? '' : 's');
     drawActs();
-    nav.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { st.folder = b.dataset.f; draw(); });
+    nav.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { st.folder = b.dataset.f; st.show = 120; draw(); });
     grid.querySelectorAll('.lib-t').forEach((t) => { const tog = (e) => { const id = t.dataset.id, multi = e && (e.ctrlKey || e.metaKey || e.shiftKey);
         // admin page: a plain click opens the file; ctrl/cmd/shift-click (or any click once something is selected) selects
         if (!opts.picker && !multi && !st.sel.size) return openItem(st.items.find((x) => x.id === id));
