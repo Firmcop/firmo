@@ -201,7 +201,7 @@ where email = '${esc(ME.email)}';</pre>
 const NAV = [
   ['dashboard', 'Dashboard'], ['leads', 'Leads', 'leads_new'], ['quotes', 'Quotes', 'quotes_review'], ['orders', 'Atelier orders', 'orders_pending'],
   ['builds', 'Client builds', 'variations_pending'], ['collection', 'Collection'], ['catalogue', 'Catalogue', 'low_stock'], ['works', 'Works'], ['opps', 'Invest'],
-  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['blog', 'Blog'], ['seo', 'SEO'], ['subscribers', 'Subscribers'], ['media', 'Photos'], ['ai', 'AI helper'], ['settings', 'Site settings'], ['team', 'Team']
+  ['designs', 'Designs', 'designs_review'], ['projects', 'Studio projects'], ['aframe', 'A-frame engineering'], ['blog', 'Blog'], ['seo', 'SEO'], ['subscribers', 'Subscribers'], ['library', 'Image library'], ['media', 'Photo optimiser'], ['ai', 'AI helper'], ['settings', 'Site settings'], ['team', 'Team']
 ];
 function shell() {
   root.innerHTML = `<div class="app"><aside><a class="brand" href="Main.dc.html" title="Open the website"><b>FIRMCOP</b><small>Admin</small></a>
@@ -236,7 +236,7 @@ function drawer(title, eyebrow, bodyHtml, onMount) {
   document.body.appendChild(d);
   const body = $('.dbody', d); body.innerHTML = bodyHtml || '';
   const close = () => { d.remove(); document.removeEventListener('keydown', key); if (prev && prev.focus) prev.focus(); };
-  const key = (e) => { if (e.key === 'Escape' && !document.querySelector('.fcd-back')) close(); };
+  const key = (e) => { if (e.key === 'Escape' && !document.querySelector('.fcd-back,.lib-back')) close(); };
   document.addEventListener('keydown', key);
   $('.x', d).onclick = close; d.addEventListener('mousedown', (e) => { if (e.target === d) close(); });
   setTimeout(() => $('.x', d).focus(), 20);
@@ -608,6 +608,146 @@ async function mediaFn(body) {
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'The photo tool did not answer (' + r.status + ')'); return j;
 }
 const mb = (b) => b == null ? '' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+// ---------- Image library: folders of photos, videos and documents to reuse anywhere ----------
+const LIB_CSS = `.lib{display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start}@media(max-width:860px){.lib{grid-template-columns:minmax(0,1fr)}}
+.lib-f{display:grid;gap:2px;position:sticky;top:70px}.lib-f button{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:40px;padding:0 12px;border:0;border-radius:6px;background:none;text-align:left;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.lib-f button:hover{background:#ECE8E0}.lib-f button[aria-current=true]{background:var(--ink);color:#fff}.lib-f button span{font-size:12px;opacity:.7}
+.lib-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.lib-t{position:relative;border:2px solid transparent;border-radius:6px;background:#fff;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--line)}
+.lib-t:focus-visible{outline:2px solid var(--brass);outline-offset:2px}.lib-t[aria-selected=true]{border-color:var(--brass)}.lib-t .th{aspect-ratio:4/3;background:#E7E1D6 center/cover no-repeat;display:grid;place-items:center;font:600 11px 'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.lib-t .nm{padding:6px 8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lib-t .ck{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:#fff;border:1.5px solid #BDB29C;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
+.lib-t[aria-selected=true] .ck{background:var(--brass);border-color:var(--brass)}
+.lib-drop{border:2px dashed #BDB29C;border-radius:8px;padding:18px;text-align:center;color:var(--muted);margin-bottom:12px;background:#FBF9F5}.lib-drop.over{border-color:var(--brass);background:#FFF6E5;color:var(--ink)}
+.lib-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}.lib-bar .q{flex:1;min-width:180px}
+.lib-back{position:fixed;inset:0;background:rgba(13,12,10,.55);z-index:80;display:grid;place-items:center;padding:16px}.lib-pick{background:var(--paper,#F7F4EE);border-radius:10px;width:min(1100px,100%);max-height:calc(100vh - 32px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+.lib-pick header,.lib-pick footer{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}.lib-pick footer{border-top:1px solid var(--line);border-bottom:0}.lib-pick .bd{overflow:auto;padding:16px 18px}`;
+const LIB_KIND = (type, name) => /^image\//.test(type || '') || /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(name || '') ? 'photo' : /^video\//.test(type || '') || /\.(mp4|webm|mov)$/i.test(name || '') ? 'video' : /pdf/.test(type || '') || /\.pdf$/i.test(name || '') ? 'document' : 'other';
+const libSlug = (s) => String(s || 'general').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+const libThumb = (x) => x.kind === 'photo' ? `style="background-image:url('${esc(FC.img ? FC.img(x.url, 320) : x.url)}')"` : '';
+async function libUpload(files, folder, onStep) {
+  const out = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]; if (onStep) onStep(i, files.length, f);
+    if (/^video\//.test(f.type) && f.size > 50 * 1048576) { toast(f.name + ' is over 50 MB: put it on YouTube or Vimeo instead', true); continue; }
+    try {
+      const url = await uploadFile(f, 'library/' + libSlug(folder ? folder.name : 'general'));
+      const path = url.split('/storage/v1/object/public/media/')[1];
+      const r = await api('media_library', { method: 'POST', body: { folder_id: folder ? folder.id : null, path, url, name: f.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ').trim() || f.name, kind: LIB_KIND(f.type, f.name), content_type: f.type || null, bytes: f.size }, headers: { Prefer: 'return=representation' } });
+      out.push(r[0]);
+    } catch (ex) { toast(f.name + ': ' + ex.message, true); }
+  }
+  return out;
+}
+// the library grid, used both as the admin page and inside the picker
+function libBrowser(el, opts) {
+  opts = opts || {};
+  const st = { folder: opts.folder || 'all', q: '', sel: new Set(), folders: [], items: [], counts: {} };
+  el.innerHTML = `<style>${LIB_CSS}</style><div class="lib"><nav class="lib-f" aria-label="Folders"></nav><div>
+    <div class="lib-drop" tabindex="0" role="button" aria-label="Upload files">Drop photos, videos or PDFs here, or <u>choose files</u>. They are shrunk and saved automatically.<input type="file" multiple accept="${esc(opts.accept || 'image/*,video/mp4,video/webm,video/quicktime,application/pdf')}" style="position:absolute;left:-9999px"></div>
+    <div class="lib-bar"><input class="q" type="search" placeholder="Search by name or description" aria-label="Search the library"><span class="small muted" id="lst" role="status"></span></div>
+    <div class="lib-acts lib-bar" hidden></div><div class="lib-g"></div></div></div>`;
+  const nav = $('.lib-f', el), grid = $('.lib-g', el), drop = $('.lib-drop', el), inp = $('input[type=file]', drop), acts = $('.lib-acts', el);
+  const cur = () => st.folders.find((f) => f.id === st.folder) || null;
+  async function load() {
+    const [folders, items] = await Promise.all([api('media_folders?select=*&order=sort.asc,name.asc'), api('media_library?select=*&order=created_at.desc&limit=2000')]);
+    st.folders = folders; st.items = items; st.counts = {}; items.forEach((x) => { st.counts[x.folder_id || 'none'] = (st.counts[x.folder_id || 'none'] || 0) + 1; });
+    if (st.folder !== 'all' && st.folder !== 'none' && !folders.some((f) => f.id === st.folder)) st.folder = 'all';
+    draw();
+  }
+  function draw() {
+    nav.innerHTML = [['all', 'All files', st.items.length], ...st.folders.map((f) => [f.id, f.name, st.counts[f.id] || 0]), ...(st.counts.none ? [['none', 'Not in a folder', st.counts.none]] : [])]
+      .map(([id, n, c]) => `<button type="button" data-f="${esc(id)}" aria-current="${st.folder === id}">${esc(n)}<span>${c}</span></button>`).join('')
+      + (opts.picker ? '' : '<div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="lnew">New folder</button>' + (cur() ? '<button class="btn sm line" type="button" id="lren">Rename</button>' + (st.counts[st.folder] ? '' : '<button class="btn sm danger" type="button" id="ldel">Delete</button>') : '') + '</div>');
+    let list = st.folder === 'all' ? st.items : st.items.filter((x) => (x.folder_id || 'none') === st.folder);
+    if (opts.kind) list = list.filter((x) => opts.kind.includes(x.kind));
+    if (st.q) { const q = st.q.toLowerCase(); list = list.filter((x) => (x.name + ' ' + (x.alt || '')).toLowerCase().includes(q)); }
+    grid.innerHTML = list.map((x) => `<div class="lib-t" tabindex="0" role="option" data-id="${x.id}" aria-selected="${st.sel.has(x.id)}" title="${esc(x.name)}"><div class="th" ${libThumb(x)}>${x.kind === 'photo' ? '' : esc(x.kind)}</div><div class="nm">${esc(x.name)}</div><i class="ck" aria-hidden="true">✓</i></div>`).join('')
+      || `<p class="muted" style="grid-column:1/-1">${st.q ? 'Nothing matches.' : 'This folder is empty. Drop files above to add some.'}</p>`;
+    $('#lst', el).textContent = list.length + ' file' + (list.length === 1 ? '' : 's');
+    drawActs();
+    nav.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { st.folder = b.dataset.f; draw(); });
+    grid.querySelectorAll('.lib-t').forEach((t) => { const tog = (e) => { const id = t.dataset.id, multi = e && (e.ctrlKey || e.metaKey || e.shiftKey);
+        // admin page: a plain click opens the file; ctrl/cmd/shift-click (or any click once something is selected) selects
+        if (!opts.picker && !multi && !st.sel.size) return openItem(st.items.find((x) => x.id === id));
+        if (opts.single) { const had = st.sel.has(id); st.sel.clear(); if (!had) st.sel.add(id); } else if (st.sel.has(id)) st.sel.delete(id); else st.sel.add(id);
+        draw(); if (opts.onSelect) opts.onSelect(selected()); };
+      t.onclick = tog; t.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(e); } }; });
+    const nw = $('#lnew', el); if (nw) nw.onclick = () => askName('New folder', '', async (name) => { const r = await guard(api('media_folders', { method: 'POST', body: { name, sort: st.folders.length + 10 }, headers: { Prefer: 'return=representation' } }), 'Folder created'); st.folder = r[0].id; load(); });
+    const rn = $('#lren', el); if (rn) rn.onclick = () => askName('Rename folder', cur().name, async (name) => { await guard(api('media_folders?id=eq.' + st.folder, { method: 'PATCH', body: { name } }), 'Renamed'); load(); });
+    const dl = $('#ldel', el); if (dl) dl.onclick = async (e) => { if (!confirmInline(e.target, 'Delete folder?')) return; await guard(api('media_folders?id=eq.' + st.folder, { method: 'DELETE' }), 'Folder deleted'); st.folder = 'all'; load(); };
+  }
+  const selected = () => st.items.filter((x) => st.sel.has(x.id));
+  function drawActs() {
+    if (opts.picker || !st.sel.size) { acts.hidden = true; return; }
+    acts.hidden = false;
+    acts.innerHTML = `<b>${st.sel.size} selected</b><label class="small">Move to <select id="lmv"><option value="">Choose a folder…</option>${st.folders.map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select></label><button class="btn sm line" type="button" id="lcp">Copy links</button><button class="btn sm danger" type="button" id="lrm">Delete</button><button class="btn sm line" type="button" id="lclr">Clear selection</button>`;
+    $('#lmv', el).onchange = async (e) => { if (!e.target.value) return; await guard(api('media_library?id=in.(' + [...st.sel].join(',') + ')', { method: 'PATCH', body: { folder_id: e.target.value, updated_at: new Date().toISOString() } }), 'Moved'); st.sel.clear(); load(); };
+    $('#lcp', el).onclick = async () => { try { await navigator.clipboard.writeText(selected().map((x) => x.url).join('\n')); toast('Links copied'); } catch (ex) { toast('Could not copy: select the links from a file instead', true); } };
+    $('#lrm', el).onclick = async (e) => { if (!confirmInline(e.target, 'Delete ' + st.sel.size + ' for good?')) return; await removeItems(selected()); st.sel.clear(); load(); };
+    $('#lclr', el).onclick = () => { st.sel.clear(); draw(); };
+  }
+  async function removeItems(items) {
+    const cfg = window.FC_SUPA, t = await FC.auth.token();
+    const r = await fetch(cfg.url + '/storage/v1/object/media', { method: 'DELETE', headers: { apikey: cfg.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: items.map((x) => x.path) }) });
+    if (!r.ok) toast('The files could not be removed from storage (' + r.status + '); they are taken out of the library only', true);
+    await guard(api('media_library?id=in.(' + items.map((x) => x.id).join(',') + ')', { method: 'DELETE' }), 'Deleted');
+  }
+  function askName(title, val, done) {
+    drawer(title, 'Image library', `<form class="f" id="nf"><label class="fl wide">Folder name<input name="name" value="${esc(val)}" required maxlength="80"></label><div class="wide tools"><button class="btn" type="submit">Save</button></div></form>`, (d) => {
+      const f = $('#nf', d.el); setTimeout(() => f.name.focus(), 30); f.onsubmit = async (e) => { e.preventDefault(); const n = f.name.value.trim(); if (!n) return; d.close(); await done(n); };
+    });
+  }
+  function openItem(x) {
+    if (!x) return;
+    drawer(x.name, 'Image library', '', (d) => {
+      d.el.innerHTML = `${x.kind === 'photo' ? `<img src="${esc(FC.img ? FC.img(x.url, 1200) : x.url)}" alt="${esc(x.alt || '')}" style="width:100%;max-height:420px;object-fit:contain;background:#ECE8E0;border-radius:6px">` : x.kind === 'video' ? `<video src="${esc(x.url)}" controls style="width:100%;max-height:420px;border-radius:6px;background:#000"></video>` : `<p><a class="btn line" href="${esc(x.url)}" target="_blank" rel="noopener">Open the file</a></p>`}
+        <form class="f" id="if" style="margin-top:12px"><label class="fl wide">Name<input name="name" value="${esc(x.name)}"></label><label class="fl wide">Description <span class="hint">what the photo shows, for screen readers and Google</span><input name="alt" value="${esc(x.alt || '')}" placeholder="e.g. 40 ft container home at dusk, Naivasha"></label>
+        <label class="fl">Folder<select name="folder_id"><option value="">Not in a folder</option>${st.folders.map((f) => `<option value="${f.id}" ${f.id === x.folder_id ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select></label>
+        <div class="fl"><span>Details</span><span class="small muted">${x.width ? x.width + ' × ' + x.height + ' px · ' : ''}${x.bytes ? (x.bytes / 1024 > 1024 ? (x.bytes / 1048576).toFixed(1) + ' MB' : Math.round(x.bytes / 1024) + ' KB') : ''} · added ${when(x.created_at)}</span></div>
+        <label class="fl wide">Link<input value="${esc(x.url)}" readonly onclick="this.select()"></label>
+        <div class="wide tools"><button class="btn" type="submit">Save</button><button class="btn line" type="button" id="icp">Copy link</button><button class="btn danger" type="button" id="irm">Delete</button></div></form>`;
+      const f = $('#if', d.el);
+      f.onsubmit = async (e) => { e.preventDefault(); await guard(api('media_library?id=eq.' + x.id, { method: 'PATCH', body: { name: f.name.value.trim() || x.name, alt: f.alt.value.trim() || null, folder_id: f.folder_id.value || null, updated_at: new Date().toISOString() } }), 'Saved'); d.close(); load(); };
+      $('#icp', d.el).onclick = async () => { try { await navigator.clipboard.writeText(x.url); toast('Link copied'); } catch (ex) { f.querySelector('input[readonly]').select(); } };
+      $('#irm', d.el).onclick = async (e) => { if (!confirmInline(e.target, 'Delete for good?')) return; await removeItems([x]); d.close(); load(); };
+    });
+  }
+  const up = async (files) => { if (!files.length) return; const folder = cur(); const got = await libUpload(files, folder, (i, n) => { $('#lst', el).textContent = 'Uploading ' + (i + 1) + ' of ' + n + '…'; });
+    if (got.length) toast(got.length + ' file' + (got.length === 1 ? '' : 's') + ' added' + (folder ? ' to ' + folder.name : ''));
+    if (opts.picker) got.forEach((x) => { if (opts.single) st.sel.clear(); st.sel.add(x.id); });
+    await load(); if (opts.onSelect) opts.onSelect(selected()); };
+  drop.onclick = (e) => { if (e.target !== inp) inp.click(); }; drop.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+  inp.onchange = () => { up([...inp.files]); inp.value = ''; };
+  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (e) => up([...(e.dataTransfer && e.dataTransfer.files || [])]));
+  let tq; $('.q', el).oninput = (e) => { clearTimeout(tq); tq = setTimeout(() => { st.q = e.target.value.trim(); draw(); }, 150); };
+  load();
+  return { selected, reload: load };
+}
+VIEWS.library = async (m) => {
+  m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Image library</h1></div></div>
+    <p class="muted" style="margin-top:0">Keep photos, videos and PDFs in folders and use them anywhere in the admin with “Choose from library”. Click a file to describe it, move it or copy its link. Ctrl-click (or Cmd-click) to select several.</p><div id="libx"></div>`;
+  libBrowser($('#libx', m));
+};
+// pick files from the library: resolves with the chosen items ([] if cancelled)
+function pickFromLibrary(opts) {
+  opts = opts || {};
+  return new Promise((resolve) => {
+    const prev = document.activeElement, back = document.createElement('div'); back.className = 'lib-back';
+    back.innerHTML = `<style>${LIB_CSS}</style><div class="lib-pick" role="dialog" aria-modal="true" aria-label="Choose from the image library"><header><b>Choose from the image library</b><button class="x" type="button" aria-label="Close" style="border:0;background:none;font-size:24px;cursor:pointer">×</button></header><div class="bd"></div>
+      <footer><span class="small muted" id="psel">${opts.single ? 'Click a file to choose it.' : 'Click files to choose them.'}</span><span class="tools"><button class="btn line" type="button" id="pcan">Cancel</button><button class="btn" type="button" id="pok" disabled>Use ${opts.single ? 'this file' : 'these files'}</button></span></footer></div>`;
+    document.body.appendChild(back);
+    let chosen = [];
+    const done = (val) => { back.remove(); document.removeEventListener('keydown', key, true); if (prev && prev.focus) prev.focus(); resolve(val); };
+    const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); done([]); } };
+    document.addEventListener('keydown', key, true);
+    libBrowser($('.bd', back), { picker: true, single: opts.single, kind: opts.kind, accept: opts.accept, onSelect: (s) => { chosen = s; $('#pok', back).disabled = !s.length; $('#psel', back).textContent = s.length ? s.length + ' chosen' : 'Nothing chosen yet.'; } });
+    $('.x', back).onclick = () => done([]); $('#pcan', back).onclick = () => done([]); $('#pok', back).onclick = () => done(chosen);
+    back.addEventListener('mousedown', (e) => { if (e.target === back) done([]); });
+    setTimeout(() => $('.x', back).focus(), 30);
+  });
+}
+
 VIEWS.media = async (m) => {
   m.innerHTML = `<div class="top"><div><p class="eb">Website</p><h1>Photos</h1></div><div class="tools"><button class="btn" type="button" id="mimp">Bring in photos from the old site</button><button class="btn line" type="button" id="mall">Check every photo again</button></div></div>
     <p class="muted" style="margin-top:0">Every photo uploaded here is shrunk automatically to at most 2000 px, saved as WebP and cached by browsers for a year. Cards and lists ask for small copies, and photos load as visitors scroll.</p>
@@ -753,7 +893,7 @@ async function editPost(id, reload) {
           <label class="fl wide">Summary <span class="hint">shown on the blog list and under the title</span><textarea name="excerpt" rows="2">${esc(p.excerpt || '')}</textarea></label>
         </form>
         <div class="tools" style="align-items:center"><button class="btn" type="button" id="bai">Write a first draft with AI</button><span class="small muted" id="baist">${p.ai && p.ai.at ? 'Last AI draft ' + when(p.ai.at) + '.' : 'Uses the title, search phrase, brief and Firmcop products and prices.'}</span></div>
-        <div class="ed-bar" role="toolbar" aria-label="Formatting">${[['h2', 'Heading'], ['h3', 'Subheading'], ['p', 'Text'], ['bold', 'B'], ['italic', 'I'], ['ul', '• List'], ['ol', '1. List'], ['quote', '“ Quote'], ['link', 'Link'], ['product', 'Product link'], ['image', 'Photo'], ['table', 'Table'], ['clear', 'Clear']].map(([k, l]) => `<button type="button" data-ed="${k}" title="${l}">${l}</button>`).join('')}<input type="file" id="edimg" accept="image/*" style="position:absolute;left:-9999px"></div>
+        <div class="ed-bar" role="toolbar" aria-label="Formatting">${[['h2', 'Heading'], ['h3', 'Subheading'], ['p', 'Text'], ['bold', 'B'], ['italic', 'I'], ['ul', '• List'], ['ol', '1. List'], ['quote', '“ Quote'], ['link', 'Link'], ['product', 'Product link'], ['image', 'Photo'], ['libimg', 'From library'], ['table', 'Table'], ['clear', 'Clear']].map(([k, l]) => `<button type="button" data-ed="${k}" title="${l}">${l}</button>`).join('')}<input type="file" id="edimg" accept="image/*" style="position:absolute;left:-9999px"></div>
         <div class="ed" id="ed" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Post text">${p.body_html || '<p></p>'}</div>
         <section class="card"><h3>Featured products and projects</h3><p class="small muted" style="margin-top:0">Shown under the post, so readers can go straight to the right product or a real build.</p>
           <div class="chipset" id="rp"></div><div class="tools" style="margin-top:8px"><select id="rpadd" aria-label="Add a product" style="max-width:420px"><option value="">Add a product…</option>${prods.map((x) => `<option value="${esc(x.slug)}">${esc(x.name)}</option>`).join('')}</select></div>
@@ -771,7 +911,7 @@ async function editPost(id, reload) {
           <label class="ck"><input type="checkbox" name="needs_expansion" ${p.needs_expansion ? 'checked' : ''}>Needs checking</label></form>
           <div class="tools" style="margin-top:10px"><button class="btn" type="button" id="bsave">Save</button><button class="btn line" type="button" id="bpub">${p.status === 'published' ? 'Update live post' : 'Publish'}</button></div>
           <div class="tools" style="margin-top:8px"><a class="btn sm line" id="bprev" href="/blog.html?post=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Preview</a>${p.status === 'published' ? `<a class="btn sm line" href="/blog/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Open live</a>` : ''}<button class="btn sm danger" type="button" id="bdel">Delete</button></div></section>
-        <section class="card"><h3 style="margin-top:0">Cover photo</h3><div id="cov"></div><div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload<input type="file" id="cf" accept="image/*" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="cclr">Remove</button></div>
+        <section class="card"><h3 style="margin-top:0">Cover photo</h3><div id="cov"></div><div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload<input type="file" id="cf" accept="image/*" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="clib">From library</button><button class="btn sm line" type="button" id="cclr">Remove</button></div>
           <label class="fl" style="margin-top:8px">Describe the photo<input id="calt" value="${esc(p.cover_alt || '')}" placeholder="e.g. 40 ft container home on a hillside in Naivasha"></label></section>
         <section class="card"><h3 style="margin-top:0">Checks</h3><div class="bckl" id="bck"></div></section>
       </aside></div>`;
@@ -808,11 +948,13 @@ async function editPost(id, reload) {
       if (k === 'link') { const u = prompt('Link to (a full address, or a page like /collection)'); if (u) cmd('createLink', u); return; }
       if (k === 'product') { const nm = prompt('Product name, or part of it'); if (!nm) return; const x = prods.find((y) => y.name.toLowerCase().includes(nm.toLowerCase())); if (!x) return toast('No product matches that name', true); const sel = window.getSelection(); const href = FC.link ? FC.link.product(x) : '/collection/' + x.slug; if (sel && String(sel).trim()) cmd('createLink', href); else cmd('insertHTML', `<a href="${href}">${esc(x.name)}</a>&nbsp;`); if (!state.related_products.includes(x.slug)) state.related_products.push(x.slug); return mark(); }
       if (k === 'image') return $('#edimg', d.el).click();
+      if (k === 'libimg') { const sel = window.getSelection(), range = sel && sel.rangeCount && ed.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null; pickFromLibrary({ kind: ['photo'], accept: 'image/*' }).then((xs) => { if (!xs.length) return; ed.focus(); if (range) { sel.removeAllRanges(); sel.addRange(range); } cmd('insertHTML', xs.map((x) => `<img src="${esc(x.url)}" alt="${esc(x.alt || '')}"><p></p>`).join('')); }); return; }
       if (k === 'table') return cmd('insertHTML', '<table><thead><tr><th>Option</th><th>Size</th><th>Price (KES)</th></tr></thead><tbody><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></tbody></table><p></p>');
     });
     $('#edimg', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const url = await guard(uploadFile(f, 'blog/' + (p.slug || 'post')), 'Photo added'); const alt = prompt('Describe this photo in a few words') || ''; cmd('insertHTML', `<img src="${esc(url)}" alt="${esc(alt)}"><p></p>`); e.target.value = ''; };
     $('#cf', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; state.cover_url = await guard(uploadFile(f, 'blog/' + (p.slug || 'post')), 'Cover uploaded'); mark(); };
     $('#cclr', d.el).onclick = () => { state.cover_url = ''; mark(); };
+    $('#clib', d.el).onclick = async () => { const [x] = await pickFromLibrary({ single: true, kind: ['photo'], accept: 'image/*' }); if (!x) return; state.cover_url = x.url; if (x.alt && !$('#calt', d.el).value) $('#calt', d.el).value = x.alt; mark(); };
     async function save(extra, msg) {
       const v = Object.assign(current(), extra || {});
       if (!v.title) return toast('Give the post a title', true);
@@ -909,7 +1051,7 @@ async function seoPages(box) {
         <label class="fl wide">Search title <span class="hint">about 60 characters</span><input name="title" value="${esc(r.title || '')}"></label>
         <label class="fl wide">Search description <span class="hint">120 to 160 characters</span><textarea name="description" rows="3">${esc(r.description || '')}</textarea></label>
         <label class="fl wide">Share image <span class="hint">shown in WhatsApp, Facebook and LinkedIn previews</span><input name="og_image_url" value="${esc(r.og_image_url || '')}"></label>
-        <label class="fl"><span>Upload a share image</span><input type="file" id="oimg" accept="image/*"></label>
+        <label class="fl"><span>Upload a share image</span><input type="file" id="oimg" accept="image/*"></label><div class="fl"><span>Or</span><button class="btn sm line" type="button" id="olib">Choose from library</button></div>
         <label class="fl">Canonical address <span class="hint">only if this page copies another</span><input name="canonical_url" value="${esc(r.canonical_url || '')}"></label>
         <label class="ck wide"><input type="checkbox" name="noindex" ${r.noindex ? 'checked' : ''}>Hide this page from search engines</label>
         <label class="fl wide">Notes<textarea name="notes" rows="2">${esc(r.notes || '')}</textarea></label>
@@ -917,6 +1059,7 @@ async function seoPages(box) {
         <div class="wide tools"><button class="btn" type="submit">Save</button>${isNew ? '' : '<button class="btn danger" type="button" id="odel">Remove</button>'}</div></form>`;
       const f = $('#of', d.el), pv = () => { $('#opv', d.el).innerHTML = snippet(f.title.value || 'Firmcop Modular', location.origin + f.path.value, f.description.value); };
       f.addEventListener('input', pv); pv();
+      $('#olib', d.el).onclick = async () => { const [x] = await pickFromLibrary({ single: true, kind: ['photo'], accept: 'image/*' }); if (x) { f.og_image_url.value = x.url; pv(); } };
       $('#oimg', d.el).onchange = async (e) => { const file = e.target.files[0]; if (file) f.og_image_url.value = await guard(uploadFile(file, 'seo'), 'Image uploaded'); };
       f.onsubmit = async (e) => { e.preventDefault(); const v = { path: '/' + f.path.value.trim().replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, ''), title: f.title.value.trim() || null, description: f.description.value.trim() || null, og_image_url: f.og_image_url.value.trim() || null, canonical_url: f.canonical_url.value.trim() || null, noindex: f.noindex.checked, notes: f.notes.value.trim() || null, updated_at: new Date().toISOString() };
         await guard(api('seo_overrides?on_conflict=path', { method: 'POST', body: v, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } }), 'Saved'); d.close(); seoPages(box); };
@@ -1022,12 +1165,13 @@ async function workDetail(r, d, reload, tab) {
   const gal = (r.gallery && r.gallery.length ? r.gallery : (r.images || []).map((u) => ({ url: u }))).slice();
   const save = async (list, msg) => { await guard(api('works?id=eq.' + r.id, { method: 'PATCH', body: { gallery: list, images: list.map((g) => g.url) } }), msg); reload(); workDetail(r, d, reload, 'photos'); };
   box.innerHTML = `<section class="card" style="margin-top:12px"><h3>Add photos</h3><p class="small muted" style="margin-top:0">The first photo is the cover on the Works page and the project page. Add a caption to say what each one shows, for example before, during or after.</p>
-      <label class="btn line" style="cursor:pointer">Choose photos<input type="file" id="wf" multiple accept="image/*" style="position:absolute;left:-9999px"></label> <span class="small muted" id="wst"></span></section>
+      <label class="btn line" style="cursor:pointer">Choose photos<input type="file" id="wf" multiple accept="image/*" style="position:absolute;left:-9999px"></label> <button class="btn line" type="button" id="wlib">From library</button> <span class="small muted" id="wst"></span></section>
     <div class="grid" style="margin-top:12px">${gal.map((g, i) => `<div class="card" data-i="${i}" style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start;padding:12px">
       <img src="${esc(g.url)}" alt="" width="120" height="90" style="object-fit:cover;border-radius:4px;display:block">
       <div style="display:grid;gap:8px"><label class="fl">Caption<input data-cap value="${esc(g.caption || '')}" placeholder="e.g. After: the finished offices"></label>
       <div class="tools">${i === 0 ? '<span class="pill yes">cover</span>' : '<button class="btn sm line" type="button" data-up>Move up</button><button class="btn sm line" type="button" data-cover>Make cover</button>'}<button class="btn sm danger" type="button" data-rm>Remove</button></div></div></div>`).join('') || '<p class="muted">No photos yet.</p>'}</div>
     ${gal.length ? '<div class="tools" style="margin-top:12px"><button class="btn" type="button" id="wcap">Save captions</button></div>' : ''}`;
+  $('#wlib', box).onclick = async () => { const xs = await pickFromLibrary({ kind: ['photo'], accept: 'image/*' }); if (!xs.length) return; const list = gal.slice(); xs.forEach((x) => { if (!list.some((g) => g.url === x.url)) list.push({ url: x.url, caption: x.alt || undefined }); }); save(list, xs.length + ' photo' + (xs.length === 1 ? '' : 's') + ' added'); };
   $('#wf', box).onchange = async (e) => {
     const files = [...e.target.files], list = gal.slice();
     for (let i = 0; i < files.length; i++) { $('#wst', box).textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + '…'; list.push({ url: await guard(uploadFile(files[i], 'works/' + r.slug)) }); }
@@ -1152,7 +1296,7 @@ async function editModel(id, reload) {
             <div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="fromwork">Copy photos and video from the build</button></div></div></section>
 
         <section class="card"><h3 style="margin-top:0">Photos and video</h3><p class="small muted" style="margin-top:0">At least ${INV_MIN_PHOTOS} photos and ${INV_MIN_VIDEOS} video. The first photo is the cover. Photos are shrunk automatically; video clips up to 50 MB, or paste a YouTube or Vimeo link for longer films.</p>
-          <div class="tools"><label class="btn line" style="cursor:pointer">Upload photos or video<input type="file" id="mup" multiple accept="image/*,video/mp4,video/webm,video/quicktime" style="position:absolute;left:-9999px"></label><input id="mlink" placeholder="YouTube or Vimeo link" style="min-height:44px;border:1.5px solid #BDB29C;border-radius:4px;padding:0 10px;min-width:220px;flex:1"><button class="btn line" type="button" id="maddlink">Add video link</button><span class="small muted" id="mstat"></span></div>
+          <div class="tools"><label class="btn line" style="cursor:pointer">Upload photos or video<input type="file" id="mup" multiple accept="image/*,video/mp4,video/webm,video/quicktime" style="position:absolute;left:-9999px"></label><input id="mlink" placeholder="YouTube or Vimeo link" style="min-height:44px;border:1.5px solid #BDB29C;border-radius:4px;padding:0 10px;min-width:220px;flex:1"><button class="btn line" type="button" id="maddlink">Add video link</button><button class="btn line" type="button" id="mlib">From library</button><span class="small muted" id="mstat"></span></div>
           <div class="mgrid" id="mg" style="margin-top:12px"></div></section>
 
         <section class="card"><h3 style="margin-top:0">Units</h3><p class="small muted" style="margin-top:0">List each unit investors can buy. Available, reserved and sold counts update the website. Without a list, the totals below are used.</p>
@@ -1175,7 +1319,7 @@ async function editModel(id, reload) {
           <h4 style="margin:14px 0 6px">Payment plan</h4><div class="rowsx" id="pl"></div><div class="tools" style="margin-top:8px"><button class="btn sm line" type="button" id="pladd">Add a milestone</button><button class="btn sm line" type="button" id="plstd">Use 20 / 40 / 40</button><span class="small muted" id="plsum"></span></div></section>
 
         <section class="card"><h3 style="margin-top:0">Documents</h3><p class="small muted" style="margin-top:0">Information pack, title, approvals, sample agreement (PDF).</p><div class="rowsx" id="dl"></div>
-          <div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload a PDF<input type="file" id="dup" accept="application/pdf" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="dadd">Add a link</button></div></section>
+          <div class="tools" style="margin-top:8px"><label class="btn sm line" style="cursor:pointer">Upload a PDF<input type="file" id="dup" accept="application/pdf" style="position:absolute;left:-9999px"></label><button class="btn sm line" type="button" id="dadd">Add a link</button><button class="btn sm line" type="button" id="dlib">From library</button></div></section>
 
         <section class="card"><h3 style="margin-top:0">Search and sharing</h3><form class="f" onsubmit="return false" id="mfs"><label class="fl wide">Search title<input name="seo_title" value="${v('seo_title')}" placeholder="Leave empty to use the name"></label><label class="fl wide">Search description<textarea name="seo_description" rows="2" placeholder="Leave empty to use the summary">${v('seo_description')}</textarea></label></form><div id="msnip" style="margin-top:8px"></div></section>
       </div>
@@ -1251,6 +1395,7 @@ async function editModel(id, reload) {
         if (/^video\//.test(f.type) && f.size > 50 * 1048576) { toast(f.name + ' is over 50 MB: put it on YouTube or Vimeo and paste the link', true); continue; }
         try { const url = await uploadFile(f, 'invest/' + (o.slug || 'model')); S.media.push({ type: /^video\//.test(f.type) ? 'video' : 'photo', url, caption: '' }); } catch (ex) { toast(ex.message, true); } }
       stat.textContent = ''; e.target.value = ''; drawMedia(); mark(); };
+    $('#mlib', d.el).onclick = async () => { const xs = await pickFromLibrary({ kind: ['photo', 'video'] }); xs.forEach((x) => { if (!S.media.some((y) => y.url === x.url)) S.media.push({ type: x.kind === 'video' ? 'video' : 'photo', url: x.url, caption: x.alt || '' }); }); if (xs.length) { drawMedia(); mark(); } };
     $('#maddlink', d.el).onclick = () => { const u = $('#mlink', d.el).value.trim(); if (!ytId(u) && !vimeoId(u) && !isVideoFile(u)) return toast('Paste a YouTube or Vimeo link', true); S.media.push({ type: 'video', url: u, caption: '' }); $('#mlink', d.el).value = ''; drawMedia(); mark(); };
     const addPhotos = (urls) => { let n = 0; urls.filter(Boolean).forEach((u) => { if (!S.media.some((x) => x.url === u)) { S.media.push({ type: isVideoFile(u) || ytId(u) || vimeoId(u) ? 'video' : 'photo', url: u, caption: '' }); n++; } }); drawMedia(); mark(); toast(n ? n + ' added' : 'Nothing new to add'); };
     $('#fromwork', d.el).onclick = () => { const w = wks.find((x) => x.slug === F('work_slug').value); if (!w) return toast('Choose the build first', true);
@@ -1259,6 +1404,7 @@ async function editModel(id, reload) {
     $('#fromprod', d.el).onclick = () => { const p = prods.find((x) => x.slug === F('product_slug').value); if (!p) return toast('Choose the product first', true); addPhotos([p.cover_url, ...(p.images || [])]); if (!F('price').value && p.base_price) { F('price').value = Math.round(p.base_price); mark(); } };
     $('#pladd', d.el).onclick = () => { S.plan.push({ label: '', pct: null, when: '' }); drawPlan(); mark(); };
     $('#plstd', d.el).onclick = () => { S.plan = [{ label: 'Deposit', pct: 20, when: 'On signing' }, { label: 'Structure complete', pct: 40, when: 'When the frame is up' }, { label: 'Handover', pct: 40, when: 'At completion' }]; drawPlan(); mark(); };
+    $('#dlib', d.el).onclick = async () => { const xs = await pickFromLibrary({ kind: ['document'], accept: 'application/pdf' }); xs.forEach((x) => S.docs.push({ label: x.name, url: x.url })); if (xs.length) { drawDocs(); mark(); } };
     $('#dadd', d.el).onclick = () => { S.docs.push({ label: '', url: '' }); drawDocs(); mark(); };
     $('#dup', d.el).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const url = await guard(uploadFile(f, 'invest/' + (o.slug || 'model') + '/docs'), 'Uploaded'); S.docs.push({ label: f.name.replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '), url }); e.target.value = ''; drawDocs(); mark(); };
     $('#uadd', d.el).onclick = () => addUnits(1, $('#ugp', d.el).value.trim());
@@ -1476,11 +1622,12 @@ function editCategory(c, done) {
         ${[['collection', 'Collection (buildings)'], ['atelier', 'Atelier (shop)'], ['studio', '3D Studio library']].map(([k, l]) => `<label class="ck" style="display:inline-flex;margin-right:16px"><input type="checkbox" name="sc_${k}" ${(c.scopes || []).includes(k) ? 'checked' : ''}>${l}</label>`).join('')}</fieldset>
       <label class="fl wide">Description<textarea name="description">${esc(c.description || '')}</textarea></label>
       <label class="fl wide">Image <span class="hint">shown in the mega menu</span><input name="image_url" type="url" value="${esc(c.image_url || '')}"></label>
-      <label class="fl"><span>Upload an image</span><input type="file" accept="image/*" id="cimg"></label>
+      <label class="fl"><span>Upload an image</span><input type="file" accept="image/*" id="cimg"></label><div class="fl"><span>Or</span><button class="btn sm line" type="button" id="clibc">Choose from library</button></div>
       <label class="ck"><input type="checkbox" name="published" ${c.published ? 'checked' : ''}>Show on the website</label>
       <div class="wide tools"><button class="btn" type="submit">${isNew ? 'Create' : 'Save'}</button></div></form>`;
     const f = $('#cf', d.el);
     if (isNew) f.name.addEventListener('input', () => { f.slug.value = slugify(f.name.value); });
+    $('#clibc', d.el).onclick = async () => { const [x] = await pickFromLibrary({ single: true, kind: ['photo'], accept: 'image/*' }); if (x) f.image_url.value = x.url; };
     $('#cimg', d.el).onchange = async (e) => { const file = e.target.files[0]; if (!file) return; f.image_url.value = await guard(uploadFile(file, 'categories'), 'Image uploaded'); };
     f.onsubmit = async (e) => {
       e.preventDefault();
@@ -1682,7 +1829,7 @@ async function editProduct(p, reload, tab, defaults) {
       const media = await api('product_media?product_id=eq.' + p.id + '&order=sort.asc,created_at.asc');
       box.innerHTML = `<section class="card" style="margin-top:12px"><h3>Add photos, swatches or a 3D model</h3>
         <p class="small muted" style="margin-top:0">Photos: JPG, PNG or WebP. 3D model: a .glb file; it replaces the simple shape in the Studio and on the product page.</p>
-        <div class="tools"><label class="btn line" style="cursor:pointer">Choose files<input type="file" id="mf" multiple accept="image/*,.glb,.gltf,model/gltf-binary" style="position:absolute;left:-9999px"></label><span class="small muted" id="mstatus"></span></div></section>
+        <div class="tools"><label class="btn line" style="cursor:pointer">Choose files<input type="file" id="mf" multiple accept="image/*,.glb,.gltf,model/gltf-binary" style="position:absolute;left:-9999px"></label><button class="btn line" type="button" id="mlibp">From library</button><span class="small muted" id="mstatus"></span></div></section>
         ${p.model_url ? `<p class="small" style="margin:10px 0 0">3D model in use: <a href="${esc(p.model_url)}" target="_blank" rel="noopener">${esc(p.model_url.split('/').pop())}</a></p>` : '<p class="small muted" style="margin:10px 0 0">No 3D model yet: the Studio draws a simple shape from the sizes.</p>'}
         <div class="tablewrap ctable" style="margin-top:12px"><table><thead><tr><th></th><th>Kind</th><th>Shows for option</th><th>Caption</th><th>#</th><th></th></tr></thead><tbody>
         ${media.map((x) => `<tr data-id="${x.id}"><td>${x.kind === 'model' ? '<span class="pill">GLB</span>' : `<img src="${esc(x.url)}" alt="" width="64" height="48" style="object-fit:cover;border-radius:3px;display:block">`}</td>
@@ -1690,6 +1837,15 @@ async function editProduct(p, reload, tab, defaults) {
           <td><input data-k="opt" aria-label="Option" placeholder="e.g. colour=black" value="${esc(x.option_key ? x.option_key + '=' + (x.option_value || '') : '')}"></td>
           <td><input data-k="caption" aria-label="Caption" value="${esc(x.caption || '')}"></td><td><input data-k="sort" type="number" aria-label="Order" value="${esc(x.sort)}" style="width:56px"></td>
           <td style="white-space:nowrap"><button class="btn sm line" type="button" data-cover>Use as cover</button> <button class="btn sm" type="button" data-save>Save</button> <button class="btn sm danger" type="button" data-del>Remove</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No photos yet.</td></tr>'}</tbody></table></div>`;
+      $('#mlibp', box).onclick = async () => {
+        const xs = await pickFromLibrary({ kind: ['photo'], accept: 'image/*' }); if (!xs.length) return;
+        for (let i = 0; i < xs.length; i++) {
+          const url = xs[i].url; if ((p.images || []).includes(url)) continue;
+          await guard(api('product_media', { method: 'POST', body: { product_id: p.id, url, kind: 'photo', caption: xs[i].alt || null, sort: media.length + i } }));
+          const r = await api('catalog_products?id=eq.' + p.id, { method: 'PATCH', body: Object.assign({ images: (p.images || []).concat(url) }, p.cover_url ? {} : { cover_url: url }), headers: { Prefer: 'return=representation' } }); p = r[0];
+        }
+        toast(xs.length + ' photo' + (xs.length === 1 ? '' : 's') + ' added'); reload(); render('media');
+      };
       $('#mf', box).onchange = async (e) => {
         const files = [...e.target.files]; const stat = $('#mstatus', box);
         for (let i = 0; i < files.length; i++) {
