@@ -1144,11 +1144,67 @@ const WORK_FIELDS = [{ k: 'title', label: 'Title', req: true, wide: true }, { k:
   { k: 'design_slug', label: '3D Studio design', hint: 'opens "Build something like this" in the Studio' }, { k: 'product_slugs', label: 'Products used', type: 'lines', hint: 'one product web address per line, e.g. atelier-dr-stl' },
   { k: 'seo_title', label: 'Search title' }, { k: 'seo_description', label: 'Search description', type: 'textarea' },
   { k: 'sort', label: 'Order', type: 'number' }, { k: 'featured', label: 'Featured', type: 'bool' }, { k: 'published', label: 'Show on the website', type: 'bool' }];
+const CONTAINER_CONCEPTS = [
+  {
+    slug: 'concept-20ft-container-office',
+    title: '20 ft Container Office · Concept',
+    category: 'Site offices',
+    design: 'Two workspaces with separate entrances',
+    finishes: 'Charcoal corrugated steel, aluminium glazing, plywood lining',
+    brief: 'A compact site office concept that gives two teams separate workspaces within a single 20 ft container.'
+  },
+  {
+    slug: 'concept-40ft-container-home',
+    title: '40 ft Container Home · Concept',
+    category: 'Container homes',
+    design: 'One bedroom, open-plan living and a shaded deck',
+    finishes: 'Green corrugated steel, timber decking, glazed sliding doors',
+    brief: 'A one-bedroom container home concept with a kitchen and living area that opens onto an outdoor deck.'
+  },
+  {
+    slug: 'concept-twin-container-cafe',
+    title: 'Twin Container Courtyard Café · Concept',
+    category: 'Food and hospitality',
+    design: 'Two parallel containers around a sheltered courtyard',
+    finishes: 'Rust-red corrugated steel, glazed service openings, shade canopy',
+    brief: 'A café concept with a kitchen and service counter in separate modules and shared seating in the courtyard.'
+  }
+];
+
 VIEWS.works = (m) => listView(m, {
   table: 'works', title: 'Works', eyebrow: 'Portfolio', order: 'published.desc,featured.desc,sort.asc', search: ['title', 'location', 'category'], filter: { col: 'type', options: WORK_TYPES, label: 'types' },
   cols: [{ k: 'images', label: '', fmt: (v) => v && v[0] ? `<img src="${esc(v[0])}" alt="" width="56" height="42" style="object-fit:cover;border-radius:3px;display:block">` : '' }, { k: 'title', label: 'Project' }, { k: 'type', label: 'Type' }, { k: 'location', label: 'Location' },
     { k: 'gallery', label: 'Photos', n: true, fmt: (v, r) => String((v && v.length) || (r.images || []).length || '') }, { k: 'brief', label: 'Story', fmt: (v, r) => (r.brief || r.outcome) ? pill('yes') : '<span class="pill">short</span>' }, { k: 'featured', label: 'Featured', fmt: yes }, { k: 'published', label: 'On website', fmt: yes }],
   fields: WORK_FIELDS, defaults: { type: 'Container', published: true, featured: false, images: [], gallery: [], product_slugs: [], sort: 100 }, newLabel: 'Add a project', canDelete: true, slugFrom: 'title',
+  extraTools: '<button class="btn line" type="button" data-add-container-concepts>Publish container concepts</button>',
+  onTools: (root, { reload }) => {
+    const button = $('[data-add-container-concepts]', root);
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        const records = CONTAINER_CONCEPTS.map((concept, index) => {
+          const prefix = '/img/container-concepts/' + concept.slug;
+          const gallery = [
+            { url: prefix + '-exterior.webp', caption: 'Illustrative exterior rendering' },
+            { url: prefix + '-plan.webp', caption: 'Concept floor plan' }
+          ];
+          return { ...concept, type: 'Container', featured: false, published: true, sort: 110 + index,
+            images: gallery.map((item) => item.url), gallery };
+        });
+        const added = await api('works?on_conflict=slug', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=ignore-duplicates,return=representation' },
+          body: records
+        });
+        await reload();
+        toast(added.length ? 'Container concepts published: ' + added.length : 'Container concepts already exist');
+      } catch (error) {
+        toast(error.message || String(error), true);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  },
   detail: (r, d, reload) => workDetail(r, d, reload)
 });
 async function workDetail(r, d, reload, tab) {
