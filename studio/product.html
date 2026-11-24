@@ -32,6 +32,10 @@ ul.feat{margin:10px 0 0;padding-left:20px}
 .buy{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:18px}
 .buy label{display:grid;gap:4px;font-size:13px;font-weight:600;color:#3B3832}
 .buy input{width:110px;min-height:48px;padding:0 12px;border:1.5px solid #BDB29C;border-radius:4px;font:inherit;font-size:16px}
+.concept-media{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px}
+.concept-media figure{margin:0;min-width:0}
+.concept-media img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#F7F4EE;border:1px solid var(--line);border-radius:6px;display:block}
+.concept-media figcaption{margin-top:8px}
 .added{margin:10px 0 0;padding:10px 14px;background:#E3F1E6;color:#1F5A2E;border-radius:4px;font-size:14px}
 </style>
 </head>
@@ -39,6 +43,7 @@ ul.feat{margin:10px 0 0;padding-left:20px}
 <header id="fc-head" class="fc-head"></header>
 <main class="wrap" id="main" tabindex="-1">
   <div class="pd" id="pd"><div class="skel" style="aspect-ratio:4/3"></div><div><div class="skel" style="height:40px;width:60%"></div><div class="skel" style="height:120px;margin-top:16px"></div></div></div>
+  <div id="product-design"></div>
   <div id="more"></div>
 </main>
 <script src="ds-config.js"></script>
@@ -50,6 +55,12 @@ ul.feat{margin:10px 0 0;padding-left:20px}
   const slug = FC.routeSlug('p');
   const SKIP_SPEC = { swatch: 1, texture: 1, col: 1, pat: 1, door: 1, glass: 1, sill: 1, tag: 1, flat: 1, wet: 1, sanitary: 1, tallItem: 1, gable: 1, mult: 1, per_m2: 1, when: 1 };
   const SPEC_LABEL = { w: 'Width (m)', h: 'Height (m)', d: 'Depth (m)', cat: 'Room', note: 'Note' };
+  const CONCEPT_LAYOUTS = {
+    'firmcop-container-apartment-2-bedroom': 'Two bedrooms at opposite ends, with a shared living area, kitchen and bathroom in the middle.',
+    'firmcop-classic-aframe-40': 'Ground floor with a bedroom, bathroom and open kitchen and living area, plus a sleeping loft above the service rooms.',
+    'firmcop-1br-cabin-32': 'Separate bedroom and bathroom behind an open living area and kitchen.',
+    'firmcop-warehouse-frame-200': 'Open 10 × 20 m warehouse footprint with an end loading opening and side access.'
+  };
   let P = null, CATS = [], choice = {};
   let FALLBACK = '', drawMode = false;
   const isBuildingKind = (k) => k === 'building' || k === 'design';
@@ -140,6 +151,35 @@ ul.feat{margin:10px 0 0;padding-left:20px}
     $('#price').innerHTML = (p.params && p.params.length || !isBuildingKind(p.kind) ? 'KES ' : 'From KES ') + fmt(r.unit_price) + u;
     $('#pnote').textContent = (r.area_m2 ? r.area_m2 + ' m² · ' : '') + (p.kind === 'building' || p.kind === 'design' ? 'Before delivery and site works. The final price follows a site survey.' : 'Before delivery. Prices include VAT where stated on the quote.');
   }
+  async function productDesign(p) {
+    if (!isBuildingKind(p.kind)) return;
+    const layout = Object.hasOwn(CONCEPT_LAYOUTS, p.slug) ? CONCEPT_LAYOUTS[p.slug] : '';
+    const uploaded = await FC.rest('product_media?select=url,caption&product_id=eq.' + encodeURIComponent(p.id)
+      + '&kind=eq.drawing&order=sort.asc,created_at.asc').catch(() => []);
+    const drawings = uploaded.flatMap((item) => {
+      try {
+        const url = new URL(item.url, location.origin);
+        return item.url && ['https:', 'http:'].includes(url.protocol) ? [{ ...item, url: url.href }] : [];
+      } catch {
+        return [];
+      }
+    });
+    const prefix = '/img/collection-concepts/' + p.slug;
+    const illustrative = !drawings.length && layout;
+    if (illustrative) drawings.push({ url: prefix + '-plan.webp', caption: 'Concept floor plan', alt: layout });
+    if (!drawings.length) return;
+    const figure = (url, caption, alt) => `<figure><a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc('Open ' + caption)}"><img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" decoding="async"></a><figcaption>${esc(caption)}</figcaption></figure>`;
+    $('#product-design').innerHTML = `<section class="sec"><h2>${illustrative ? 'Concept design and floor plan' : 'Design drawings'}</h2>
+      ${illustrative ? '<p class="muted">Illustrative layout for planning discussions. Construction requires site-specific drawings.</p>' : ''}
+      <div class="concept-media">${illustrative ? figure(prefix + '-exterior.webp', 'Concept exterior render', 'Illustrative exterior of ' + p.name) : ''}
+      ${drawings.map((item, index) => {
+        const caption = item.caption || 'Design drawing ' + (index + 1);
+        const path = new URL(item.url, location.origin).pathname;
+        if (/\.(pdf|dwg|dxf)$/i.test(path)) return `<p><a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(caption)}</a></p>`;
+        return figure(item.url, caption, item.alt || caption);
+      }).join('')}</div></section>`;
+  }
+
   function related() {
     const p = P, isB = p.kind === 'building' || p.kind === 'design';
     Promise.all([
@@ -160,7 +200,7 @@ ul.feat{margin:10px 0 0;padding-left:20px}
       P = rows[0];
       const scope = scopeFor(P.kind);
       FC.header($('#fc-head'), scope === 'collection' ? 'collection.html' : 'atelier.html');
-      return FC.cats(scope).then((c) => { CATS = c; render(); related(); });
+      return FC.cats(scope).then((c) => { CATS = c; render(); productDesign(P); related(); });
     })
     .catch(() => { FC.header($('#fc-head'), 'collection.html'); fail('This page could not load just now. Please refresh.'); });
 })();
