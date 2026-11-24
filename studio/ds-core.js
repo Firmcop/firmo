@@ -649,7 +649,10 @@
     // growing: stretch the plan; shrinking: keep the bathroom block at full size against the end gable and squeeze the living space
     const sx = p.L >= bL ? v => +(v * p.L / bL).toFixed(2) : v => +(v >= bL - 2 ? v + p.L - bL : v * (p.L - 2) / (bL - 2)).toFixed(2);
     const sz = p.L >= bL ? v => +(v * p.W / bW).toFixed(2) : v => +cl(v + (p.W - bW) / 2 - (p.W < 6 ? 0.6 : 0)).toFixed(2), fx = 1, fz = 1;
-    s.parts.forEach(q => { if (q.a === 'z') { q.at = sx(q.at); q.s0 = sz(q.s0); q.s1 = sz(q.s1); } else { q.at = sz(q.at); q.s0 = sx(q.s0); q.s1 = sx(q.s1); } if (q.door != null) q.door = +(q.door * (q.a === 'z' ? fz : fx)).toFixed(2); });
+    // a partition that ran up to the inside of a wall must still meet that wall after stretching, or rooms leak into each other
+    const bt = b.t || 0.2, pt = p.t || 0.2, near = (v, w) => Math.abs(v - w) < 0.03;
+    const ex = v => near(v, bt) ? pt : near(v, bL - bt) ? +(p.L - pt).toFixed(2) : sx(v), ez = v => near(v, bt) ? pt : near(v, bW - bt) ? +(p.W - pt).toFixed(2) : sz(v);
+    s.parts.forEach(q => { if (q.a === 'z') { q.at = sx(q.at); q.s0 = ez(q.s0); q.s1 = ez(q.s1); } else { q.at = sz(q.at); q.s0 = ex(q.s0); q.s1 = ex(q.s1); } if (q.door != null) q.door = +(q.door * (q.a === 'z' ? fz : fx)).toFixed(2); });
     s.opens.forEach(o => { o.u = sz(o.u); });
     s.runs.forEach(r => { if (/^[NS]$/.test(r.side)) r.u0 = sx(r.u0); else if (/^[WE]$/.test(r.side)) r.u0 = sz(r.u0); });
     s.items.forEach(i => { i.x = sx(i.x); i.z = sz(i.z); });

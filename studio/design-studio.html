@@ -298,6 +298,8 @@ const GUIDE_STEPS = [['assembly', 'Place the units', 'One unit, or several joine
 const QP = new URLSearchParams(location.search), LINKPRODUCT = QP.get('product') || null;
 let GUIDE = false, FLMENU = false, LASTBUILD = 'assembly', PROJ_FRESH = false, STAB = 'new';
 const VISITED = new Set();
+// designs made for one Collection product open from that product's page; the browse lists show only the general catalogue designs
+const LISTD = () => (DS.DESIGNS || []).filter(d => !(d.tags || []).includes('product'));
 const railOf = st => (RAIL.find(r => r[2].includes(st)) || RAIL[0])[0];
 const PIPE = ['Design in progress', 'Engineering review', 'Proposal sent to client', 'Deposit requested (M-Pesa)', 'Order placed'];
 
@@ -548,7 +550,7 @@ function startHTML() {
     ${STAB !== 'mine' ? `<label class="lbl" style="max-width:420px">Project name<input type="text" id="pj-name" placeholder="e.g. Naivasha family home" value="${esc(nm)}"></label>` : ''}
     ${STAB === 'new' ? `<div class="eb" style="margin-top:14px">Pick the first unit. You can add more units and floors inside.</div>
     ${sys.map(sy => `<div class="eb" style="color:var(--muted);margin-top:8px">${SYS[sy].name}</div><div class="cards st-grid">${Object.entries(PRESETS).filter(([k, p]) => p.sys === sy && LISTED(k, p)).map(([k, p]) => `<button type="button" class="card" data-a="pjNew" data-v="${k}"><div class="row"><b>${esc(p.name)}</b><span class="chip">${esc(p.sub)}</span></div><small>${p.L.toFixed(2)} × ${p.W.toFixed(2)} m · ${((p.L - 2 * p.t) * (p.W - 2 * p.t)).toFixed(1)} m² inside</small><small>Shell from ${KSh(p.shell)} · ${p.weeks} weeks</small></button>`).join('')}</div>`).join('')}` : ''}
-    ${STAB === 'designs' ? ((DS.DESIGNS || []).length ? `<div class="eb" style="margin-top:14px">Catalogue designs, ready to change</div><div class="cards st-grid">${DS.DESIGNS.map(d => `<button type="button" class="card" data-a="pjDesign" data-v="${esc(d.slug)}"><b>${esc(d.name)}</b><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('')}</div>` : '<p class="empty">No catalogue designs yet.</p>') : ''}
+    ${STAB === 'designs' ? (LISTD().length ? `<div class="eb" style="margin-top:14px">Catalogue designs, ready to change</div><div class="cards st-grid">${LISTD().map(d => `<button type="button" class="card" data-a="pjDesign" data-v="${esc(d.slug)}"><b>${esc(d.name)}</b><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('')}</div>` : '<p class="empty">No catalogue designs yet.</p>') : ''}
     ${STAB === 'mine' ? (local.length ? `<div class="eb" style="margin-top:14px">Projects on this device</div><div class="list">${local.map(r => `<button type="button" data-a="pjOpen" data-v="${esc(r.id)}"><span>${esc(r.name)} · ${r.units} unit${r.units === 1 ? '' : 's'}</span><span>${new Date(r.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></button>`).join('')}</div>` : '<p class="empty">No projects on this device yet. Sign in to see projects saved to your account.</p>') + '<div id="st-remote"></div>' : ''}</div>`;
 }
 function openStart() {
@@ -696,7 +698,7 @@ function renderLeft() {
   const el = $('#left'); let h = '';
   if (GUIDE) { el.innerHTML = guideHTML(); return; }
   if (STAGE === 'shell') {
-    const ds = (DS.DESIGNS || []).filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
+    const ds = LISTD().filter(d => d.system === SHELLSYS), allowS = P.design && P.design.rules && P.design.rules.shells && !AUTHOR ? P.design.rules.shells : null;
     h = `<div class="sec"><div class="eb">Build · Size</div><h2 class="h">Choose the system and size</h2>
       <div class="seg">${Object.entries(SYS).map(([k, s]) => `<button type="button" class="${SHELLSYS === k ? 'on' : ''}" data-a="shellsys" data-v="${k}">${s.name}</button>`).join('')}</div></div>
       <div class="sec"><div class="eb">Catalogue designs</div><div class="cards">${ds.map(d => `<button type="button" class="card ${P.design && P.design.slug === d.slug ? 'on' : ''}" data-a="design" data-v="${d.slug}"><div class="row"><b>${esc(d.name)}</b><span class="chip">v${d.version}</span></div><small>${esc(d.summary || '')}</small><small>${PRESETS[d.shell] ? PRESETS[d.shell].name : ''}${d.total_kes && !CLIENT ? ' · ' + KSh(d.total_kes) : ''}</small></button>`).join('') || '<p class="empty">No published designs for this system yet.</p>'}</div></div>
