@@ -194,6 +194,52 @@ Use only the facts given. Returns are projections, never promises: say "projecte
   },
 };
 
+
+// ---------- photo-style images (Google Gemini image models) ----------
+// Draws a realistic photo from a prompt, optionally following a reference picture (such as the product's 3D render),
+// saves it to the media bucket and the image library, and can add it to a product's photos.
+const IMAGE_MODELS = ["gemini-3.1-flash-image", "gemini-3-pro-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview"];
+const b64 = (buf: ArrayBuffer) => { const a = new Uint8Array(buf); let s = ""; for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode(...a.subarray(i, i + 0x8000)); return btoa(s); };
+async function makeImage(body: Record<string, any>, uid: string) {
+  if (!KEYS.gemini) throw new Error("Photo generation needs a Google Gemini key (Admin › AI helper).");
+  const prompt = String(body.prompt || "").slice(0, 4000); if (prompt.length < 10) throw new Error("Describe the photo you want.");
+  const parts: unknown[] = [{ text: prompt }];
+  for (const u of (body.ref_urls || (body.ref_url ? [body.ref_url] : [])).slice(0, 3)) {
+    const r = await fetch(String(u)); if (!r.ok) throw new Error("Could not read the reference picture (" + r.status + ")");
+    parts.push({ inline_data: { mime_type: r.headers.get("content-type") || "image/jpeg", data: b64(await r.arrayBuffer()) } });
+  }
+  const models = body.model ? [String(body.model)] : IMAGE_MODELS; let last = "";
+  for (const model of models) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: "POST", headers: { "x-goog-api-key": KEYS.gemini, "content-type": "application/json" },
+      body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: String(body.aspect || "3:2") } } }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404) { last = "model " + model + " not available"; continue; }
+    if (!r.ok) throw new Error(friendly(r.status, (Array.isArray(j) ? j[0]?.error?.message : j.error?.message) || ""));
+    const part = (j.candidates?.[0]?.content?.parts || []).find((x: any) => x.inlineData || x.inline_data);
+    if (!part) { last = "no picture came back" + (j.candidates?.[0]?.finishReason ? " (" + j.candidates[0].finishReason + ")" : ""); continue; }
+    const d = part.inlineData || part.inline_data, mime = d.mimeType || d.mime_type || "image/png", ext = mime.includes("jpeg") ? "jpg" : mime.includes("webp") ? "webp" : "png";
+    const bytes = Uint8Array.from(atob(d.data), (c) => c.charCodeAt(0));
+    const slug = String(body.slug || "photo").toLowerCase().replace(/[^a-z0-9-]+/g, "-").slice(0, 60);
+    const path = `library/ai-photos/${slug}-${Date.now().toString(36)}.${ext}`;
+    const up = await fetch(`${URL_}/storage/v1/object/media/${path}`, { method: "POST", headers: { ...svc, "content-type": mime, "x-upsert": "true", "cache-control": "public, max-age=31536000, immutable" }, body: bytes });
+    if (!up.ok) throw new Error("Could not save the picture (" + up.status + ")");
+    const url = `${URL_}/storage/v1/object/public/media/${path}`;
+    const folder = (await rest(`media_folders?select=id&name=eq.${encodeURIComponent(String(body.folder || "AI photos"))}`).catch(() => []))[0]
+      || (await rest("media_folders", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ name: String(body.folder || "AI photos"), sort: 7 }) }))[0];
+    await rest("media_library", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ folder_id: folder.id, path, url, name: String(body.name || slug).slice(0, 120), alt: String(body.alt || "").slice(0, 300) || null, kind: "photo", content_type: mime, bytes: bytes.length, created_by: /^[0-9a-f-]{36}$/.test(uid) ? uid : null }) }).catch(() => {});
+    if (body.product_id) {
+      const p = (await rest(`catalog_products?select=id,images,cover_url&id=eq.${encodeURIComponent(String(body.product_id))}`))[0];
+      if (p) {
+        const imgs = body.as_cover ? [url, ...(p.images || []).filter((x: string) => x !== url)] : [...(p.images || []), url];
+        await rest(`catalog_products?id=eq.${p.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ images: imgs, cover_url: body.as_cover || !p.cover_url ? url : p.cover_url, updated_at: new Date().toISOString() }) });
+        await rest("product_media", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ product_id: p.id, url, kind: "photo", caption: body.caption || null, sort: body.as_cover ? 0 : imgs.length }) }).catch(() => {});
+      }
+    }
+    return { url, path, model, bytes: bytes.length };
+  }
+  throw new Error("No picture was made: " + last);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const uid = (await trusted(req.headers.get("x-media-secret"))) ? "system" : await staffUser(req.headers.get("authorization"));
@@ -205,6 +251,12 @@ Deno.serve(async (req: Request) => {
     return json({ provider: cfg.provider, model: cfg.model, wanted: cfg.wanted, cap: cfg.cap, used, keys: Object.fromEntries(Object.entries(KEYS).map(([k, v]) => [k, !!v])), key_names: KEY_NAME, defaults: DEFAULT_MODEL, secret_names: SECRET_NAMES, secret_shapes: Object.fromEntries(SECRET_NAMES.map((n) => { const t = (Deno.env.get(n) || '').trim(); return [n, { length: t.length, google_format: /^AIza[\w-]{30,}$/.test(t), spaces: /\s/.test(t) }]; })) });
   }
   if (task === "models") { if (!cfg.provider) return json({ error: "No AI key" }, 503); try { const ids = await listModels(cfg.provider); return json({ provider: cfg.provider, models: ids, best: bestModel(cfg.provider, ids) }); } catch (e) { return json({ error: String((e as Error).message) }, 500); } }
+  if (task === "image") {
+    if ((await usedThisMonth()) >= cfg.cap) return json({ error: `This month's AI limit (${cfg.cap} requests) is used up.` }, 429);
+    const t0 = Date.now();
+    try { const out = await makeImage(body, uid); await rest("ai_usage", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ user_id: /^[0-9a-f-]{36}$/.test(uid) ? uid : null, task: "image", provider: "gemini", model: out.model, ok: true, ms: Date.now() - t0 }) }).catch(() => {}); return json(out); }
+    catch (e) { const msg = String((e as Error).message || e); await rest("ai_usage", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ task: "image", provider: "gemini", ok: false, error: msg.slice(0, 300), ms: Date.now() - t0 }) }).catch(() => {}); return json({ error: msg }, 500); }
+  }
   const make = TASKS[task]; if (!make) return json({ error: "Unknown task" }, 400);
   if (!cfg.provider) return json({ error: "The AI helper is not switched on yet. Add an AI key in Supabase (Edge Functions > Secrets): GEMINI_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY. See Admin › AI helper. You can still write it yourself." }, 503);
   if (task !== "test" && (await usedThisMonth()) >= cfg.cap) return json({ error: `This month's AI limit (${cfg.cap} requests) is used up. An admin can raise it in Admin › AI helper.` }, 429);
